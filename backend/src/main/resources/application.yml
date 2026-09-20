@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: hls-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/hls}
+    username: ${DB_USERNAME:hls}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Kept short so an unreachable data store fails fast — the status check's
+      # 3-second bound (FR-006/SC-004) covers connection acquisition too, not just
+      # the isValid() call itself.
+      connection-timeout: 2000
+      validation-timeout: 2000
+
+server:
+  port: ${SERVER_PORT:8080}
+
+hls:
+  app:
+    version: "@project.version@"
+
+status:
+  check:
+    timeout-seconds: 3

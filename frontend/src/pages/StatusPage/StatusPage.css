@@ -1,0 +1,42 @@
+.status-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1.25rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.status-page__status {
+  margin: 0;
+  font-size: clamp(1.5rem, 6vw, 2.25rem);
+}
+
+.status-page--ok .status-page__status {
+  color: #1a7f37;
+}
+
+.status-page--degraded .status-page__status {
+  color: #b34700;
+}
+
+.status-page__details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.status-page__details dt {
+  font-weight: 600;
+}
+
+.status-page__details dd {
+  margin: 0;
+}

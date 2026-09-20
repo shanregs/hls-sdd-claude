@@ -1,0 +1,62 @@
+### Java / Maven (backend) ###
+backend/target/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+mvn-dependency-tree.txt
+hs_err_pid*
+replay_pid*
+
+### React / Node / Vite (frontend) ###
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/build/
+dist/
+dist-ssr/
+build/
+*.local
+frontend/coverage/
+coverage/
+*.tsbuildinfo
+.vite/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### Environment / secrets ###
+.env
+.env.*
+!.env.example
+
+### IDE ###
+.idea/
+!.idea/.gitignore
+*.iml
+.vscode/
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.factorypath
+
+### OS ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Logs ###
+*.log
+logs/
+
+### Docker ###
+*.pid

@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: HLS System Status API
+  description: >
+    Single unauthenticated endpoint for the throwaway warm-up "System Status Page"
+    feature (specs/001-system-status-page). No RBAC applies — see plan.md
+    Complexity Tracking for the justified exception to Principle VIII.
+  version: "1.0.0"
+paths:
+  /api/status:
+    get:
+      summary: Get current application and core data store status
+      description: >
+        Performs a fresh, bounded-timeout reachability check against the core
+        data store on every call (FR-005). Never cached across requests (SC-002).
+      operationId: getStatus
+      security: [] # explicitly no authentication, per FR-001
+      responses:
+        "200":
+          description: >
+            Status computed successfully. Note: this returns 200 even when
+            status is DEGRADED (FR-007) — the page itself must always load.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusCheckResult"
+              examples:
+                ok:
+                  value:
+                    status: OK
+                    version: "0.1.0-warmup"
+                    serverTime: "2026-09-21T14:32:10+05:30"
+                    dataStoreReachable: true
+                    checkDurationMs: 42
+                degraded:
+                  value:
+                    status: DEGRADED
+                    version: "0.1.0-warmup"
+                    serverTime: "2026-09-21T14:33:05+05:30"
+                    dataStoreReachable: false
+                    checkDurationMs: 3000
+components:
+  schemas:
+    StatusCheckResult:
+      type: object
+      required:
+        - status
+        - version
+        - serverTime
+        - dataStoreReachable
+        - checkDurationMs
+      properties:
+        status:
+          type: string
+          enum: [OK, DEGRADED]
+          description: Overall result (FR-002)
+        version:
+          type: string
+          description: Current application version (FR-003)
+        serverTime:
+          type: string
+          format: date-time
+          description: Moment the check ran, IST offset (FR-004)
+        dataStoreReachable:
+          type: boolean
+          description: Whether the core data store responded within the bounded wait (FR-005)
+        checkDurationMs:
+          type: integer
+          format: int32
+          description: How long the reachability check took, in milliseconds
