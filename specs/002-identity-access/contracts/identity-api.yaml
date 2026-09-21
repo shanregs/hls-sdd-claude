@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: HLS Identity & Access API
+  description: >
+    Authentication, session, and password-reset endpoints (specs/002-identity-access).
+    Manager-scope enforcement (FR-004/FR-014/FR-019) is not a separate endpoint here —
+    it is applied as a filter/interceptor on every other module's endpoints, calling
+    Organization's AccountabilityQueries (spec 003) and failing closed. See plan.md's
+    ManagerScopeGuard.
+  version: "1.0.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Staff password login (Director, Manager, Admin, Accounts Officer)
+      description: >
+        FR-007. Returns MFA_REQUIRED instead of tokens if MFA is enabled on the
+        account (FR-018) — the client then calls /auth/mfa/verify.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, password]
+              properties:
+                phoneNumber:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                deviceLabel:
+                  type: string
+                  nullable: true
+                  description: >
+                    Added during implementation (2026-09-21) — free-text label so
+                    User Story 5's session list can identify this login (e.g.
+                    "Chrome on Windows"). Optional; the server labels it generically
+                    if omitted.
+      responses:
+        "200":
+          description: Either full tokens or an MFA challenge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: >
+            Invalid credentials or locked account — same generic error either
+            way (FR-015). A locked account is reported identically to a wrong
+            password so lockout state isn't itself enumerable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericAuthError"
+  /api/v1/auth/mfa/verify:
+    post:
+      summary: Complete login by submitting the MFA second factor
+      operationId: verifyMfa
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mfaChallengeId, code]
+              properties:
+                mfaChallengeId:
+                  type: string
+                  format: uuid
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Full tokens issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "401":
+          description: Incorrect or expired code.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericAuthError"
+  /api/v1/auth/otp/request:
+    post:
+      summary: Request a Teacher login OTP
+      description: >
+        FR-008, FR-009 (rate-limited per phone number), FR-015 (never reveals
+        whether the number is registered — always 202, regardless).
+      operationId: requestOtp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber:
+                  type: string
+      responses:
+        "202":
+          description: >
+            Always returned on a well-formed request, whether or not the
+            number is registered (FR-015) and whether or not delivery
+            actually happens for that reason.
+        "429":
+          description: Rate limit exceeded for this phone number (FR-009).
+  /api/v1/auth/otp/verify:
+    post:
+      summary: Complete Teacher login by submitting the OTP
+      operationId: verifyOtp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, code]
+              properties:
+                phoneNumber:
+                  type: string
+                code:
+                  type: string
+                channel:
+                  type: string
+                  enum: [WEB, MOBILE]
+                  default: WEB
+                  description: Added during implementation (2026-09-21) — which channel completed the OTP flow (FR-008).
+                deviceLabel:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Full tokens issued (FR-008 acceptance scenario 2).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "401":
+          description: Expired or incorrect OTP (FR-008 acceptance scenario 3) — caller may request a new one.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericAuthError"
+  /api/v1/auth/refresh:
+    post:
+      summary: Silently renew an access token using the refresh token
+      description: >
+        FR-011. The refresh token itself travels only in the httpOnly cookie
+        the login/refresh response set (research.md §7) — never in the
+        request body.
+      operationId: refresh
+      security:
+        - refreshCookie: []
+      responses:
+        "200":
+          description: New access token issued; refresh token rotated (research.md §5).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "401":
+          description: Refresh token invalid, expired, or its session has been revoked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericAuthError"
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke the current session
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Session revoked immediately.
+  /api/v1/auth/users/{userId}/unlock:
+    post:
+      summary: Unlock an account locked by FR-010
+      description: >
+        Added during implementation (2026-09-21) — User Story 4's acceptance
+        scenario 2 requires "an authorized unlock action," but no endpoint for
+        it existed in this contract until now. Admin/Director-only.
+      operationId: unlockAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Account unlocked; login attempts succeed again with correct credentials.
+        "403":
+          description: Caller is not Admin or Director.
+  /api/v1/auth/sessions:
+    get:
+      summary: List active sessions/devices for the current user, or another user (Admin/Director only)
+      description: FR-012, User Story 5.
+      operationId: listSessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          description: Omit to list the caller's own sessions; Admin/Director may pass another user's id.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Active (non-revoked) sessions only.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionSummary"
+  /api/v1/auth/sessions/{sessionId}:
+    delete:
+      summary: Revoke a specific session
+      operationId: revokeSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Session revoked; its next request/refresh will be denied (SC-005).
+  /api/v1/auth/password-reset/request:
+    post:
+      summary: Request a self-service password reset
+      description: FR-016, FR-015 (never reveals whether the identifier is registered).
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier]
+              properties:
+                identifier:
+                  type: string
+                  description: Phone number or email.
+      responses:
+        "202":
+          description: Always returned, regardless of whether the identifier is registered (FR-015).
+  /api/v1/auth/password-reset/confirm:
+    post:
+      summary: Complete a password reset using the one-time code/link
+      operationId: confirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resetToken, newPassword]
+              properties:
+                resetToken:
+                  type: string
+                newPassword:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Password updated; the user can now log in with it.
+        "401":
+          description: Token invalid, expired, or already used.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+      description: httpOnly, Secure, SameSite=Strict — set by the server, never read by frontend JS (research.md §7).
+  schemas:
+    TokenPair:
+      type: object
+      required: [accessToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Seconds until the access token expires.
+    LoginResult:
+      oneOf:
+        - $ref: "#/components/schemas/TokenPair"
+        - $ref: "#/components/schemas/MfaChallenge"
+    MfaChallenge:
+      type: object
+      required: [mfaChallengeId, method]
+      properties:
+        mfaChallengeId:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum: [SMS, EMAIL]
+    SessionSummary:
+      type: object
+      required: [id, channel, issuedAt, lastActiveAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum: [WEB, MOBILE]
+        deviceLabel:
+          type: string
+          nullable: true
+        issuedAt:
+          type: string
+          format: date-time
+        lastActiveAt:
+          type: string
+          format: date-time
+    GenericAuthError:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "Incorrect phone number or password."
+          description: Deliberately generic — never reveals which field was wrong, or whether the account exists/is locked (FR-015).

@@ -18,4 +18,4 @@ The only "shape" worth documenting is the transient, in-memory result of a singl
 
 **Lifecycle**: Constructed fresh on every request to `GET /api/status`; never stored, cached, or referenced by a later request (SC-002's "no stale OK" requirement rules out caching across requests).
 
-**Relationships**: None — this feature has no relationship to any other entity in the system (Teacher, School, Contract, etc. are all untouched, consistent with this being a pre-roster warm-up feature).
+**Relationships**: None — this feature has no relationship to any other entity in the system (Teacher, School, SchoolBilling, etc. are all untouched, consistent with this being a pre-master-data warm-up feature).

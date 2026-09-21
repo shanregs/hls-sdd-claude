@@ -18,7 +18,11 @@ import java.util.UUID;
 public class CorrelationIdFilter extends HttpFilter {
 
     static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
-    static final String MDC_KEY = "correlationId";
+    // Public: other modules (e.g. identity's AuthAuditLogger/ManagerScopeGuard/
+    // TeacherScopeGuard) read this same key rather than duplicating the string —
+    // found via /speckit-implement's T051 that three call sites had drifted to
+    // a different literal ("requestId") and were silently always missing it.
+    public static final String MDC_KEY = "correlationId";
 
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -34,5 +38,11 @@ public class CorrelationIdFilter extends HttpFilter {
         } finally {
             MDC.remove(MDC_KEY);
         }
+    }
+
+    /** The current request's correlation id, or {@code "unknown"} outside a request (e.g. a unit test). */
+    public static String currentCorrelationId() {
+        String value = MDC.get(MDC_KEY);
+        return value != null ? value : "unknown";
     }
 }

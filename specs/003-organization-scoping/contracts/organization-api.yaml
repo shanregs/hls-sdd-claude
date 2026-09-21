@@ -1,0 +1,389 @@
+openapi: 3.0.3
+info:
+  title: HLS Organization API
+  description: >
+    Manager/School/Teacher accountability (specs/003-organization-scoping).
+    Every write endpoint is DIRECTOR/ADMIN-only (Clarifications session
+    2026-09-21). Read endpoints are also DIRECTOR/ADMIN-only for v1 — the spec
+    defines no self-service Manager view. Role and identity come from Identity
+    & Access's real JWT bearer token (spec 002, implemented) — updated
+    2026-09-22, see plan.md/research.md §6 (this replaces the original
+    stubbed-role placeholder scheme).
+  version: "1.0.0"
+paths:
+  /api/v1/organization/school-assignments:
+    post:
+      summary: Assign or reassign a School's accountable Manager
+      description: >
+        Creates the first assignment for a School (FR-001), or ends the
+        current one and opens a new one in a single request (FR-004).
+        Assigning the manager who is already current is a no-op (FR-010).
+      operationId: assignSchoolManager
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRequest"
+      responses:
+        "200":
+          description: Assignment created, reassigned, or recognized as a no-op.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentAssignment"
+        "409":
+          description: >
+            Conflict: the assignment this request intended to end was already
+            ended by another request first (FR-011).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+  /api/v1/organization/schools/{schoolId}/accountable-manager:
+    get:
+      summary: Get the accountable Manager for a School, now or as of a past date
+      operationId: getSchoolAccountableManager
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: asOf
+          in: query
+          required: false
+          description: Defaults to now (FR-007). Answers "who was accountable on date D" (FR-005).
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Always 200 — the answer itself may be UNASSIGNED or UNKNOWN_IDENTIFIER (FR-012, SC-002).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountabilityAnswer"
+  /api/v1/organization/schools/{schoolId}/assignment-history:
+    get:
+      summary: Full accountability history for a School, oldest first
+      operationId: getSchoolAssignmentHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Every past and current assignment period, no gaps or overlaps (US2 acceptance scenario 2).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssignmentHistoryEntry"
+  /api/v1/organization/school-assignments/{assignmentId}:
+    delete:
+      summary: End a School's current assignment with no replacement
+      description: >
+        Ends the named assignment (sets effectiveTo) without opening a new
+        one, leaving the School UNASSIGNED (spec Edge Case 1, FR-009). Uses
+        the same conditional-update conflict check as reassignment (FR-011) —
+        ending an assignment someone else already ended returns 409.
+      operationId: endSchoolAssignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Assignment ended; the School now appears on GET /organization/unassigned.
+        "409":
+          description: Conflict — this assignment was already ended by another request (FR-011).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+  /api/v1/organization/teacher-assignments:
+    post:
+      summary: Assign or reassign a Teacher's accountable Manager
+      description: >
+        Same semantics as school-assignments, but for a Teacher, and
+        independent of that Teacher's current School (FR-002, FR-013).
+      operationId: assignTeacherManager
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRequest"
+      responses:
+        "200":
+          description: Assignment created, reassigned, or recognized as a no-op.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentAssignment"
+        "409":
+          description: Conflict — same semantics as the school-assignments endpoint (FR-011).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+  /api/v1/organization/teachers/{teacherId}/accountable-manager:
+    get:
+      summary: Get the accountable Manager for a Teacher, now or as of a past date
+      operationId: getTeacherAccountableManager
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: asOf
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Always 200 — see the schools equivalent above.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountabilityAnswer"
+  /api/v1/organization/teachers/{teacherId}/assignment-history:
+    get:
+      summary: Full accountability history for a Teacher, oldest first
+      operationId: getTeacherAssignmentHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Every past and current assignment period, no gaps or overlaps.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssignmentHistoryEntry"
+  /api/v1/organization/teacher-assignments/{assignmentId}:
+    delete:
+      summary: End a Teacher's current assignment with no replacement
+      description: >
+        Same semantics as the school-assignments DELETE above, for a Teacher
+        (spec Edge Case 1, FR-009, FR-011).
+      operationId: endTeacherAssignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Assignment ended; the Teacher now appears on GET /organization/unassigned.
+        "409":
+          description: Conflict — this assignment was already ended by another request (FR-011).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+  /api/v1/organization/managers/{managerId}/portfolio:
+    get:
+      summary: Every School and Teacher currently accountable to a Manager
+      operationId: getManagerPortfolio
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: managerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current portfolio only — never includes past-but-ended assignments (FR-008, US3 acceptance scenario 1).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioItem"
+  /api/v1/organization/unassigned:
+    get:
+      summary: Every School and every Teacher with no current accountable Manager
+      operationId: listUnassigned
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemType
+          in: query
+          required: false
+          description: Filter to just SCHOOL or just TEACHER; omit for both (FR-009).
+          schema:
+            type: string
+            enum: [SCHOOL, TEACHER]
+      responses:
+        "200":
+          description: Includes items that were never assigned and items whose only assignment was ended without a replacement (SC-005).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnassignedItem"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Identity & Access's real JWT bearer token (spec 002, implemented).
+        Endpoint handlers additionally check the token's `roles` claim for
+        DIRECTOR/ADMIN membership (FR-001/002/004) — this scheme only
+        describes the authentication mechanism, not the authorization rule.
+        Updated 2026-09-22 (research.md §6); this replaces the original
+        placeholder `X-Debug-Role` scheme this contract shipped with.
+  schemas:
+    AssignmentRequest:
+      type: object
+      required:
+        - managerId
+      properties:
+        schoolId:
+          type: string
+          format: uuid
+          description: Required on the school-assignments endpoint, absent on teacher-assignments.
+        teacherId:
+          type: string
+          format: uuid
+          description: Required on the teacher-assignments endpoint, absent on school-assignments.
+        managerId:
+          type: string
+          format: uuid
+        endsAssignmentId:
+          type: string
+          format: uuid
+          description: >
+            Required when reassigning (FR-004); the id of the current
+            assignment row the caller last read and intends to end. Omitted
+            when assigning a School/Teacher that currently has none. Used for
+            the conflict check in FR-011 (research.md §2).
+    CurrentAssignment:
+      type: object
+      required: [id, managerId, effectiveFrom]
+      properties:
+        id:
+          type: string
+          format: uuid
+        managerId:
+          type: string
+          format: uuid
+        effectiveFrom:
+          type: string
+          format: date-time
+    AccountabilityAnswer:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [CURRENT_MANAGER, UNASSIGNED, UNKNOWN_IDENTIFIER]
+          description: >
+            UNKNOWN_IDENTIFIER is defined by the schema but not yet reachable
+            in this implementation — see research.md §3.
+        managerId:
+          type: string
+          format: uuid
+          description: Present only when state is CURRENT_MANAGER.
+    AssignmentHistoryEntry:
+      type: object
+      required: [id, managerId, effectiveFrom, assignedBy, assignedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        managerId:
+          type: string
+          format: uuid
+        effectiveFrom:
+          type: string
+          format: date-time
+        effectiveTo:
+          type: string
+          format: date-time
+          nullable: true
+        assignedBy:
+          type: string
+          format: uuid
+        assignedAt:
+          type: string
+          format: date-time
+    PortfolioItem:
+      type: object
+      required: [itemType, itemId, since]
+      properties:
+        itemType:
+          type: string
+          enum: [SCHOOL, TEACHER]
+        itemId:
+          type: string
+          format: uuid
+        since:
+          type: string
+          format: date-time
+    UnassignedItem:
+      type: object
+      required: [itemType, itemId]
+      properties:
+        itemType:
+          type: string
+          enum: [SCHOOL, TEACHER]
+        itemId:
+          type: string
+          format: uuid
+        lastEndedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null if this item has never been assigned at all.
+    ConflictError:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "This assignment was already changed by someone else. Refresh and retry."
