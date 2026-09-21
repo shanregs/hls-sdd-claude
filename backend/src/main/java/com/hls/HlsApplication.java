@@ -6,12 +6,21 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.modulith.Modulith;
 
+import java.time.Clock;
+
+@Modulith
 @SpringBootApplication
 public class HlsApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(HlsApplication.class, args);
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
     }
 
     /**

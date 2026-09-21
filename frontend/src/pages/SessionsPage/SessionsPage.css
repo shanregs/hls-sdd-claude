@@ -1,0 +1,18 @@
+.sessions-page {
+  max-width: 480px;
+  margin: 2rem auto;
+  font-family: system-ui, sans-serif;
+}
+
+.sessions-page ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sessions-page li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #ddd;
+}

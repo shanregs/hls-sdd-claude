@@ -1,10 +1,72 @@
+import { useState } from "react";
 import { StatusPage } from "./pages/StatusPage/StatusPage";
+import { LoginPage } from "./pages/LoginPage/LoginPage";
+import { TeacherOtpLoginPage } from "./pages/TeacherOtpLoginPage/TeacherOtpLoginPage";
+import { PasswordResetPage } from "./pages/PasswordResetPage/PasswordResetPage";
+import { SessionsPage } from "./pages/SessionsPage/SessionsPage";
+import { AssignmentsPage } from "./pages/AssignmentsPage/AssignmentsPage";
+import { AuthProvider, useAuth } from "./auth/AuthContext";
+
+type UnauthenticatedView = "staff-login" | "teacher-login" | "password-reset";
 
 /**
- * Root app shell. Only one page exists so far (the status page), and per FR-001 it
- * is reachable without any authentication guard — there is no login/route-gating
- * logic to add until the Identity & Access module ships.
+ * No routing library exists in this project yet (a deliberate scope decision,
+ * plan.md); a small state-based switch is enough for the two views Identity &
+ * Access adds. A real router can replace this once more modules need routes.
  */
+function UnauthenticatedApp() {
+  const [view, setView] = useState<UnauthenticatedView>("staff-login");
+
+  return (
+    <div>
+      <nav style={{ display: "flex", gap: "1rem", justifyContent: "center", padding: "1rem" }}>
+        <button onClick={() => setView("staff-login")}>Staff login</button>
+        <button onClick={() => setView("teacher-login")}>Teacher login</button>
+        <button onClick={() => setView("password-reset")}>Forgot password?</button>
+      </nav>
+      {view === "staff-login" && <LoginPage />}
+      {view === "teacher-login" && <TeacherOtpLoginPage />}
+      {view === "password-reset" && <PasswordResetPage />}
+    </div>
+  );
+}
+
+type AuthenticatedView = "sessions" | "assignments";
+
+function AuthenticatedApp() {
+  const { logout } = useAuth();
+  const [view, setView] = useState<AuthenticatedView>("assignments");
+  return (
+    <div>
+      <nav style={{ display: "flex", gap: "1rem", justifyContent: "center", padding: "1rem" }}>
+        <button onClick={() => setView("assignments")}>Assignments</button>
+        <button onClick={() => setView("sessions")}>Sessions</button>
+        <button onClick={() => logout()}>Sign out</button>
+      </nav>
+      {view === "assignments" && <AssignmentsPage />}
+      {view === "sessions" && <SessionsPage />}
+    </div>
+  );
+}
+
+/**
+ * spec 001 FR-001: the status page has no auth guard and must stay reachable
+ * regardless of login state — it does not move inside the authenticated branch.
+ */
+function AppShell() {
+  const { isAuthenticated } = useAuth();
+  return (
+    <div>
+      <StatusPage />
+      {isAuthenticated ? <AuthenticatedApp /> : <UnauthenticatedApp />}
+    </div>
+  );
+}
+
 export function App() {
-  return <StatusPage />;
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
+  );
 }

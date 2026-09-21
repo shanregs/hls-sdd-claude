@@ -32,4 +32,4 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
-- All items passed on first validation pass — no [NEEDS CLARIFICATION] markers were needed. The dependency of Manager access-scope enforcement (FR-004, FR-014) on the not-yet-built Teacher/School/Contract (roster) modules is documented in the spec's Assumptions section rather than flagged as a blocking clarification, since it affects build sequencing, not the shape of this spec.
+- All items passed on first validation pass — no [NEEDS CLARIFICATION] markers were needed. The dependency of Manager access-scope enforcement (FR-004, FR-014) on the not-yet-built Teacher, School, SchoolBilling and Organization modules is documented in the spec's Assumptions section rather than flagged as a blocking clarification, since it affects build sequencing, not the shape of this spec.

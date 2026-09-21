@@ -12,6 +12,15 @@ spring:
       # the isValid() call itself.
       connection-timeout: 2000
       validation-timeout: 2000
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only validates against it (Constitution:
+      # "Flyway -> schema, Hibernate -> validation" — never let Hibernate auto-DDL
+      # touch financial/identity tables).
+      ddl-auto: validate
+  flyway:
+    enabled: true
 
 server:
   port: ${SERVER_PORT:8080}
@@ -19,6 +28,19 @@ server:
 hls:
   app:
     version: "@project.version@"
+  identity:
+    # JWT signing key: environment-only, never committed (Constitution Principle VIII).
+    # The default below is for local dev only and must be overridden in every other environment.
+    jwt-signing-key: ${JWT_SIGNING_KEY:dev-only-signing-key-not-for-production-use-------}
+    access-token-ttl-seconds: ${ACCESS_TOKEN_TTL_SECONDS:900}
+    refresh-token-ttl-seconds: ${REFRESH_TOKEN_TTL_SECONDS:1209600}
+    lockout:
+      failed-attempt-threshold: ${LOCKOUT_THRESHOLD:5}
+      lockout-duration-minutes: ${LOCKOUT_DURATION_MINUTES:30}
+    otp:
+      ttl-seconds: ${OTP_TTL_SECONDS:300}
+      rate-limit-per-minute: ${OTP_RATE_LIMIT_PER_MINUTE:3}
+    manager-scope-check-timeout-ms: 2000 # FR-019
 
 status:
   check:
