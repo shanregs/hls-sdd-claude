@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../../auth/AuthContext";
-import { zoneClient, type PlaceView } from "./zoneClient";
+import {
+  zoneClient,
+  type BulkImportResponse,
+  type PlaceView,
+} from "./zoneClient";
 import "./ZonesPage.css";
 
 /**
@@ -14,6 +18,10 @@ import "./ZonesPage.css";
  * Also covers specs/008-school-places User Stories 1-3: adding a Place to a
  * Zone, looking up which Zone a Place belongs to (by PIN code or by name),
  * and viewing every Place recorded under a Zone.
+ *
+ * Also covers specs/010-place-bulk-import: submitting many places (pasted as
+ * a JSON array) in one request, with a per-row success/failure report — a
+ * bad row never blocks the other valid rows in the same batch.
  */
 export function ZonesPage() {
   const { accessToken } = useAuth();
@@ -46,6 +54,11 @@ export function ZonesPage() {
 
   const [zonePlacesZoneId, setZonePlacesZoneId] = useState("");
   const [zonePlaces, setZonePlaces] = useState<PlaceView[] | null>(null);
+
+  const [bulkImportJson, setBulkImportJson] = useState("");
+  const [bulkImportResult, setBulkImportResult] =
+    useState<BulkImportResponse | null>(null);
+  const [bulkImportError, setBulkImportError] = useState<string | null>(null);
 
   async function handleCreateZone(event: FormEvent) {
     event.preventDefault();
@@ -157,6 +170,22 @@ export function ZonesPage() {
       setZonePlaces(places);
     } catch {
       setZonePlaces(null);
+    }
+  }
+
+  async function handleBulkImport(event: FormEvent) {
+    event.preventDefault();
+    if (!accessToken) return;
+    setBulkImportError(null);
+    setBulkImportResult(null);
+    try {
+      const rows = JSON.parse(bulkImportJson);
+      const result = await zoneClient.bulkImportPlaces(accessToken, rows);
+      setBulkImportResult(result);
+    } catch (e) {
+      setBulkImportError(
+        e instanceof Error ? e.message : "Bulk import failed.",
+      );
     }
   }
 
@@ -333,6 +362,40 @@ export function ZonesPage() {
             </li>
           ))}
         </ul>
+      </form>
+
+      <form data-testid="bulk-import-form" onSubmit={handleBulkImport}>
+        <h2>Bulk Import Places</h2>
+        <label>
+          Rows (JSON array of {"{"}zoneId, name, pincode{"}"})
+          <textarea
+            data-testid="bulk-import-textarea"
+            value={bulkImportJson}
+            onChange={(e) => setBulkImportJson(e.target.value)}
+            rows={6}
+          />
+        </label>
+        <button type="submit">Import</button>
+        {bulkImportError && (
+          <p data-testid="bulk-import-error">{bulkImportError}</p>
+        )}
+        {bulkImportResult && (
+          <div data-testid="bulk-import-summary">
+            <p>
+              {bulkImportResult.successCount} succeeded,{" "}
+              {bulkImportResult.failureCount} failed.
+            </p>
+            <ul>
+              {bulkImportResult.results
+                .filter((r) => !r.succeeded)
+                .map((r) => (
+                  <li key={r.index} data-testid="bulk-import-failure-row">
+                    Row {r.index}: {r.reason}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
       </form>
     </div>
   );

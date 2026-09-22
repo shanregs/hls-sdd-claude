@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: HLS Place Bulk Import API
+  description: >
+    Extends the `school` module's Places slice (specs/008-school-places)
+    with a batch-shaped way to add many places in one request
+    (specs/010-place-bulk-import). Director/Admin-only, matching every
+    other place/Zone-maintenance endpoint. Partial success: a row failing
+    validation does not block other valid rows in the same batch (FR-002).
+  version: "1.0.0"
+paths:
+  /api/v1/school/places/bulk-import:
+    post:
+      summary: Add many places in one request
+      description: >
+        FR-001/002/003/004/005/006. Every row is validated independently
+        (name present, pincode present, zoneId resolves to an existing
+        Zone) — a row failing validation is reported as failed and not
+        created, while every other valid row in the batch is still
+        created. The batch itself is rejected outright (nothing created)
+        if empty or larger than 5000 rows.
+      operationId: bulkImportPlaces
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/BulkPlaceRow"
+      responses:
+        "200":
+          description: >
+            The batch was processed (which does not imply every row
+            succeeded — see successCount/failureCount and each row's
+            own result).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkImportResponse"
+        "400":
+          description: The batch itself was rejected (empty, or exceeds the maximum row count) — nothing was created.
+        "403":
+          description: Caller is not Director or Admin.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Identity & Access's real JWT bearer token (spec 002). Director/Admin role required.
+  schemas:
+    BulkPlaceRow:
+      type: object
+      required: [zoneId, name, pincode]
+      properties:
+        zoneId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pincode:
+          type: string
+    PlaceView:
+      type: object
+      required: [id, zoneId, name, pincode]
+      properties:
+        id:
+          type: string
+          format: uuid
+        zoneId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pincode:
+          type: string
+    BulkImportRowResult:
+      type: object
+      required: [index, succeeded]
+      properties:
+        index:
+          type: integer
+          description: 0-based position of this row in the submitted batch.
+        succeeded:
+          type: boolean
+        place:
+          allOf:
+            - $ref: "#/components/schemas/PlaceView"
+          nullable: true
+          description: Present only when succeeded is true.
+        reason:
+          type: string
+          nullable: true
+          description: Present only when succeeded is false.
+    BulkImportResponse:
+      type: object
+      required: [results, successCount, failureCount]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkImportRowResult"
+        successCount:
+          type: integer
+        failureCount:
+          type: integer

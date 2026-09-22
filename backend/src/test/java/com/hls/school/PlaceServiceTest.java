@@ -1,30 +1,41 @@
 package com.hls.school;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.hls.school.api.BulkImportBatchException;
+import com.hls.school.api.dto.BulkImportResponse;
+import com.hls.school.api.dto.BulkPlaceRow;
 import com.hls.school.api.dto.PlaceView;
 import com.hls.school.internal.Place;
 import com.hls.school.internal.PlaceRepository;
 import com.hls.school.internal.PlaceService;
+import com.hls.school.internal.Zone;
+import com.hls.school.internal.ZoneRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit coverage for FR-001-007 (User Stories 1-3). Repository is mocked;
- * the real HTTP round trip lives in {@code SchoolIntegrationTest}.
+ * Unit coverage for FR-001-007 (specs/008, User Stories 1-3) and
+ * specs/010-place-bulk-import's FR-001-006 (User Stories 1-3). Repositories
+ * are mocked; the real HTTP round trip lives in {@code SchoolIntegrationTest}.
  */
 class PlaceServiceTest {
 
     private PlaceRepository placeRepository;
+    private ZoneRepository zoneRepository;
     private Clock clock;
     private PlaceService service;
 
@@ -33,8 +44,13 @@ class PlaceServiceTest {
     @BeforeEach
     void setUp() {
         placeRepository = mock(PlaceRepository.class);
+        zoneRepository = mock(ZoneRepository.class);
         clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        service = new PlaceService(placeRepository, clock);
+        service = new PlaceService(placeRepository, zoneRepository, clock);
+    }
+
+    private void zoneExists(UUID zoneId) {
+        when(zoneRepository.findById(zoneId)).thenReturn(Optional.of(new Zone(zoneId, "A Zone", NOW, UUID.randomUUID())));
     }
 
     // ---- User Story 1: addPlace ------------------------------------------------------------
@@ -151,5 +167,115 @@ class PlaceServiceTest {
         when(placeRepository.findByZoneId(zoneId)).thenReturn(List.of());
 
         assertThat(service.findByZoneId(zoneId)).isEmpty();
+    }
+
+    // ---- specs/010 User Story 1: bulkImportPlaces, all-valid ---------------------------------
+
+    @Test
+    void bulkImportPlaces_allValidRows_createsAllAndReturnsSuccessResults() {
+        UUID zoneId = UUID.randomUUID();
+        zoneExists(zoneId);
+        List<BulkPlaceRow> rows = List.of(
+                new BulkPlaceRow(zoneId, "Mettupalayam", "641301"),
+                new BulkPlaceRow(zoneId, "Annur", "641653"));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.successCount()).isEqualTo(2);
+        assertThat(response.failureCount()).isZero();
+        assertThat(response.results()).extracting(r -> r.succeeded()).containsExactly(true, true);
+        verify(placeRepository, org.mockito.Mockito.times(2)).save(any());
+    }
+
+    @Test
+    void bulkImportPlaces_rowsAcrossMultipleZones_eachCreatedUnderItsOwnZone() {
+        UUID zoneA = UUID.randomUUID();
+        UUID zoneB = UUID.randomUUID();
+        zoneExists(zoneA);
+        zoneExists(zoneB);
+        List<BulkPlaceRow> rows = List.of(
+                new BulkPlaceRow(zoneA, "Place In A", "641001"),
+                new BulkPlaceRow(zoneB, "Place In B", "641002"));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.results().get(0).place().zoneId()).isEqualTo(zoneA);
+        assertThat(response.results().get(1).place().zoneId()).isEqualTo(zoneB);
+    }
+
+    // ---- specs/010 User Story 2: partial success, per-row reasons ---------------------------
+
+    @Test
+    void bulkImportPlaces_unknownZoneId_reportedAsFailure_otherValidRowsStillCreated() {
+        UUID zoneId = UUID.randomUUID();
+        UUID unknownZoneId = UUID.randomUUID();
+        zoneExists(zoneId);
+        when(zoneRepository.findById(unknownZoneId)).thenReturn(Optional.empty());
+        List<BulkPlaceRow> rows = List.of(
+                new BulkPlaceRow(zoneId, "Valid Place", "641001"),
+                new BulkPlaceRow(unknownZoneId, "Bad Zone Place", "641002"));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.successCount()).isEqualTo(1);
+        assertThat(response.failureCount()).isEqualTo(1);
+        assertThat(response.results().get(0).succeeded()).isTrue();
+        assertThat(response.results().get(1).succeeded()).isFalse();
+        assertThat(response.results().get(1).reason()).contains(unknownZoneId.toString());
+        verify(placeRepository, org.mockito.Mockito.times(1)).save(any());
+    }
+
+    @Test
+    void bulkImportPlaces_missingName_reportedWithReason() {
+        UUID zoneId = UUID.randomUUID();
+        zoneExists(zoneId);
+        List<BulkPlaceRow> rows = List.of(new BulkPlaceRow(zoneId, "  ", "641001"));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.results().get(0).reason()).contains("name");
+    }
+
+    @Test
+    void bulkImportPlaces_missingPincode_reportedWithReason() {
+        UUID zoneId = UUID.randomUUID();
+        zoneExists(zoneId);
+        List<BulkPlaceRow> rows = List.of(new BulkPlaceRow(zoneId, "A Place", ""));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.results().get(0).reason()).contains("pincode");
+    }
+
+    @Test
+    void bulkImportPlaces_allRowsValid_reportsZeroFailures() {
+        UUID zoneId = UUID.randomUUID();
+        zoneExists(zoneId);
+        List<BulkPlaceRow> rows = List.of(new BulkPlaceRow(zoneId, "A Place", "641001"));
+
+        BulkImportResponse response = service.bulkImportPlaces(rows, UUID.randomUUID());
+
+        assertThat(response.failureCount()).isZero();
+    }
+
+    // ---- specs/010 User Story 3: batch-level rejection ---------------------------------------
+
+    @Test
+    void bulkImportPlaces_emptyBatch_throwsBeforeCreatingAnything() {
+        assertThatThrownBy(() -> service.bulkImportPlaces(List.of(), UUID.randomUUID()))
+                .isInstanceOf(BulkImportBatchException.class);
+        verify(placeRepository, never()).save(any());
+    }
+
+    @Test
+    void bulkImportPlaces_exceedsMaxRowCount_throwsBeforeCreatingAnything() {
+        UUID zoneId = UUID.randomUUID();
+        List<BulkPlaceRow> tooMany = java.util.stream.IntStream.range(0, 5001)
+                .mapToObj(i -> new BulkPlaceRow(zoneId, "Place " + i, "641001"))
+                .toList();
+
+        assertThatThrownBy(() -> service.bulkImportPlaces(tooMany, UUID.randomUUID()))
+                .isInstanceOf(BulkImportBatchException.class);
+        verify(placeRepository, never()).save(any());
     }
 }

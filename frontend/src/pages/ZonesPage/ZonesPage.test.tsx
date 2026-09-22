@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -215,5 +215,90 @@ describe("ZonesPage", () => {
 
     const rows = await screen.findAllByTestId("zone-place-row");
     expect(rows).toHaveLength(3);
+  });
+
+  it("bulk-imports an all-valid batch, showing the success count (specs/010 User Story 1)", async () => {
+    mockFetchOnce(200, {
+      results: [
+        {
+          index: 0,
+          succeeded: true,
+          place: {
+            id: "place-1",
+            zoneId: "zone-1",
+            name: "Mettupalayam",
+            pincode: "641301",
+          },
+        },
+        {
+          index: 1,
+          succeeded: true,
+          place: {
+            id: "place-2",
+            zoneId: "zone-1",
+            name: "Annur",
+            pincode: "641653",
+          },
+        },
+      ],
+      successCount: 2,
+      failureCount: 0,
+    });
+    renderAuthenticated();
+
+    fireEvent.change(screen.getByTestId("bulk-import-textarea"), {
+      target: {
+        value: JSON.stringify([
+          { zoneId: "zone-1", name: "Mettupalayam", pincode: "641301" },
+          { zoneId: "zone-1", name: "Annur", pincode: "641653" },
+        ]),
+      },
+    });
+    await userEvent.click(screen.getByRole("button", { name: /^import$/i }));
+
+    expect(await screen.findByTestId("bulk-import-summary")).toHaveTextContent(
+      "2 succeeded, 0 failed",
+    );
+  });
+
+  it("bulk-imports a mixed batch, showing each failed row's reason (specs/010 User Story 2)", async () => {
+    mockFetchOnce(200, {
+      results: [
+        {
+          index: 0,
+          succeeded: true,
+          place: {
+            id: "place-1",
+            zoneId: "zone-1",
+            name: "Valparai",
+            pincode: "642127",
+          },
+        },
+        {
+          index: 1,
+          succeeded: false,
+          reason: "zone 00000000-0000-0000-0000-000000000000 does not exist",
+        },
+      ],
+      successCount: 1,
+      failureCount: 1,
+    });
+    renderAuthenticated();
+
+    fireEvent.change(screen.getByTestId("bulk-import-textarea"), {
+      target: {
+        value: JSON.stringify([
+          { zoneId: "zone-1", name: "Valparai", pincode: "642127" },
+        ]),
+      },
+    });
+    await userEvent.click(screen.getByRole("button", { name: /^import$/i }));
+
+    expect(await screen.findByTestId("bulk-import-summary")).toHaveTextContent(
+      "1 succeeded, 1 failed",
+    );
+    expect(
+      await screen.findByTestId("bulk-import-failure-row"),
+    ).toHaveTextContent("does not exist");
   });
 });
