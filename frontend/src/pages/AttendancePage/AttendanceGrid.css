@@ -1,0 +1,40 @@
+.attendance-grid table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.attendance-grid th,
+.attendance-grid td {
+  border: 1px solid #ddd;
+  padding: 0.25rem 0.4rem;
+  text-align: center;
+  position: relative;
+}
+
+.attendance-grid td.editable {
+  cursor: pointer;
+}
+
+.attendance-grid td.not-editable {
+  color: #999;
+  background: #f5f5f5;
+}
+
+.attendance-grid td em {
+  color: #999;
+  font-style: italic;
+}
+
+.attendance-grid [data-testid="grid-cell-editor"] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
+  background: white;
+  border: 1px solid #999;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 8rem;
+}

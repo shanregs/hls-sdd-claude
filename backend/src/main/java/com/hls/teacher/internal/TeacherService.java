@@ -16,6 +16,7 @@ import com.hls.teacher.api.dto.UpdateTeacherProfileRequest;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -60,6 +61,11 @@ public class TeacherService implements TeacherQueries, TeacherCommands, TeacherS
     @Override
     public boolean exists(UUID teacherId) {
         return teacherProfileRepository.findById(teacherId).isPresent();
+    }
+
+    @Override
+    public List<TeacherProfileView> findAll() {
+        return teacherProfileRepository.findAll().stream().map(this::toView).toList();
     }
 
     // ---- Salary queries (specs/009-teacher-salary-history) -----------------------------

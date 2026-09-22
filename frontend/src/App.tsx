@@ -9,6 +9,8 @@ import { AuditHistoryPage } from "./pages/AuditHistoryPage/AuditHistoryPage";
 import { ZonesPage } from "./pages/ZonesPage/ZonesPage";
 import { TeacherProfilesPage } from "./pages/TeacherProfilesPage/TeacherProfilesPage";
 import { MyProfilePage } from "./pages/MyProfilePage/MyProfilePage";
+import { MyAttendancePage } from "./pages/MyAttendancePage/MyAttendancePage";
+import { AttendancePage } from "./pages/AttendancePage/AttendancePage";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 
 type UnauthenticatedView = "staff-login" | "teacher-login" | "password-reset";
@@ -50,7 +52,9 @@ type AuthenticatedView =
   | "audit-history"
   | "zones"
   | "teacher-profiles"
-  | "my-profile";
+  | "my-profile"
+  | "my-attendance"
+  | "attendance";
 
 function AuthenticatedApp() {
   const { logout } = useAuth();
@@ -71,6 +75,8 @@ function AuthenticatedApp() {
           Teacher Profiles
         </button>
         <button onClick={() => setView("my-profile")}>My Profile</button>
+        <button onClick={() => setView("my-attendance")}>My Attendance</button>
+        <button onClick={() => setView("attendance")}>Attendance</button>
         <button onClick={() => setView("audit-history")}>Audit History</button>
         <button onClick={() => setView("sessions")}>Sessions</button>
         <button onClick={() => logout()}>Sign out</button>
@@ -79,6 +85,8 @@ function AuthenticatedApp() {
       {view === "zones" && <ZonesPage />}
       {view === "teacher-profiles" && <TeacherProfilesPage />}
       {view === "my-profile" && <MyProfilePage />}
+      {view === "my-attendance" && <MyAttendancePage />}
+      {view === "attendance" && <AttendancePage />}
       {view === "audit-history" && <AuditHistoryPage />}
       {view === "sessions" && <SessionsPage />}
     </div>
