@@ -44,7 +44,8 @@ class ArchitectureTest {
                         "com.hls.recruitment..",
                         "com.hls.marketing..",
                         "com.hls.reporting..",
-                        "com.hls.audit..");
+                        "com.hls.audit..",
+                        "com.hls.attendance..");
 
         noDependencyOnOtherModules.check(classes);
     }
@@ -150,5 +151,25 @@ class ArchitectureTest {
                 .resideInAPackage("com.hls.teacher.internal..");
 
         onlyTeacherAccessesTeacherInternals.check(classes);
+    }
+
+    /**
+     * Attendance-specific rule added with the Attendance module (spec 011):
+     * nothing outside {@code com.hls.attendance} may reach into
+     * {@code com.hls.attendance.internal} — only {@code com.hls.attendance.api}
+     * is public.
+     */
+    @Test
+    void attendanceInternalsAreOnlyAccessedFromWithinAttendance() {
+        JavaClasses classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.hls");
+
+        ArchRule onlyAttendanceAccessesAttendanceInternals = noClasses()
+                .that().resideOutsideOfPackage("com.hls.attendance..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("com.hls.attendance.internal..");
+
+        onlyAttendanceAccessesAttendanceInternals.check(classes);
     }
 }

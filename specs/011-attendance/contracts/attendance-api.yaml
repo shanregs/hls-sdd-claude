@@ -1,0 +1,645 @@
+openapi: 3.0.3
+info:
+  title: HLS Attendance API
+  description: >
+    Daily attendance capture and monthly rollup (specs/011-attendance),
+    replacing the "STAFF ATTENDANCE REGISTER" spreadsheet. Marking is
+    Teacher-self or Manager-on-behalf (FR-001/FR-002); viewing follows the
+    same Director/Manager/Teacher scoping already established by `teacher`
+    and `teacher-salary-history` (FR-015), reusing `identity.api`'s
+    `ManagerScopeQueries`/`TeacherScopeQueries`. Reopening a locked
+    teacher-month is Director-only (FR-014).
+  version: "1.0.0"
+paths:
+  /api/v1/attendance/status-codes:
+    get:
+      summary: List active attendance status codes
+      description: FR-005. Available to any authenticated caller — needed to render the marking UI.
+      operationId: listStatusCodes
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active status codes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceStatusCodeView"
+    post:
+      summary: Add a new attendance status code
+      description: FR-005. Admin or Director.
+      operationId: createStatusCode
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStatusCodeRequest"
+      responses:
+        "200":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceStatusCodeView"
+        "403":
+          description: Caller is neither Admin nor Director.
+
+  /api/v1/attendance/non-working-dates:
+    get:
+      summary: List the non-working calendar's dates for a month
+      description: FR-022. Available to any authenticated caller — needed to render the calendar indicator in the grid/rollup UI.
+      operationId: listNonWorkingDates
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: "`YYYY-MM`"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Active non-working dates in that month.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NonWorkingDateView"
+    post:
+      summary: Add a date to the shared non-working calendar
+      description: >
+        FR-022. Admin-only. Applies automatically to every Teacher's rollup
+        and grid from this point on (an existing explicit mark for this date,
+        if any Teacher already has one, still takes precedence for them).
+      operationId: addNonWorkingDate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddNonWorkingDateRequest"
+      responses:
+        "200":
+          description: Added.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NonWorkingDateView"
+        "403":
+          description: Caller is not Admin.
+
+  /api/v1/attendance/non-working-dates/{id}/deactivate:
+    post:
+      summary: Deactivate a non-working date (correcting a wrongly-added entry)
+      description: FR-022. Admin-only. The date is deactivated, never deleted (data-model.md).
+      operationId: deactivateNonWorkingDate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NonWorkingDateView"
+        "403":
+          description: Caller is not Admin.
+
+  /api/v1/attendance/me/marks:
+    post:
+      summary: A Teacher marks their own attendance for a day
+      description: >
+        FR-001/FR-003/FR-004. Creates a new mark or edits today's/a still-unlocked
+        day's existing mark (US1 AC4) — upsert on `(teacherId, markDate)`.
+        `teacherId` is taken from the caller's JWT, never from the body.
+      operationId: markMyAttendance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkAttendanceRequest"
+      responses:
+        "200":
+          description: Mark saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceMarkView"
+        "409":
+          description: The mark's teacher-month is locked (FR-012).
+
+  /api/v1/attendance/teachers/{teacherId}/marks:
+    post:
+      summary: A Manager or Admin marks attendance on behalf of a Teacher
+      description: >
+        FR-002/FR-024. A Manager may only mark a Teacher currently accountable
+        to them (403 otherwise). An Admin may mark any Teacher, unscoped
+        (FR-024 — no accountability check, mirroring Admin's existing
+        unscoped write authority over Teacher master data). This is also the
+        write path the attendance grid's inline cell edit uses (FR-025,
+        User Story 5) — the grid introduces no separate endpoint.
+      operationId: markAttendanceOnBehalf
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkAttendanceRequest"
+      responses:
+        "200":
+          description: Mark saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceMarkView"
+        "403":
+          description: Caller is a Manager and this Teacher is not currently accountable to them (Admin/Director have no such restriction, though Director is not a permitted caller of this endpoint at all — FR-024 grants this to Admin, not Director).
+        "409":
+          description: The mark's teacher-month is locked (FR-012).
+
+  /api/v1/attendance/teachers/{teacherId}/months/{period}:
+    get:
+      summary: A Teacher's monthly attendance rollup
+      description: >
+        FR-007/FR-008/FR-010. Director unscoped, Manager scoped to
+        currently-accountable Teachers, Teacher scoped to themself (FR-015).
+        Always computed live against current marks (research.md §5).
+      operationId: getMonthlyRollup
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: path
+          required: true
+          description: "`YYYY-MM`"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The rollup.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyAttendanceRollupView"
+        "403":
+          description: Caller is not allowed to view this Teacher's attendance.
+
+  /api/v1/attendance/teachers/{teacherId}/months/{period}/marks:
+    get:
+      summary: Every attendance mark recorded for a Teacher in a month
+      description: FR-010 — includes a way to tell which calendar days have no mark at all (compare against `period`'s day count).
+      operationId: listMarksForMonth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: This Teacher's marks for the month, one per marked day.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceMarkView"
+        "403":
+          description: Caller is not allowed to view this Teacher's attendance.
+
+  /api/v1/attendance/teachers/{teacherId}/months/{period}/lock:
+    get:
+      summary: A teacher-month's current lock status and full reopen history
+      description: >
+        FR-011/FR-013. Read-only — same viewing scope as the rollup (FR-015).
+        An implementation-time addition alongside the grid's `schoolId` fix:
+        `AttendanceLockQueries.lockStatus` existed as a service method from
+        the start but had no REST endpoint until this one was added.
+      operationId: getLockStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The current lock status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LockStatusView"
+        "403":
+          description: Caller is not allowed to view this Teacher's attendance.
+    post:
+      summary: Lock a teacher-month against further direct edits
+      description: >
+        FR-011. Director-only, standing in for an automatic `payroll`-run
+        trigger until that module exists (research.md §2) — the same
+        authority boundary as reopen (FR-014), per Constitution Principle II.
+        Also used to re-lock after a reopen's corrections are done (FR-013).
+      operationId: lockMonth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Locked (or re-locked).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LockStatusView"
+        "403":
+          description: Caller is not Director.
+
+  /api/v1/attendance/grid:
+    get:
+      summary: A month's attendance across multiple Teachers, as a grid (rows = Teachers, columns = days)
+      description: >
+        FR-019/FR-020/FR-021 (User Story 5). Director sees every Teacher, optionally
+        narrowed with `managerId` to one Manager's portfolio (FR-021); Manager
+        always sees only their own currently-accountable Teachers, and MUST NOT
+        pass a `managerId` other than themself. Teacher role is not supported
+        for this endpoint (use the per-Teacher rollup instead). Each cell's
+        `editable` flag (FR-025) tells the caller whether they may edit that
+        cell — editing itself is done by calling
+        `POST /api/v1/attendance/teachers/{teacherId}/marks` (Manager, scoped
+        to their portfolio, or Admin, unscoped, per FR-002/FR-024), not a
+        separate grid-specific write call.
+      operationId: getAttendanceGrid
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: "`YYYY-MM`"
+          schema:
+            type: string
+        - name: managerId
+          in: query
+          required: false
+          description: Director-only filter to one Manager's portfolio (FR-021).
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The grid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceGridView"
+        "403":
+          description: Caller is Teacher-role, or a Manager passed a `managerId` other than themself.
+
+  /api/v1/attendance/teachers/{teacherId}/months/{period}/reopen:
+    post:
+      summary: Reopen a locked teacher-month for correction
+      description: FR-013/FR-014. Director-only. Requires a stated reason.
+      operationId: reopenMonth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Reopened.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LockStatusView"
+        "403":
+          description: Caller is not Director.
+        "409":
+          description: Teacher-month is not currently locked.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AttendanceStatusCodeView:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        category:
+          type: string
+          enum: [WORKED, LEAVE, TRAINING, NON_WORKING]
+        weight:
+          type: number
+        active:
+          type: boolean
+    CreateStatusCodeRequest:
+      type: object
+      required: [code, label, category, weight]
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        category:
+          type: string
+          enum: [WORKED, LEAVE, TRAINING, NON_WORKING]
+        weight:
+          type: number
+    EvidenceInput:
+      type: object
+      nullable: true
+      properties:
+        geoLat:
+          type: number
+          nullable: true
+        geoLng:
+          type: number
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        checkinCode:
+          type: string
+          nullable: true
+    MarkAttendanceRequest:
+      type: object
+      required: [markDate, schoolId, statusCode]
+      properties:
+        markDate:
+          type: string
+          format: date
+        schoolId:
+          type: string
+          format: uuid
+        statusCode:
+          type: string
+        fractionalValue:
+          type: number
+          nullable: true
+          description: Defaults to 1.00 if omitted.
+        evidence:
+          $ref: "#/components/schemas/EvidenceInput"
+    AttendanceMarkView:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teacherId:
+          type: string
+          format: uuid
+        markDate:
+          type: string
+          format: date
+        schoolId:
+          type: string
+          format: uuid
+        statusCode:
+          type: string
+        fractionalValue:
+          type: number
+        evidence:
+          $ref: "#/components/schemas/EvidenceInput"
+        markedBy:
+          type: string
+          format: uuid
+        markedByRole:
+          type: string
+          enum: [TEACHER, MANAGER, ADMIN]
+        markedAt:
+          type: string
+          format: date-time
+    MonthlyAttendanceRollupView:
+      type: object
+      properties:
+        teacherId:
+          type: string
+          format: uuid
+        period:
+          type: string
+        trainingDaysTotal:
+          type: integer
+        trainingDaysAttended:
+          type: number
+        daysWorked:
+          type: number
+        daysLeave:
+          type: number
+        overallWorkingDays:
+          type: integer
+        unmarkedDays:
+          type: integer
+        weightedAttendanceTotal:
+          type: number
+        lockStatus:
+          type: string
+          enum: [UNLOCKED, LOCKED, REOPENED]
+    ReopenEntry:
+      type: object
+      properties:
+        reason:
+          type: string
+        reopenedAt:
+          type: string
+          format: date-time
+        reopenedBy:
+          type: string
+          format: uuid
+        relockedAt:
+          type: string
+          format: date-time
+          nullable: true
+        relockedBy:
+          type: string
+          format: uuid
+          nullable: true
+    NonWorkingDateView:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        label:
+          type: string
+        active:
+          type: boolean
+    AddNonWorkingDateRequest:
+      type: object
+      required: [date, label]
+      properties:
+        date:
+          type: string
+          format: date
+        label:
+          type: string
+    GridCell:
+      type: object
+      nullable: true
+      description: >
+        Three states (research.md §10): an explicit mark (statusCode/category/
+        fractionalValue all set); a calendar non-working day with no mark for
+        this Teacher (category="NON_WORKING", statusCode/fractionalValue both
+        null); or truly unmarked (all three null).
+      properties:
+        statusCode:
+          type: string
+          nullable: true
+        category:
+          type: string
+          enum: [WORKED, LEAVE, TRAINING, NON_WORKING]
+          nullable: true
+        fractionalValue:
+          type: number
+          nullable: true
+        schoolId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            The mark's school assignment, when a mark exists — lets a grid-originated
+            edit of an already-marked day pass it straight back through
+            MarkAttendanceRequest without the caller re-typing it.
+        editable:
+          type: boolean
+          description: >
+            FR-025. Whether the caller may edit this cell right now (false when
+            its teacher-month is locked, or the caller has no write permission
+            for this Teacher). A UI hint only — the edit call
+            (POST .../teachers/{teacherId}/marks) independently re-checks both.
+    AttendanceGridRow:
+      type: object
+      properties:
+        teacherId:
+          type: string
+          format: uuid
+        teacherName:
+          type: string
+        cells:
+          type: object
+          description: Keyed by ISO date (`YYYY-MM-DD`); a missing key or null value means unmarked (FR-019).
+          additionalProperties:
+            $ref: "#/components/schemas/GridCell"
+    AttendanceGridView:
+      type: object
+      properties:
+        period:
+          type: string
+        days:
+          type: array
+          items:
+            type: string
+            format: date
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceGridRow"
+    LockStatusView:
+      type: object
+      properties:
+        teacherId:
+          type: string
+          format: uuid
+        period:
+          type: string
+        status:
+          type: string
+          enum: [UNLOCKED, LOCKED, REOPENED]
+        lockedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lockedBy:
+          type: string
+          format: uuid
+          nullable: true
+        reopenHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReopenEntry"
