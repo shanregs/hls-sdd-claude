@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { StatusPage } from "./StatusPage";
 
 function mockFetchOnce(body: unknown, delayMs = 0) {
@@ -48,7 +48,9 @@ describe("StatusPage", () => {
 
     // T012 (US1)
     expect(await screen.findByTestId("status-label")).toHaveTextContent("OK");
-    expect(screen.getByTestId("status-version")).toHaveTextContent(okResponse.version);
+    expect(screen.getByTestId("status-version")).toHaveTextContent(
+      okResponse.version,
+    );
     expect(screen.getByTestId("status-time")).not.toBeEmptyDOMElement();
   });
 
@@ -92,9 +94,12 @@ describe("StatusPage", () => {
     mockFetchOnce(okResponse, 50);
     render(<StatusPage />);
 
-    await waitFor(() => expect(screen.getByTestId("status-label")).toHaveTextContent("OK"), {
-      timeout: 5000,
-    });
+    await waitFor(
+      () => expect(screen.getByTestId("status-label")).toHaveTextContent("OK"),
+      {
+        timeout: 5000,
+      },
+    );
   });
 
   it("shows an error state without throwing when the status endpoint is unreachable", async () => {

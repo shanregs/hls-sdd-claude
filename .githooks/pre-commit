@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Auto-fixes lint issues in staged files before commit, then re-stages the fixes.
+# Enable with: git config core.hooksPath .githooks
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)" || exit 1
+cd "$repo_root" || exit 1
+
+status=0
+frontend_files=()
+backend_files=()
+
+while IFS= read -r -d '' f; do
+    case "$f" in
+        frontend/src/*.ts | frontend/src/*.tsx | frontend/src/*.js | frontend/src/*.jsx)
+            frontend_files+=("$f")
+            ;;
+        backend/src/*.java)
+            backend_files+=("$f")
+            ;;
+    esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+
+if [ "${#frontend_files[@]}" -gt 0 ]; then
+    echo "[pre-commit] Running ESLint --fix on ${#frontend_files[@]} staged frontend file(s)..."
+    rel_files=()
+    for f in "${frontend_files[@]}"; do
+        rel_files+=("${f#frontend/}")
+    done
+    if (cd frontend && npx --no-install eslint --fix "${rel_files[@]}" && npx --no-install prettier --write "${rel_files[@]}"); then
+        git add -- "${frontend_files[@]}"
+    else
+        echo "[pre-commit] ESLint/Prettier found errors it could not auto-fix; commit blocked." >&2
+        status=1
+    fi
+fi
+
+if [ "${#backend_files[@]}" -gt 0 ]; then
+    echo "[pre-commit] Running Spotless apply on ${#backend_files[@]} staged backend file(s)..."
+    # google-java-format's javac shim doesn't support JDK 25 (this project's java.version) yet,
+    # so run the in-process Spotless plugin under JDK 21+ if one is installed alongside it.
+    spotless_java_home="${HLS_SPOTLESS_JAVA_HOME:-}"
+    if [ -z "$spotless_java_home" ]; then
+        for candidate in "/c/Program Files/Java/jdk-21" "/c/Program Files/Java/jdk-23" "/c/Program Files/Java/jdk-24"; do
+            if [ -d "$candidate" ]; then
+                spotless_java_home="$candidate"
+                break
+            fi
+        done
+    fi
+    # -DspotlessFiles full-matches each regex against the file's absolute path (backslashes on
+    # Windows), so match on basename with a leading .* wildcard to sidestep the path separator.
+    spotless_files="$(printf '%s\n' "${backend_files[@]}" | sed -E 's#.*/##; s/[.[\*^$]/\\&/g; s/^/.*/' | paste -sd ',' -)"
+    (
+        cd backend || exit 1
+        if [ -n "$spotless_java_home" ]; then
+            export JAVA_HOME="$spotless_java_home"
+            export PATH="$spotless_java_home/bin:$PATH"
+        fi
+        mvn -q com.diffplug.spotless:spotless-maven-plugin:2.44.4:apply "-DspotlessFiles=$spotless_files"
+    )
+    if [ $? -eq 0 ]; then
+        git add -- "${backend_files[@]}"
+    else
+        echo "[pre-commit] Spotless failed; commit blocked." >&2
+        status=1
+    fi
+fi
+
+exit $status
