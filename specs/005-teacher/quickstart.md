@@ -29,13 +29,18 @@ TEACHER_ID=<id from the response above>
 
 **Expected outcome**: the profile is immediately retrievable (see Scenario 3) with exactly the details entered (SC-001).
 
-## Scenario 2 — Admin updates salary and changes status, both tracked (User Story 2)
+## Scenario 2 — Admin records a salary increment and changes status, both tracked (User Story 2)
+
+Salary is no longer changed via `PATCH /teachers/{id}` — that endpoint is contact-details-only.
+Recording a salary change, and querying it as of a past date, is its own capability;
+see `specs/009-teacher-salary-history/quickstart.md` for the full walkthrough. The
+short version:
 
 ```bash
-curl -s -X PATCH http://localhost:8080/api/v1/teachers/$TEACHER_ID \
+curl -s -X POST http://localhost:8080/api/v1/teachers/$TEACHER_ID/salary \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-  -d '{"hlsOfferedSalary":18000}'
-# → 200, hlsOfferedSalary now 18000
+  -d '{"amount":18000}'
+# → 200, TeacherSalaryHistoryView; current salary now 18000
 
 curl -s -X POST http://localhost:8080/api/v1/teachers/$TEACHER_ID/status \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \

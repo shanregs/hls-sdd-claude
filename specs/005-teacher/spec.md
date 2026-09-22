@@ -86,7 +86,7 @@ A Teacher opens their own profile from the mobile app — name, contact details,
 ### Functional Requirements
 
 - **FR-001**: The system MUST allow Admin to create a new teacher profile capturing name, contact details, HLS-offered monthly salary, and an initial status.
-- **FR-002**: The system MUST allow Admin to update an existing teacher's contact details and HLS-offered monthly salary.
+- **FR-002**: The system MUST allow Admin to update an existing teacher's contact details. (Salary is updated separately, with its own effective date and full history — see `specs/009-teacher-salary-history`, which corrected this module's original single-value salary field before it was merged.)
 - **FR-003**: The system MUST allow Admin to change a teacher's status among at least: in training, active, on leave, and exited.
 - **FR-004**: The system MUST NOT allow a teacher profile to be deleted; a teacher who has left HLS is represented by status "exited," never by removing the record.
 - **FR-005**: The system MUST preserve, for every change to a teacher's status, contact details, or salary, the value before the change, the value after, and when the change happened — a correction MUST always be retrievable as history, never as a silent overwrite of what was there before.
@@ -99,7 +99,7 @@ A Teacher opens their own profile from the mobile app — name, contact details,
 
 ### Key Entities *(include if feature involves data)*
 
-- **Teacher Profile**: One record per teacher. Captures name, contact details, HLS-offered monthly salary, and current status (in training / active / on leave / exited). Never deleted; a teacher's departure and any later return are both represented as status changes on the same record. Bank details for payout are explicitly out of scope for this module (see Assumptions) — they will be added, likely by a dedicated payout-details feature, once Payroll needs them.
+- **Teacher Profile**: One record per teacher. Captures name, contact details, and current status (in training / active / on leave / exited). Never deleted; a teacher's departure and any later return are both represented as status changes on the same record. Bank details for payout are explicitly out of scope for this module (see Assumptions) — they will be added, likely by a dedicated payout-details feature, once Payroll needs them. HLS-offered monthly salary is tracked as a separate, date-indexed history rather than a field on this record — see `specs/009-teacher-salary-history`.
 - **Profile Change Record**: One entry per change made to a Teacher Profile's status, contact details, or salary. Captures what changed, the value before and after, and when it happened, so a profile's full history remains visible rather than only its current state.
 
 ## Success Criteria *(mandatory)*

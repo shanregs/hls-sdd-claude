@@ -15,6 +15,8 @@ description: "Task list for Teacher Master Data"
 
 **Scope note**: Bank details for payout are excluded from this feature (spec.md Assumptions, scope correction 2026-09-22) — no task below creates a bank-detail field, column, or form control.
 
+**Historical note (2026-09-22, later same day)**: T006-T009 below describe `hlsOfferedSalary` as a plain field on `TeacherProfileView`/`CreateTeacherProfileRequest`/`UpdateTeacherProfileRequest`/`TeacherProfile` — accurate for what this task list originally built. `specs/009-teacher-salary-history` then corrected this: `TeacherProfile` no longer stores salary at all (it's derived from a new `TeacherSalaryHistory` table), and `UpdateTeacherProfileRequest` no longer has a salary field. This file is left as a record of what was executed at the time rather than rewritten; see `specs/009-teacher-salary-history/data-model.md` and `tasks.md` for the corrected, current design and `specs/005-teacher/data-model.md` for the updated field list.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)

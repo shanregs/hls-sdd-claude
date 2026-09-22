@@ -197,6 +197,9 @@ components:
         hlsOfferedSalary:
           type: number
           format: double
+          description: >
+            The current salary, derived from specs/009-teacher-salary-history's
+            salary history, not a stored TeacherProfile column.
         status:
           $ref: "#/components/schemas/TeacherStatus"
         createdAt:
