@@ -22,7 +22,7 @@ MANAGER_A_TOKEN=$(... same pattern, a Manager-role user ...)
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/teachers \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
-  -d '{"name":"Priya Sharma","phone":"+919811111111","bankAccountHolderName":"Priya Sharma","bankAccountNumber":"1234567890","bankName":"HDFC Bank","ifscCode":"HDFC0001234","hlsOfferedSalary":17000,"status":"IN_TRAINING"}'
+  -d '{"name":"Priya Sharma","phone":"+919811111111","hlsOfferedSalary":17000,"status":"IN_TRAINING"}'
 # → 200, TeacherProfileView with a new id
 TEACHER_ID=<id from the response above>
 ```

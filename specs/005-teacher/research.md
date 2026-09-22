@@ -50,11 +50,11 @@ No `[NEEDS CLARIFICATION]` markers remain in the Technical Context — spec.md's
 **Alternatives considered**:
 - *A dedicated `teacher_profile_history` table, matching spec.md's literal "Profile Change Record" key entity as its own persisted table*: rejected — spec.md's Key Entities section describes a concept ("what changed, before/after, when"), not a mandated implementation; Constitution Principle V explicitly says no module should keep its own competing history table once `audit` exists for exactly this. Using `audit` instead satisfies the same requirement (FR-005) with less code and one less table to maintain.
 
-## 6. `TeacherModuleTest` bootstrap mode: `DIRECT_DEPENDENCIES` from the start
+## 6. `TeacherModuleTest` bootstrap mode: `ALL_DEPENDENCIES`, not `DIRECT_DEPENDENCIES`
 
-**Decision**: `TeacherModuleTest` uses `@ApplicationModuleTest(mode = BootstrapMode.DIRECT_DEPENDENCIES)` from the beginning, not the default `STANDALONE`.
+**Decision**: `TeacherModuleTest` uses `@ApplicationModuleTest(mode = BootstrapMode.ALL_DEPENDENCIES)`, not the default `STANDALONE` and — corrected during implementation — not `DIRECT_DEPENDENCIES` either.
 
-**Rationale**: `teacher` has real Spring bean dependencies on `identity.api` (`ManagerScopeQueries`, `TeacherScopeQueries`) and `audit.api` (`AuditWriter`) from day one — unlike Audit, which had zero dependencies when it was built and could use `STANDALONE`. Organization's tasks.md T031 discovered, only after the fact, that `IdentityModuleTest` needed this same switch once `ManagerScopeGuard` gained a real dependency on `organization.api`; `teacher` starts with the dependency already known, so there's no reason to repeat that discovery-after-breakage cycle.
+**Rationale**: `teacher` has real Spring bean dependencies on `identity.api` (`ManagerScopeQueries`, `TeacherScopeQueries`) and `audit.api` (`AuditWriter`) from day one — unlike Audit, which had zero dependencies when it was built and could use `STANDALONE`. This section originally planned `DIRECT_DEPENDENCIES` (reasoning by analogy with `IdentityModuleTest`'s own switch, specs/003 tasks.md T031), but implementation found that insufficient: `identity`'s own `ManagerScopeGuard` bean has a real dependency on `organization.api.AccountabilityQueries` — a *transitive*, not direct, dependency of `teacher`. `DIRECT_DEPENDENCIES` only bootstraps a module's immediate dependencies, so the context failed to start with a missing `AccountabilityQueries` bean; switching to `ALL_DEPENDENCIES` (which bootstraps the full transitive graph) fixed it.
 
 ## 7. Frontend: web pages standing in for "mobile," again
 
@@ -67,14 +67,13 @@ No `[NEEDS CLARIFICATION]` markers remain in the Technical Context — spec.md's
 **Alternatives considered**:
 - *Defer all frontend work until a real mobile app exists*: rejected — same reasoning Organization's research.md §8 already rejected this for AssignmentsPage: no remaining reason to defer once a working pattern (web-page stand-in) is established.
 
-## 8. Bank-detail protection: deployment-layer, not application-layer
+## 8. Bank details are out of scope (scope correction, 2026-09-22)
 
-**Decision**: Treat Constitution's "encryption at rest for teacher bank details" as satisfied at the deployment layer (an encrypted disk/volume under the single EC2 instance's PostgreSQL data directory), not via application-level column encryption in this module.
+**Finding**: The original feature description included bank details for payout as a profile field. spec.md's Assumptions section now explicitly excludes them — no bank-related field, requirement, or acceptance scenario is in scope for this module.
 
-**Rationale**: No existing table in this codebase (including Identity's own sensitive data) uses application-level field encryption — Identity's password field uses one-way hashing (BCrypt), a different mechanism for a different problem (verification, not later retrieval). Introducing column-level encryption here would mean inventing a new key-management pattern for one module's three fields, inconsistent with the project's stated minimal-infra approach ("secrets... via environment configuration, not a vault at this scale"). An encrypted volume gives the same "at rest" guarantee with zero application code and no new key to manage.
+**Decision**: `TeacherProfile` has no bank-detail fields at all; no bank-detail-specific data-protection question (encryption at rest, key management, etc.) arises in this plan.
 
-**Alternatives considered**:
-- *Application-level column encryption (e.g., a JPA `AttributeConverter` backed by AES-GCM) for `bankAccountNumber`/`ifscCode`*: rejected for this plan — real added complexity (key storage, rotation, and it would make the fields opaque to any future reporting/export need without a matching decrypt step) for a guarantee the deployment layer already gives. Worth revisiting if a stronger, more granular guarantee (e.g., protecting against a full-disk compromise, not just physical media) is ever required — that's a cross-cutting security initiative, not a call to make inside one module's plan.
+**Rationale**: Removing the fields removes the question — there is nothing bank-related for this module's data-protection posture to address. If a payout-details feature is added later (likely alongside Payroll), that feature's own plan will need to make this call for real at that point, not this one.
 
 ## 9. Forward note (not in this plan's scope): Organization's FR-012 could now be wired for real
 

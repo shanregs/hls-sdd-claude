@@ -6,7 +6,7 @@
 
 ## Summary
 
-The first master-data module: a `teacher` bounded context owning each teacher's profile (name, contact, bank details, HLS-offered salary, status) — reference data every future operational module (Attendance, Payroll, Training, Substitution) will read but never own. Technical approach: a single JPA-backed `TeacherProfile` table with a narrow, no-delete repository (FR-004); every create/update/status-change call routes through the real `audit.api.AuditWriter` (FR-005) — this module becomes Audit's first genuine caller, not just its own test harness. Access control reuses infrastructure Identity already built and shipped for exactly this purpose: `identity.api.ManagerScopeQueries.isAllowedForTeacher(...)` for Manager-scoped viewing and `identity.api.TeacherScopeQueries.isAllowed(...)` for Teacher self-viewing — `teacher` never needs its own dependency on `organization.api` at all. The one gap those interfaces don't close is *how* a Teacher discovers their own `teacherId`; closing it requires one small, additive touch to Identity's already-shipped `TokenService` (adds a `teacherId` JWT claim when `User.linkedTeacherId` is set), detailed in research.md §3.
+The first master-data module: a `teacher` bounded context owning each teacher's profile (name, contact, HLS-offered salary, status) — reference data every future operational module (Attendance, Payroll, Training, Substitution) will read but never own. Bank details for payout are explicitly out of scope for this module (spec.md Assumptions, scope correction 2026-09-22) — they will be added later, likely alongside Payroll, once a payout-details feature is actually needed. Technical approach: a single JPA-backed `TeacherProfile` table with a narrow, no-delete repository (FR-004); every create/update/status-change call routes through the real `audit.api.AuditWriter` (FR-005) — this module becomes Audit's first genuine caller, not just its own test harness. Access control reuses infrastructure Identity already built and shipped for exactly this purpose: `identity.api.ManagerScopeQueries.isAllowedForTeacher(...)` for Manager-scoped viewing and `identity.api.TeacherScopeQueries.isAllowed(...)` for Teacher self-viewing — `teacher` never needs its own dependency on `organization.api` at all. The one gap those interfaces don't close is *how* a Teacher discovers their own `teacherId`; closing it requires one small, additive touch to Identity's already-shipped `TokenService` (adds a `teacherId` JWT claim when `User.linkedTeacherId` is set), detailed in research.md §3.
 
 ## Technical Context
 
@@ -14,7 +14,7 @@ The first master-data module: a `teacher` bounded context owning each teacher's 
 
 **Primary Dependencies**: All already present in `backend/pom.xml` — `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `spring-boot-starter-oauth2-resource-server`, `spring-modulith-starter-core`/`-test`, `spring-boot-flyway` + `flyway-core`/`flyway-database-postgresql`, `spring-boot-testcontainers`, `h2` (test). **No new dependency additions for this module.**
 
-**Storage**: PostgreSQL — one new table, `teacher_profile`, migration `V4__create_teacher_tables.sql` (Identity claimed `V1`, Organization `V2`, Audit `V3`)
+**Storage**: PostgreSQL — one new table, `teacher_profile`, migration `V6__create_teacher_tables.sql` (Identity claimed `V1`, Organization `V2`, Audit `V3`, School/Zone `V4`, School/Places `V5` — both landed after this plan was first drafted, so this module now takes `V6`)
 
 **Testing**: JUnit 5 + Spring Boot Test (`TeacherServiceTest`, unit, mocked repository + mocked `AuditWriter`) for FR-001-005/010 rules; Spring Modulith's `@ApplicationModuleTest` (`TeacherModuleTest`, H2) — unlike Audit's, this one needs `BootstrapMode.DIRECT_DEPENDENCIES` from the start, since `teacher` has real bean dependencies on `identity.api` and `audit.api` (research.md §6 — Organization's tasks.md T031 had to retrofit this after the fact for Identity; `teacher` doesn't repeat that mistake); Testcontainers-backed PostgreSQL integration test (`TeacherIntegrationTest`) exercising real JWT bearer auth for all four roles, real Manager scoping (seeded via Organization's real `AccountabilityCommands`), real Teacher self-view (seeded via a `User` with `linkedTeacherId`, logging in for real to prove the new JWT claim round-trips), and reading the resulting history back through Audit's real `GET /api/v1/audit/.../history` endpoint; ArchUnit for the module-boundary rule
 
@@ -24,7 +24,7 @@ The first master-data module: a `teacher` bounded context owning each teacher's 
 
 **Performance Goals**: No specific throughput target given the <100-user, ~60-teacher scale (Requirements §1). Writes ride inside the same transaction as their audit entry (same pattern Audit's own research.md §3 established), adding one extra insert per write, not a new latency budget.
 
-**Constraints**: FR-004 (never deleted) enforced by a narrow repository interface with no delete method, mirroring `AuditEntryRepository`/`AuthAuditEntryRepository`'s established pattern (research.md §4). FR-005 (history, never silently overwritten) is satisfied by routing every write through `audit.api.AuditWriter` rather than building a second, bespoke history mechanism (research.md §2). Bank-detail "encryption at rest" (Constitution's Security section) is treated as a deployment-layer concern (encrypted disk volume) rather than application-level column encryption, consistent with this project's minimal-infra scale and lack of any existing precedent for app-level field crypto (research.md §5).
+**Constraints**: FR-004 (never deleted) enforced by a narrow repository interface with no delete method, mirroring `AuditEntryRepository`/`AuthAuditEntryRepository`'s established pattern (research.md §4). FR-005 (history, never silently overwritten) is satisfied by routing every write through `audit.api.AuditWriter` rather than building a second, bespoke history mechanism (research.md §2). No bank-detail-specific data-protection concern applies to this plan — bank details are out of scope (spec.md Assumptions).
 
 **Scale/Scope**: One new entity/table, ~5 REST endpoints, two new frontend pages, one small additive touch to Identity's `TokenService` (research.md §3); no batch/background processing.
 
@@ -41,7 +41,7 @@ The first master-data module: a `teacher` bounded context owning each teacher's 
 | V. Architecture Is a Modular Monolith With Enforced Boundaries | Yes | New `com.hls.teacher` package, `api`/`internal` split, joins `ApplicationModules.verify()` and gets an `ArchitectureTest` rule. Dependency direction is one-way: `teacher` → `identity.api` (scoping) and `teacher` → `audit.api` (history); nothing depends on `teacher.internal`; neither `identity` nor `audit` depends on `teacher`, so no cycle. |
 | VI. Concurrency Uses Structured, Virtual-Thread Batch Processing | No (N/A) | Simple per-request CRUD; no triggered batch job of its own. |
 | VII. Reliability, Testability, and Incremental Delivery | Yes | Unit (mocked), Modulith isolation, and Testcontainers integration tests for every FR, written before implementation. |
-| VIII. Security, Identity, and Observability | Yes | Real JWT bearer auth reused end to end (no new auth mechanism); `requestId`/`userId`/`role` continue via Identity's existing app-wide `SecurityMdcInterceptor`/`CorrelationIdFilter` with no extra wiring (same finding Organization's and Audit's Polish phases already confirmed). Bank-detail protection addressed as a deployment-layer decision (research.md §5), explicitly not silently skipped. |
+| VIII. Security, Identity, and Observability | Yes | Real JWT bearer auth reused end to end (no new auth mechanism); `requestId`/`userId`/`role` continue via Identity's existing app-wide `SecurityMdcInterceptor`/`CorrelationIdFilter` with no extra wiring (same finding Organization's and Audit's Polish phases already confirmed). No bank-detail data-protection concern applies — out of scope (spec.md Assumptions). |
 | IX. Recruitment and Marketing Are Tracked to Outcome | No | Not applicable. |
 | Additional Constraints — stack/deployment | Yes | Java 25 / Spring Boot 4.1.1 / PostgreSQL / single EC2 `ap-south-1` / Docker Compose unchanged. Directly satisfies the "Teacher... normalized relational entities with historical continuity" data-model constraint. |
 
@@ -106,7 +106,8 @@ backend/
 │   │   │                                                 # TeacherScopeQueries for scoping (no new scope logic)
 │   │   └── resources/
 │   │       └── db/migration/
-│   │           └── V4__create_teacher_tables.sql        # V4 — Identity=V1, Organization=V2, Audit=V3
+│   │           └── V6__create_teacher_tables.sql        # V6 — Identity=V1, Organization=V2, Audit=V3,
+│   │                                                     # School/Zone=V4, School/Places=V5
 │   └── test/
 │       └── java/com/hls/
 │           ├── ArchitectureTest.java                     # + teacher internal-access rule

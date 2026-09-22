@@ -1,0 +1,15 @@
+.my-profile-page {
+  max-width: 480px;
+  margin: 2rem auto;
+  font-family: system-ui, sans-serif;
+}
+
+.my-profile-page dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.my-profile-page dt {
+  font-weight: 600;
+}

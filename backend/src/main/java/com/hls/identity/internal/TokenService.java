@@ -2,9 +2,6 @@ package com.hls.identity.internal;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -15,6 +12,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import javax.crypto.SecretKey;
+import org.springframework.stereotype.Service;
 
 /**
  * FR-011: HS256 JWT issuance and refresh-token rotation (research.md §1, §5).
@@ -42,7 +41,7 @@ public class TokenService {
     }
 
     /** Creates a brand-new session (login) and returns both tokens. */
-    public IssuedTokens issueForNewSession(UUID userId, Set<Role> roles, Channel channel, String deviceLabel) {
+    public IssuedTokens issueForNewSession(UUID userId, Set<Role> roles, Channel channel, String deviceLabel, UUID linkedTeacherId) {
         UUID sessionId = UUID.randomUUID();
         Instant now = clock.instant();
         String rawRefreshToken = randomToken();
@@ -51,7 +50,7 @@ public class TokenService {
         Session session = new Session(sessionId, userId, channel, hash(rawRefreshToken), now, refreshExpiry, deviceLabel);
         sessionRepository.save(session);
 
-        String accessToken = buildAccessToken(userId, roles, sessionId, now);
+        String accessToken = buildAccessToken(userId, roles, sessionId, now, linkedTeacherId);
         return new IssuedTokens(accessToken, properties.getAccessTokenTtlSeconds(), rawRefreshToken, sessionId);
     }
 
@@ -63,7 +62,7 @@ public class TokenService {
      * previous raw value stops working the moment this succeeds, so a stolen-but-used
      * refresh token can't be replayed.
      */
-    public RefreshResult refresh(String rawRefreshToken, UUID userId, Set<Role> roles) {
+    public RefreshResult refresh(String rawRefreshToken, UUID userId, Set<Role> roles, UUID linkedTeacherId) {
         Session session = sessionRepository.findByRefreshTokenHash(hash(rawRefreshToken))
                 .filter(s -> s.isUsable(clock.instant()))
                 .orElseThrow(InvalidSessionException::new);
@@ -74,18 +73,23 @@ public class TokenService {
         session.rotate(hash(newRawRefreshToken), now, newExpiry);
         sessionRepository.save(session);
 
-        String accessToken = buildAccessToken(userId, roles, session.getId(), now);
+        String accessToken = buildAccessToken(userId, roles, session.getId(), now, linkedTeacherId);
         return new RefreshResult(accessToken, properties.getAccessTokenTtlSeconds(), newRawRefreshToken);
     }
 
-    private String buildAccessToken(UUID userId, Set<Role> roles, UUID sessionId, Instant now) {
+    /** specs/005-teacher research.md §3: embeds "teacherId" the same way "roles" already is, when the caller has a linked Teacher record. */
+    private String buildAccessToken(UUID userId, Set<Role> roles, UUID sessionId, Instant now, UUID linkedTeacherId) {
         List<String> roleNames = roles.stream().map(Enum::name).toList();
         Date issuedAt = Date.from(now);
         Date expiry = Date.from(now.plus(Duration.ofSeconds(properties.getAccessTokenTtlSeconds())));
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId.toString())
                 .claim("sid", sessionId.toString())
-                .claim("roles", roleNames)
+                .claim("roles", roleNames);
+        if (linkedTeacherId != null) {
+            builder.claim("teacherId", linkedTeacherId.toString());
+        }
+        return builder
                 .issuedAt(issuedAt)
                 .expiration(expiry)
                 // Explicit HS256: signWith(Key) alone auto-selects the strongest

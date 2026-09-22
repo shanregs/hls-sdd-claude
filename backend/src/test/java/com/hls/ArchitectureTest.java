@@ -132,4 +132,23 @@ class ArchitectureTest {
 
         onlySchoolAccessesSchoolInternals.check(classes);
     }
+
+    /**
+     * Teacher-specific rule added with the Teacher module (spec 005): nothing
+     * outside {@code com.hls.teacher} may reach into {@code com.hls.teacher.internal}
+     * — only {@code com.hls.teacher.api} is public.
+     */
+    @Test
+    void teacherInternalsAreOnlyAccessedFromWithinTeacher() {
+        JavaClasses classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.hls");
+
+        ArchRule onlyTeacherAccessesTeacherInternals = noClasses()
+                .that().resideOutsideOfPackage("com.hls.teacher..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("com.hls.teacher.internal..");
+
+        onlyTeacherAccessesTeacherInternals.check(classes);
+    }
 }

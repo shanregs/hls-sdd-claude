@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: HLS Teacher Salary History API
+  description: >
+    Extends the `teacher` module (specs/005-teacher) with a structured,
+    date-indexed salary history (specs/009-teacher-salary-history).
+    Recording a salary change is Admin-only (FR-009); viewing follows the
+    same rules as viewing a Teacher Profile (FR-008 — Director/Admin
+    unscoped, Manager scoped to currently-assigned teachers, Teacher scoped
+    to themself).
+  version: "1.0.0"
+paths:
+  /api/v1/teachers/{teacherId}/salary:
+    post:
+      summary: Record a new salary amount for a teacher
+      description: FR-003. Admin-only. `effectiveFrom` defaults to today if omitted.
+      operationId: recordSalaryChange
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  format: double
+                effectiveFrom:
+                  type: string
+                  format: date
+                  nullable: true
+      responses:
+        "200":
+          description: Recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherSalaryHistoryView"
+        "403":
+          description: Caller is not Admin.
+        "404":
+          description: No teacher profile with this id.
+    get:
+      summary: The salary in effect on a given date, or the current salary if no date is given
+      description: >
+        FR-005/FR-006/FR-007. Without `asOf`, returns the current (latest
+        effective, not in the future) salary — the same value
+        `GET /teachers/{teacherId}` already shows. With `asOf`, returns the
+        salary that was in effect on that date, or a clear "not yet
+        recorded" state (never an error, never a misleading zero) for a
+        date before the teacher's first recorded salary.
+      operationId: getSalary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: asOf
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: The salary answer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalaryAsOfAnswer"
+        "403":
+          description: Caller is not allowed to view this teacher's salary (same rule as viewing their profile).
+        "404":
+          description: No teacher profile with this id.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Identity & Access's real JWT bearer token (spec 002).
+  schemas:
+    TeacherSalaryHistoryView:
+      type: object
+      required: [id, teacherId, amount, effectiveFrom]
+      properties:
+        id:
+          type: string
+          format: uuid
+        teacherId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+        effectiveFrom:
+          type: string
+          format: date
+    SalaryAsOfAnswer:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [RECORDED, NOT_YET_RECORDED]
+        amount:
+          type: number
+          format: double
+          nullable: true

@@ -1,10 +1,5 @@
 package com.hls.identity.internal;
 
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
@@ -13,6 +8,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * FR-001/003/007/008/009/010/012/015/016/018: password + OTP verification,
@@ -91,7 +90,7 @@ public class AuthenticationService {
             return new LoginOutcome.MfaRequired(challengeId, user.getMfaMethod());
         }
 
-        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel);
+        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel, user.getLinkedTeacherId());
         auditLogger.loginSuccess(user.getId(), user.getRoles(), requestId);
         return new LoginOutcome.Authenticated(tokens);
     }
@@ -102,7 +101,7 @@ public class AuthenticationService {
         User user = resolveUserByIdentifier(challenge.getIdentifier())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel);
+        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel, user.getLinkedTeacherId());
         auditLogger.loginSuccess(user.getId(), user.getRoles(), requestId);
         return tokens;
     }
@@ -149,7 +148,7 @@ public class AuthenticationService {
         verifyChallengeCodeOrThrow(current, code);
 
         User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(InvalidCredentialsException::new);
-        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel);
+        TokenService.IssuedTokens tokens = tokenService.issueForNewSession(user.getId(), user.getRoles(), channel, deviceLabel, user.getLinkedTeacherId());
         auditLogger.loginSuccess(user.getId(), user.getRoles(), requestId);
         return tokens;
     }
@@ -198,7 +197,7 @@ public class AuthenticationService {
                 .filter(s -> s.isUsable(clock.instant()))
                 .orElseThrow(TokenService.InvalidSessionException::new);
         User user = userRepository.findById(session.getUserId()).orElseThrow(TokenService.InvalidSessionException::new);
-        return tokenService.refresh(rawRefreshToken, user.getId(), user.getRoles());
+        return tokenService.refresh(rawRefreshToken, user.getId(), user.getRoles(), user.getLinkedTeacherId());
     }
 
     // ---- User Story 5: view/revoke sessions ----------------------------------------
