@@ -25,6 +25,25 @@ export interface PlaceView {
   pincode: string;
 }
 
+export interface BulkPlaceRow {
+  zoneId: string;
+  name: string;
+  pincode: string;
+}
+
+export interface BulkImportRowResult {
+  index: number;
+  succeeded: boolean;
+  place?: PlaceView;
+  reason?: string;
+}
+
+export interface BulkImportResponse {
+  results: BulkImportRowResult[];
+  successCount: number;
+  failureCount: number;
+}
+
 async function request<T>(
   accessToken: string,
   path: string,
@@ -51,6 +70,12 @@ async function request<T>(
     }
     if (response.status === 404) {
       throw new Error("Not found.");
+    }
+    if (response.status === 400) {
+      const body = await response
+        .json()
+        .catch(() => ({ message: "Invalid request." }));
+      throw new Error(body.message ?? "Invalid request.");
     }
     throw new Error(`Request failed: ${response.status}`);
   }
@@ -124,6 +149,17 @@ export const zoneClient = {
     return request<PlaceView[]>(
       accessToken,
       `/api/v1/school/zones/${zoneId}/places`,
+    );
+  },
+
+  bulkImportPlaces(accessToken: string, rows: BulkPlaceRow[]) {
+    return request<BulkImportResponse>(
+      accessToken,
+      "/api/v1/school/places/bulk-import",
+      {
+        method: "POST",
+        body: JSON.stringify(rows),
+      },
     );
   },
 };

@@ -1,6 +1,9 @@
 package com.hls.school.internal;
 
+import com.hls.school.api.BulkImportBatchException;
 import com.hls.school.api.ZoneAssignmentConflictException;
+import com.hls.school.api.dto.BulkImportResponse;
+import com.hls.school.api.dto.BulkPlaceRow;
 import com.hls.school.api.dto.CurrentSchoolZoneAssignment;
 import com.hls.school.api.dto.PlaceView;
 import com.hls.school.api.dto.SchoolZoneAnswer;
@@ -43,6 +46,9 @@ public class ZoneController {
     }
 
     public record ConflictError(String message) {
+    }
+
+    public record ErrorBody(String message) {
     }
 
     @PostMapping("/zones")
@@ -106,10 +112,22 @@ public class ZoneController {
         return placeService.findByZoneId(zoneId);
     }
 
+    @PostMapping("/places/bulk-import")
+    public BulkImportResponse bulkImportPlaces(@RequestBody List<BulkPlaceRow> rows, @AuthenticationPrincipal Jwt jwt) {
+        requireDirectorOrAdmin(jwt);
+        return placeService.bulkImportPlaces(rows, userId(jwt));
+    }
+
     @ExceptionHandler(ZoneAssignmentConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ConflictError handleConflict(ZoneAssignmentConflictException e) {
         return new ConflictError("This School's Zone assignment was already changed by someone else. Refresh and retry.");
+    }
+
+    @ExceptionHandler(BulkImportBatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorBody handleBulkImportBatchError(BulkImportBatchException e) {
+        return new ErrorBody(e.getMessage());
     }
 
     // ---- helpers -------------------------------------------------------------------------

@@ -287,6 +287,104 @@ class SchoolIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
+    // ---- specs/010-place-bulk-import: User Story 1 (T009) — bulk import valid rows -----
+
+    @Test
+    void bulkImportPlaces_multipleValidRows_allImmediatelyRetrievableAfterward() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Bulk Import Zone A");
+
+        String body = mockMvc.perform(post("/api/v1/school/places/bulk-import")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(List.of(
+                                new BulkRowBody(zoneId, "Mettupalayam", "641301"),
+                                new BulkRowBody(zoneId, "Annur", "641653"),
+                                new BulkRowBody(zoneId, "Sulur", "641402")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.successCount").value(3))
+                .andExpect(jsonPath("$.failureCount").value(0))
+                .andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat(objectMapper.readTree(body).get("results")).hasSize(3);
+
+        mockMvc.perform(get("/api/v1/school/zones/" + zoneId + "/places")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    // ---- specs/010-place-bulk-import: User Story 2 (T012) — partial success, denial -----
+
+    @Test
+    void bulkImportPlaces_mixedValidAndInvalidRows_partialSuccess_withRowIndexedReasons() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Bulk Import Zone B");
+        UUID unknownZoneId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/school/places/bulk-import")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(List.of(
+                                new BulkRowBody(zoneId, "Valparai", "642127"),
+                                new BulkRowBody(unknownZoneId, "Unknown Zone Place", "641000"),
+                                new BulkRowBody(zoneId, "", "641000")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.successCount").value(1))
+                .andExpect(jsonPath("$.failureCount").value(2))
+                .andExpect(jsonPath("$.results[0].succeeded").value(true))
+                .andExpect(jsonPath("$.results[1].succeeded").value(false))
+                .andExpect(jsonPath("$.results[1].reason").value(org.hamcrest.Matchers.containsString(unknownZoneId.toString())))
+                .andExpect(jsonPath("$.results[2].succeeded").value(false))
+                .andExpect(jsonPath("$.results[2].reason").value(org.hamcrest.Matchers.containsString("name")));
+    }
+
+    @Test
+    void bulkImportPlaces_asNonDirectorOrAdmin_isDenied() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Bulk Import Zone C");
+        User teacher = seedUser("+919820000099", "irrelevant-password", Set.of(Role.TEACHER));
+        String teacherToken = login(teacher.getPhoneNumber(), "irrelevant-password");
+
+        mockMvc.perform(post("/api/v1/school/places/bulk-import")
+                        .header("Authorization", "Bearer " + teacherToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(List.of(new BulkRowBody(zoneId, "Should Be Denied", "641000")))))
+                .andExpect(status().isForbidden());
+    }
+
+    // ---- specs/010-place-bulk-import: User Story 3 (T015) — batch-level rejection -------
+
+    @Test
+    void bulkImportPlaces_emptyBatch_returns400_nothingCreated() throws Exception {
+        String accessToken = loginAsDirector();
+
+        mockMvc.perform(post("/api/v1/school/places/bulk-import")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content("[]"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void bulkImportPlaces_oversizedBatch_returns400_nothingCreated() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Bulk Import Zone D");
+        List<BulkRowBody> tooMany = java.util.stream.IntStream.range(0, 5001)
+                .mapToObj(i -> new BulkRowBody(zoneId, "Place " + i, "641000"))
+                .toList();
+
+        mockMvc.perform(post("/api/v1/school/places/bulk-import")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(tooMany)))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/v1/school/zones/" + zoneId + "/places")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
     // ---- helpers -------------------------------------------------------------------------
 
     private record ZoneRequestBody(String name) {
@@ -296,6 +394,9 @@ class SchoolIntegrationTest {
     }
 
     private record PlaceRequestBody(UUID zoneId, String name, String pincode) {
+    }
+
+    private record BulkRowBody(UUID zoneId, String name, String pincode) {
     }
 
     private void addPlace(String accessToken, UUID zoneId, String name, String pincode) throws Exception {
