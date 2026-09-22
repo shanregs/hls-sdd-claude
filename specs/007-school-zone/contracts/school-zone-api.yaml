@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: HLS School Master Data API (Zones slice)
+  description: >
+    The first `school` module endpoints (specs/007-school-zone) — a minimal,
+    pulled-forward slice of School Master Data covering only Zones and each
+    School's current Zone. Every endpoint is DIRECTOR/ADMIN-only, matching
+    every other master-data-maintenance endpoint in this system. Role and
+    identity come from Identity & Access's real JWT bearer token (spec 002).
+  version: "1.0.0"
+paths:
+  /api/v1/school/zones:
+    post:
+      summary: Create a Zone
+      description: FR-001.
+      operationId: createZone
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Zone created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneView"
+  /api/v1/school/zones/{zoneId}:
+    get:
+      summary: Get a Zone by id
+      description: FR-002.
+      operationId: getZone
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The Zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneView"
+        "404":
+          description: No Zone with this id (Edge Cases).
+  /api/v1/school/zones/{zoneId}/schools:
+    get:
+      summary: Every School currently assigned to a Zone
+      description: FR-007, User Story 3.
+      operationId: getZoneSchools
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Every School's id currently in this Zone (empty array, not an error, if none).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+  /api/v1/school/school-zone-assignments:
+    post:
+      summary: Assign or reassign a School's Zone
+      description: >
+        FR-003/FR-004. First assignment when `endsAssignmentId` is omitted;
+        reassignment (ending the named current row) when provided — same
+        semantics as organization-api.yaml's school-assignments endpoint.
+      operationId: assignSchoolZone
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [schoolId, zoneId]
+              properties:
+                schoolId:
+                  type: string
+                  format: uuid
+                zoneId:
+                  type: string
+                  format: uuid
+                endsAssignmentId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: School's current Zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneView"
+        "409":
+          description: Conflict — this School's Zone assignment was already changed by someone else (FR-005).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+  /api/v1/school/schools/{schoolId}/zone:
+    get:
+      summary: A School's current Zone
+      description: FR-006.
+      operationId: getSchoolZone
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Always 200 — the answer itself may be UNASSIGNED (Edge Cases).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolZoneAnswer"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Identity & Access's real JWT bearer token (spec 002). Director/Admin role required.
+  schemas:
+    ZoneView:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    SchoolZoneAnswer:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [CURRENT_ZONE, UNASSIGNED]
+        zoneId:
+          type: string
+          format: uuid
+          description: Present only when state is CURRENT_ZONE.
+    ConflictError:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "This School's Zone assignment was already changed by someone else. Refresh and retry."

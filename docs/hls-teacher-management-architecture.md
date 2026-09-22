@@ -1,5 +1,20 @@
 # HLS Teacher Management — Target Architecture & Implementation Plan
 
+> **Correction (2026-09-22)**: Wherever this document shows Manager-School-Teacher
+> access as two independent assignments (e.g. `ManagerSchoolAssignment` and
+> `TeacherAssignment` as separate, unrelated entities in §54-55's sprint plan, or
+> `canAccessSchool`-style examples with no Zone in the picture), that no longer
+> matches the real operating model. Managers operate over geographic **Zones**
+> (one or more Managers per Zone); each School belongs to a Zone and is managed
+> by one of that Zone's Managers; a Teacher's accountable Manager is **derived**
+> from their School's Manager, not independently assigned. Zone itself is
+> School master data (owned by `school`), not Organization data — `organization`
+> only owns Zone–Manager assignment, reading Zone/School-Zone data through
+> `school`'s public API. See `.specify/memory/constitution.md` Amendments 1.6.0
+> and 1.7.0 and `docs/HLS Teacher Management System — Requirements.md` §2/§10/§13
+> for the authoritative correction — this file is a loose architecture sketch,
+> not re-edited line by line to match.
+
 ## 1. Target architecture
 
 Recommended target:

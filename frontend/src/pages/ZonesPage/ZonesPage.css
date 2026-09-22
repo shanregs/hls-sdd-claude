@@ -1,0 +1,28 @@
+.zones-page {
+  max-width: 640px;
+  margin: 2rem auto;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.zones-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+}
+
+.zones-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.zones-page ul {
+  list-style: none;
+  padding: 0;
+}

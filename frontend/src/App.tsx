@@ -6,6 +6,7 @@ import { PasswordResetPage } from "./pages/PasswordResetPage/PasswordResetPage";
 import { SessionsPage } from "./pages/SessionsPage/SessionsPage";
 import { AssignmentsPage } from "./pages/AssignmentsPage/AssignmentsPage";
 import { AuditHistoryPage } from "./pages/AuditHistoryPage/AuditHistoryPage";
+import { ZonesPage } from "./pages/ZonesPage/ZonesPage";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 
 type UnauthenticatedView = "staff-login" | "teacher-login" | "password-reset";
@@ -41,7 +42,7 @@ function UnauthenticatedApp() {
   );
 }
 
-type AuthenticatedView = "sessions" | "assignments" | "audit-history";
+type AuthenticatedView = "sessions" | "assignments" | "audit-history" | "zones";
 
 function AuthenticatedApp() {
   const { logout } = useAuth();
@@ -57,11 +58,13 @@ function AuthenticatedApp() {
         }}
       >
         <button onClick={() => setView("assignments")}>Assignments</button>
+        <button onClick={() => setView("zones")}>Zones</button>
         <button onClick={() => setView("audit-history")}>Audit History</button>
         <button onClick={() => setView("sessions")}>Sessions</button>
         <button onClick={() => logout()}>Sign out</button>
       </nav>
       {view === "assignments" && <AssignmentsPage />}
+      {view === "zones" && <ZonesPage />}
       {view === "audit-history" && <AuditHistoryPage />}
       {view === "sessions" && <SessionsPage />}
     </div>
