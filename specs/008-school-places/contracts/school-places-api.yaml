@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: HLS School Master Data API (Places slice)
+  description: >
+    Extends the `school` module (specs/007-school-zone) with Places — named
+    localities (city/town/village + PIN code) grouped under a Zone
+    (specs/008-school-places). Every endpoint is DIRECTOR/ADMIN-only, matching
+    every other master-data endpoint in this system.
+  version: "1.0.0"
+paths:
+  /api/v1/school/places:
+    post:
+      summary: Add a place under a Zone
+      description: FR-001.
+      operationId: addPlace
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zoneId, name, pincode]
+              properties:
+                zoneId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                pincode:
+                  type: string
+      responses:
+        "200":
+          description: Place added.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceView"
+    get:
+      summary: Look up places by PIN code or by name
+      description: >
+        FR-003/FR-004/FR-005. Exactly one of `pincode`/`name` is expected per
+        call. Returns every matching place (FR-002's no-uniqueness rule means
+        this is always a list, never a single result) — an empty array, not
+        an error, when nothing matches (SC-003).
+      operationId: findPlaces
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pincode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Every matching place, each with its Zone.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceView"
+  /api/v1/school/zones/{zoneId}/places:
+    get:
+      summary: Every place currently recorded under a Zone
+      description: FR-006, User Story 3.
+      operationId: getZonePlaces
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Every place under this Zone (empty array, not an error, if none).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceView"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Identity & Access's real JWT bearer token (spec 002). Director/Admin role required.
+  schemas:
+    PlaceView:
+      type: object
+      required: [id, zoneId, name, pincode]
+      properties:
+        id:
+          type: string
+          format: uuid
+        zoneId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pincode:
+          type: string

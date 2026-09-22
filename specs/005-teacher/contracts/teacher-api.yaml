@@ -1,0 +1,274 @@
+openapi: 3.0.3
+info:
+  title: HLS Teacher Master Data API
+  description: >
+    Teacher profile master data (specs/005-teacher). Create/update/status-change
+    are Admin-only (FR-001/002/003/010). Viewing is role-scoped: Director sees
+    any profile, a Manager sees only teachers currently assigned to them
+    (via identity.api.ManagerScopeQueries, which itself reads Organization —
+    research.md §1), a Teacher sees only their own (via
+    identity.api.TeacherScopeQueries, research.md §2), and Admin sees any.
+    Role and identity come from Identity & Access's real JWT bearer token
+    (spec 002, implemented); GET /teachers/me additionally depends on the new
+    "teacherId" claim that token now carries when the caller has a linked
+    Teacher record (research.md §3).
+  version: "1.0.0"
+paths:
+  /api/v1/teachers:
+    post:
+      summary: Create a new teacher profile
+      description: Admin-only (FR-001, FR-010).
+      operationId: createTeacher
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeacherProfileRequest"
+      responses:
+        "200":
+          description: Profile created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherProfileView"
+        "403":
+          description: Caller is not Admin.
+  /api/v1/teachers/{teacherId}:
+    get:
+      summary: Get a teacher's profile
+      description: >
+        Director: always allowed. Manager: allowed only if currently assigned
+        to this teacher (403 otherwise). Teacher: allowed only for their own
+        id (403 otherwise — use GET /teachers/me to avoid needing to know it).
+        Admin: always allowed.
+      operationId: getTeacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherProfileView"
+        "403":
+          description: Caller is not allowed to view this profile (FR-007/FR-009).
+        "404":
+          description: No profile with this id.
+    patch:
+      summary: Update a teacher's contact details, bank details, or salary
+      description: Admin-only (FR-002, FR-010). Every field is optional; only the fields present are changed.
+      operationId: updateTeacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeacherProfileRequest"
+      responses:
+        "200":
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherProfileView"
+        "403":
+          description: Caller is not Admin.
+        "404":
+          description: No profile with this id.
+  /api/v1/teachers/{teacherId}/status:
+    post:
+      summary: Change a teacher's status
+      description: >
+        Admin-only (FR-003, FR-010). Any status is reachable from any other,
+        including re-activating a previously EXITED teacher (data-model.md
+        state transitions) — this module enforces no illegal-transition rule.
+      operationId: changeTeacherStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: "#/components/schemas/TeacherStatus"
+      responses:
+        "200":
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherProfileView"
+        "403":
+          description: Caller is not Admin.
+        "404":
+          description: No profile with this id.
+  /api/v1/teachers/me:
+    get:
+      summary: Get the caller's own teacher profile
+      description: >
+        Teacher-only convenience endpoint (FR-008) — resolves the profile from
+        the access token's "teacherId" claim (research.md §3) rather than
+        requiring the caller to already know their own id.
+      operationId: getMyTeacherProfile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The caller's own profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherProfileView"
+        "403":
+          description: Caller has no linked teacher id (not a Teacher, or not yet linked).
+        "404":
+          description: The linked teacher id has no profile (data inconsistency).
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Identity & Access's real JWT bearer token (spec 002, implemented).
+        Endpoint handlers additionally check the token's `roles` claim and, for
+        Manager/Teacher viewing, call identity.api.ManagerScopeQueries/
+        TeacherScopeQueries — this scheme only describes the authentication
+        mechanism, not the authorization rule, matching Organization's and
+        Audit's contracts.
+  schemas:
+    TeacherStatus:
+      type: string
+      enum: [IN_TRAINING, ACTIVE, ON_LEAVE, EXITED]
+    TeacherProfileView:
+      type: object
+      required:
+        - id
+        - name
+        - phone
+        - bankAccountHolderName
+        - bankAccountNumber
+        - bankName
+        - ifscCode
+        - hlsOfferedSalary
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        bankAccountHolderName:
+          type: string
+        bankAccountNumber:
+          type: string
+        bankName:
+          type: string
+        ifscCode:
+          type: string
+        hlsOfferedSalary:
+          type: number
+          format: double
+        status:
+          $ref: "#/components/schemas/TeacherStatus"
+        createdAt:
+          type: string
+          format: date-time
+    CreateTeacherProfileRequest:
+      type: object
+      required:
+        - name
+        - phone
+        - bankAccountHolderName
+        - bankAccountNumber
+        - bankName
+        - ifscCode
+        - hlsOfferedSalary
+        - status
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        bankAccountHolderName:
+          type: string
+        bankAccountNumber:
+          type: string
+        bankName:
+          type: string
+        ifscCode:
+          type: string
+        hlsOfferedSalary:
+          type: number
+          format: double
+        status:
+          $ref: "#/components/schemas/TeacherStatus"
+    UpdateTeacherProfileRequest:
+      type: object
+      description: All fields optional — only those present are changed (FR-002).
+      properties:
+        name:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        bankAccountHolderName:
+          type: string
+          nullable: true
+        bankAccountNumber:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+        ifscCode:
+          type: string
+          nullable: true
+        hlsOfferedSalary:
+          type: number
+          format: double
+          nullable: true

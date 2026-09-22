@@ -110,4 +110,26 @@ class ArchitectureTest {
 
         onlyAuditAccessesAuditInternals.check(classes);
     }
+
+    /**
+     * School-specific rule added with the School module (spec 007): nothing
+     * outside {@code com.hls.school} may reach into {@code com.hls.school.internal}
+     * — only {@code com.hls.school.api} is public. No module depends on
+     * {@code school.internal} yet, but this rule is added up front rather
+     * than only once a real caller exists (the same discipline specs/004/005
+     * already applied).
+     */
+    @Test
+    void schoolInternalsAreOnlyAccessedFromWithinSchool() {
+        JavaClasses classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.hls");
+
+        ArchRule onlySchoolAccessesSchoolInternals = noClasses()
+                .that().resideOutsideOfPackage("com.hls.school..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("com.hls.school.internal..");
+
+        onlySchoolAccessesSchoolInternals.check(classes);
+    }
 }
