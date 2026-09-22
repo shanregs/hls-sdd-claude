@@ -1,23 +1,22 @@
 package com.hls.identity;
 
-import com.hls.identity.internal.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
+import com.hls.identity.internal.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * Unit coverage for FR-001/007/008/009/010/015/016/018 (User Stories 1, 2, 4).
@@ -74,7 +73,7 @@ class AuthenticationServiceTest {
         User user = activeUser("correct-password");
         when(userRepository.findByPhoneNumber(user.getPhoneNumber())).thenReturn(Optional.of(user));
         var issued = new TokenService.IssuedTokens("access", 900, "refresh", UUID.randomUUID());
-        when(tokenService.issueForNewSession(user.getId(), user.getRoles(), Channel.WEB, null)).thenReturn(issued);
+        when(tokenService.issueForNewSession(user.getId(), user.getRoles(), Channel.WEB, null, user.getLinkedTeacherId())).thenReturn(issued);
 
         LoginOutcome outcome = service.login(user.getPhoneNumber(), "correct-password", Channel.WEB, null, "req-1");
 
@@ -93,7 +92,7 @@ class AuthenticationServiceTest {
 
         assertThat(user.getFailedAttemptCount()).isEqualTo(1);
         verify(auditLogger).loginFailure(user.getId(), user.getPhoneNumber(), "req-2");
-        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any());
+        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any(), any());
     }
 
     // FR-015: an unregistered phone number fails identically to a wrong password.
@@ -126,7 +125,7 @@ class AuthenticationServiceTest {
         // FR-015: locked-account denial with correct credentials looks identical to wrong-password.
         assertThatThrownBy(() -> service.login(user.getPhoneNumber(), "correct-password", Channel.WEB, null, "req"))
                 .isInstanceOf(InvalidCredentialsException.class);
-        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any());
+        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -160,7 +159,7 @@ class AuthenticationServiceTest {
         assertThat(((LoginOutcome.MfaRequired) outcome).method()).isEqualTo(MfaMethod.SMS);
         verify(otpChallengeRepository).save(any());
         verify(otpSender).sendCode(eq(user.getPhoneNumber()), any());
-        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any());
+        verify(tokenService, never()).issueForNewSession(any(), any(), any(), any(), any());
         // Not yet fully authenticated — no LOGIN_SUCCESS until the MFA step itself succeeds.
         verify(auditLogger, never()).loginSuccess(any(), any(), any());
     }
@@ -177,7 +176,7 @@ class AuthenticationServiceTest {
         User teacher = new User(UUID.randomUUID(), "Teacher", phoneNumber, Set.of(Role.TEACHER), NOW);
         when(userRepository.findByPhoneNumber(phoneNumber)).thenReturn(Optional.of(teacher));
         var issued = new TokenService.IssuedTokens("access", 900, "refresh", UUID.randomUUID());
-        when(tokenService.issueForNewSession(teacher.getId(), teacher.getRoles(), Channel.MOBILE, "phone-1")).thenReturn(issued);
+        when(tokenService.issueForNewSession(teacher.getId(), teacher.getRoles(), Channel.MOBILE, "phone-1", teacher.getLinkedTeacherId())).thenReturn(issued);
 
         var tokens = service.verifyOtp(phoneNumber, code, Channel.MOBILE, "phone-1", "req-otp");
 
