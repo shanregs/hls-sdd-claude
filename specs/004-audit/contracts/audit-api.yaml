@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: HLS Audit API
+  description: >
+    Read-only history lookup for the append-only audit trail (specs/004-audit).
+    Writing an audit entry (FR-002) happens only in-process, via other backend
+    modules calling `audit.api.AuditWriter` directly (research.md §1/§2) — there
+    is deliberately no HTTP write endpoint here, so an audit entry can never be
+    created, edited, or deleted over the network by any client, including an
+    Admin's own browser session (FR-005). This contract's single endpoint is
+    DIRECTOR/ADMIN-only (FR-007, FR-008). Role and identity come from Identity &
+    Access's real JWT bearer token (spec 002, implemented), the same pattern
+    `organization`'s contract already established.
+  version: "1.0.0"
+paths:
+  /api/v1/audit/{entityType}/{entityId}/history:
+    get:
+      summary: Full audit history for one record, oldest first
+      description: >
+        Returns every entry ever recorded against this (entityType, entityId)
+        pair, in the order they actually happened (User Story 2). Returns an
+        empty array, not an error, when the pair is syntactically valid but
+        has no recorded history (edge case: never-audited record).
+      operationId: getEntityHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          description: The owning module's name for the record, e.g. "AttendanceRecord".
+          schema:
+            type: string
+        - name: entityId
+          in: path
+          required: true
+          description: The owning module's own identifier for the record.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Every entry for this record, ordered oldest first (FR-007, FR-011).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntryView"
+        "403":
+          description: Caller is authenticated but not a Director or Admin (FR-008, US2 acceptance scenario 3).
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Identity & Access's real JWT bearer token (spec 002, implemented).
+        The endpoint handler additionally checks the token's `roles` claim for
+        DIRECTOR/ADMIN membership — this scheme only describes the
+        authentication mechanism, not the authorization rule, matching
+        `organization`'s contract.
+  schemas:
+    AuditEntryView:
+      type: object
+      required:
+        - id
+        - sequenceNo
+        - sourceModule
+        - entityType
+        - entityId
+        - action
+        - summary
+        - actorUserId
+        - occurredAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        sequenceNo:
+          type: integer
+          format: int64
+          description: The definitive ordering key (research.md §5) — occurredAt is for display only.
+        sourceModule:
+          type: string
+          example: attendance
+        entityType:
+          type: string
+          example: AttendanceRecord
+        entityId:
+          type: string
+        action:
+          type: string
+          enum: [CREATED, UPDATED, CORRECTED]
+        summary:
+          type: string
+          example: "status: Present -> Leave"
+        beforeValue:
+          type: string
+          nullable: true
+          description: Caller-supplied, typically JSON. Null for a CREATED entry.
+        afterValue:
+          type: string
+          nullable: true
+        actorUserId:
+          type: string
+          format: uuid
+        actorRole:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          nullable: true

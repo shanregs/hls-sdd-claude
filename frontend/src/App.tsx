@@ -5,6 +5,7 @@ import { TeacherOtpLoginPage } from "./pages/TeacherOtpLoginPage/TeacherOtpLogin
 import { PasswordResetPage } from "./pages/PasswordResetPage/PasswordResetPage";
 import { SessionsPage } from "./pages/SessionsPage/SessionsPage";
 import { AssignmentsPage } from "./pages/AssignmentsPage/AssignmentsPage";
+import { AuditHistoryPage } from "./pages/AuditHistoryPage/AuditHistoryPage";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 
 type UnauthenticatedView = "staff-login" | "teacher-login" | "password-reset";
@@ -19,10 +20,19 @@ function UnauthenticatedApp() {
 
   return (
     <div>
-      <nav style={{ display: "flex", gap: "1rem", justifyContent: "center", padding: "1rem" }}>
+      <nav
+        style={{
+          display: "flex",
+          gap: "1rem",
+          justifyContent: "center",
+          padding: "1rem",
+        }}
+      >
         <button onClick={() => setView("staff-login")}>Staff login</button>
         <button onClick={() => setView("teacher-login")}>Teacher login</button>
-        <button onClick={() => setView("password-reset")}>Forgot password?</button>
+        <button onClick={() => setView("password-reset")}>
+          Forgot password?
+        </button>
       </nav>
       {view === "staff-login" && <LoginPage />}
       {view === "teacher-login" && <TeacherOtpLoginPage />}
@@ -31,19 +41,28 @@ function UnauthenticatedApp() {
   );
 }
 
-type AuthenticatedView = "sessions" | "assignments";
+type AuthenticatedView = "sessions" | "assignments" | "audit-history";
 
 function AuthenticatedApp() {
   const { logout } = useAuth();
   const [view, setView] = useState<AuthenticatedView>("assignments");
   return (
     <div>
-      <nav style={{ display: "flex", gap: "1rem", justifyContent: "center", padding: "1rem" }}>
+      <nav
+        style={{
+          display: "flex",
+          gap: "1rem",
+          justifyContent: "center",
+          padding: "1rem",
+        }}
+      >
         <button onClick={() => setView("assignments")}>Assignments</button>
+        <button onClick={() => setView("audit-history")}>Audit History</button>
         <button onClick={() => setView("sessions")}>Sessions</button>
         <button onClick={() => logout()}>Sign out</button>
       </nav>
       {view === "assignments" && <AssignmentsPage />}
+      {view === "audit-history" && <AuditHistoryPage />}
       {view === "sessions" && <SessionsPage />}
     </div>
   );

@@ -1,12 +1,12 @@
 package com.hls;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Test;
-
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * Enforces constitution Principle V (modular monolith with enforced boundaries):
@@ -88,5 +88,26 @@ class ArchitectureTest {
                 .resideInAPackage("com.hls.organization.internal..");
 
         onlyOrganizationAccessesOrganizationInternals.check(classes);
+    }
+
+    /**
+     * Audit-specific rule added with the Audit module (spec 004): nothing
+     * outside {@code com.hls.audit} may reach into {@code com.hls.audit.internal}
+     * — only {@code com.hls.audit.api} is public. No module depends on
+     * {@code audit.internal} yet (research.md §2), but this rule is added
+     * up front rather than only once a real caller exists.
+     */
+    @Test
+    void auditInternalsAreOnlyAccessedFromWithinAudit() {
+        JavaClasses classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.hls");
+
+        ArchRule onlyAuditAccessesAuditInternals = noClasses()
+                .that().resideOutsideOfPackage("com.hls.audit..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("com.hls.audit.internal..");
+
+        onlyAuditAccessesAuditInternals.check(classes);
     }
 }

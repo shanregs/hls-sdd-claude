@@ -1,0 +1,36 @@
+.audit-history-page {
+  max-width: 900px;
+  margin: 2rem auto;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.audit-history-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+}
+
+.audit-history-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.audit-history-page table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.audit-history-page th,
+.audit-history-page td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+}
