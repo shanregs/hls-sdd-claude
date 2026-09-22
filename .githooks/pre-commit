@@ -49,8 +49,25 @@ if [ "${#backend_files[@]}" -gt 0 ]; then
         done
     fi
     # -DspotlessFiles full-matches each regex against the file's absolute path (backslashes on
-    # Windows), so match on basename with a leading .* wildcard to sidestep the path separator.
-    spotless_files="$(printf '%s\n' "${backend_files[@]}" | sed -E 's#.*/##; s/[.[\*^$]/\\&/g; s/^/.*/' | paste -sd ',' -)"
+    # Windows), so a bare basename pattern needs a leading .* to sidestep the path separator.
+    # A basename ALONE is not enough, though: com.hls.audit.internal.AuditEntry and
+    # com.hls.identity.internal.AuthAuditEntry both end in "AuditEntry.java", so a
+    # ".*AuditEntry\.java" pattern silently matches (and reformats) the wrong file too.
+    # Disambiguate by also requiring the com.hls.<module> segment (audit/identity/organization/...)
+    # to appear before the basename — module names don't collide the way basenames can.
+    spotless_files=""
+    for f in "${backend_files[@]}"; do
+        module="$(printf '%s' "$f" | sed -E 's#.*/com/hls/([^/]+)/.*#\1#')"
+        base="$(printf '%s' "$f" | sed -E 's#.*/##')"
+        esc_module="$(printf '%s' "$module" | sed -E 's/[.[\*^$]/\\&/g')"
+        esc_base="$(printf '%s' "$base" | sed -E 's/[.[\*^$]/\\&/g')"
+        pattern=".*${esc_module}.*${esc_base}"
+        if [ -z "$spotless_files" ]; then
+            spotless_files="$pattern"
+        else
+            spotless_files="$spotless_files,$pattern"
+        fi
+    done
     (
         cd backend || exit 1
         if [ -n "$spotless_java_home" ]; then
