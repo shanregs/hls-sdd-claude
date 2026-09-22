@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .githooks/pre-commit || echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Lint auto-fix (ESLint/Prettier/Spotless) left errors it could not resolve automatically in the staged files. Run git status, fix them by hand, re-stage, and retry the commit.\"}}'",
+            "command": "root=\"$(git rev-parse --show-toplevel 2>/dev/null)\" && bash \"$root/.githooks/pre-commit\" || echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Lint auto-fix (ESLint/Prettier/Spotless) left errors it could not resolve automatically in the staged files. Run git status, fix them by hand, re-stage, and retry the commit.\"}}'",
             "if": "Bash(git commit*)",
             "shell": "bash",
             "timeout": 120,
