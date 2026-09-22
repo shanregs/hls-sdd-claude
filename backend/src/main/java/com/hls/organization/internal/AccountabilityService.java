@@ -3,14 +3,17 @@ package com.hls.organization.internal;
 import com.hls.organization.api.AccountabilityCommands;
 import com.hls.organization.api.AccountabilityQueries;
 import com.hls.organization.api.AssignmentConflictException;
+import com.hls.organization.api.SchoolManagerNotInZoneException;
+import com.hls.organization.api.ZoneNotFoundException;
 import com.hls.organization.api.dto.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.hls.school.api.ZoneQueries;
+import com.hls.school.api.dto.SchoolZoneAnswer;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implements both {@link AccountabilityQueries} and {@link AccountabilityCommands}
@@ -29,13 +32,19 @@ public class AccountabilityService implements AccountabilityQueries, Accountabil
 
     private final SchoolAssignmentRepository schoolAssignmentRepository;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
+    private final ZoneManagerAssignmentRepository zoneManagerAssignmentRepository;
+    private final ZoneQueries zoneQueries;
     private final Clock clock;
 
     public AccountabilityService(SchoolAssignmentRepository schoolAssignmentRepository,
                                   TeacherAssignmentRepository teacherAssignmentRepository,
+                                  ZoneManagerAssignmentRepository zoneManagerAssignmentRepository,
+                                  ZoneQueries zoneQueries,
                                   Clock clock) {
         this.schoolAssignmentRepository = schoolAssignmentRepository;
         this.teacherAssignmentRepository = teacherAssignmentRepository;
+        this.zoneManagerAssignmentRepository = zoneManagerAssignmentRepository;
+        this.zoneQueries = zoneQueries;
         this.clock = clock;
     }
 
@@ -129,6 +138,15 @@ public class AccountabilityService implements AccountabilityQueries, Accountabil
                 .toList();
     }
 
+    @Override
+    public ZoneCoverage zoneCoverage(UUID zoneId) {
+        List<UUID> managerIds = zoneManagerAssignmentRepository.findByZoneIdAndEffectiveToIsNull(zoneId).stream()
+                .map(ZoneManagerAssignment::getManagerId)
+                .toList();
+        List<UUID> schoolIds = zoneQueries.currentSchoolsForZone(zoneId);
+        return new ZoneCoverage(zoneId, managerIds, schoolIds);
+    }
+
     private List<UnassignedItem> unassignedTeachers() {
         List<TeacherAssignment> all = teacherAssignmentRepository.findAll();
         Set<UUID> currentIds = all.stream().filter(TeacherAssignment::isCurrent)
@@ -149,6 +167,21 @@ public class AccountabilityService implements AccountabilityQueries, Accountabil
     @Override
     @Transactional
     public CurrentAssignment assignSchoolManager(UUID schoolId, UUID managerId, UUID endsAssignmentId, UUID actingUserId) {
+        // specs/006-zone-scoping FR-003/FR-004: checked first, before any existing
+        // no-op/conflict logic, so a Zone-coverage failure is never confused with
+        // an assignment conflict (research.md §3).
+        SchoolZoneAnswer schoolZone = zoneQueries.currentZoneForSchool(schoolId);
+        if (schoolZone.state() != SchoolZoneAnswer.State.CURRENT_ZONE) {
+            throw new SchoolManagerNotInZoneException("School " + schoolId + " has no current Zone");
+        }
+        boolean managerCoversZone = zoneManagerAssignmentRepository
+                .findByZoneIdAndManagerIdAndEffectiveToIsNull(schoolZone.zoneId(), managerId)
+                .isPresent();
+        if (!managerCoversZone) {
+            throw new SchoolManagerNotInZoneException(
+                    "Manager " + managerId + " does not currently cover School " + schoolId + "'s Zone");
+        }
+
         Optional<SchoolAssignment> current = schoolAssignmentRepository.findBySchoolIdAndEffectiveToIsNull(schoolId);
         Instant now = clock.instant();
 
@@ -223,6 +256,34 @@ public class AccountabilityService implements AccountabilityQueries, Accountabil
         int updated = teacherAssignmentRepository.endIfStillCurrent(assignmentId, clock.instant());
         if (updated == 0) {
             throw new AssignmentConflictException("Assignment " + assignmentId + " was already changed by someone else");
+        }
+    }
+
+    @Override
+    @Transactional
+    public ZoneManagerAssignmentView assignManagerToZone(UUID zoneId, UUID managerId, UUID actingUserId) {
+        if (zoneQueries.findById(zoneId).isEmpty()) {
+            throw new ZoneNotFoundException("No Zone with id " + zoneId);
+        }
+        Optional<ZoneManagerAssignment> existing =
+                zoneManagerAssignmentRepository.findByZoneIdAndManagerIdAndEffectiveToIsNull(zoneId, managerId);
+        if (existing.isPresent()) {
+            // No-op on repeat, consistent with every other assignment command in this codebase.
+            ZoneManagerAssignment current = existing.get();
+            return new ZoneManagerAssignmentView(current.getId(), current.getZoneId(), current.getManagerId(), current.getEffectiveFrom());
+        }
+        Instant now = clock.instant();
+        ZoneManagerAssignment created = new ZoneManagerAssignment(UUID.randomUUID(), zoneId, managerId, now, actingUserId, now);
+        zoneManagerAssignmentRepository.save(created);
+        return new ZoneManagerAssignmentView(created.getId(), zoneId, managerId, now);
+    }
+
+    @Override
+    @Transactional
+    public void removeManagerFromZone(UUID assignmentId, UUID actingUserId) {
+        int updated = zoneManagerAssignmentRepository.endIfStillCurrent(assignmentId, clock.instant());
+        if (updated == 0) {
+            throw new AssignmentConflictException("Zone-Manager assignment " + assignmentId + " was already changed by someone else");
         }
     }
 }

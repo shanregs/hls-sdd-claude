@@ -1,17 +1,18 @@
 package com.hls.organization.internal;
 
 import com.hls.organization.api.AssignmentConflictException;
+import com.hls.organization.api.SchoolManagerNotInZoneException;
+import com.hls.organization.api.ZoneNotFoundException;
 import com.hls.organization.api.dto.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * REST endpoints per contracts/organization-api.yaml. No {@code CurrentUserResolver}
@@ -34,7 +35,13 @@ public class OrganizationController {
     public record AssignmentRequest(UUID schoolId, UUID teacherId, UUID managerId, UUID endsAssignmentId) {
     }
 
+    public record ZoneManagerAssignmentRequest(UUID zoneId, UUID managerId) {
+    }
+
     public record ConflictError(String message) {
+    }
+
+    public record ErrorBody(String message) {
     }
 
     @PostMapping("/school-assignments")
@@ -111,10 +118,41 @@ public class OrganizationController {
         return accountabilityService.unassigned(itemType);
     }
 
+    @PostMapping("/zone-manager-assignments")
+    public ZoneManagerAssignmentView assignManagerToZone(@RequestBody ZoneManagerAssignmentRequest request, @AuthenticationPrincipal Jwt jwt) {
+        requireDirectorOrAdmin(jwt);
+        return accountabilityService.assignManagerToZone(request.zoneId(), request.managerId(), userId(jwt));
+    }
+
+    @DeleteMapping("/zone-manager-assignments/{assignmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeManagerFromZone(@PathVariable UUID assignmentId, @AuthenticationPrincipal Jwt jwt) {
+        requireDirectorOrAdmin(jwt);
+        accountabilityService.removeManagerFromZone(assignmentId, userId(jwt));
+    }
+
+    @GetMapping("/zones/{zoneId}/coverage")
+    public ZoneCoverage getZoneCoverage(@PathVariable UUID zoneId, @AuthenticationPrincipal Jwt jwt) {
+        requireDirectorOrAdmin(jwt);
+        return accountabilityService.zoneCoverage(zoneId);
+    }
+
     @ExceptionHandler(AssignmentConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ConflictError handleConflict(AssignmentConflictException e) {
         return new ConflictError("This assignment was already changed by someone else. Refresh and retry.");
+    }
+
+    @ExceptionHandler(SchoolManagerNotInZoneException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorBody handleSchoolManagerNotInZone(SchoolManagerNotInZoneException e) {
+        return new ErrorBody(e.getMessage());
+    }
+
+    @ExceptionHandler(ZoneNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorBody handleZoneNotFound(ZoneNotFoundException e) {
+        return new ErrorBody(e.getMessage());
     }
 
     // ---- helpers -------------------------------------------------------------------------

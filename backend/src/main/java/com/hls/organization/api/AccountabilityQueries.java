@@ -5,7 +5,7 @@ import com.hls.organization.api.dto.AssignmentHistoryEntry;
 import com.hls.organization.api.dto.ItemType;
 import com.hls.organization.api.dto.PortfolioItem;
 import com.hls.organization.api.dto.UnassignedItem;
-
+import com.hls.organization.api.dto.ZoneCoverage;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -38,4 +38,11 @@ public interface AccountabilityQueries {
 
     /** FR-009: every School/Teacher with no current accountable Manager. {@code filter} may be null for both types. */
     List<UnassignedItem> unassigned(ItemType filter);
+
+    /**
+     * specs/006-zone-scoping FR-005: a Zone's current coverage — its
+     * covering Managers (this module's own data) and its Schools (read live
+     * through {@code school.api.ZoneQueries}), composed in one call.
+     */
+    ZoneCoverage zoneCoverage(UUID zoneId);
 }

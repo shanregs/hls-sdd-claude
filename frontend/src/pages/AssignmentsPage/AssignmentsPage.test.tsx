@@ -195,4 +195,60 @@ describe("AssignmentsPage", () => {
     expect(row).toHaveTextContent("SCHOOL");
     expect(row).toHaveTextContent("school-1");
   });
+
+  it("assigns a Manager to cover a Zone (specs/006 User Story 1)", async () => {
+    mockFetchSequence([
+      { status: 200, body: [] }, // initial unassigned load
+      {
+        status: 200,
+        body: {
+          id: "zma-1",
+          zoneId: "zone-1",
+          managerId: "manager-a",
+          effectiveFrom: "2026-09-22T00:00:00Z",
+        },
+      },
+    ]);
+    renderAuthenticated();
+    await screen.findByTestId("unassigned-section");
+
+    await userEvent.type(
+      screen.getByTestId("zone-manager-zone-id-input"),
+      "zone-1",
+    );
+    await userEvent.type(
+      screen.getByTestId("zone-manager-manager-id-input"),
+      "manager-a",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /assign manager to zone/i }),
+    );
+
+    expect(await screen.findByTestId("zone-manager-message")).toHaveTextContent(
+      "manager-a",
+    );
+  });
+
+  it("shows the 422 rejection reason when a School's chosen Manager doesn't cover its Zone (specs/006 User Story 2)", async () => {
+    mockFetchSequence([
+      { status: 200, body: [] }, // initial unassigned load
+      { status: 200, body: [] }, // assignment-history (empty — no current row)
+      {
+        status: 422,
+        body: {
+          message: "Manager does not currently cover this School's Zone.",
+        },
+      },
+    ]);
+    renderAuthenticated();
+    await screen.findByTestId("unassigned-section");
+
+    await userEvent.type(screen.getByTestId("item-id-input"), "school-1");
+    await userEvent.type(screen.getByTestId("manager-id-input"), "manager-x");
+    await userEvent.click(screen.getByRole("button", { name: /^assign$/i }));
+
+    expect(await screen.findByTestId("assign-error")).toHaveTextContent(
+      "does not currently cover",
+    );
+  });
 });

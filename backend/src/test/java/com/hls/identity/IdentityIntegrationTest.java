@@ -1,15 +1,24 @@
 package com.hls.identity;
 
-import tools.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.hls.identity.api.ManagerScopeQueries;
 import com.hls.identity.api.TeacherScopeQueries;
 import com.hls.identity.internal.*;
 import com.hls.organization.api.AccountabilityCommands;
+import com.hls.school.api.ZoneCommands;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -17,17 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Testcontainers-backed end-to-end coverage: real Postgres, real Flyway
@@ -69,6 +68,8 @@ class IdentityIntegrationTest {
     private TeacherScopeQueries teacherScopeQueries;
     @Autowired
     private AccountabilityCommands accountabilityCommands;
+    @Autowired
+    private ZoneCommands zoneCommands;
     @Autowired
     private OtpChallengeRepository otpChallengeRepository;
     @Autowired
@@ -142,6 +143,15 @@ class IdentityIntegrationTest {
         UUID managerA = UUID.randomUUID();
         UUID managerB = UUID.randomUUID();
         UUID schoolId = UUID.randomUUID();
+        // specs/006-zone-scoping: assignSchoolManager is now Zone-constrained — the
+        // chosen Manager must currently cover the School's Zone, both read/checked
+        // live through school.api.ZoneQueries / organization's own Zone-Manager
+        // assignment. Seed a real Zone (school.api.ZoneCommands), assign the School
+        // to it, and assign managerA to cover it, before assigning managerA as the
+        // School's accountable Manager.
+        UUID zoneId = zoneCommands.createZone("Identity Test Zone", UUID.randomUUID());
+        zoneCommands.assignSchoolToZone(schoolId, zoneId, null, UUID.randomUUID());
+        accountabilityCommands.assignManagerToZone(zoneId, managerA, UUID.randomUUID());
         accountabilityCommands.assignSchoolManager(schoolId, managerA, null, UUID.randomUUID());
 
         assertThat(managerScopeQueries.isAllowedForSchool(managerA, schoolId)).isTrue();
