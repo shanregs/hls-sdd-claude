@@ -1,13 +1,20 @@
 package com.hls.organization;
 
-import tools.jackson.databind.ObjectMapper;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.hls.identity.internal.Role;
 import com.hls.identity.internal.User;
 import com.hls.identity.internal.UserRepository;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -15,29 +22,21 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * Testcontainers-backed end-to-end coverage: real Postgres (both {@code V1} and
- * {@code V2} Flyway migrations applied), a real login through Identity's
- * {@code /api/v1/auth/login} to obtain a bearer token, then real HTTP calls
- * against {@code OrganizationController}. Covers tasks.md T011/T018/T025
- * (User Stories 1-3's integration-level acceptance criteria) and
- * quickstart.md's Scenarios 4-5.
+ * Testcontainers-backed end-to-end coverage: real Postgres (all Flyway
+ * migrations through {@code V8} applied), a real login through Identity's
+ * {@code /api/v1/auth/login} to obtain a bearer token, real HTTP calls
+ * against {@code OrganizationController}, and — since specs/006-zone-scoping's
+ * rework — real Zone/School-Zone setup through {@code school}'s own,
+ * already-shipped endpoints (never a stand-in). Covers specs/003's original
+ * User Stories 1-3 (now Zone-constrained) and specs/006-zone-scoping's
+ * reworked User Stories 1-3.
  *
  * <p>Imports {@code identity.internal.*} directly for user-seeding, exactly as
  * {@code IdentityIntegrationTest} does within its own module — {@code ArchitectureTest}
- * excludes test sources from its boundary check (research.md's module-boundary
- * rule only constrains {@code main} code).
+ * excludes test sources from its boundary check.
  *
  * <p><b>Environment note</b>: requires a running Docker daemon.
  */
@@ -67,13 +66,15 @@ class OrganizationIntegrationTest {
     @Autowired
     private Clock clock;
 
-    // ---- User Story 1 (T011): assign over real HTTP, then query -------------------------
+    // ---- specs/003 User Story 1: assign over real HTTP, then query ----------------------
 
     @Test
     void assignSchoolManager_overHttp_thenAccountableManagerQueryReturnsIt() throws Exception {
         String accessToken = loginAsDirector();
-        UUID schoolId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
+        UUID zoneId = createZone(accessToken, "Org Zone A");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        assignManagerToZone(accessToken, zoneId, managerId);
 
         mockMvc.perform(post("/api/v1/organization/school-assignments")
                         .header("Authorization", "Bearer " + accessToken)
@@ -89,15 +90,19 @@ class OrganizationIntegrationTest {
                 .andExpect(jsonPath("$.managerId").value(managerId.toString()));
     }
 
-    // ---- User Story 2 (T018): conflicting reassignment, and FR-013 independence ---------
+    // ---- specs/003 User Story 2: conflicting reassignment, and FR-013 independence ------
 
     @Test
     void reassignment_namingAnAlreadyEndedAssignment_isRejectedAsConflict() throws Exception {
         String accessToken = loginAsDirector();
-        UUID schoolId = UUID.randomUUID();
         UUID managerA = UUID.randomUUID();
         UUID managerB = UUID.randomUUID();
         UUID managerC = UUID.randomUUID();
+        UUID zoneId = createZone(accessToken, "Org Zone B");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        assignManagerToZone(accessToken, zoneId, managerA);
+        assignManagerToZone(accessToken, zoneId, managerB);
+        assignManagerToZone(accessToken, zoneId, managerC);
 
         String firstAssignBody = mockMvc.perform(post("/api/v1/organization/school-assignments")
                         .header("Authorization", "Bearer " + accessToken)
@@ -107,7 +112,7 @@ class OrganizationIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         UUID currentAssignmentId = UUID.fromString(objectMapper.readTree(firstAssignBody).get("id").asText());
 
-        // SC-004: the first reassignment naming this row succeeds...
+        // The first reassignment naming this row succeeds...
         mockMvc.perform(post("/api/v1/organization/school-assignments")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType("application/json")
@@ -126,17 +131,20 @@ class OrganizationIntegrationTest {
                 .andExpect(status().isConflict());
     }
 
-    // quickstart.md Scenario 4 / FR-013.
+    // FR-013.
     @Test
     void reassigningSchoolManager_leavesAnUnrelatedTeachersAccountableManagerUnchanged() throws Exception {
         String accessToken = loginAsDirector();
         UUID teacherId = UUID.randomUUID();
         UUID teachersManager = UUID.randomUUID();
-        UUID schoolId = UUID.randomUUID();
         UUID schoolManagerA = UUID.randomUUID();
         UUID schoolManagerB = UUID.randomUUID();
+        UUID zoneId = createZone(accessToken, "Org Zone C");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        assignManagerToZone(accessToken, zoneId, schoolManagerA);
+        assignManagerToZone(accessToken, zoneId, schoolManagerB);
 
-        // Assign the Teacher to its own Manager.
+        // Assign the Teacher to its own Manager — no Zone setup involved at all.
         mockMvc.perform(post("/api/v1/organization/teacher-assignments")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType("application/json")
@@ -165,14 +173,15 @@ class OrganizationIntegrationTest {
                 .andExpect(jsonPath("$.managerId").value(teachersManager.toString()));
     }
 
-    // ---- User Story 3 (T025): end-without-replacement appears on unassigned list --------
+    // ---- specs/003 User Story 3: end-without-replacement appears on unassigned list -----
 
-    // quickstart.md Scenario 5 / SC-005.
     @Test
     void endingAssignmentWithoutReplacement_appearsOnUnassignedListInTheSameSession() throws Exception {
         String accessToken = loginAsDirector();
-        UUID schoolId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
+        UUID zoneId = createZone(accessToken, "Org Zone D");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        assignManagerToZone(accessToken, zoneId, managerId);
 
         String assignBody = mockMvc.perform(post("/api/v1/organization/school-assignments")
                         .header("Authorization", "Bearer " + accessToken)
@@ -207,9 +216,162 @@ class OrganizationIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ---- specs/006 User Story 1: assign/remove Manager coverage of a Zone ---------------
+
+    @Test
+    void assignManagerToZone_thenRemove_reflectsInCoverage() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Org Zone E");
+        UUID managerId = UUID.randomUUID();
+
+        String body = mockMvc.perform(post("/api/v1/organization/zone-manager-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new ZoneManagerRequestBody(zoneId, managerId))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        UUID assignmentId = UUID.fromString(objectMapper.readTree(body).get("id").asText());
+
+        mockMvc.perform(get("/api/v1/organization/zones/" + zoneId + "/coverage")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.managerIds[0]").value(managerId.toString()));
+
+        mockMvc.perform(delete("/api/v1/organization/zone-manager-assignments/" + assignmentId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/organization/zones/" + zoneId + "/coverage")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.managerIds.length()").value(0));
+    }
+
+    @Test
+    void assignManagerToZone_unknownZoneId_returns404() throws Exception {
+        String accessToken = loginAsDirector();
+
+        mockMvc.perform(post("/api/v1/organization/zone-manager-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new ZoneManagerRequestBody(UUID.randomUUID(), UUID.randomUUID()))))
+                .andExpect(status().isNotFound());
+    }
+
+    // ---- specs/006 User Story 2: assignSchoolManager is Zone-constrained ----------------
+
+    @Test
+    void assignSchoolManager_managerCoveringSchoolsZone_succeeds() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID managerId = UUID.randomUUID();
+        UUID zoneId = createZone(accessToken, "Org Zone F");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        assignManagerToZone(accessToken, zoneId, managerId);
+
+        mockMvc.perform(post("/api/v1/organization/school-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestBody(schoolId, null, managerId, null))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void assignSchoolManager_managerNotCoveringSchoolsZone_returns422() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Org Zone G");
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+        UUID managerNotCovering = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/organization/school-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestBody(schoolId, null, managerNotCovering, null))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void assignSchoolManager_schoolWithNoZone_returns422() throws Exception {
+        String accessToken = loginAsDirector();
+
+        mockMvc.perform(post("/api/v1/organization/school-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestBody(UUID.randomUUID(), null, UUID.randomUUID(), null))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    // quickstart.md Scenario 4 / SC-004.
+    @Test
+    void assignTeacherManager_stillWorksWithNoZoneSetupAtAll() throws Exception {
+        String accessToken = loginAsDirector();
+
+        mockMvc.perform(post("/api/v1/organization/teacher-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestBody(null, UUID.randomUUID(), UUID.randomUUID(), null))))
+                .andExpect(status().isOk());
+    }
+
+    // ---- specs/006 User Story 3: zone coverage lookup ------------------------------------
+
+    @Test
+    void getZoneCoverage_returnsManagersAndSchoolsInOneLookup() throws Exception {
+        String accessToken = loginAsDirector();
+        UUID zoneId = createZone(accessToken, "Org Zone H");
+        UUID managerA = UUID.randomUUID();
+        UUID managerB = UUID.randomUUID();
+        assignManagerToZone(accessToken, zoneId, managerA);
+        assignManagerToZone(accessToken, zoneId, managerB);
+        UUID schoolId = assignSchoolToZone(accessToken, UUID.randomUUID(), zoneId);
+
+        mockMvc.perform(get("/api/v1/organization/zones/" + zoneId + "/coverage")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.managerIds.length()").value(2))
+                .andExpect(jsonPath("$.schoolIds[0]").value(schoolId.toString()));
+    }
+
     // ---- helpers -------------------------------------------------------------------------
 
     private record AssignmentRequestBody(UUID schoolId, UUID teacherId, UUID managerId, UUID endsAssignmentId) {
+    }
+
+    private record ZoneManagerRequestBody(UUID zoneId, UUID managerId) {
+    }
+
+    private record ZoneRequestBody(String name) {
+    }
+
+    private record SchoolZoneRequestBody(UUID schoolId, UUID zoneId) {
+    }
+
+    /** Creates a real Zone through `school`'s own endpoint (specs/007-school-zone) — never a stand-in. */
+    private UUID createZone(String accessToken, String name) throws Exception {
+        String body = mockMvc.perform(post("/api/v1/school/zones")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new ZoneRequestBody(name))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(body).get("id").asText());
+    }
+
+    /** Assigns {@code schoolId} to {@code zoneId} through `school`'s own endpoint; returns {@code schoolId} for chaining. */
+    private UUID assignSchoolToZone(String accessToken, UUID schoolId, UUID zoneId) throws Exception {
+        mockMvc.perform(post("/api/v1/school/school-zone-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new SchoolZoneRequestBody(schoolId, zoneId))))
+                .andExpect(status().isOk());
+        return schoolId;
+    }
+
+    private void assignManagerToZone(String accessToken, UUID zoneId, UUID managerId) throws Exception {
+        mockMvc.perform(post("/api/v1/organization/zone-manager-assignments")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new ZoneManagerRequestBody(zoneId, managerId))))
+                .andExpect(status().isOk());
     }
 
     private static final AtomicInteger DIRECTOR_SEQUENCE = new AtomicInteger(1);

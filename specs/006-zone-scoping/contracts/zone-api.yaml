@@ -1,21 +1,30 @@
 openapi: 3.0.3
 info:
-  title: HLS Zone Scoping API (extends Organization)
+  title: HLS Zone-Based Manager Scoping API (extends Organization)
   description: >
-    New endpoints for Zones (specs/006-zone-scoping), plus one new rejection
-    case on the existing `POST /api/v1/organization/school-assignments`
-    endpoint. specs/003-organization-scoping/contracts/organization-api.yaml
+    New endpoints for Zone-Manager coverage (specs/006-zone-scoping,
+    reworked), plus one new rejection case on the existing
+    `POST /api/v1/organization/school-assignments` endpoint.
+    specs/003-organization-scoping/contracts/organization-api.yaml
     documents every endpoint this file doesn't repeat — it is left as the
     historical record of what originally shipped and is not edited by this
-    feature. Every endpoint here is DIRECTOR/ADMIN-only, same as Organization's
+    feature. This feature does **not** define Zone or School-Zone
+    assignment endpoints — those are `school`'s
+    (`specs/007-school-zone/contracts/school-zone-api.yaml`,
+    `POST /api/v1/school/zones`, `POST /api/v1/school/school-zone-assignments`).
+    Every endpoint here is DIRECTOR/ADMIN-only, same as Organization's
     existing endpoints, via the same real JWT bearer token (spec 002).
   version: "1.0.0"
 paths:
-  /api/v1/organization/zones:
+  /api/v1/organization/zone-manager-assignments:
     post:
-      summary: Create a Zone
-      description: FR-001.
-      operationId: createZone
+      summary: Assign a Manager to cover a Zone
+      description: >
+        FR-001/FR-002. Repeatable for different managers — a Zone may have
+        more than one current covering Manager. Rejects (404) if `zoneId`
+        does not correspond to an existing Zone (validated live through
+        `school.api.ZoneQueries`, never a locally-owned copy).
+      operationId: assignManagerToZone
       security:
         - bearerAuth: []
       requestBody:
@@ -24,35 +33,50 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name]
+              required: [zoneId, managerId]
               properties:
-                name:
+                zoneId:
                   type: string
+                  format: uuid
+                managerId:
+                  type: string
+                  format: uuid
       responses:
         "200":
-          description: Zone created.
+          description: Manager now covers this Zone.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZoneSummary"
-    get:
-      summary: List every Zone
-      operationId: listZones
+                $ref: "#/components/schemas/ZoneManagerAssignmentView"
+        "404":
+          description: No Zone with this id exists.
+  /api/v1/organization/zone-manager-assignments/{assignmentId}:
+    delete:
+      summary: Remove a Manager's coverage of a Zone
+      description: >
+        FR-001. Does not affect any School this Manager currently manages in
+        this Zone (spec.md Edge Cases) — that assignment is left as-is.
+      operationId: removeManagerFromZone
       security:
         - bearerAuth: []
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
-          description: Every Zone (User Story 3's discovery path).
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ZoneSummary"
-  /api/v1/organization/zones/{zoneId}:
+        "204":
+          description: Manager no longer covers this Zone.
+  /api/v1/organization/zones/{zoneId}/coverage:
     get:
-      summary: Get a Zone's current coverage
-      description: FR-006, User Story 3.
+      summary: A Zone's current coverage — Managers and Schools, in one lookup
+      description: >
+        FR-005, User Story 3. `managerIds` comes from this module's own
+        Zone-Manager assignments; `schoolIds` is read live from
+        `school.api.ZoneQueries.currentSchoolsForZone(...)` — composed at
+        read time, not a persisted or cached join.
       operationId: getZoneCoverage
       security:
         - bearerAuth: []
@@ -65,110 +89,26 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Current Managers and Schools, even if either list is empty.
+          description: Current covering Managers and current Schools, even if either list is empty.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ZoneCoverage"
-  /api/v1/organization/zones/{zoneId}/managers:
-    post:
-      summary: Assign a Manager to a Zone
-      description: FR-002. Repeatable for different managers — a Zone may have more than one current Manager.
-      operationId: assignManagerToZone
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: zoneId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [managerId]
-              properties:
-                managerId:
-                  type: string
-                  format: uuid
-      responses:
-        "200":
-          description: Manager now covers this Zone.
-  /api/v1/organization/zones/{zoneId}/managers/{managerId}:
-    delete:
-      summary: Remove a Manager's coverage of a Zone
-      description: >
-        FR-002. Does not affect any School this Manager currently manages in
-        this Zone (spec.md Edge Cases) — that assignment is left as-is.
-      operationId: removeManagerFromZone
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: zoneId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: managerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "204":
-          description: Manager no longer covers this Zone.
-  /api/v1/organization/school-zone-assignments:
-    post:
-      summary: Assign or reassign a School's Zone
-      description: >
-        FR-003. Same shape as the existing school-assignments endpoint
-        (organization-api.yaml) — first assignment when endsAssignmentId is
-        omitted, reassignment (with the same 409-on-conflict semantics,
-        specs/003 FR-011) when it's provided.
-      operationId: assignSchoolZone
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [schoolId, zoneId]
-              properties:
-                schoolId:
-                  type: string
-                  format: uuid
-                zoneId:
-                  type: string
-                  format: uuid
-                endsAssignmentId:
-                  type: string
-                  format: uuid
-      responses:
-        "200":
-          description: School's current Zone.
-        "409":
-          description: Conflict — this School's Zone assignment was already changed by someone else (same semantics as specs/003 FR-011).
   /api/v1/organization/school-assignments:
     post:
-      summary: (Existing endpoint, specs/003) Assign or reassign a School's Manager — now Zone-constrained
+      summary: (Existing endpoint, specs/003) Assign or reassign a School's accountable Manager — now Zone-constrained
       description: >
-        UNCHANGED request/response shape from organization-api.yaml. The only
-        change this feature makes: a new possible rejection (FR-004/FR-005).
+        UNCHANGED request/response shape from organization-api.yaml. The
+        only change this feature makes: a new possible rejection
+        (FR-003/FR-004), checked before the existing no-op/conflict logic.
       responses:
         "422":
           description: >
-            NEW (FR-004/FR-005): the chosen Manager is not currently assigned
-            to this School's Zone — or the School has no Zone yet, or its
-            Zone has no Managers yet. Never retry-worthy as-is; a different
-            Manager (or fixing the Zone setup first) is required.
+            NEW (FR-003/FR-004): the chosen Manager does not currently
+            cover this School's Zone — or the School has no current Zone,
+            or its Zone has no covering Managers yet. Never retry-worthy
+            as-is; a different Manager (or fixing the Zone-coverage setup
+            first) is required.
           content:
             application/json:
               schema:
@@ -181,24 +121,29 @@ components:
       bearerFormat: JWT
       description: Identity & Access's real JWT bearer token (spec 002). Director/Admin role required, same pattern as every existing Organization endpoint.
   schemas:
-    ZoneSummary:
+    ZoneManagerAssignmentView:
       type: object
-      required: [id, name]
+      required: [id, zoneId, managerId, effectiveFrom]
       properties:
         id:
           type: string
           format: uuid
-        name:
+        zoneId:
           type: string
+          format: uuid
+        managerId:
+          type: string
+          format: uuid
+        effectiveFrom:
+          type: string
+          format: date-time
     ZoneCoverage:
       type: object
-      required: [id, name, managerIds, schoolIds]
+      required: [zoneId, managerIds, schoolIds]
       properties:
-        id:
+        zoneId:
           type: string
           format: uuid
-        name:
-          type: string
         managerIds:
           type: array
           items:
@@ -215,4 +160,4 @@ components:
       properties:
         message:
           type: string
-          example: "Manager is not currently assigned to this School's Zone."
+          example: "Manager does not currently cover this School's Zone."

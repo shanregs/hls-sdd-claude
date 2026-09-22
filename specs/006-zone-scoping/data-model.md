@@ -1,28 +1,15 @@
-# Data Model: Zone-Based Manager Scoping
+# Data Model: Zone-Based Manager Scoping (reworked)
 
-Derived from spec.md's Key Entities section and Functional Requirements FR-001 through FR-008. Extends the `organization` module's existing data model (specs/003-organization-scoping/data-model.md) — `SchoolAssignment` and `TeacherAssignment` are unchanged and not repeated here.
+Derived from spec.md's Key Entities section and Functional Requirements FR-001 through FR-008. Extends the `organization` module's existing data model (specs/003-organization-scoping/data-model.md) — `SchoolAssignment` and `TeacherAssignment` are unchanged and not repeated here. Zone and School-Zone Assignment are **not** defined here — they are `school`'s data (`specs/007-school-zone/data-model.md`), only referenced through `school.api.ZoneQueries`.
 
-## Zone
+## ZoneManagerAssignment (new, owned by `organization`)
 
-A named geographic area. The first entity in `organization` with real attributes of its own, rather than an opaque UUID reference to a not-yet-built module.
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID (PK) | |
-| `name` | String, not null | No uniqueness enforced (spec.md doesn't require it) |
-| `createdAt` | timestamp (UTC) | |
-| `createdBy` | UUID | The Director/Admin `userId` who created it |
-
-**Invariants**: Never deleted (Constitution Principle I, matching how every other organizational-structure record in this system is treated).
-
-## ZoneManagerAssignment
-
-One period during which a Manager was (or is) assigned to cover a Zone. Unlike `SchoolAssignment`/`TeacherAssignment`, **more than one can be simultaneously current for the same Zone** (different Managers) — research.md §1.
+One period during which a Manager was (or is) assigned to cover a Zone. Unlike `SchoolAssignment`/`TeacherAssignment`, **more than one can be simultaneously current for the same Zone** (different Managers) — research.md §2.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | UUID (PK) | |
-| `zoneId` | UUID | |
+| `zoneId` | UUID | Opaque reference into `school`'s `Zone` table — no FK constraint, consistent with this module's and `school`'s established opaque-reference style; existence is validated at write time via `school.api.ZoneQueries.findById(...)` (FR-002), not a database constraint |
 | `managerId` | UUID | |
 | `effectiveFrom` | timestamp (UTC) | |
 | `effectiveTo` | timestamp (UTC), nullable | `NULL` means this Manager currently covers this Zone |
@@ -30,76 +17,55 @@ One period during which a Manager was (or is) assigned to cover a Zone. Unlike `
 | `assignedAt` | timestamp (UTC) | |
 
 **Invariants**:
-- At most one **currently-open row per `(zoneId, managerId)` pair** — enforced by a partial unique index (research.md §1), not the `(zoneId)`-alone pattern `SchoolAssignment` uses. Different Managers may each have their own currently-open row for the same Zone.
+- At most one **currently-open row per `(zoneId, managerId)` pair** — enforced by a partial unique index (research.md §2), not the `(zoneId)`-alone pattern `SchoolAssignment` uses. Different Managers may each have their own currently-open row for the same Zone.
 - Rows are never updated except to set `effectiveTo` exactly once, never deleted.
 
-## SchoolZoneAssignment
+## Modified: `SchoolAssignment`'s write path (no schema change)
 
-One period during which a School belonged to a particular Zone. Same shape and invariants as `SchoolAssignment` (specs/003), with `zoneId` in place of `managerId` — a School has at most one current Zone.
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID (PK) | |
-| `schoolId` | UUID | Opaque — School Master Data still doesn't exist (same narrowing specs/003 already documented) |
-| `zoneId` | UUID | |
-| `effectiveFrom` | timestamp (UTC) | |
-| `effectiveTo` | timestamp (UTC), nullable | `NULL` means this is the School's current Zone |
-| `assignedBy` | UUID | |
-| `assignedAt` | timestamp (UTC) | |
-
-**Invariants**: At most one currently-open row per `schoolId` — enforced by a partial unique index on `(schoolId)`, identical in shape to `SchoolAssignment`'s own constraint.
-
-## Modified: SchoolAssignment's write path
-
-No schema change to `organization_school_assignment` itself. `AccountabilityService.assignSchoolManager(...)` (specs/003) gains a precondition, checked before any row is written (research.md §2):
+No schema change to `organization_school_assignment` itself. `AccountabilityService.assignSchoolManager(...)` (specs/003) gains a precondition, checked before any write and before the existing no-op/conflict logic (research.md §3):
 
 ```
-resolve School's current SchoolZoneAssignment.zoneId
-  → none found: reject (FR-005)
-check a currently-open ZoneManagerAssignment exists for (that zoneId, the chosen managerId)
-  → none found: reject (FR-004/FR-005)
-  → found: proceed with the existing assign/reassign logic, unchanged
+call school.api.ZoneQueries.currentZoneForSchool(schoolId)
+  → UNASSIGNED: reject with SchoolManagerNotInZoneException (FR-004's "no Zone" case)
+  → CURRENT_ZONE(zoneId): continue
+check organization's own ZoneManagerAssignmentRepository for a currently-open
+row for (zoneId, the chosen managerId)
+  → none found: reject with SchoolManagerNotInZoneException (FR-003/FR-004's "not covering" case)
+  → found: proceed with the existing assign/reassign/no-op/conflict logic, unchanged
 ```
 
-## Unmodified: TeacherAssignment
+## Unmodified: `TeacherAssignment`
 
-No schema or behavior change (FR-007/FR-008). Documented here only to make the boundary explicit: this feature does not touch it.
+No schema or behavior change (FR-006/FR-007). Documented here only to make the boundary explicit: this feature does not touch it.
+
+## Referenced, not owned: `Zone` and `SchoolZoneAssignment` (`school` module)
+
+This feature reads, but never writes or duplicates:
+- `school.api.ZoneQueries.findById(zoneId)` — to validate a Zone id exists before assigning a Manager to cover it (FR-002).
+- `school.api.ZoneQueries.currentZoneForSchool(schoolId)` — a School's current Zone, or `UNASSIGNED` (FR-003/FR-004).
+- `school.api.ZoneQueries.currentSchoolsForZone(zoneId)` — every School currently in a Zone, for the coverage lookup (FR-005).
+
+See `specs/007-school-zone/data-model.md` for `Zone`'s and `SchoolZoneAssignment`'s own field definitions and invariants — not repeated here, since this feature does not own them.
+
+## Derived / query-only shapes (not persisted)
+
+- **ZoneCoverage** — the read-side shape of a Zone-coverage lookup (FR-005): `zoneId`, the list of currently-covering `managerId`s (from this feature's own `ZoneManagerAssignment` table), and the list of currently-assigned `schoolId`s (from `school.api.ZoneQueries.currentSchoolsForZone(...)`). Composed at read time from two sources, never persisted as its own row.
 
 ## State transitions
 
-Zone and ZoneManagerAssignment follow the identical creation/end pattern `SchoolAssignment` already established (specs/003 data-model.md) — no new transition shape, just a new dimension (multiple concurrent Managers per Zone):
+`ZoneManagerAssignment` follows the identical creation/end pattern `SchoolAssignment`/`TeacherAssignment` already established (specs/003 data-model.md) — no new transition shape, just a new dimension (multiple concurrent Managers per Zone):
 
 ```
-        createZone(name)
+   assignManagerToZone(zoneId, managerId)  ──┐ (repeatable for
+              │                              │  different managerIds —
+              ▼                              │  each gets its own row)
+   [ +1 currently-open                       │
+     ZoneManagerAssignment ] ◄───────────────┘
               │
-              ▼
-        [ Zone exists, 0 current Managers ]
-              │
-    assignManagerToZone(managerId)  ──┐ (repeatable for
-              │                       │  different managerIds —
-              ▼                       │  each gets its own row)
-   [ +1 currently-open                │
-     ZoneManagerAssignment ] ◄────────┘
-              │
-   removeManagerFromZone(managerId)
+   removeManagerFromZone(zoneId, managerId)
               │
               ▼
    [ that (zone, manager) row's
      effectiveTo is set; other
      managers' rows unaffected ]
-```
-
-```
-        assignSchoolToZone(schoolId, zoneId)
-                     │
-                     ▼
-        [ SchoolZoneAssignment: schoolId's
-          current zoneId = zoneId ]
-                     │
-   assignSchoolToZone(schoolId, differentZoneId, endsAssignmentId)
-                     │
-                     ▼
-        [ old row ended, new row opened —
-          existing SchoolAssignment (Manager)
-          is NOT touched, per spec.md Assumptions ]
 ```

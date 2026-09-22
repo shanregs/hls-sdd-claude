@@ -1,7 +1,7 @@
 package com.hls.organization.api;
 
 import com.hls.organization.api.dto.CurrentAssignment;
-
+import com.hls.organization.api.dto.ZoneManagerAssignmentView;
 import java.util.UUID;
 
 /**
@@ -27,4 +27,17 @@ public interface AccountabilityCommands {
     void endSchoolAssignment(UUID assignmentId, UUID actingUserId);
 
     void endTeacherAssignment(UUID assignmentId, UUID actingUserId);
+
+    /**
+     * specs/006-zone-scoping FR-001/FR-002: assigns {@code managerId} to
+     * cover {@code zoneId}. Repeatable for different managers — a Zone may
+     * have more than one current covering Manager. A repeat call naming the
+     * same (zoneId, managerId) pair already current is a no-op. Throws
+     * {@link ZoneNotFoundException} if {@code zoneId} does not correspond to
+     * an existing Zone (validated live through {@code school.api.ZoneQueries}).
+     */
+    ZoneManagerAssignmentView assignManagerToZone(UUID zoneId, UUID managerId, UUID actingUserId);
+
+    /** FR-001: ends the named Zone-Manager coverage assignment. */
+    void removeManagerFromZone(UUID assignmentId, UUID actingUserId);
 }

@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Zone-Based Manager Scoping
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-09-22
+**Created**: 2026-09-22 (reworked 2026-09-22)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -32,4 +32,4 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
-- No [NEEDS CLARIFICATION] markers were needed — the correction (Zones, Zone-Manager assignment, School-Manager constrained to Zone) and its explicit boundary (Teacher-Manager accountability stays independent for now, pending the future SchoolBilling Contract) were already resolved via user discussion before this spec was written; see constitution Amendment 1.6.0.
+- No [NEEDS CLARIFICATION] markers were needed — the constitution (Principle II, Amendments 1.6.0/1.7.0) already fully specifies the corrected operating model this rework implements; the rework itself only narrows scope (removing Zone/School-Zone ownership, now `school`'s) rather than introducing new open questions.

@@ -1,122 +1,112 @@
 ---
 
-description: "Task list for the Zone-Based Manager Scoping module implementation"
+description: "Task list for Zone-Based Manager Scoping (reworked)"
 ---
 
-# Tasks: Zone-Based Manager Scoping
+# Tasks: Zone-Based Manager Scoping (reworked)
 
 **Input**: Design documents from `/specs/006-zone-scoping/`
 
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/zone-api.yaml, quickstart.md (all present)
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/zone-api.yaml, quickstart.md
 
-**Tests**: Included. Constitution Principle VII ("test coverage for calculation logic, access rules, and integration boundaries") and this feature's own Complexity Tracking (plan.md) commit to updating — not just extending — the already-shipped `AccountabilityServiceTest`/`OrganizationIntegrationTest`, since FR-004/FR-005 will otherwise break their existing `assignSchoolManager` cases.
+**Tests**: Included — this codebase's established practice writes unit + integration tests alongside every service, and this feature additionally requires updating two already-shipped test files (plan.md Summary/Complexity Tracking).
 
-**Organization**: Tasks are grouped by user story (spec.md's three: US1/US2 = P1, US3 = P2).
+**Organization**: Tasks are grouped by user story (spec.md priorities: US1 = P1, US2 = P1, US3 = P2). This is an extension of the already-shipped `organization` module — no new bounded-context package, no new frontend page.
 
-**Cross-cutting note**: This feature extends the already-shipped `organization` module in place — no new bounded-context package, no new `ArchitectureTest` rule, no new frontend page (extends the existing `AssignmentsPage`). No new backend dependencies are needed. The exact Flyway migration number is left as `V<next>` throughout (research.md §5) — resolve it against whatever's actually in `backend/src/main/resources/db/migration/` at implementation time.
+**Rework note**: This tasks.md replaces the original, never-executed one entirely — it does not define Zone or School↔Zone assignment (both are `school`'s, already implemented) and adds organization's first real cross-module dependency on `school.api.ZoneQueries`.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
-- **[Story]**: Maps the task to spec.md's US1–US3
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (US1, US2, US3)
 
-## Phase 1: Setup
+## Path Conventions
 
-- [ ] T001 Create Flyway migration `backend/src/main/resources/db/migration/V<next>__create_zone_tables.sql` (research.md §5 — determine `<next>` from the highest existing `V<n>` at implementation time; do not renumber any other module's migration) creating: `organization_zone` (`id UUID PK`, `name VARCHAR NOT NULL`, `created_at TIMESTAMPTZ NOT NULL`, `created_by UUID NOT NULL`); `organization_zone_manager_assignment` (`id UUID PK`, `zone_id UUID NOT NULL`, `manager_id UUID NOT NULL`, `effective_from TIMESTAMPTZ NOT NULL`, `effective_to TIMESTAMPTZ NULLABLE`, `assigned_by UUID NOT NULL`, `assigned_at TIMESTAMPTZ NOT NULL`) with partial unique index `CREATE UNIQUE INDEX ux_zone_manager_assignment_current ON organization_zone_manager_assignment (zone_id, manager_id) WHERE effective_to IS NULL` — **on the pair, not `zone_id` alone** (data-model.md, research.md §1 — a Zone may have more than one current Manager); `organization_school_zone_assignment` (same shape as `organization_school_assignment`, `zone_id` in place of `manager_id`) with partial unique index `CREATE UNIQUE INDEX ux_school_zone_assignment_current ON organization_school_zone_assignment (school_id) WHERE effective_to IS NULL` (at most one current Zone per School, matching `SchoolAssignment`'s existing pattern exactly)
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**🚨 CRITICAL**: No user story task may start until this phase is complete.
-
-- [ ] T002 [P] Create `Zone` JPA entity in `backend/src/main/java/com/hls/organization/internal/Zone.java`: `id`, `name`, `createdAt`, `createdBy` — constructor sets all fields once, no setters (data-model.md: "Never deleted once created")
-- [ ] T003 [P] Create `ZoneManagerAssignment` JPA entity in `backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignment.java`: same shape/invariants as `SchoolAssignment` (`id`, `zoneId`, `managerId`, `effectiveFrom`, `effectiveTo`, `assignedBy`, `assignedAt`, an `end(Instant)` method settable exactly once, an `isCurrent()` helper)
-- [ ] T004 [P] Create `SchoolZoneAssignment` JPA entity in `backend/src/main/java/com/hls/organization/internal/SchoolZoneAssignment.java`: identical shape/invariants to T003 with `schoolId`/`zoneId` in place of `schoolId`/`managerId`
-- [ ] T005 [P] Create `ZoneRepository` in `backend/src/main/java/com/hls/organization/internal/ZoneRepository.java`: extends bare `Repository<Zone, UUID>` (not `JpaRepository`), declares only `save(Zone)`, `findById(UUID)`, `findAll()` — no delete method (data-model.md invariant, mirrors `AuditEntryRepository`'s established pattern)
-- [ ] T006 [P] Create `ZoneManagerAssignmentRepository` in `backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignmentRepository.java`: `findByZoneIdAndEffectiveToIsNull(UUID zoneId)` (returns a `List`, not `Optional` — multiple current rows possible, research.md §1), `findByZoneIdAndManagerIdAndEffectiveToIsNull(UUID zoneId, UUID managerId)` (returns `Optional`, for the FR-004 membership check), and `endIfStillCurrent(UUID id, Instant now)` (`@Modifying`, conditional `UPDATE ... WHERE id = ? AND effective_to IS NULL`, same pattern as `SchoolAssignmentRepository`)
-- [ ] T007 [P] Create `SchoolZoneAssignmentRepository` in `backend/src/main/java/com/hls/organization/internal/SchoolZoneAssignmentRepository.java`: `findBySchoolIdAndEffectiveToIsNull(UUID schoolId)`, `findBySchoolIdOrderByEffectiveFromAsc(UUID schoolId)`, `endIfStillCurrent(UUID id, Instant now)` — same shape as `SchoolAssignmentRepository`
-- [ ] T008 [P] Create `SchoolManagerNotInZoneException` in `backend/src/main/java/com/hls/organization/api/SchoolManagerNotInZoneException.java`: public `RuntimeException` (research.md §3 — distinct from `AssignmentConflictException`; callers of `AccountabilityCommands` must be able to catch it)
-
-**Checkpoint**: Foundation ready — user story phases below may now begin.
+`backend/src/main/java/com/hls/organization/`, `backend/src/test/java/com/hls/organization/`, `frontend/src/pages/AssignmentsPage/`.
 
 ---
 
-## Phase 3: User Story 1 - Director/Admin Defines Zones and Their Managers (Priority: P1) 🎯 MVP
+## Phase 1: Foundational (Blocking Prerequisites)
 
-**Goal**: Director/Admin can create a Zone and assign one or more Managers to cover it, with more than one Manager able to be simultaneously current for the same Zone.
+**Purpose**: The `ZoneManagerAssignment` table/entity/repository, DTOs, and new exception every user story builds on.
 
-**Independent Test**: Create a Zone, assign a Manager to it, confirm that Manager is retrievable as currently covering it; assign a second, different Manager to the same Zone and confirm both are current at once.
+**⚠️ CRITICAL**: No user story task can begin until this phase is complete.
 
-### Tests for User Story 1
+- [X] T001 Create migration `backend/src/main/resources/db/migration/V8__create_zone_manager_assignment_table.sql`: table `organization_zone_manager_assignment` with columns `id UUID PRIMARY KEY`, `zone_id UUID NOT NULL`, `manager_id UUID NOT NULL`, `effective_from TIMESTAMPTZ NOT NULL`, `effective_to TIMESTAMPTZ`, `assigned_by UUID NOT NULL`, `assigned_at TIMESTAMPTZ NOT NULL`; partial unique index `ux_zone_manager_assignment_current ON organization_zone_manager_assignment (zone_id, manager_id) WHERE effective_to IS NULL` (research.md §2 — NOT `(zone_id)` alone); index `ix_zone_manager_assignment_zone_id ON organization_zone_manager_assignment (zone_id) WHERE effective_to IS NULL`
+- [X] T002 [P] Create `backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignment.java`: JPA entity mirroring `SchoolAssignment`'s exact shape (`id, zoneId, managerId, effectiveFrom, effectiveTo, assignedBy, assignedAt`, `isCurrent()`, `end(Instant)` settable exactly once)
+- [X] T003 [P] Create `backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignmentRepository.java`: `extends JpaRepository<ZoneManagerAssignment, UUID>`, plus `findByZoneIdAndManagerIdAndEffectiveToIsNull`, `findByZoneIdAndEffectiveToIsNull`, `endIfStillCurrent` (`@Modifying @Query`, mirroring `SchoolAssignmentRepository`'s)
+- [X] T004 [P] Create `backend/src/main/java/com/hls/organization/api/SchoolManagerNotInZoneException.java`: FR-003/FR-004's rejection, mapped to 422 by the controller (research.md §4)
+- [X] T005 [P] Create `backend/src/main/java/com/hls/organization/api/ZoneNotFoundException.java`: FR-002's rejection (an unknown `zoneId`), mapped to 404 by the controller
+- [X] T006 [P] Create `backend/src/main/java/com/hls/organization/api/dto/ZoneManagerAssignmentView.java`: `record ZoneManagerAssignmentView(UUID id, UUID zoneId, UUID managerId, Instant effectiveFrom)`
+- [X] T007 [P] Create `backend/src/main/java/com/hls/organization/api/dto/ZoneCoverage.java`: `record ZoneCoverage(UUID zoneId, List<UUID> managerIds, List<UUID> schoolIds)` — composed at read time (data-model.md), never persisted
+- [X] T008 Extend `backend/src/main/java/com/hls/organization/api/AccountabilityCommands.java`: add `ZoneManagerAssignmentView assignManagerToZone(UUID zoneId, UUID managerId, UUID actingUserId)` (FR-001/002) and `void removeManagerFromZone(UUID assignmentId, UUID actingUserId)` (FR-001)
+- [X] T009 Extend `backend/src/main/java/com/hls/organization/api/AccountabilityQueries.java`: add `ZoneCoverage zoneCoverage(UUID zoneId)` (FR-005)
 
-> Write these first; confirm they fail before implementing.
+**Checkpoint**: `ZoneManagerAssignment` persists and is queryable; the public interfaces declare the new contract. User story implementation can now begin.
 
-- [ ] T009 [P] [US1] `ZoneServiceTest` cases: `createZone` persists a new Zone retrievable by id (US1 AC1); `assignManagerToZone` creates a currently-open `ZoneManagerAssignment` (US1 AC2); assigning a **second, different** Manager to the same Zone leaves both currently open at once (US1 AC3, data-model.md's `(zone_id, manager_id)` uniqueness, not `zone_id` alone); `removeManagerFromZone` ends only that Manager's row, leaving any other Manager's row for the same Zone untouched (US1 AC4) — in `backend/src/test/java/com/hls/organization/ZoneServiceTest.java`
-- [ ] T010 [P] [US1] `OrganizationIntegrationTest` case covering quickstart.md Scenario 1: real HTTP `POST /organization/zones`, two `POST .../managers` calls with different `managerId`s, then confirm both appear via a lookup — in `backend/src/test/java/com/hls/organization/OrganizationIntegrationTest.java`
+---
+
+## Phase 2: User Story 1 - Director/Admin Assigns Manager(s) to Cover an Existing Zone (Priority: P1) 🎯 MVP
+
+**Goal**: FR-001/FR-002 — assign one or more Managers to cover an existing Zone; reject an unknown Zone id; remove a Manager's coverage.
+
+**Independent Test**: Assign a Manager to an existing Zone (created via `school`'s real endpoint) and confirm that Manager is retrievable as one of the Zone's currently covering Managers.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement `ZoneService` (partial: Zone + Zone-Manager operations only) in `backend/src/main/java/com/hls/organization/internal/ZoneService.java`: `createZone(name, actingUserId)`, `assignManagerToZone(zoneId, managerId, actingUserId)`, `removeManagerFromZone(zoneId, managerId, actingUserId)`, `currentManagersForZone(zoneId)` — depends on T002, T003, T005, T006
-- [ ] T012 [US1] Implement `ZoneController` (partial) in `backend/src/main/java/com/hls/organization/internal/ZoneController.java` per `contracts/zone-api.yaml`: `POST /api/v1/organization/zones`, `GET /api/v1/organization/zones` (list, for discovery), `POST /api/v1/organization/zones/{zoneId}/managers`, `DELETE /api/v1/organization/zones/{zoneId}/managers/{managerId}` — reads `@AuthenticationPrincipal Jwt` directly, same Director/Admin check `OrganizationController` already uses — depends on T011
-- [ ] T013 [US1] Extend `frontend/src/pages/AssignmentsPage/organizationClient.ts` and `AssignmentsPage.tsx` (+ `AssignmentsPage.test.tsx`) with a Zone section: create Zone, assign/remove Manager (research.md §6 — no new page) — depends on T012
+- [X] T010 [US1] Implement `AccountabilityService.assignManagerToZone(...)` in `backend/src/main/java/com/hls/organization/internal/AccountabilityService.java`: validate `zoneId` exists via the new `school.api.ZoneQueries.findById(zoneId)` constructor dependency (throw `ZoneNotFoundException` if absent — FR-002); if a currently-open row for `(zoneId, managerId)` already exists, return it as a no-op (consistent with every other assignment command in this codebase); otherwise create and save a new `ZoneManagerAssignment`
+- [X] T011 [US1] Implement `AccountabilityService.removeManagerFromZone(...)`: `endIfStillCurrent` on the named assignment id, throwing `AssignmentConflictException` (existing type, existing 409 handler) if it was already ended by someone else — mirrors `endSchoolAssignment`/`endTeacherAssignment` exactly
+- [X] T012 [US1] Extend `backend/src/main/java/com/hls/organization/internal/OrganizationController.java`: `POST /api/v1/organization/zone-manager-assignments` and `DELETE /api/v1/organization/zone-manager-assignments/{assignmentId}` (Director/Admin-only via the existing `requireDirectorOrAdmin` helper); add `@ExceptionHandler(ZoneNotFoundException.class)` → 404
+- [X] T013 [P] [US1] Add `AccountabilityServiceTest` cases (mocking `school.api.ZoneQueries`): `assignManagerToZone_newManager_createsAssignment`, `assignManagerToZone_sameManagerAgain_isNoOp`, `assignManagerToZone_unknownZoneId_throwsZoneNotFound`, `assignManagerToZone_secondDifferentManager_bothCurrentlyCoverTheSameZone` (AC2), `removeManagerFromZone_endsAssignment`
+- [X] T014 [P] [US1] Add `OrganizationIntegrationTest` case: `assignManagerToZone_thenRemove_reflectsInCoverage` — real HTTP, a real Zone created via `school`'s endpoint (not a stand-in), then the new zone-manager-assignment endpoints
 
-**Checkpoint**: User Story 1 fully functional and independently testable — Zones and Zone-Manager assignment usable on their own, before the School-Manager constraint (US2) exists.
+**Checkpoint**: Managers can be assigned to and removed from Zone coverage — User Story 1 is independently functional (MVP).
 
 ---
 
-## Phase 4: User Story 2 - A School's Manager Must Come From Its Zone's Managers (Priority: P1)
+## Phase 3: User Story 2 - A School's Manager Must Come From Its Zone's Covering Managers (Priority: P1)
 
-**Goal**: Assigning a School's accountable Manager is rejected unless that Manager currently covers the School's Zone; Teacher-Manager assignment remains completely untouched.
+**Goal**: FR-003/FR-004 — `assignSchoolManager` rejects a Manager who doesn't currently cover the School's Zone, or a School with no current Zone, or a Zone with no covering Managers.
 
-**Independent Test**: Assign a School to a Zone with a known Manager pool, then attempt to assign that School's Manager both inside and outside that pool; separately, confirm `assignTeacherManager` still works with zero Zone setup.
-
-**Depends on**: User Story 1 (needs `ZoneService`'s Zone/Zone-Manager operations to exist first — there's nothing to test a School's Manager *against* without a Zone that has Managers).
-
-### Tests for User Story 2
-
-- [ ] T014 [P] [US2] **Update** `AccountabilityServiceTest`: every existing test case that calls `assignSchoolManager` now first seeds a Zone with the chosen Manager assigned to it (via the mocked `ZoneService`/repositories) — these currently pass without any Zone setup and will start failing once T017/T018 land, so this update must ship in the same change, not after (plan.md Complexity Tracking). Add new cases: assigning within the Zone succeeds (US2 AC1); assigning a Manager not in the Zone throws `SchoolManagerNotInZoneException` (US2 AC2, FR-004); a School with no Zone assigned throws (US2 AC4, FR-005); a Zone with zero current Managers throws (FR-005); and a case proving `assignTeacherManager` succeeds with **no** Zone/Zone-Manager setup at all (SC-004) — in `backend/src/test/java/com/hls/organization/AccountabilityServiceTest.java`
-- [ ] T015 [P] [US2] **Update** `OrganizationIntegrationTest`: existing `assignSchoolManager`-calling cases now seed a Zone/Zone-Manager assignment first via real HTTP calls; add cases covering quickstart.md Scenario 2 (in-zone succeeds, out-of-zone or no-zone → `422`) and Scenario 4 (`assignTeacherManager` succeeds with zero Zone setup, proving SC-004 over real HTTP, not just the unit level) — in `OrganizationIntegrationTest.java`
+**Independent Test**: Assign a School to a Zone with a known set of covering Managers (via `school`'s real endpoint + US1's new endpoint), then attempt to assign that School's accountable Manager to someone inside vs. outside that set.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Extend `ZoneService` (School-Zone operations) in `backend/src/main/java/com/hls/organization/internal/ZoneService.java`: `assignSchoolToZone(schoolId, zoneId, endsAssignmentId, actingUserId)` (same create/reassign/conflict shape as `AccountabilityService.assignSchoolManager`, FR-011's conflict semantics reused) and `isManagerCurrentlyInSchoolsZone(schoolId, managerId)` (FR-004/FR-005's membership check: resolve the School's current `SchoolZoneAssignment`, then check a currently-open `ZoneManagerAssignment` exists for that `(zoneId, managerId)` pair — `false` if the School has no current Zone or the Zone has no current Managers) — depends on T004, T007, T011
-- [ ] T017 [US2] Modify `AccountabilityService.assignSchoolManager(...)` in `backend/src/main/java/com/hls/organization/internal/AccountabilityService.java`: call `zoneService.isManagerCurrentlyInSchoolsZone(schoolId, managerId)` before the existing assign/reassign logic runs, throwing `SchoolManagerNotInZoneException` if `false` (FR-004/FR-005, research.md §2) — **`assignTeacherManager` is not modified at all** (FR-007/FR-008) — depends on T008, T016
-- [ ] T018 [US2] Add `POST /api/v1/organization/school-zone-assignments` to `ZoneController` per `contracts/zone-api.yaml`, and a new `@ExceptionHandler(SchoolManagerNotInZoneException.class)` returning `422` in `backend/src/main/java/com/hls/organization/internal/OrganizationController.java` — depends on T016, T017
-- [ ] T019 [US2] Extend `AssignmentsPage`: assign-School-to-Zone control, and surface the new `422` error message on the existing School-assignment form (research.md §6) — depends on T013, T018
+- [X] T015 [US2] Add a `school.api.ZoneQueries` constructor dependency to `AccountabilityService` (used by both T010 and this story); implement the precondition in `assignSchoolManager(...)`, checked first, before the existing no-op/conflict logic (data-model.md's pseudocode): call `zoneQueries.currentZoneForSchool(schoolId)` → `UNASSIGNED` throws `SchoolManagerNotInZoneException` (FR-004); otherwise check `ZoneManagerAssignmentRepository.findByZoneIdAndManagerIdAndEffectiveToIsNull(zoneId, managerId)` → absent throws `SchoolManagerNotInZoneException` (FR-003/FR-004); present, proceed unchanged
+- [X] T016 [US2] Update `backend/src/test/java/com/hls/organization/OrganizationModuleTest.java`: `@ApplicationModuleTest(mode = BootstrapMode.ALL_DEPENDENCIES)` (research.md §8 — `organization` now has a real bean dependency on `school.api.ZoneQueries`)
+- [X] T017 [US2] Add `@ExceptionHandler(SchoolManagerNotInZoneException.class)` to `OrganizationController` → 422 (contracts/zone-api.yaml)
+- [X] T018 [P] [US2] Update existing `AccountabilityServiceTest` `assignSchoolManager` cases (mocking `school.api.ZoneQueries` to return `CURRENT_ZONE` + a currently-open `ZoneManagerAssignment`, so they keep passing under the new precondition — plan.md Summary's named risk); add new cases: `assignSchoolManager_managerNotCoveringZone_throwsSchoolManagerNotInZone`, `assignSchoolManager_schoolHasNoCurrentZone_throwsSchoolManagerNotInZone`, `assignSchoolManager_zoneHasNoCoveringManagers_throwsSchoolManagerNotInZone`, `assignSchoolManager_twoSchoolsSameZoneDifferentManagers_bothSucceed` (AC3); add `assignTeacherManager_neverCallsZoneQueries` (SC-004 — verify zero interactions with the mocked `ZoneQueries`)
+- [X] T019 [P] [US2] Update existing `OrganizationIntegrationTest` `assignSchoolManager`-calling cases to seed a real Zone (via `school`'s endpoint) and Zone coverage (via US1's new endpoint) first; add new cases: `assignSchoolManager_managerCoveringSchoolsZone_succeeds`, `assignSchoolManager_managerNotCoveringSchoolsZone_returns422`, `assignSchoolManager_schoolWithNoZone_returns422`, `assignTeacherManager_stillWorksWithNoZoneSetupAtAll` (quickstart.md Scenario 4, SC-004)
 
-**Checkpoint**: User Stories 1 and 2 both independently functional; Teacher assignment proven unaffected by both test suites.
+**Checkpoint**: School-Manager assignment is correctly Zone-constrained — User Stories 1-2 are both independently functional.
 
 ---
 
-## Phase 5: User Story 3 - Director/Admin Sees Zone Coverage at a Glance (Priority: P2)
+## Phase 4: User Story 3 - Director/Admin Sees Zone Coverage at a Glance (Priority: P2)
 
-**Goal**: A single lookup shows a Zone's currently assigned Managers and currently assigned Schools together.
+**Goal**: FR-005 — a single lookup returns a Zone's currently covering Managers and currently assigned Schools.
 
-**Independent Test**: Set up a Zone with known Managers (US1) and Schools (US2), then confirm one lookup returns exactly that Zone's current Managers and Schools, including the empty-Schools case.
-
-**Depends on**: User Stories 1 and 2 (coverage has nothing meaningful to show without both Managers and Schools existing).
-
-### Tests for User Story 3
-
-- [ ] T020 [P] [US3] `ZoneServiceTest` cases: `zoneCoverage(zoneId)` returns the Zone's current `managerIds` and current `schoolIds` together (US3 AC1); a Zone with Managers but no Schools yet returns an empty `schoolIds` list, not an error (US3 AC2) — in `ZoneServiceTest.java`
-- [ ] T021 [P] [US3] `OrganizationIntegrationTest` case covering quickstart.md Scenario 3 — in `OrganizationIntegrationTest.java`
+**Independent Test**: Set up a Zone with known covering Managers and Schools, then confirm a single lookup returns exactly that Zone's current Managers and Schools.
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Implement `zoneCoverage(zoneId)` in `ZoneService`: aggregates current `ZoneManagerAssignment` rows and current `SchoolZoneAssignment` rows for the given Zone into one view (FR-006) — depends on T011, T016
-- [ ] T023 [US3] Implement `GET /api/v1/organization/zones/{zoneId}` in `ZoneController` per `contracts/zone-api.yaml`, returning the coverage view from T022 — depends on T022
-- [ ] T024 [US3] Extend `AssignmentsPage`: Zone coverage view (select a Zone, see its current Managers and Schools) — depends on T019, T023
+- [X] T020 [US3] Implement `AccountabilityService.zoneCoverage(zoneId)`: `managerIds` from `ZoneManagerAssignmentRepository.findByZoneIdAndEffectiveToIsNull(zoneId)`; `schoolIds` from `school.api.ZoneQueries.currentSchoolsForZone(zoneId)` — composed into one `ZoneCoverage`, never persisted (data-model.md)
+- [X] T021 [US3] Extend `OrganizationController`: `GET /api/v1/organization/zones/{zoneId}/coverage`
+- [X] T022 [P] [US3] Add `AccountabilityServiceTest` cases: `zoneCoverage_returnsCurrentManagersAndSchools`, `zoneCoverage_zoneWithNoSchoolsYet_returnsEmptySchoolListNotError` (AC2)
+- [X] T023 [P] [US3] Add `OrganizationIntegrationTest` case: `getZoneCoverage_returnsManagersAndSchoolsInOneLookup` (quickstart.md Scenario 3)
 
-**Checkpoint**: All three user stories independently functional.
+**Checkpoint**: All three user stories are independently functional.
 
 ---
 
-## Phase 6: Polish & Cross-Cutting Concerns
+## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T025 [P] Run all 4 quickstart.md scenarios end-to-end via their automated equivalents: `cd backend && ./mvnw test -Dtest=ZoneServiceTest,AccountabilityServiceTest,OrganizationIntegrationTest,OrganizationModuleTest` and `cd frontend && npx vitest run src/pages/AssignmentsPage`
-- [ ] T026 [P] Confirm `ZoneController`'s structured log output already carries `requestId`/`userId`/`role` via Identity's app-wide `SecurityMdcInterceptor`/`CorrelationIdFilter` with no extra wiring needed, the same finding Organization's, Audit's, and (pending) Teacher's own Polish phases already confirmed — confirm by inspection; add an explicit test only if it doesn't already hold
-- [ ] T027 Run the full ArchUnit + Spring Modulith verification suite (`./mvnw test -Dtest=ArchitectureTest,OrganizationModuleTest,IdentityModuleTest,AuditModuleTest,ApplicationModulesTest`) and confirm no boundary rule changes are needed — every new type is `organization.internal`, so the existing rule already covers it
-- [ ] T028 [P] Finalize T001's Flyway version number against whatever has actually shipped by the time this feature is implemented (research.md §5) — rename the migration file if specs/005-teacher claimed `V4` first
-- [ ] T029 [P] Update `docs/HLS SDD Implementation Plan & Deliverables Tracker.md` row 4a (added 2026-09-22) from "Not started" to Done once all phases above pass
+- [X] T024 [P] Extend `frontend/src/pages/AssignmentsPage/organizationClient.ts`: add `ZoneManagerAssignmentView`/`ZoneCoverage` types and `assignManagerToZone`/`removeManagerFromZone`/`getZoneCoverage` calls; update the existing school-assignment error handling to surface the new 422 message
+- [X] T025 Extend `frontend/src/pages/AssignmentsPage/AssignmentsPage.tsx`: add an "Assign Manager to Zone" form (`data-testid="assign-manager-to-zone-form"`, zoneId + managerId) and a "Zone Coverage" lookup form (`data-testid="zone-coverage-form"`, zoneId, showing manager and school ids) — following the page's existing assign/portfolio/unassigned section pattern
+- [X] T026 [P] Extend `frontend/src/pages/AssignmentsPage/AssignmentsPage.test.tsx`: cases for assigning a Manager to a Zone, and for the school-assignment form now showing the new 422 rejection reason
+- [X] T027 [P] Run quickstart.md's four scenarios manually (or confirm via the automated equivalents in T014/T019/T023)
+- [X] T028 Update `docs/HLS SDD Implementation Plan & Deliverables Tracker.md`'s row 4b (Zone-based Manager scoping) from "Not started" to Done, and add a "Resolved" Section 7 entry documenting the rework
+- [X] T029 Run the full backend (`mvn test`) and frontend (`npx vitest run`, `npx eslint .`, `npx tsc -b`) suites to confirm no regressions — this step caught two real regressions a module-scoped test run missed (research.md §10/§11): `IdentityModuleTest` needed the same `BootstrapMode.ALL_DEPENDENCIES` fix (`identity` → `organization` → `school` is a transitive hop `DIRECT_DEPENDENCIES` doesn't reach), and `IdentityIntegrationTest`'s `managerScopeGuard_allowsAssignedManagerAndDeniesUnassignedOne` needed to seed a real Zone (via `school.api.ZoneCommands`) before calling `assignSchoolManager`, which is now Zone-constrained. Both fixed before this task was marked complete.
 
 ---
 
@@ -124,41 +114,38 @@ description: "Task list for the Zone-Based Manager Scoping module implementation
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies.
-- **Foundational (Phase 2)**: Depends on Setup — blocks every user story phase.
-- **User Stories (Phase 3–5)**: All depend on Foundational. Unlike most prior specs' user stories, these are **not** mutually independent: US2 needs US1's `ZoneService` (Zone/Zone-Manager operations) to exist first, and US3 needs both US1 (Managers) and US2 (Schools) to have anything meaningful to show. This mirrors specs/003's own US1→US2 dependency (reassign builds on assign) rather than the fully-parallel case Audit's or Teacher's stories were.
-- **Polish (Phase 6)**: Depends on all three user stories.
+- **Foundational (Phase 1)**: No dependencies — BLOCKS all user stories
+- **User Story 1 (Phase 2)**: Depends on Phase 1 only
+- **User Story 2 (Phase 3)**: Depends on Phase 1; also depends on T010's `ZoneQueries` constructor dependency being added to `AccountabilityService` (shared with T015) — in practice built alongside or immediately after US1
+- **User Story 3 (Phase 4)**: Depends on Phase 1 and on US1's `ZoneManagerAssignmentRepository` queries (T010) — no dependency on US2
+- **Polish (Phase 5)**: Depends on all three user stories being complete
 
 ### Parallel Opportunities
 
-- T001 (Setup) has nothing to run alongside — it's the only setup task.
-- T002–T008 (Foundational) can run in parallel once T001's migration is written.
-- US1 must land first (T011's `ZoneService` is extended, not replaced, by T016); within US1, T009/T010 (tests) run in parallel with each other before T011 begins.
-- Within US2 and US3, `[P]`-marked test tasks run in parallel with each other before their implementation tasks begin.
+- T002-T007 (Foundational entity/repository/exceptions/DTOs) — different files
+- T013/T014 (US1 tests), T018/T019 (US2 tests), T022/T023 (US3 tests) — each pair touches different test files
+- Phase 4 (US3) can be built in parallel with Phase 3 (US2) by a different contributor, since both depend only on Phase 1 and US1's repository, not on each other
 
-## Parallel Example: Foundational Phase
-
-```bash
-Task: "Zone JPA entity in backend/src/main/java/com/hls/organization/internal/Zone.java"
-Task: "ZoneManagerAssignment JPA entity in backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignment.java"
-Task: "SchoolZoneAssignment JPA entity in backend/src/main/java/com/hls/organization/internal/SchoolZoneAssignment.java"
-Task: "ZoneRepository in backend/src/main/java/com/hls/organization/internal/ZoneRepository.java"
-Task: "ZoneManagerAssignmentRepository in backend/src/main/java/com/hls/organization/internal/ZoneManagerAssignmentRepository.java"
-Task: "SchoolZoneAssignmentRepository in backend/src/main/java/com/hls/organization/internal/SchoolZoneAssignmentRepository.java"
-Task: "SchoolManagerNotInZoneException in backend/src/main/java/com/hls/organization/api/SchoolManagerNotInZoneException.java"
-```
+---
 
 ## Implementation Strategy
 
-### MVP First
+### MVP First (User Story 1 Only)
 
-User Story 1 alone (Zones + Zone-Manager assignment) is a real, deployable increment — Director/Admin can start organizing Managers into Zones immediately, even before the School-Manager constraint exists. But the actual *correction* this feature exists for is User Story 2 (the constraint itself); a demo that stops at US1 hasn't yet fixed the leakage Constitution Principle II names. A realistically meaningful v1 needs **US1 + US2** together. US3 (coverage view) is valuable operational visibility but changes no behavior on its own.
+1. Complete Phase 1: Foundational
+2. Complete Phase 2: User Story 1 (Managers can be assigned to cover Zones)
+3. **STOP and VALIDATE**: a Manager assigned to a Zone is retrievable as currently covering it
 
-1. Setup → Foundational (blocking)
-2. US1 → validate independently (Zones and Zone-Manager assignment, no constraint yet)
-3. US2 → validate independently (the constraint itself + the Teacher-unaffected proof) — **this is where the two existing shipped test files get updated, not just extended**
-4. US3 → validate independently (coverage view)
+### Incremental Delivery
 
-### Format Validation
+1. Foundational → `ZoneManagerAssignment` ready, contracts declared
+2. User Story 1 → Zone-Manager coverage can be assigned/removed (MVP)
+3. User Story 2 → the actual scoping correction this feature exists for — `assignSchoolManager` is Zone-constrained
+4. User Story 3 → the "who's responsible for this area" visibility
+5. Polish → frontend extension, quickstart validation, tracker update
 
-All 29 tasks above follow `- [ ] T### [P?] [Story?] Description with file path`: Setup/Foundational/Polish tasks carry no `[Story]` label; every Phase 3–5 task carries its `[US#]` label; every task names a concrete file path.
+## Notes
+
+- No task defines a Zone or School↔Zone assignment endpoint, table, or entity — both are `school`'s, already shipped (specs/007-school-zone). Every reference to Zone/School-Zone data goes through `school.api.ZoneQueries`.
+- T015/T016 are the two tasks that give `organization` its first real cross-module dependency — do these together, since `OrganizationModuleTest` will fail to boot between adding the constructor dependency and switching its bootstrap mode otherwise.
+- Commit after each task or logical group, consistent with this repo's established practice.
