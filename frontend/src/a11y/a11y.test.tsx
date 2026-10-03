@@ -34,11 +34,22 @@ import { TeachersPage } from "../features/teachers/TeachersPage";
 import { TeacherDialog } from "../features/teachers/TeacherDialog";
 import { SalaryDialog } from "../features/teachers/SalaryDialog";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
+import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
   roles: ["ADMIN"],
   navigation: [
+    {
+      section: "OPERATIONS",
+      items: [
+        {
+          label: "Attendance Setup",
+          route: "/operations/attendance-setup",
+          actions: ["VIEW", "EDIT"],
+        },
+      ],
+    },
     {
       section: "Dashboard",
       items: [{ label: "Dashboard", route: "/dashboard", actions: ["VIEW"] }],
@@ -227,6 +238,54 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       json: async () => ({
         current: { id: "e1", amount: 22000, effectiveOn: "2026-10-01" },
         history: [{ id: "e1", amount: 22000, effectiveOn: "2026-10-01" }],
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/attendance/status-codes")) {
+    return {
+      ok: true,
+      json: async () => [
+        {
+          id: "c1",
+          shortCode: "P",
+          name: "Present",
+          category: "WORKED",
+          weight: 1,
+          active: true,
+          system: true,
+          inUse: true,
+          version: 0,
+        },
+        {
+          id: "c2",
+          shortCode: "SICK",
+          name: "Sick leave",
+          category: "LEAVE",
+          weight: 0,
+          active: true,
+          system: false,
+          inUse: false,
+          version: 0,
+        },
+      ],
+    } as Response;
+  }
+  if (url === "/api/v1/attendance/calendar") {
+    return {
+      ok: true,
+      json: async () => ({
+        defaultWeeklyOff: ["SUN"],
+        defaultVersion: 0,
+        schoolOverrides: [
+          {
+            schoolId: "s1",
+            schoolName: "St Mary's",
+            weeklyOff: ["SAT", "SUN"],
+          },
+        ],
+        nonWorkingDates: [
+          { date: "2026-10-02", description: "Gandhi Jayanti" },
+        ],
       }),
     } as Response;
   }
@@ -429,6 +488,11 @@ const pages: PageCase[] = [
     name: "MyTeacherProfile",
     render: () => <MyTeacherProfile />,
     settle: () => screen.findByText("Tara Teacher"),
+  },
+  {
+    name: "AttendanceSetupPage",
+    render: () => <AttendanceSetupPage />,
+    settle: () => screen.findByText("Gandhi Jayanti"),
   },
   {
     name: "Manager dashboard with assigned counts",
