@@ -8,6 +8,7 @@ import { RouteGuard } from "./app/RouteGuard";
 import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
 import { DashboardRouter } from "./dashboards/DashboardRouter";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
+import { UserManagementPage } from "./features/users/UserManagementPage";
 import { LoginHistoryPage } from "./features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "./features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "./features/audit/UserActivityPage";
@@ -49,6 +50,14 @@ export function App() {
           element={
             <RouteGuard>
               <ProfilePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/identity/users"
+          element={
+            <RouteGuard>
+              <UserManagementPage />
             </RouteGuard>
           }
         />

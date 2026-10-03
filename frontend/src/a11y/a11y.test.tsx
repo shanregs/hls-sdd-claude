@@ -19,6 +19,10 @@ import { LoginHistoryPage } from "../features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "../features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "../features/audit/UserActivityPage";
 import { AuditLogsPage } from "../features/audit/AuditLogsPage";
+import { UserManagementPage } from "../features/users/UserManagementPage";
+import { CreateUserDialog } from "../features/users/CreateUserDialog";
+import { EditRolesDialog } from "../features/users/EditRolesDialog";
+import { ResetPasswordDialog } from "../features/users/ResetPasswordDialog";
 
 const ACCESS_MODEL = {
   roles: ["ADMIN"],
@@ -30,6 +34,11 @@ const ACCESS_MODEL = {
     {
       section: "SYSTEM",
       items: [
+        {
+          label: "User Management",
+          route: "/identity/users",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
         {
           label: "Role & Permissions",
           route: "/identity/permissions",
@@ -58,6 +67,27 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   }
   if (url.includes("/me/sessions")) {
     return { ok: true, json: async () => [] } as Response;
+  }
+  if (url.includes("/api/v1/identity/users")) {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            id: "u9",
+            displayName: "Alice Manager",
+            phone: "9800000001",
+            username: null,
+            email: null,
+            roles: ["MANAGER"],
+            active: true,
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+      }),
+    } as Response;
   }
   if (url.includes("/api/v1/audit/")) {
     return {
@@ -98,7 +128,19 @@ interface PageCase {
   /** Awaited after render, for pages with an async effect that must settle first (RTL's
    * `findBy*` queries wrap their own polling in `act`, unlike a manual `act()` call). */
   settle?: () => Promise<unknown>;
+  /** Dialogs render in a portal outside the render container, so they are checked on the body. */
+  axeTarget?: () => HTMLElement;
 }
+
+const SAMPLE_USER = {
+  id: "u9",
+  displayName: "Alice Manager",
+  phone: "9800000001",
+  username: null,
+  email: null,
+  roles: ["MANAGER" as const],
+  active: true,
+};
 
 const pages: PageCase[] = [
   { name: "SignInPage", render: () => <SignInPage /> },
@@ -139,6 +181,38 @@ const pages: PageCase[] = [
     render: () => <AuditLogsPage />,
     settle: () => screen.findByText(/no rows/i),
   },
+  {
+    name: "UserManagementPage",
+    render: () => <UserManagementPage />,
+    settle: () => screen.findAllByText("Alice Manager"),
+  },
+  {
+    name: "CreateUserDialog",
+    render: () => <CreateUserDialog onClose={vi.fn()} onCreated={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "EditRolesDialog",
+    render: () => (
+      <EditRolesDialog user={SAMPLE_USER} onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ResetPasswordDialog",
+    render: () => (
+      <ResetPasswordDialog
+        user={SAMPLE_USER}
+        isSelf
+        onClose={vi.fn()}
+        onDone={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
 ];
 
 describe.each(["light", "dark"] as const)(
@@ -152,9 +226,12 @@ describe.each(["light", "dark"] as const)(
           await page.settle();
         }
 
-        const results = await axe(container, {
-          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
-        });
+        const results = await axe(
+          page.axeTarget ? page.axeTarget() : container,
+          {
+            runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
+          },
+        );
 
         // vitest-axe@0.1.0's `toHaveNoViolations` matcher types don't match this project's
         // Vitest 2 typings, so violations are asserted directly for a readable failure message.
