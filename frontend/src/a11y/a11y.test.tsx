@@ -23,6 +23,18 @@ import { UserManagementPage } from "../features/users/UserManagementPage";
 import { CreateUserDialog } from "../features/users/CreateUserDialog";
 import { EditRolesDialog } from "../features/users/EditRolesDialog";
 import { ResetPasswordDialog } from "../features/users/ResetPasswordDialog";
+import { ZonesPage } from "../features/zones/ZonesPage";
+import { ZoneDialog } from "../features/zones/ZoneDialog";
+import { PlaceDialog } from "../features/zones/PlaceDialog";
+import { BulkImportPlacesDialog } from "../features/zones/BulkImportPlacesDialog";
+import { SchoolsPage } from "../features/schools/SchoolsPage";
+import { SchoolDialog } from "../features/schools/SchoolDialog";
+import { ManagersPage } from "../features/managers/ManagersPage";
+import { TeachersPage } from "../features/teachers/TeachersPage";
+import { TeacherDialog } from "../features/teachers/TeacherDialog";
+import { SalaryDialog } from "../features/teachers/SalaryDialog";
+import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
+import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
   roles: ["ADMIN"],
@@ -47,6 +59,31 @@ const ACCESS_MODEL = {
       ],
     },
     {
+      section: "MASTER DATA",
+      items: [
+        {
+          label: "Zones",
+          route: "/master-data/zones",
+          actions: ["VIEW", "CREATE", "EDIT", "DELETE"],
+        },
+        {
+          label: "Schools",
+          route: "/master-data/schools",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Managers",
+          route: "/master-data/managers",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Teachers",
+          route: "/master-data/teachers",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+      ],
+    },
+    {
       section: "ACCOUNT",
       items: [
         {
@@ -57,7 +94,32 @@ const ACCESS_MODEL = {
       ],
     },
   ],
-  dataScope: { DASHBOARD: "ORG_WIDE" },
+  dataScope: { DASHBOARD: "ORG_WIDE", TEACHER_SALARY: "ORG_WIDE" },
+};
+
+const TEACHER = {
+  id: "t1",
+  name: "Tara Teacher",
+  phone: "9800000004",
+  email: null,
+  address: null,
+  status: "ACTIVE",
+  statusEffectiveOn: "2026-04-01",
+  allowedNextStatuses: ["ON_LEAVE", "EXITED"],
+  userId: null,
+  version: 0,
+  school: { id: "s1", name: "St Mary's" },
+  manager: null,
+  pendingPlacement: null,
+  placements: null,
+};
+
+const ZONE = {
+  id: "z1",
+  name: "North Zone",
+  version: 0,
+  placeCount: 1,
+  schoolCount: 1,
 };
 
 const authFetch = vi.fn(async (input: RequestInfo) => {
@@ -67,6 +129,109 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   }
   if (url.includes("/me/sessions")) {
     return { ok: true, json: async () => [] } as Response;
+  }
+  const emptyPage = { content: [], page: 0, size: 25, totalElements: 0 };
+  if (url.startsWith("/api/v1/zones?")) {
+    return {
+      ok: true,
+      json: async () => ({
+        ...emptyPage,
+        content: [
+          {
+            id: "z1",
+            name: "North Zone",
+            version: 0,
+            placeCount: 1,
+            schoolCount: 1,
+            managerCount: 1,
+          },
+        ],
+        totalElements: 1,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/schools?")) {
+    return {
+      ok: true,
+      json: async () => ({
+        ...emptyPage,
+        content: [
+          {
+            id: "s1",
+            name: "St Mary's",
+            place: { id: "p1", name: "Madurantakam", pinCode: "603306" },
+            zone: { id: "z1", name: "North Zone" },
+            address: "1 Main Road",
+            contactPerson: null,
+            contactPhone: null,
+            billingContact: null,
+            active: true,
+            version: 0,
+            manager: null,
+            teacherCount: 1,
+          },
+        ],
+        totalElements: 1,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/managers?")) {
+    return {
+      ok: true,
+      json: async () => ({
+        ...emptyPage,
+        content: [
+          {
+            id: "m1",
+            userId: "u1",
+            displayName: "Manoj Manager",
+            phone: "9800000003",
+            active: true,
+            version: 0,
+            zones: [{ id: "z1", name: "North Zone" }],
+            schoolCount: 1,
+            teacherCount: 1,
+          },
+        ],
+        totalElements: 1,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/teachers?")) {
+    return {
+      ok: true,
+      json: async () => ({
+        ...emptyPage,
+        content: [TEACHER],
+        totalElements: 1,
+      }),
+    } as Response;
+  }
+  if (url === "/api/v1/teachers/me") {
+    return { ok: true, status: 200, json: async () => TEACHER } as Response;
+  }
+  if (url.startsWith("/api/v1/me/scope")) {
+    return {
+      ok: true,
+      json: async () => ({
+        orgWide: false,
+        zoneCount: 1,
+        schoolCount: 1,
+        zones: [],
+      }),
+    } as Response;
+  }
+  if (url.endsWith("/salary")) {
+    return {
+      ok: true,
+      json: async () => ({
+        current: { id: "e1", amount: 22000, effectiveOn: "2026-10-01" },
+        history: [{ id: "e1", amount: 22000, effectiveOn: "2026-10-01" }],
+      }),
+    } as Response;
+  }
+  if (url.includes("/places")) {
+    return { ok: true, json: async () => emptyPage } as Response;
   }
   if (url.includes("/api/v1/identity/users")) {
     return {
@@ -199,6 +364,76 @@ const pages: PageCase[] = [
     ),
     settle: () => screen.findByRole("dialog"),
     axeTarget: () => document.body,
+  },
+  {
+    name: "ZonesPage",
+    render: () => <ZonesPage />,
+    settle: () => screen.findAllByText("North Zone"),
+  },
+  {
+    name: "ZoneDialog",
+    render: () => <ZoneDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "PlaceDialog",
+    render: () => (
+      <PlaceDialog zoneId="z1" onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "BulkImportPlacesDialog",
+    render: () => (
+      <BulkImportPlacesDialog zone={ZONE} onClose={vi.fn()} onDone={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "SchoolsPage",
+    render: () => <SchoolsPage />,
+    settle: () => screen.findAllByText("St Mary's"),
+  },
+  {
+    name: "SchoolDialog",
+    render: () => <SchoolDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ManagersPage",
+    render: () => <ManagersPage />,
+    settle: () => screen.findAllByText("Manoj Manager"),
+  },
+  {
+    name: "TeachersPage",
+    render: () => <TeachersPage />,
+    settle: () => screen.findAllByText("Tara Teacher"),
+  },
+  {
+    name: "TeacherDialog",
+    render: () => <TeacherDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "SalaryDialog",
+    render: () => <SalaryDialog teacher={TEACHER as never} onClose={vi.fn()} />,
+    settle: () => screen.findByText(/current:/i),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "MyTeacherProfile",
+    render: () => <MyTeacherProfile />,
+    settle: () => screen.findByText("Tara Teacher"),
+  },
+  {
+    name: "Manager dashboard with assigned counts",
+    render: () => <MasterDataManagerDashboard />,
+    settle: () => screen.findByText("My assigned zones"),
   },
   {
     name: "ResetPasswordDialog",

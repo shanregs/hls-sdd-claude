@@ -9,6 +9,10 @@ import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
 import { DashboardRouter } from "./dashboards/DashboardRouter";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
+import { ManagersPage } from "./features/managers/ManagersPage";
+import { SchoolsPage } from "./features/schools/SchoolsPage";
+import { TeachersPage } from "./features/teachers/TeachersPage";
+import { ZonesPage } from "./features/zones/ZonesPage";
 import { LoginHistoryPage } from "./features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "./features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "./features/audit/UserActivityPage";
@@ -50,6 +54,38 @@ export function App() {
           element={
             <RouteGuard>
               <ProfilePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/zones"
+          element={
+            <RouteGuard>
+              <ZonesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/managers"
+          element={
+            <RouteGuard>
+              <ManagersPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/teachers"
+          element={
+            <RouteGuard>
+              <TeachersPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/schools"
+          element={
+            <RouteGuard>
+              <SchoolsPage />
             </RouteGuard>
           }
         />

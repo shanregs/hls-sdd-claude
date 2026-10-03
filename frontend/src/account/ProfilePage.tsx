@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useAuth } from "../auth/useAuth";
 import type { SessionSummary } from "../auth/authApi";
+import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
 
 /**
  * Self-service session management (FR-015, User Story 5): shows only the caller's own active
@@ -69,6 +70,7 @@ export function ProfilePage() {
 
   return (
     <Box sx={{ p: 4, maxWidth: 600 }}>
+      {user.roles.includes("TEACHER") && <MyTeacherProfile />}
       <Typography variant="h5" component="h1" gutterBottom>
         My sessions
       </Typography>
