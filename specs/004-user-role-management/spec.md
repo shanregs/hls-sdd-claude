@@ -31,9 +31,9 @@ exactly that role.
    status.
 2. **Given** an Admin assigns two roles (e.g., Manager and Director) to a new user, **When** the
    user signs in, **Then** they are recognized by both roles with no role picker.
-3. **Given** a phone number already belongs to an existing user, **When** an Admin tries to create
-   another account with that phone number, **Then** the system refuses with a clear duplicate
-   message and creates nothing.
+3. **Given** a phone number, username, or email already belongs to an existing user, **When** an
+   Admin tries to create another account with it, **Then** the system refuses with a message naming
+   the duplicated field and creates nothing.
 
 ---
 
@@ -184,6 +184,13 @@ same two attempts now succeed on the first account.
   unit; no partial role change is applied.
 - What happens when System reactivates a deactivated Admin account? Allowed; reactivation never
   triggers the last-admin safeguard, since it only ever increases the number of active Admins.
+- What happens when an Admin deactivates an already-inactive user, or reactivates an already-active
+  one? It succeeds as a no-op: no event is published and no audit entry is written.
+- What happens when a request names a role outside the five fixed roles? Refused with a 400.
+- Who may grant or remove `ADMIN` and `SYSTEM`? Either Admin or System may grant or remove any of
+  the five roles, since the constitution gives both user management; the audit trail records it.
+- What happens on self-deactivation or self-password-reset? Allowed (see above); the UI warns that
+  the actor's own session will end.
 
 ## Requirements *(mandatory)*
 
@@ -192,20 +199,23 @@ same two attempts now succeed on the first account.
 - **FR-001**: Admin and System users MUST be able to create a new user account with a display name,
   phone number, one or more of the five fixed roles, and optionally a username, email, and an
   initial password.
-- **FR-002**: Admin and System users MUST be able to view, search, and filter the full list of user
-  accounts by name and phone, seeing each one's display name, phone, roles, and active/inactive
-  status.
+- **FR-002**: Admin and System users MUST be able to view and search the full list of user accounts
+  by name and phone, and filter it by role and by active/inactive status, seeing each one's display
+  name, phone, roles, and active/inactive status.
 - **FR-003**: Admin and System users MUST be able to add or remove one or more role assignments on
   an existing user account, except where doing so would leave that user holding zero roles.
 - **FR-004**: Admin and System users MUST be able to deactivate an active user account, which
   immediately ends all of that user's active sessions and refuses any further sign-in by any method
-  (reusing spec 001's existing deactivation enforcement).
+  (reusing spec 001's existing deactivation enforcement). Access tokens already issued to that user
+  MUST also stop working on their next request, not only after they expire.
 - **FR-005**: Admin and System users MUST be able to reactivate a previously deactivated user
   account, restoring exactly the role assignments it held at the time of deactivation and allowing
   sign-in again.
 - **FR-006**: Admin and System users MUST be able to set a new password directly on another user's
   account ("admin-triggered reset"), which ends all of that user's existing sessions and clears any
   account lockout, under the same password policy spec 001 already enforces for self-service resets.
+  The target's already-issued access tokens MUST also stop working on their next request. The
+  submitted password MUST NOT appear in logs, audit entries, or error responses.
 - **FR-007**: The system MUST refuse, as a single rejected action with no partial effect, any
   deactivation or role-removal request that would leave zero active user accounts holding the Admin
   role (the last-admin safeguard), with a clear explanation of why it was refused.
@@ -217,6 +227,12 @@ same two attempts now succeed on the first account.
 - **FR-010**: All four prior spec 001 identity rules continue to apply unchanged to accounts created
   or edited here: duplicate-phone rejection, the five-role-only constraint, the password policy, and
   deactivation's sign-in/session enforcement.
+- **FR-011**: The last-admin check and the change it guards MUST be evaluated atomically, so two
+  concurrent requests (for example two Admins deactivating each other) can never together leave
+  zero active Admin accounts.
+- **FR-012**: Within User Management, the Create, Edit Roles, Deactivate/Reactivate, and Reset
+  Password actions MUST be shown only if the caller's access model grants the matching
+  `USER_MANAGEMENT` action (`CREATE` or `EDIT`). The backend independently enforces the same check.
 
 ### Key Entities
 
@@ -241,7 +257,7 @@ spec does not change that capability; it adds the separate, user-level last-admi
 described in User Story 6, which protects against zero active Admin *users*, independent of whether
 the Admin *role* still holds its permissions.
 
-**New permission keys**: `userManagement.view`, `userManagement.create`, `userManagement.edit` —
+**New permission keys**: module `USER_MANAGEMENT` with actions `VIEW`, `CREATE`, and `EDIT` —
 seeded `true` for Admin and System only, `false` for Director, Manager, and Teacher, matching the
 Constitution's default role access matrix row for User Management.
 
@@ -277,7 +293,9 @@ Constitution's default role access matrix row for User Management.
   assignments.
 - The last-admin safeguard (User Story 6, FR-007) protects only the Admin role, matching this
   spec's description; no equivalent protection exists for the System role.
-- A role-assignment change made here takes effect for an already-signed-in user within one access
-  token's lifetime (currently 15 minutes, spec 001), consistent with how the existing JWT issuance
-  and renewal model already works — there is no requirement to immediately invalidate a live
-  session's current access token on a role change.
+- A *role* change made here takes effect for an already-signed-in user within one access token's
+  lifetime (currently 15 minutes, spec 001), consistent with the existing JWT issuance and renewal
+  model. *Deactivation and admin-triggered password reset* take effect on the user's next request:
+  every request checks that the token's session (`sid`) is still active and the user is active.
+- An admin-set password does not force the user to change it at next sign-in in this spec; revisit
+  if policy requires it.

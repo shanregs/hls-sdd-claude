@@ -1,7 +1,7 @@
 # Phase 1 Data Model: User & Role Management
 
 No new table. This spec amends two existing entities (spec 001's `AppUser`, read/write patterns on
-`RoleAssignment`) and adds four new domain events that feed spec 003's existing
+`RoleAssignment`) and adds three new domain events (and the first `active=true` use of an existing one) that feed spec 003's existing
 `user_activity_entry` table through its existing consumer.
 
 ## App User (amended)

@@ -10,7 +10,7 @@ description: "Task list for feature implementation"
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/user-management-api.md,
 quickstart.md, and **002-access-model-app-shell** and **003-audit implemented** (this feature adds
 its own `USER_MANAGEMENT` module to 002's `PermissionMatrixSeeder`/`NavigationCatalog`, and feeds
-003's existing `UserActivityEventConsumer` with four new event types).
+003's existing `UserActivityEventConsumer` with three new event types plus the existing `AccountActivationChanged`).
 
 **Tests**: included as first-class tasks — Constitution Principle IX requires per-role
 authorization tests on every endpoint, and this spec's own Independent Test per user story
@@ -94,13 +94,22 @@ user story below builds on.
       for a plain deactivation check), returns whether this would leave zero *active* `AppUser`
       rows holding `Role.ADMIN` — querying `RoleAssignmentRepository.findByRole(Role.ADMIN)` then
       `AppUserRepository.findAllById(...)` for their `active` flags, excluding the target user's own
-      current Admin-role membership when it is one of the roles being removed. Depends on T007,
-      T008.
+      current Admin-role membership when it is one of the roles being removed. Per FR-011 the
+      `findByRole(Role.ADMIN)` read takes a `PESSIMISTIC_WRITE` lock, and callers MUST invoke the
+      guard inside their own `@Transactional` method so the check and the change are atomic.
+      Depends on T007, T008.
+- [ ] T010a Add a session/active check to access-token validation (FR-004/FR-006): a custom
+      `OAuth2TokenValidator<Jwt>` (or equivalent filter) wired in
+      `backend/src/main/java/com/hls/identity/security/SecurityConfig.java` that rejects a token
+      whose `sid` session is revoked or whose user is inactive, so deactivation and admin reset take
+      effect on the next request. Tests: a revoked-session token and a deactivated-user token each
+      get 401; all existing spec 001-003 auth tests stay green.
 - [ ] T011 [P] Add a unit test `LastAdminGuardTest` in
       `backend/src/test/java/com/hls/identity/user/LastAdminGuardTest.java`: with exactly one active
       Admin, both "deactivate them" and "remove their Admin role" are refused; with two active
       Admins, both succeed; a deactivated Admin does not count as keeping the system unlocked.
-      Depends on T010.
+      Add a concurrency test (FR-011): with two Admins, two threads each deactivate the other, and
+      exactly one succeeds. Depends on T010.
 - [ ] T012 [P] Create three new domain event records in
       `backend/src/main/java/com/hls/identity/activity/`: `UserCreated.java` (`eventId`,
       `occurredAt`, `actorUserId` nullable, `newUserId`, `roles`), `UserRoleChanged.java`
@@ -138,7 +147,9 @@ the new user can immediately sign in and is recognized by exactly that role.
       `backend/src/test/java/com/hls/identity/user/UserManagementControllerTest.java`:
       `ADMIN`/`SYSTEM` can create a user with one or more roles and the user can then sign in and
       is recognized by exactly those roles; a duplicate phone is refused with a 409 and the same
-      message as spec 001's existing validation; `DIRECTOR`/`MANAGER`/`TEACHER` get 403
+      message as spec 001's existing validation, and a duplicate username or duplicate email is
+      likewise refused with a 409 naming the field; a role value outside the five fixed roles is
+      refused with 400; `DIRECTOR`/`MANAGER`/`TEACHER` get 403
       (contracts/user-management-api.md). **End-to-end audit assertion (FR-008/SC-005, through the
       real endpoint, not a manually-published event)**: after a successful create,
       `await().atMost(Duration.ofSeconds(5)).untilAsserted(...)` that
@@ -159,7 +170,9 @@ the new user can immediately sign in and is recognized by exactly that role.
       linkedTeacherId, String initialPassword, String username, String email)` to
       `UserAdminService.java` (research.md §5): delegates to the existing creation logic, then
       publishes `UserCreated(UUID.randomUUID(), clock.instant(), actorUserId, user.getId(), roles)`.
-      The two existing no-actor overloads are unchanged. Depends on T012.
+      The two existing no-actor overloads are unchanged. The controller passes `null` for
+      `linkedTeacherId`; teacher linking is not part of this spec (spec 005 will own it).
+      Depends on T012.
 - [ ] T017 [US1] Implement `UserManagementController` in
       `backend/src/main/java/com/hls/identity/user/UserManagementController.java`:
       `POST /api/v1/identity/users` (contracts/user-management-api.md) gated by
@@ -193,19 +206,27 @@ empty state.
 
 - [ ] T020 [P] [US2] Backend integration test (extend `UserManagementControllerTest.java`):
       `GET /api/v1/identity/users` with no filter returns all users paginated; `?query=` narrows by
-      display name or phone; a non-matching query returns an empty `content` array, not an error;
+      display name or phone; `?role=` and `?active=` filter by role and status (alone and
+      combined with `query`); a non-matching query returns an empty `content` array, not an error;
       `DIRECTOR`/`MANAGER`/`TEACHER` get 403.
 - [ ] T021 [P] [US2] Frontend test in `UserManagementPage.test.tsx` (list/search): the list renders
       seeded rows with roles and active/inactive status; typing a search term that matches nothing
       shows an empty state, not an error; a Manager/Teacher/Director access-model fixture hides the
       User Management nav section entirely.
+- [ ] T021a [P] [US2] Backend test in
+      `backend/src/test/java/com/hls/identity/accessmodel/UserManagementAccessModelTest.java`
+      (Constitution Principle IX): `GET /api/v1/me/access-model` shows "User Management" under
+      `SYSTEM` for an Admin and under `SYSTEM CONFIGURATION` for a System user, with VIEW/CREATE/EDIT
+      actions; Director, Manager, and Teacher get no such nav entry; the seeded matrix has
+      `USER_MANAGEMENT` VIEW/CREATE/EDIT true for ADMIN and SYSTEM only.
 
 ### Implementation for User Story 2
 
 - [ ] T022 [US2] Add `GET /api/v1/identity/users` to `UserManagementController.java`
       (contracts/user-management-api.md) gated by `USER_MANAGEMENT.VIEW`, calling T009's
       `AppUserRepository.search` and projecting each `AppUser` plus its roles
-      (`UserAdminService.rolesOf`) into the response shape. Depends on T009, T017.
+      (`UserAdminService.rolesOf`) into the response shape. Accepts optional `role` and `active`
+      query params in addition to `query` (FR-002). Depends on T009, T017.
 - [ ] T023 [US2] Wire `UserManagementPage.tsx`'s list/search against T022's endpoint, using the
       DataGrid convention from `frontend/src/features/audit`/`frontend/src/features/permissions`
       (pagination, a search field, an active/inactive status column). Depends on T018, T022.
@@ -280,7 +301,11 @@ intact and they can sign in again.
       attempt (password and OTP); reactivating restores sign-in and exactly their prior roles;
       deactivating the sole active Admin is refused with 409 and they remain active (FR-007); the
       same deactivation succeeds once a second active Admin exists; reactivation is never refused
-      by the safeguard; `DIRECTOR`/`MANAGER`/`TEACHER` get 403 on both
+      by the safeguard; after deactivation the user's still-unexpired access token gets 401 on the
+      next call (T010a, FR-004); deactivating an already-inactive user and reactivating an
+      already-active one are no-ops that publish no event; an Admin deactivating their own account
+      succeeds (when not the last Admin) and ends their own session;
+      `DIRECTOR`/`MANAGER`/`TEACHER` get 403 on both
       `POST .../deactivate` and `POST .../reactivate` (FR-009, Constitution Principle IX). **End-to-
       end audit assertion (FR-008/SC-005)**: after deactivating and then reactivating,
       `await().atMost(Duration.ofSeconds(5)).untilAsserted(...)` that
@@ -328,7 +353,9 @@ old one.
       a new password ends the target's existing sessions and clears any lockout; the user can then
       sign in with the new password and not the old one; a user who previously had no password can
       subsequently sign in with the new one; a password shorter than 10 characters or equal to the
-      user's phone is refused with 400 and spec 001's exact policy message (T006);
+      user's phone is refused with 400 and spec 001's exact policy message (T006); the target's
+      old, still-unexpired access token gets 401 on the next call (T010a, FR-006); the submitted
+      password string appears nowhere in captured logs or in the `user_activity_entry` row (FR-006);
       `DIRECTOR`/`MANAGER`/`TEACHER` get 403 on `POST .../reset-password` (FR-009, Constitution
       Principle IX). **End-to-end audit assertion (FR-008/SC-005)**: after a successful reset,
       `await().atMost(Duration.ofSeconds(5)).untilAsserted(...)` that
@@ -345,8 +372,9 @@ old one.
       returning a `PasswordPolicyViolationException` on failure), sets the encoded password, calls
       `sessionService.revokeAllSessionsForUser(targetUserId)` and clears `failedAttemptCount`/
       `lockUntil` (mirroring `PasswordResetService.complete`'s side effects), then publishes
-      `PasswordResetByAdmin(UUID.randomUUID(), clock.instant(), actorUserId, targetUserId)`.
-      Depends on T006, T012.
+      `PasswordResetByAdmin(UUID.randomUUID(), clock.instant(), actorUserId, targetUserId)`. The
+      password MUST NOT be logged, echoed in `PasswordPolicyViolationException`, or placed in the
+      event (FR-006). Depends on T006, T012.
 - [ ] T038 [US5] Add `POST /api/v1/identity/users/{userId}/reset-password` to
       `UserManagementController.java` gated by `USER_MANAGEMENT.EDIT`, mapping
       `PasswordPolicyViolationException` to 400 (contracts/user-management-api.md). Depends on
@@ -354,6 +382,13 @@ old one.
 - [ ] T039 [US5] Implement `ResetPasswordDialog.tsx` in
       `frontend/src/features/users/ResetPasswordDialog.tsx` and a "Reset password" row action in
       `UserManagementPage.tsx` wired to T038's endpoint. Depends on T023, T038.
+- [ ] T039a [P] [US5] Gate every User Management action by the access model (FR-012, Constitution
+      Principle IV): hide "Create user" unless `USER_MANAGEMENT.CREATE` is granted, and hide the
+      Roles, Deactivate/Reactivate, and Reset password row actions unless `USER_MANAGEMENT.EDIT` is
+      granted. Show a confirmation warning that the actor's own session will end when they target
+      their own account for deactivation or password reset. Frontend test in
+      `UserManagementPage.test.tsx`: a fixture with VIEW but no EDIT/CREATE renders the list with no
+      actions. Depends on T034, T039.
 
 **Checkpoint**: User Stories 1-5 work together.
 
@@ -402,7 +437,9 @@ complete.
       `CreateUserDialog`, `EditRolesDialog`, and `ResetPasswordDialog` in both themes to
       `frontend/src/a11y/a11y.test.tsx`, asserting zero critical WCAG 2.2 AA violations
       (FR-024/SC-008 precedent from spec 001/003).
-- [ ] T044 [P] Run all six of `quickstart.md`'s scenarios end-to-end and record the results.
+- [ ] T044 [P] Run all six of `quickstart.md`'s scenarios end-to-end and record the results,
+      including timing the SC-001 (create-and-sign-in under 2 minutes) and SC-002 (find and
+      deactivate in 3 actions) walkthroughs by hand.
 - [ ] T045 [P] Update `docs/spec-roadmap.md` row 004's status to "Implemented" once every
       checkpoint above has passed.
 - [ ] T046 Run the full backend suite (`mvn test`) and the full frontend suite (`npm run test`,
@@ -468,5 +505,5 @@ Task: "Frontend test for EditRolesDialog in frontend/src/features/users/EditRole
 6. US5 → validate (admin-triggered password reset).
 7. US6 → validate (the safeguard's two-Admin boundary case, end-to-end through both US3 and US4's
    real endpoints together) → spec complete.
-8. Final Phase → audit-consumer coverage for all four new action types, axe-core checks, quickstart
+8. Final Phase → audit-consumer coverage for all new action types, axe-core checks, quickstart
    run, roadmap update, full suite green.

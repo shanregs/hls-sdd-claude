@@ -2,8 +2,8 @@
 
 ## 1. Reusing audit's existing `user_activity_entry` table vs a new table
 
-**Decision**: this spec's four new events (`UserCreated`, `UserRoleChanged`,
-`AccountActivationChanged` with its first `active=true` caller, `PasswordResetByAdmin`) all feed
+**Decision**: this spec's three new events (`UserCreated`, `UserRoleChanged`, `PasswordResetByAdmin`) plus the existing
+`AccountActivationChanged` (first `active=true` caller) all feed
 `audit`'s existing `UserActivityEventConsumer` and `user_activity_entry` table from spec 003,
 mapping to new `action` text values. No new table, no schema change.
 

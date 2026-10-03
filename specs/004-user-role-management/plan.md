@@ -55,10 +55,16 @@ deactivate a user or strip a role and only then discover it broke the invariant.
 reactivation, and admin-triggered reset all reuse spec 001's exact session-termination and
 lockout-clearing behavior rather than re-implementing it.
 
-**Scale/Scope**: Under 100 users growing ~30%/year. At this spec's scope, four new identity
-lifecycle event types feed `audit`'s existing User Activity consumer (`UserCreated`,
-`UserRoleChanged`, `AccountActivationChanged` — already exists, gains its first `active=true`
-caller — and `PasswordResetByAdmin`); no schema change to any audit table.
+Access-token validation gains a check that the token's `sid` session is not revoked and the user is
+active (a per-request lookup; at under 100 users this is fine), so deactivation and admin reset take
+effect on the next request, not after the 15-minute token lifetime (FR-004/FR-006). The last-admin
+check runs inside the same transaction as the change, after taking a pessimistic write lock on the
+Admin `role_assignment` rows, so concurrent requests cannot both pass it (FR-011).
+
+**Scale/Scope**: Under 100 users growing ~30%/year. At this spec's scope, new identity
+lifecycle event types feed `audit`'s existing User Activity consumer: three new (`UserCreated`,
+`UserRoleChanged`, `PasswordResetByAdmin`) plus the existing `AccountActivationChanged`, which gains
+its first `active=true` caller; no schema change to any audit table.
 
 ## Constitution Check
 

@@ -11,7 +11,8 @@ spec 002) are unchanged by this spec and are not repeated here.
 
 **Authorization**: `USER_MANAGEMENT.VIEW`.
 
-**Query params**: `query` (optional free-text match against display name or phone), `page`, `size`.
+**Query params**: `query` (optional free-text match against display name or phone), `role` (optional,
+one of the five fixed roles), `active` (optional boolean), `page`, `size`. Filters combine with AND.
 
 **Response 200**:
 
@@ -55,8 +56,10 @@ spec 002) are unchanged by this spec and are not repeated here.
 
 **Response 201**: the created user (same shape as the list's `content` entries).
 
+**Response 400**: `roles` is empty, or contains a value outside the five fixed roles.
+
 **Response 409**: `{"reason": "A user with phone 9800000099 already exists."}` (reusing spec 001's
-existing duplicate-phone/username/email rejections verbatim).
+existing duplicate-phone/username/email rejections verbatim; the message names the duplicated field).
 
 ---
 
@@ -77,7 +80,7 @@ model.md).
 **Response 200**: the updated user.
 
 **Response 400**: `{"reason": "A user must hold at least one role."}` — the given role set is
-empty.
+empty — or it contains a value outside the five fixed roles.
 
 **Response 409**: `{"reason": "This would leave no active user able to administer the system as Admin."}`
 — the last-admin safeguard (FR-007) refused the request; no role was changed.
@@ -104,6 +107,9 @@ enforcement); no further sign-in succeeds for them by any method.
 deactivation. Never refused by the last-admin safeguard (reactivation only ever increases the
 number of active Admins).
 
+Deactivating an already-inactive user, and reactivating an already-active one, return 204 as no-ops
+and publish no event.
+
 ---
 
 ## POST /api/v1/identity/users/{userId}/reset-password
@@ -117,7 +123,8 @@ number of active Admins).
 ```
 
 **Response 204**: the password is set; all of the user's existing sessions end and any account
-lockout is cleared (identical side effects to spec 001's self-service reset).
+lockout is cleared (identical side effects to spec 001's self-service reset). The password is never
+logged, echoed, or recorded in the audit entry.
 
 **Response 400**: `{"reason": "Password must be at least 10 characters and not your phone number."}`
 — the exact message spec 001's self-service reset already uses (research.md §2's shared
@@ -126,6 +133,13 @@ lockout is cleared (identical side effects to spec 001's self-service reset).
 ---
 
 ## Notes
+
+- **Token invalidation (FR-004/FR-006)**: after `deactivate` or `reset-password`, the affected
+  user's already-issued access tokens are rejected with 401 on their next request (the token's `sid`
+  session is revoked / the user is inactive). A *role* change still takes effect within one token
+  lifetime (15 minutes).
+- **Atomicity (FR-011)**: the last-admin check and the change it guards run in one transaction under
+  a pessimistic lock, so concurrent requests cannot together leave zero active Admins.
 
 - Every write endpoint above is additionally recorded as an immutable User Activity entry
   (FR-008) — this is a side effect of the underlying `UserAdminService` methods publishing domain
