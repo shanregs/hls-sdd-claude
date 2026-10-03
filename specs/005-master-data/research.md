@@ -208,3 +208,24 @@ publisher) keeps one enforcement point and keeps publishers ignorant of who read
 **Alternatives considered**: not publishing salary amounts to audit (rejected: Principle I requires
 prior and new values); a second audit store for restricted data (rejected: Principle VII says one
 store).
+
+## 17. Two more SPIs: scope and read-model enrichment for `school` views
+
+**Decision**: besides the three veto guards (section 2), `school.api` defines
+`SchoolScopeProvider` (returns the School ids a caller may see) and two read-model enrichers,
+`SchoolViewEnricher` and `ZoneViewEnricher` (return extra attributes per id). `organization`
+implements the scope provider and contributes `manager` (School views) and `managerCount` (Zone
+views); `teacher` contributes `teacherCount` (School views). `SchoolService` merges the extras into
+the JSON it returns.
+
+**Rationale**: School and Zone lists must be Manager-scoped and must show each School's Manager and
+Teacher count, but those facts belong to `organization` and `teacher`, which depend on `school`
+(Principle VII). The School endpoints therefore stay in `school` and ask the dependents for the
+parts they own, through interfaces `school` defines, rather than `school` importing them. With no
+scope provider present, a non-Admin/Director caller sees nothing (fail closed), which is why
+Managers see no Schools until US3 lands.
+
+**Alternatives considered**: moving the School HTTP layer into `organization` (rejected: School
+CRUD is `school`'s responsibility, and `organization` would then own endpoints for data it does not
+own); a frontend that joins School, Manager and Teacher lists (rejected: pushes scoping and
+consistency into the client).
