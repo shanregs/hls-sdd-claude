@@ -14,6 +14,7 @@ import { useAuth } from "../../auth/useAuth";
 import { useAccessModel } from "../../access-model/useAccessModel";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { formatDate } from "./formatters";
+import { LinkAccountDialog } from "./LinkAccountDialog";
 import { PlacementDialog } from "./PlacementDialog";
 import { SalaryDialog } from "./SalaryDialog";
 import { StatusDialog } from "./StatusDialog";
@@ -59,6 +60,7 @@ export function TeachersPage() {
   const [statusFor, setStatusFor] = useState<TeacherSummary | null>(null);
   const [placementFor, setPlacementFor] = useState<TeacherSummary | null>(null);
   const [salaryFor, setSalaryFor] = useState<TeacherSummary | null>(null);
+  const [accountFor, setAccountFor] = useState<TeacherSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +148,11 @@ export function TeachersPage() {
           {!limitedEdit && (
             <Button size="small" onClick={() => setStatusFor(params.row)}>
               Status
+            </Button>
+          )}
+          {!limitedEdit && params.row.status !== "EXITED" && (
+            <Button size="small" onClick={() => setAccountFor(params.row)}>
+              {params.row.userId ? "Account" : "Link account"}
             </Button>
           )}
           {canSeeSalary && (
@@ -272,6 +279,16 @@ export function TeachersPage() {
           onClose={() => setPlacementFor(null)}
           onSaved={() => {
             setPlacementFor(null);
+            reload();
+          }}
+        />
+      )}
+      {accountFor && (
+        <LinkAccountDialog
+          teacher={accountFor}
+          onClose={() => setAccountFor(null)}
+          onSaved={() => {
+            setAccountFor(null);
             reload();
           }}
         />

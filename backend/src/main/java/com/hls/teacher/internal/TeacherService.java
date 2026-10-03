@@ -151,6 +151,21 @@ public class TeacherService {
                 null);
     }
 
+    /** An active user holding the Teacher role who is not linked to any Teacher record yet. */
+    public record AccountCandidate(UUID userId, String displayName, String phone) {}
+
+    @Transactional(readOnly = true)
+    public List<AccountCandidate> accountCandidates() {
+        return userAdminService
+                .search("", Role.TEACHER, true, org.springframework.data.domain.PageRequest.of(0, 500))
+                .getContent()
+                .stream()
+                .filter(u -> teacherRepository.findByUserId(u.user().getId()).isEmpty())
+                .map(u -> new AccountCandidate(u.user().getId(), u.user().getDisplayName(), u.user().getPhone()))
+                .sorted(java.util.Comparator.comparing(c -> c.displayName().toLowerCase(java.util.Locale.ROOT)))
+                .toList();
+    }
+
     // ----------------------------------------------------------------- commands
 
     @Transactional

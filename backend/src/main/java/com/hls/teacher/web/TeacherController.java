@@ -75,6 +75,13 @@ public class TeacherController {
                 PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, MAX_PAGE_SIZE)), Sort.by("name"))));
     }
 
+    @GetMapping("/candidates")
+    public java.util.List<TeacherService.AccountCandidate> candidates(@AuthenticationPrincipal Jwt jwt) {
+        permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.EDIT);
+        requireOrgWide(jwt);
+        return teacherService.accountCandidates();
+    }
+
     @GetMapping("/{id}")
     public TeacherView get(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.VIEW);

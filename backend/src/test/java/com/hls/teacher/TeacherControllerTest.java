@@ -99,6 +99,26 @@ class TeacherControllerTest extends MasterDataTestBase {
     }
 
     @Test
+    void accountCandidatesAreActiveTeacherUsersNotYetLinkedAndOnlyForAdminAndDirector() {
+        String admin = signInAs(Role.ADMIN).token();
+        Signed free = signInAs(Role.TEACHER);
+        Signed linked = signInAs(Role.TEACHER);
+        Signed notATeacher = signInAs(Role.MANAGER);
+        post("/api/v1/teachers", admin, Map.of("name", uniqueName("L"), "userId", linked.userId()));
+
+        Resp resp = get("/api/v1/teachers/candidates", signInAs(Role.DIRECTOR).token());
+
+        assertThat(resp.status()).isEqualTo(200);
+        assertThat(resp.body())
+                .contains(free.userId().toString())
+                .doesNotContain(linked.userId().toString(), notATeacher.userId().toString());
+        assertThat(get("/api/v1/teachers/candidates", signInAs(Role.MANAGER).token()).status())
+                .isEqualTo(403);
+        assertThat(get("/api/v1/teachers/candidates", signInAs(Role.TEACHER).token()).status())
+                .isEqualTo(403);
+    }
+
+    @Test
     void creatingWithAUserIdLinksTheAccount() {
         String admin = signInAs(Role.ADMIN).token();
         Signed teacherUser = signInAs(Role.TEACHER);

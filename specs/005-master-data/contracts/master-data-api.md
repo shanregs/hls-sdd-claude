@@ -86,6 +86,7 @@ same list. **400** (nothing created) if `rows` is empty, exceeds 5,000, or `zone
 | POST | `/api/v1/teachers` | `TEACHERS.CREATE` | `{ name, phone, email, address, status, userId? }`; Admin/Director only |
 | PUT | `/api/v1/teachers/{id}` | `TEACHERS.EDIT` | contact fields + `version`; Manager allowed for scoped Teachers |
 | POST | `/api/v1/teachers/{id}/status` | `TEACHERS.EDIT` (Admin/Director) | `{ "status", "effectiveOn" }`; 409 `"A Teacher cannot move from X to Y."` for any disallowed transition, including anything from `EXITED` |
+| GET | `/api/v1/teachers/candidates` | `TEACHERS.EDIT` (Admin/Director) | active users holding the Teacher role not linked to any Teacher yet: `[{userId, displayName, phone}]` |
 | PUT | `/api/v1/teachers/{id}/user` | `TEACHERS.EDIT` (Admin/Director) | `{ "userId" \| null }`; 400 if the user lacks the Teacher role; 409 if already linked to another Teacher or if the Teacher has exited |
 | POST | `/api/v1/teachers/{id}/placements` | `TEACHERS.EDIT` (Admin/Director) | `{ "schoolId", "effectiveOn" }`: past/today -> immediate; future -> scheduled. 409 for: date before current placement start, exited Teacher, inactive School |
 | DELETE | `/api/v1/teachers/{id}/placements/pending` | `TEACHERS.EDIT` (Admin/Director) | cancel the scheduled move -> 204 |
