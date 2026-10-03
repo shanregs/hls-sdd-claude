@@ -96,6 +96,8 @@ unreachable by list or direct request.
    exist.
 5. **Given** a cell in a locked month, **When** the Manager looks at it, **Then** it is shown as
    locked and cannot be edited; a direct attempt is refused.
+6. **Given** a mark for an assigned Teacher, **When** the Manager clears it, **Then** the date
+   becomes unmarked and the cleared value stays in history.
 
 ---
 
@@ -151,6 +153,8 @@ Teacher's own calendar.
    Manager (School from the Teacher's placement on that date, history kept, lock respected).
 4. **Given** the grid, **When** they open a Teacher, **Then** they see that Teacher's rollup and
    the history of each mark.
+   4a. **Given** a mark, **When** an Admin clears it, **Then** the date becomes unmarked and the
+   cleared value stays in history; a Director corrects a day by marking over it.
 5. **Given** a user with only Teacher or System access, **When** they try to reach Attendance by
    menu or direct link, **Then** nothing is shown and the route says "not authorized".
 
@@ -463,8 +467,8 @@ Admin, Director and System may edit the role→permission matrix; this spec does
   user may mark.
 - Training days are marked with the Training status; the training calendar, sessions and
   registration belong to the later HR calendars spec. "Training days available" for a month is the
-  number of dates marked as training for that Teacher plus any dates an Admin has marked as training
-  on the non-working calendar's training list, which stays empty until that spec exists.
+  number of dates marked as training for that Teacher; until that spec exists, available equals
+  attended.
 - Weights default to Present = 1, Training = 1 (counted in the total and shown separately), Leave =
   0, Non-working excluded. A half-day mark has value 0.5. A day split between two statuses is
   recorded as one mark with the larger share and a note.
