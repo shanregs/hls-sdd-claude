@@ -170,7 +170,7 @@ class IdentityActivityPublishingTest {
         userAdminService.createUser("Deactivate Tester", "9876610005", Set.of(Role.MANAGER), null, "the-real-password-5");
         AppUser user = appUserRepository.findByPhone("9876610005").orElseThrow();
 
-        userAdminService.deactivateUser(user.getId());
+        userAdminService.deactivateUser(null, user.getId());
 
         assertThat(applicationEvents.stream(AccountActivationChanged.class))
                 .anyMatch(e -> e.affectedUserId().equals(user.getId()) && !e.active());

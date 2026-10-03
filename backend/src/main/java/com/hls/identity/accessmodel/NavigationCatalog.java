@@ -38,6 +38,22 @@ public final class NavigationCatalog {
                     10,
                     EnumSet.of(Role.SYSTEM)),
             new NavItem(
+                    "User Management",
+                    "/identity/users",
+                    PermissionModule.USER_MANAGEMENT,
+                    PermissionAction.VIEW,
+                    "SYSTEM",
+                    15,
+                    EnumSet.of(Role.ADMIN)),
+            new NavItem(
+                    "User Management",
+                    "/identity/users",
+                    PermissionModule.USER_MANAGEMENT,
+                    PermissionAction.VIEW,
+                    "SYSTEM CONFIGURATION",
+                    15,
+                    EnumSet.of(Role.SYSTEM)),
+            new NavItem(
                     "Role & Permissions",
                     "/identity/permissions",
                     PermissionModule.IDENTITY_PERMISSIONS,

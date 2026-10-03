@@ -106,7 +106,7 @@ class AccessModelResolutionTest {
     void adminSeesRolePermissionsUnderSystemSectionAndOrgWideScope() {
         var response = accessModelFor("9876550003", Set.of(Role.ADMIN));
 
-        assertThat(itemLabelsIn(response, "SYSTEM")).containsExactly("Role & Permissions");
+        assertThat(itemLabelsIn(response, "SYSTEM")).containsExactly("User Management", "Role & Permissions");
         assertThat(response.dataScope()).containsEntry("DASHBOARD", "ORG_WIDE");
     }
 
@@ -123,7 +123,8 @@ class AccessModelResolutionTest {
         var response = accessModelFor("9876550005", Set.of(Role.SYSTEM));
 
         assertThat(itemLabelsIn(response, "SYSTEM DASHBOARD")).containsExactly("Dashboard");
-        assertThat(itemLabelsIn(response, "SYSTEM CONFIGURATION")).containsExactly("Role & Permissions");
+        assertThat(itemLabelsIn(response, "SYSTEM CONFIGURATION"))
+                .containsExactly("User Management", "Role & Permissions");
         assertThat(itemLabelsIn(response, "Dashboard")).isEmpty();
         assertThat(itemLabelsIn(response, "SYSTEM")).isEmpty();
         assertThat(response.dataScope()).containsEntry("DASHBOARD", "NONE");
@@ -135,7 +136,7 @@ class AccessModelResolutionTest {
 
         assertThat(response.roles()).containsExactly("ADMIN", "DIRECTOR");
         assertThat(itemLabelsIn(response, "Dashboard")).containsExactly("Dashboard");
-        assertThat(itemLabelsIn(response, "SYSTEM")).containsExactly("Role & Permissions");
+        assertThat(itemLabelsIn(response, "SYSTEM")).containsExactly("User Management", "Role & Permissions");
         assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("Profile");
     }
 }

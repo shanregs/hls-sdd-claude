@@ -17,8 +17,10 @@ import org.springframework.modulith.events.ApplicationModuleListener;
  * audit is a pure sink) at the event-wiring level, which {@code ApplicationModulesTest}'s
  * {@code ApplicationModules.verify()} does not check on its own: that {@code audit} consumes
  * exactly the domain events spec.md's Assumptions and data-model.md document — spec 001's
- * {@code LoginHistoryRecorded}, spec 002's {@code PermissionMatrixChanged}, and the five lifecycle
- * events this spec added to {@code identity} (tasks.md T034) — and publishes none of its own.
+ * {@code LoginHistoryRecorded}, spec 002's {@code PermissionMatrixChanged}, the five lifecycle
+ * events spec 003 added to {@code identity} (tasks.md T034), and the three spec 004 added
+ * ({@code UserCreated}, {@code UserRoleChanged}, {@code PasswordResetByAdmin}) — and publishes
+ * none of its own.
  */
 class ApplicationModuleBoundaryTest {
 
@@ -29,7 +31,10 @@ class ApplicationModuleBoundaryTest {
             "com.hls.identity.activity.PasswordResetCompleted",
             "com.hls.identity.activity.SessionEnded",
             "com.hls.identity.activity.AccountLockChanged",
-            "com.hls.identity.activity.AccountActivationChanged");
+            "com.hls.identity.activity.AccountActivationChanged",
+            "com.hls.identity.activity.UserCreated",
+            "com.hls.identity.activity.UserRoleChanged",
+            "com.hls.identity.activity.PasswordResetByAdmin");
 
     // Main production classes only (target/classes) — not target/test-classes, which legitimately
     // use ApplicationEventPublisher in test fixtures to simulate redelivery of consumed events.

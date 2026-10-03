@@ -21,6 +21,9 @@ public class PermissionMatrixService {
     /** Audit screens are Admin/System only by default (spec 003's Role & Permission Impact table). */
     private static final Set<Role> AUDIT_VIEWER_ROLES = Set.of(Role.ADMIN, Role.SYSTEM);
 
+    /** User Management is Admin/System only by default (spec 004's Role & Permission Impact table). */
+    private static final Set<Role> USER_MANAGER_ROLES = Set.of(Role.ADMIN, Role.SYSTEM);
+
     private static final List<PermissionModule> AUDIT_MODULES = List.of(
             PermissionModule.AUDIT_LOGS,
             PermissionModule.AUDIT_LOGIN_HISTORY,
@@ -59,6 +62,11 @@ public class PermissionMatrixService {
                 seed(role, module, PermissionAction.VIEW, true);
                 seed(role, module, PermissionAction.EXPORT, true);
             }
+        }
+        for (Role role : USER_MANAGER_ROLES) {
+            seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
+            seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.EDIT, true);
         }
     }
 

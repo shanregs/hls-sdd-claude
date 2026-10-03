@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PasswordResetService {
 
     private static final Duration RESET_TOKEN_TTL = Duration.ofMinutes(10);
-    private static final int MIN_PASSWORD_LENGTH = 10;
 
     private final IdentifierResolver identifierResolver;
     private final AppUserRepository appUserRepository;
@@ -98,9 +97,7 @@ public class PasswordResetService {
         if (user == null) {
             return CompleteOutcome.INVALID_OR_EXPIRED_TOKEN;
         }
-        if (newPassword == null
-                || newPassword.length() < MIN_PASSWORD_LENGTH
-                || newPassword.equals(user.getPhone())) {
+        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone())) {
             return CompleteOutcome.PASSWORD_POLICY_VIOLATION;
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));

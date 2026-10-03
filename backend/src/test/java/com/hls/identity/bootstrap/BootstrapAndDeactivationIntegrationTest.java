@@ -122,7 +122,7 @@ class BootstrapAndDeactivationIntegrationTest {
                 .findByUserIdAndStatus(user.getId(), SessionStatus.ACTIVE)
                 .get(0);
 
-        userAdminService.deactivateUser(user.getId());
+        userAdminService.deactivateUser(null, user.getId());
 
         Session reloaded = sessionRepository.findById(theirSession.getId()).orElseThrow();
         assertThat(reloaded.getStatus()).isEqualTo(SessionStatus.REVOKED);

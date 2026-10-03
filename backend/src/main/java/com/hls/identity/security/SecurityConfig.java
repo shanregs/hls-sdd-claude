@@ -1,6 +1,11 @@
 package com.hls.identity.security;
 
 import com.hls.identity.auth.JwtTokenProvider;
+import com.hls.identity.session.Session;
+import com.hls.identity.session.SessionRepository;
+import com.hls.identity.user.AppUser;
+import com.hls.identity.user.AppUserRepository;
+import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,7 +13,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -37,9 +48,16 @@ public class SecurityConfig {
     };
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final SessionRepository sessionRepository;
+    private final AppUserRepository appUserRepository;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(
+            JwtTokenProvider jwtTokenProvider,
+            SessionRepository sessionRepository,
+            AppUserRepository appUserRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.sessionRepository = sessionRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     @Bean
@@ -49,7 +67,39 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(jwtTokenProvider.getKey()).build();
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withSecretKey(jwtTokenProvider.getKey()).build();
+        decoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefault(), sessionAndUserActiveValidator()));
+        return decoder;
+    }
+
+    /**
+     * Rejects an otherwise-valid access token whose session (the {@code sid} claim) is no longer
+     * active or whose user is deactivated, so deactivation, logout and admin password reset take
+     * effect on the very next request rather than when the token expires (spec 004 FR-004/FR-006).
+     */
+    private OAuth2TokenValidator<Jwt> sessionAndUserActiveValidator() {
+        return jwt -> {
+            try {
+                UUID sessionId = UUID.fromString(jwt.getClaimAsString("sid"));
+                UUID userId = UUID.fromString(jwt.getSubject());
+                boolean sessionActive = sessionRepository
+                        .findById(sessionId)
+                        .filter(Session::isActive)
+                        .filter(s -> s.getUserId().equals(userId))
+                        .isPresent();
+                boolean userActive =
+                        appUserRepository.findById(userId).filter(AppUser::isActive).isPresent();
+                if (sessionActive && userActive) {
+                    return OAuth2TokenValidatorResult.success();
+                }
+            } catch (RuntimeException e) {
+                // malformed sid/sub claim: fall through to failure (fail closed)
+            }
+            return OAuth2TokenValidatorResult.failure(
+                    new OAuth2Error("invalid_token", "The session is no longer active.", null));
+        };
     }
 
     @Bean

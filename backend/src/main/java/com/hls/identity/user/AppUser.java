@@ -112,6 +112,10 @@ public class AppUser {
         this.active = false;
     }
 
+    public void reactivate() {
+        this.active = true;
+    }
+
     public UUID getLinkedTeacherId() {
         return linkedTeacherId;
     }

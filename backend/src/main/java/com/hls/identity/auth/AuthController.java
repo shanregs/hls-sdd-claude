@@ -227,7 +227,7 @@ public class AuthController {
         return switch (outcome) {
             case SUCCESS -> ResponseEntity.ok().build();
             case PASSWORD_POLICY_VIOLATION -> ResponseEntity.status(400)
-                    .body(new ErrorResponse("Password must be at least 10 characters and not your phone number."));
+                    .body(new ErrorResponse(PasswordPolicy.VIOLATION_MESSAGE));
             case INVALID_OR_EXPIRED_TOKEN -> ResponseEntity.status(400)
                     .body(new ErrorResponse("This reset link has expired. Please request a new one."));
         };

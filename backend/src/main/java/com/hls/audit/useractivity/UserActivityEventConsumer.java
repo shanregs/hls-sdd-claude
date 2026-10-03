@@ -2,11 +2,16 @@ package com.hls.audit.useractivity;
 
 import com.hls.identity.activity.AccountActivationChanged;
 import com.hls.identity.activity.AccountLockChanged;
+import com.hls.identity.activity.PasswordResetByAdmin;
 import com.hls.identity.activity.PasswordResetCompleted;
 import com.hls.identity.activity.PasswordResetRequested;
 import com.hls.identity.activity.SessionEnded;
+import com.hls.identity.activity.UserCreated;
+import com.hls.identity.activity.UserRoleChanged;
+import com.hls.identity.user.Role;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
@@ -63,6 +68,34 @@ public class UserActivityEventConsumer {
                 event.actorUserId(),
                 event.affectedUserId(),
                 event.active() ? "ACCOUNT_REACTIVATED" : "ACCOUNT_DEACTIVATED",
+                null);
+    }
+
+    @ApplicationModuleListener
+    void on(UserCreated event) {
+        String roles = event.roles().stream().sorted().map(Role::name).collect(Collectors.joining(", "));
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.newUserId(), "USER_CREATED", roles);
+    }
+
+    @ApplicationModuleListener
+    void on(UserRoleChanged event) {
+        save(
+                event.eventId(),
+                event.occurredAt(),
+                event.actorUserId(),
+                event.affectedUserId(),
+                event.added() ? "ROLE_ASSIGNED" : "ROLE_REMOVED",
+                event.role().name());
+    }
+
+    @ApplicationModuleListener
+    void on(PasswordResetByAdmin event) {
+        save(
+                event.eventId(),
+                event.occurredAt(),
+                event.actorUserId(),
+                event.affectedUserId(),
+                "PASSWORD_RESET_BY_ADMIN",
                 null);
     }
 
