@@ -69,6 +69,7 @@ same list. **400** (nothing created) if `rows` is empty, exceeds 5,000, or `zone
 | Method | Path | Permission | Notes |
 | --- | --- | --- | --- |
 | GET | `/api/v1/managers` | `MANAGERS.VIEW` | item: `id,userId,displayName,phone,active`, `zones[]`, `schoolCount`, `teacherCount` |
+| GET | `/api/v1/managers/candidates` | `MANAGERS.CREATE` | active users holding the Manager role with no Manager record yet: `[{userId, displayName, phone}]` |
 | GET | `/api/v1/managers/{id}` | `MANAGERS.VIEW` | adds zone and school assignment history |
 | POST | `/api/v1/managers` | `MANAGERS.CREATE` | `{ "userId" }`; 400 if the user lacks the Manager role; 409 if already a Manager |
 | PUT | `/api/v1/managers/{id}/zones` | `MANAGERS.EDIT` | `{ "zoneIds": [...], "version" }` replaces the current Zone set; 409 listing Schools if removing a Zone where the Manager still has Schools |
