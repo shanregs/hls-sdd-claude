@@ -1,0 +1,892 @@
+{
+  "info": {
+    "name": "HLS API",
+    "description": "HLS backend API. Folders map to specs (001 identity, 002 access model, 003 audit). Append a folder per new spec. Run \"Password Login\" first; it stores accessToken for all other requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "sessionId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "001 Identity & Access",
+      "item": [
+        {
+          "name": "Password Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b.accessToken) { pm.collectionVariables.set(\"accessToken\", b.accessToken); }",
+                  "if (b.user && b.user.id) { pm.collectionVariables.set(\"userId\", b.user.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{loginIdentifier}}\",\n  \"password\": \"{{loginPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "identifier is phone or username. Sets renewal cookie (kept in Postman cookie jar)."
+          }
+        },
+        {
+          "name": "OTP Request (Sign-in)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{loginPhone}}\",\n  \"channel\": \"SMS\",\n  \"purpose\": \"SIGN_IN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "request"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "OTP Verify (Sign-in)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b.accessToken) { pm.collectionVariables.set(\"accessToken\", b.accessToken); }",
+                  "if (b.user && b.user.id) { pm.collectionVariables.set(\"userId\", b.user.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{loginPhone}}\",\n  \"code\": \"123456\",\n  \"purpose\": \"SIGN_IN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "verify"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Renew Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b.accessToken) { pm.collectionVariables.set(\"accessToken\", b.accessToken); }",
+                  "if (b.user && b.user.id) { pm.collectionVariables.set(\"userId\", b.user.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/renew",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "renew"
+              ],
+              "query": []
+            },
+            "description": "No body. Uses the HttpOnly renewal cookie from login."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ],
+              "query": []
+            },
+            "description": "Returns 204."
+          }
+        },
+        {
+          "name": "Password Reset - Channels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/channels?identifier={{loginIdentifier}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password-reset",
+                "channels"
+              ],
+              "query": [
+                {
+                  "key": "identifier",
+                  "value": "{{loginIdentifier}}",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Password Reset - OTP Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{loginIdentifier}}\",\n  \"channel\": \"SMS\",\n  \"purpose\": \"PASSWORD_RESET\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "request"
+              ],
+              "query": []
+            },
+            "description": "channel: SMS | EMAIL | BOTH. destination is a phone-or-username identifier."
+          }
+        },
+        {
+          "name": "Password Reset - OTP Verify",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const t = b.resetToken || b.token;",
+                  "if (t) { pm.collectionVariables.set(\"resetToken\", t); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{loginIdentifier}}\",\n  \"code\": \"123456\",\n  \"purpose\": \"PASSWORD_RESET\",\n  \"channel\": \"SMS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "otp",
+                "verify"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Password Reset - Complete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"ChangeMe-1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password-reset",
+                "complete"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "List My Sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const list = Array.isArray(b) ? b : (b.sessions || []);",
+                  "if (list.length) { pm.collectionVariables.set(\"sessionId\", list[0].id || list[0].sessionId); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "sessions"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "End My Session",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/sessions/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "sessions",
+                "{{sessionId}}"
+              ],
+              "query": []
+            },
+            "description": "403 if the session is not yours."
+          }
+        }
+      ]
+    },
+    {
+      "name": "002 Access Model & Permission Matrix",
+      "item": [
+        {
+          "name": "My Access Model",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/access-model",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "access-model"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Get Permission Matrix",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/permission-matrix",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "permission-matrix"
+              ],
+              "query": []
+            },
+            "description": "ADMIN/DIRECTOR/SYSTEM only."
+          }
+        },
+        {
+          "name": "Update Permission Grant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"granted\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/permission-matrix/MANAGER/DASHBOARD/VIEW",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "permission-matrix",
+                "MANAGER",
+                "DASHBOARD",
+                "VIEW"
+              ],
+              "query": []
+            },
+            "description": "Path is /{role}/{module}/{action}. 409 if it would remove the last IDENTITY_PERMISSIONS.EDIT grant."
+          }
+        }
+      ]
+    },
+    {
+      "name": "003 Audit",
+      "item": [
+        {
+          "name": "List Login History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/login-history?page=0&size=25&method=PASSWORD&outcome=FAILURE&from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "login-history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "25",
+                  "disabled": false
+                },
+                {
+                  "key": "method",
+                  "value": "PASSWORD",
+                  "disabled": true
+                },
+                {
+                  "key": "outcome",
+                  "value": "FAILURE",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "ADMIN/SYSTEM only. All filters optional."
+          }
+        },
+        {
+          "name": "Export Login History (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/login-history/export?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&method=PASSWORD&outcome=FAILURE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "login-history",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": false
+                },
+                {
+                  "key": "method",
+                  "value": "PASSWORD",
+                  "disabled": true
+                },
+                {
+                  "key": "outcome",
+                  "value": "FAILURE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "from and to are required on export."
+          }
+        },
+        {
+          "name": "List Change History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/change-history?page=0&size=25&entityType=PERMISSION_MATRIX&from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "change-history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "25",
+                  "disabled": false
+                },
+                {
+                  "key": "entityType",
+                  "value": "PERMISSION_MATRIX",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "ADMIN/SYSTEM only. All filters optional."
+          }
+        },
+        {
+          "name": "Export Change History (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/change-history/export?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&entityType=PERMISSION_MATRIX",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "change-history",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": false
+                },
+                {
+                  "key": "entityType",
+                  "value": "PERMISSION_MATRIX",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "from and to are required on export."
+          }
+        },
+        {
+          "name": "List User Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/user-activity?page=0&size=25&action=ACCOUNT_DEACTIVATED&from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "user-activity"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "25",
+                  "disabled": false
+                },
+                {
+                  "key": "action",
+                  "value": "ACCOUNT_DEACTIVATED",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "ADMIN/SYSTEM only. All filters optional."
+          }
+        },
+        {
+          "name": "Export User Activity (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/user-activity/export?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&action=ACCOUNT_DEACTIVATED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "user-activity",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": false
+                },
+                {
+                  "key": "action",
+                  "value": "ACCOUNT_DEACTIVATED",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "from and to are required on export."
+          }
+        },
+        {
+          "name": "List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/logs?page=0&size=25&type=LOGIN&from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "25",
+                  "disabled": false
+                },
+                {
+                  "key": "type",
+                  "value": "LOGIN",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "ADMIN/SYSTEM only. All filters optional."
+          }
+        },
+        {
+          "name": "Export Audit Logs (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/logs/export?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&type=LOGIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                "logs",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31T23:59:59Z",
+                  "disabled": false
+                },
+                {
+                  "key": "type",
+                  "value": "LOGIN",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "from and to are required on export."
+          }
+        }
+      ]
+    }
+  ]
+}
