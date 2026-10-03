@@ -30,6 +30,10 @@
     {
       "key": "sessionId",
       "value": ""
+    },
+    {
+      "key": "targetUserId",
+      "value": ""
     }
   ],
   "item": [
@@ -884,6 +888,224 @@
               ]
             },
             "description": "from and to are required on export."
+          }
+        }
+      ]
+    },
+    {
+      "name": "004 User & Role Management",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users?page=0&size=25&query=&role=MANAGER&active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "25",
+                  "disabled": false
+                },
+                {
+                  "key": "query",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "MANAGER",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "ADMIN/SYSTEM only. query matches display name or phone; role and active are optional filters."
+          }
+        },
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"targetUserId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"New Teacher\",\n  \"phone\": \"9800000099\",\n  \"roles\": [\n    \"TEACHER\"\n  ],\n  \"username\": null,\n  \"email\": null,\n  \"initialPassword\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "201 on success. 409 for a duplicate phone/username/email; 400 for empty or unknown roles."
+          }
+        },
+        {
+          "name": "Update User Roles",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roles\": [\n    \"MANAGER\",\n    \"DIRECTOR\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users",
+                "{{targetUserId}}",
+                "roles"
+              ],
+              "query": []
+            },
+            "description": "Replaces the full role set. 400 if empty; 409 if it would remove the last active Admin."
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users",
+                "{{targetUserId}}",
+                "deactivate"
+              ],
+              "query": []
+            },
+            "description": "204. Ends all their sessions; their access tokens are refused on the next request. 409 for the last active Admin."
+          }
+        },
+        {
+          "name": "Reactivate User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/reactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users",
+                "{{targetUserId}}",
+                "reactivate"
+              ],
+              "query": []
+            },
+            "description": "204. Restores sign-in with the roles held at deactivation."
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"ChangeMe-1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "identity",
+                "users",
+                "{{targetUserId}}",
+                "reset-password"
+              ],
+              "query": []
+            },
+            "description": "204. Ends their sessions and clears lockout. 400 if the password breaks the policy (>= 10 chars, not the phone number)."
           }
         }
       ]
