@@ -1,0 +1,115 @@
+package com.hls.identity.accessmodel;
+
+import com.hls.identity.permissions.PermissionAction;
+import com.hls.identity.permissions.PermissionModule;
+import com.hls.identity.user.Role;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * The versioned, code-defined catalog of every screen that could appear in the navigation
+ * (research.md §5) — not a database table. {@link AccessModelService} filters this by the
+ * permission matrix at request time. Later specs append their own entries here; this shape does
+ * not change when they do.
+ *
+ * <p>Some capabilities (Dashboard, Role &amp; Permissions, Profile) render under a different
+ * section label, or a different item label, depending on which of the caller's roles it applies
+ * to (Constitution Principle IV) — modeled as separate entries sharing the same
+ * module/action/route rather than a single entry with per-role text.
+ */
+public final class NavigationCatalog {
+
+    public static final List<NavItem> ITEMS = List.of(
+            new NavItem(
+                    "Dashboard",
+                    "/dashboard",
+                    PermissionModule.DASHBOARD,
+                    PermissionAction.VIEW,
+                    "Dashboard",
+                    10,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)),
+            new NavItem(
+                    "Dashboard",
+                    "/dashboard",
+                    PermissionModule.DASHBOARD,
+                    PermissionAction.VIEW,
+                    "SYSTEM DASHBOARD",
+                    10,
+                    EnumSet.of(Role.SYSTEM)),
+            new NavItem(
+                    "Role & Permissions",
+                    "/identity/permissions",
+                    PermissionModule.IDENTITY_PERMISSIONS,
+                    PermissionAction.VIEW,
+                    "SYSTEM",
+                    20,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
+                    "Role & Permissions",
+                    "/identity/permissions",
+                    PermissionModule.IDENTITY_PERMISSIONS,
+                    PermissionAction.VIEW,
+                    "SYSTEM CONFIGURATION",
+                    20,
+                    EnumSet.of(Role.SYSTEM)),
+            new NavItem(
+                    "Audit Logs",
+                    "/audit/logs",
+                    PermissionModule.AUDIT_LOGS,
+                    PermissionAction.VIEW,
+                    "AUDIT",
+                    30,
+                    EnumSet.of(Role.ADMIN, Role.SYSTEM)),
+            new NavItem(
+                    "Login History",
+                    "/audit/login-history",
+                    PermissionModule.AUDIT_LOGIN_HISTORY,
+                    PermissionAction.VIEW,
+                    "AUDIT",
+                    31,
+                    EnumSet.of(Role.ADMIN, Role.SYSTEM)),
+            new NavItem(
+                    "Change History",
+                    "/audit/change-history",
+                    PermissionModule.AUDIT_CHANGE_HISTORY,
+                    PermissionAction.VIEW,
+                    "AUDIT",
+                    32,
+                    EnumSet.of(Role.ADMIN, Role.SYSTEM)),
+            new NavItem(
+                    "User Activity",
+                    "/audit/user-activity",
+                    PermissionModule.AUDIT_USER_ACTIVITY,
+                    PermissionAction.VIEW,
+                    "AUDIT",
+                    33,
+                    EnumSet.of(Role.ADMIN, Role.SYSTEM)),
+            new NavItem(
+                    "Profile",
+                    "/account/profile",
+                    PermissionModule.ACCOUNT_PROFILE,
+                    PermissionAction.VIEW,
+                    "ACCOUNT",
+                    90,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.SYSTEM)),
+            new NavItem(
+                    "My Profile",
+                    "/account/profile",
+                    PermissionModule.ACCOUNT_PROFILE,
+                    PermissionAction.VIEW,
+                    "ACCOUNT",
+                    90,
+                    EnumSet.of(Role.TEACHER)));
+
+    private NavigationCatalog() {}
+
+    public record NavItem(
+            String label,
+            String route,
+            PermissionModule module,
+            PermissionAction action,
+            String section,
+            int order,
+            Set<Role> applicableRoles) {}
+}

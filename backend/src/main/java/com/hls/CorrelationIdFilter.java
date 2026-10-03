@@ -5,10 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.MDC;
-
 import java.io.IOException;
 import java.util.UUID;
+import org.slf4j.MDC;
 
 /**
  * Propagates a request-correlation id via MDC so every log line for a request can be
