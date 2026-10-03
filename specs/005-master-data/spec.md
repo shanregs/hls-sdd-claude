@@ -322,8 +322,9 @@ remain listed.
   School whose Manager does not cover its Zone.
 - What happens when a user holding the Manager role is deactivated or loses the Manager role (spec
   004)? Their Manager record keeps its history, but they are shown as inactive and any School
-  still assigned to them is flagged as needing a new Manager; their data scope is empty while they
-  lack the role.
+  still assigned to them is flagged as needing a new Manager; their data scope is empty immediately
+  while they lack the role or the account is inactive, decided from their current roles and state, not
+  from their token.
 - What happens when a Teacher is placed in a School that has no Manager yet? Allowed; the Teacher
   has no accountable Manager until the School has one, and only Admin/Director can see them.
 - What happens when a Teacher exits? Their placement ends on the exit date, the record stays
@@ -381,7 +382,9 @@ remain listed.
   be one of the Managers covering that School's Zone; any change that would break this (assigning a
   non-covering Manager, moving a School to a Place in a Zone its Manager does not cover, or removing a Manager
   from a Zone that still has Schools assigned to them) MUST be refused as a single unit with no
-  partial effect and a plain-language reason.
+  partial effect and a plain-language reason. Concurrent requests that touch the same Manager's
+  assignments MUST be evaluated one at a time, so the invariant cannot be broken by two requests that
+  each pass the check.
 - **FR-010**: Assignment changes MUST keep history: prior assignments are retained with their end
   date and are never overwritten or deleted.
 
@@ -405,7 +408,8 @@ remain listed.
   history, cannot be placed in a School again, and cannot be reinstated. A returning person is
   entered as a new Teacher record.
 - **FR-015**: A Manager MUST be able to view and edit only Teachers placed in their assigned
-  Schools; they MUST NOT create Teachers or change their School placement.
+  Schools, seeing a Teacher's placement history only for Schools assigned to them; they MUST NOT create
+  Teachers or change their School placement.
 - **FR-016**: A Teacher user MUST be linked to at most one Teacher record, and one Teacher record to
   at most one user; when a Teacher exits, the link is released.
 
@@ -422,11 +426,12 @@ remain listed.
 
 **Data scope, shared queries, and enforcement**
 
-- **FR-020**: Every list, search, count, export, and detail view of Schools and Teachers MUST be
+- **FR-020**: Every list, search, count, and detail view of Schools and Teachers, and every audit
+  export that includes master-data entries, MUST be
   filtered by the caller's data scope (Admin and Director organization-wide; Manager assigned only;
   Teacher own only; System none), independently of what the screen shows. A request for a record
   outside the caller's scope MUST be indistinguishable from a request for a record that does not
-  exist.
+  exist. This spec adds no new export of Schools or Teachers.
 - **FR-021**: The system MUST offer later modules one shared way to ask which Zones, Schools, and
   Teachers a given user may access (the union across the user's roles), so no other module
   re-implements scoping.
@@ -535,7 +540,8 @@ role→permission matrix; this spec does not change that.
   history, and replaced by the Teacher–School–Manager contract in the later school-billing spec.
 - Managers cannot see Teacher salary by default (the most conservative reading of the role matrix);
   the matrix is runtime-editable if the business decides otherwise.
-- Director has no delete rights over Zones and Schools by default; Admin does.
+- Director cannot delete a Zone (the `ZONES.DELETE` grant is Admin-only); deactivating or reactivating a
+  School is an Edit and Director may do it.
 - Deactivated Schools, Managers, and Teachers are kept, shown as inactive, and excluded from default
   pickers; nothing in this spec hard-deletes a record except an unused Zone or an unused Place (one
   with no Schools in it).

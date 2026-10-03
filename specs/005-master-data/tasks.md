@@ -72,11 +72,14 @@ module boundary rules that every story builds on.
       "Managers" (`/master-data/managers`, `MANAGERS`, `VIEW`, order 42, ADMIN+DIRECTOR); "Teachers"
       (`/master-data/teachers`, `TEACHERS`, `VIEW`, order 43, ADMIN+DIRECTOR+MANAGER). No SYSTEM or
       TEACHER entries. Depends on T003.
+- [ ] T005a Extend `AccessModelService.dataScope` in `BE/identity/accessmodel/AccessModelService.java`
+      with the four modules per research.md section 18 (reuse the existing `DataScope` enum and
+      widest-scope rule). Depends on T003.
 - [ ] T006 [P] Backend test `BT/identity/accessmodel/MasterDataAccessModelTest.java`: per role,
       `GET /api/v1/me/access-model` shows exactly the MASTER DATA items above (Admin/Director all
       four; Manager Schools and Teachers only; Teacher and System none), with the seeded actions
       (Manager `SCHOOLS`: VIEW, EDIT; `TEACHERS`: VIEW, EDIT); and the seeded matrix has
-      `TEACHER_SALARY` true only for ADMIN and DIRECTOR. Depends on T004, T005.
+      `TEACHER_SALARY` true only for ADMIN and DIRECTOR. Depends on T004, T005. Also assert the `dataScope` entries per role from T005a (Admin/Director `ORG_WIDE`, Manager `ASSIGNED` for `SCHOOLS` and `TEACHERS`, none for Teacher/System).
 - [ ] T007 Create `BE/audit/api/EntityChanged.java` (record: `UUID eventId, Instant occurredAt, UUID
       actorUserId, String entityType, String entityId, String field, String beforeValue, String
       afterValue`, Javadoc "published by master-data modules for audit to append to Change
@@ -128,8 +131,7 @@ module boundary rules that every story builds on.
       `Map<UUID, Map<String,Object>>`. Depends on T013.
 - [ ] T017 Create empty module skeletons with `api` named-interface `package-info.java` files:
       `BE/organization/api/package-info.java` and `BE/teacher/api/package-info.java` (annotated
-      `@org.springframework.modulith.NamedInterface`) plus placeholder `internal`/`web` packages via
-      their first real classes later. Confirm `ApplicationModulesTest` still passes.
+      `@org.springframework.modulith.NamedInterface`). Confirm `ApplicationModulesTest` still passes.
 - [ ] T018 [P] Architecture test `BT/MasterDataModuleRulesTest.java` (ArchUnit): classes in
       `com.hls.school..` do not depend on `com.hls.organization..` or `com.hls.teacher..`; classes in
       `com.hls.organization..` do not depend on `com.hls.teacher..`; `com.hls.audit..` does not
@@ -155,7 +157,7 @@ and by name (spec.md US1); as Manager/Teacher/System the menu and route are abse
       Director (Director delete is 403); duplicate name (case-insensitive) is 409; delete of a Zone
       with Places is 409 naming the dependency; optimistic-lock conflict on rename is 409;
       `MANAGER`/`TEACHER`/`SYSTEM` get 403 on every Zone endpoint; unauthenticated is 401; every
-      change appears in Change History (`await` up to 5 s) with before/after name.
+      change appears in Change History (`await` up to 5 s) with before/after name. Also assert pagination: `size` above 100 is capped at 100, page 2 returns the next rows, and an empty result is `content: []` with `totalElements: 0`, not an error.
 - [ ] T020 [P] [US1] `BT/school/PlaceControllerTest.java`: add a Place; duplicate names and PIN codes
       are accepted; PIN code not exactly six digits is 400; lookup by `pinCode` and by `name`
       returns every match with its Zone, and an unmatched lookup is an empty list not an error;
@@ -163,7 +165,7 @@ and by name (spec.md US1); as Manager/Teacher/System the menu and route are abse
       endpoint.
 - [ ] T021 [P] [US1] `FE/features/zones/ZonesPage.test.tsx`: list renders with counts; create/rename
       dialogs call the API and show 409 reasons inline; the Places panel adds a Place and shows
-      lookup results; Create/Edit/Delete controls hidden when the access model lacks those actions.
+      lookup results; Create/Edit/Delete controls hidden when the access model lacks those actions. Also assert the loading, empty ("No ... match your search") and error states.
 
 ### Implementation for User Story 1
 
@@ -221,13 +223,13 @@ Zone, deactivate it (spec.md US2 scenarios 1-5).
 
 - [ ] T034 [P] [US2] `BT/school/SchoolControllerTest.java`: create requires a Place (400 without);
       the response shows the Place and the Place's Zone; Admin/Director edit all profile fields;
-      move to a Place in another Zone updates the derived Zone; deactivate/reactivate need
-      `SCHOOLS.DELETE` (Director 403); a Place with Schools cannot be deleted or moved to another
+      move to a Place in another Zone updates the derived Zone; Admin and Director can
+      deactivate and reactivate (`SCHOOLS.EDIT`) while a Manager gets 403 on both; a Place with Schools cannot be deleted or moved to another
       Zone (FR-005a, 409); `TEACHER`/`SYSTEM` get 403 on every School endpoint; an unassigned Manager
-      lists no Schools and gets 404 on a School id; changes appear in Change History.
+      lists no Schools and gets 404 on a School id; changes appear in Change History. Also assert pagination: `size` above 100 is capped at 100, page 2 returns the next rows, and an empty result is `content: []` with `totalElements: 0`, not an error.
 - [ ] T035 [P] [US2] `FE/features/schools/SchoolsPage.test.tsx`: list shows Place and Zone;
       create requires a Place; Manager fixture shows name/Place/billing contact read-only and only
-      contact person/phone/address editable; Create/Deactivate hidden without the actions.
+      contact person/phone/address editable; Create/Deactivate hidden without the actions. Also assert the loading, empty ("No ... match your search") and error states.
 
 ### Implementation for User Story 2
 
@@ -249,8 +251,9 @@ Zone, deactivate it (spec.md US2 scenarios 1-5).
       (`schoolsInZone`, `zoneOf(schoolId)`, `exists`, `isActive`) implemented by `SchoolService`.
       Depends on T037.
 - [ ] T040 [US2] `BE/school/web/SchoolController.java` for the School endpoints in
-      contracts/master-data-api.md, gated by `SCHOOLS.VIEW|CREATE|EDIT|DELETE`, with the
-      Admin/Director-only `PUT /schools/{id}/place`. Depends on T037.
+      contracts/master-data-api.md, gated by `SCHOOLS.VIEW|CREATE|EDIT`, with Admin/Director-only role checks on
+      `PUT /schools/{id}/place`, `POST /schools/{id}/deactivate` and `POST /schools/{id}/reactivate`
+      (Manager also holds `SCHOOLS.EDIT`, so the role check is required). Depends on T037.
 - [ ] T041 [US2] `FE/features/schools/schoolsApi.ts`, `SchoolsPage.tsx`, `SchoolDialog.tsx`
       (fields read-only for a Manager per the access model and role; Place picker with search).
 - [ ] T042 [US2] Register `/master-data/schools` in `FE/App.tsx` behind `RouteGuard`.
@@ -272,20 +275,24 @@ assignment, refuse removing a Zone that still has the Manager's Schools (spec.md
 - [ ] T043 [P] [US3] `BT/organization/ManagerControllerTest.java`: create a Manager record only for
       a user with the Manager role (400 otherwise; 409 if already a Manager); list/get with Zones,
       School and Teacher counts; `PUT /managers/{id}/zones` assigns several Zones; a Zone may have
-      several Managers; `MANAGER`/`TEACHER`/`SYSTEM` get 403; changes are audited.
+      several Managers; `MANAGER`/`TEACHER`/`SYSTEM` get 403; changes are audited. Also assert pagination: `size` above 100 is capped at 100, page 2 returns the next rows, and an empty result is `content: []` with `totalElements: 0`, not an error.
 - [ ] T044 [P] [US3] `BT/organization/ManagerAssignmentInvariantTest.java`: assigning a School to a
       Manager who does not cover its Zone is 409 with no change; removing a Manager from a Zone
       where they still have Schools is 409 naming the Schools; moving a School to a Place in a Zone
       its Manager does not cover is 409 (`SchoolChangeGuard`); deleting a Zone with Managers is 409
       (`ZoneChangeGuard`); reassigning a School ends the old row and inserts the new one in one
       transaction and `manager-history` lists both with dates; unassigning (null) works; a failed
-      change leaves both tables untouched.
+      change leaves both tables untouched. Add a concurrency case: two threads, one removing the Manager from Zone Z and one assigning a School in Z to that Manager - exactly one succeeds and the final state satisfies the invariant.
+- [ ] T044a [P] [US3] `BT/organization/ManagerAccountSyncTest.java`: removing the Manager role or
+      deactivating the user (spec 004 endpoints) makes their scope empty on the next request even
+      with a still-valid token, sets `manager.active=false`, shows their Schools as "needs a
+      Manager", keeps assignment history; reactivation or re-adding the role restores scope.
 - [ ] T045 [P] [US3] `BT/organization/ManagerSchoolEditTest.java`: an assigned Manager lists and
       opens only their Schools; edits contact person/phone/address (200) but a changed name, Place
       or billing contact is 403 and unchanged; a School of another Manager is 404.
 - [ ] T046 [P] [US3] `FE/features/managers/ManagersPage.test.tsx`: list with Zone chips and counts;
       create from a user picker; assign-Zones dialog shows the 409 reason inline; assign-School-
-      Manager dialog lists only Managers covering the School's Zone.
+      Manager dialog lists only Managers covering the School's Zone. Also assert the loading, empty ("No ... match your search") and error states.
 
 ### Implementation for User Story 3
 
@@ -307,16 +314,24 @@ assignment, refuse removing a Zone that still has the Manager's Schools (spec.md
       Zone), `assignSchoolManager` (the Manager must have a current Zone row for
       `SchoolQueries.zoneOf(schoolId)`; end the old row and insert the new in one transaction),
       history queries; publish `EntityChanged` (`MANAGER`, `ZONE_MANAGER_ASSIGNMENT`,
-      `SCHOOL_MANAGER_ASSIGNMENT`). Depends on T039, T048, T049.
+      `SCHOOL_MANAGER_ASSIGNMENT`). Depends on T039, T048, T049. Take `PESSIMISTIC_WRITE` on the involved `manager` row(s) (in id order) before checking and changing anything, so concurrent assignment changes for one Manager run one at a time (FR-009).
+- [ ] T050a [US3] Create `BE/organization/api/ManagerQueries.java`, `ManagerView.java` and
+      `ManagerViewEnricher.java` (research.md section 17): `ManagerQueries.managerOfSchool(schoolId)`
+      and `managerSummary(managerId)`; `ManagerService` implements the queries and merges every
+      `ManagerViewEnricher`'s extras into Manager views. Depends on T050.
 - [ ] T051 [US3] `BE/organization/api/ScopeView.java` (`orgWide`, `zoneIds`, `schoolIds`) and
       `ScopeQueries.java` with an implementation `ScopeService` computing the scope per request from
       the current rows: ADMIN/DIRECTOR -> `orgWide`; MANAGER -> their Manager's current Zones and
-      Schools; union across roles (research.md section 3). No caching. Depends on T049.
+      Schools; union across roles (research.md section 3). No caching. Depends on T049. `scopeOf` MUST NOT trust the roles in the token for Manager scope: it checks, through `identity.user`'s public service, that the user currently holds `Role.MANAGER` and is active, and returns an empty scope otherwise (spec.md edge case on Manager role loss).
 - [ ] T052 [US3] Implement the SPIs in `BE/organization/internal/`: `SchoolScopeProviderImpl`
       (Manager's current School ids), `SchoolChangeGuardImpl` (the School's current Manager must
       cover the new Zone), `ZoneChangeGuardImpl` (refuse delete while Managers are assigned),
       `SchoolManagerEnricher` (adds `manager {id, displayName}` to School views) and
-      `ZoneManagerEnricher` (adds `managerCount`). Depends on T016, T050, T051.
+      `ZoneManagerEnricher` (adds `managerCount`). Depends on T016, T050, T051. `SchoolManagerEnricher` also adds `needsManager: true` when the School's current Manager record is inactive, and the Schools list shows a "Needs a Manager" badge.
+- [ ] T052a [US3] `BE/organization/internal/ManagerAccountSync.java`: `@ApplicationModuleListener`
+      methods for `identity.activity.UserRoleChanged` (when `Role.MANAGER` is removed or added) and
+      `AccountActivationChanged`, setting `manager.active` accordingly and never touching assignment
+      rows or history; dedup by event id. Depends on T048.
 - [ ] T053 [US3] `BE/organization/web/ManagerController.java` for the Manager endpoints in
       contracts/master-data-api.md, gated by `MANAGERS.VIEW|CREATE|EDIT`, including
       `PUT /schools/{id}/manager` and `GET /schools/{id}/manager-history`. Depends on T050.
@@ -357,14 +372,14 @@ Manager loses sight and the second gains it (spec.md US4).
       clears `user_id`; a Manager lists/opens only Teachers placed today in their Schools, can edit
       contact fields (200) but cannot create (403), change status, or move placement (403); an
       unplaced Teacher is invisible to Managers and visible to Admin/Director; `TEACHER`/`SYSTEM`
-      get 403 on the management endpoints; responses contain no salary field; changes are audited.
+      get 403 on the management endpoints; responses contain no salary field; changes are audited. Also assert pagination: `size` above 100 is capped at 100, page 2 returns the next rows, and an empty result is `content: []` with `totalElements: 0`, not an error.
 - [ ] T060 [P] [US4] `BT/teacher/SchoolDeactivationGuardTest.java`: deactivating a School with an
       active or scheduled-incoming Teacher is 409 listing the cause; succeeds once they are moved
       or exited.
 - [ ] T061 [P] [US4] `FE/features/teachers/TeachersPage.test.tsx`: list with status chips and
       "interim placement" label; create/edit dialogs; status dialog offers only allowed next
       statuses; placement dialog with date shows scheduled state and cancel; Manager fixture shows
-      no Create/Status/Placement controls.
+      no Create/Status/Placement controls. Also assert the loading, empty ("No ... match your search") and error states.
 
 ### Implementation for User Story 4
 
@@ -379,7 +394,7 @@ Manager loses sight and the second gains it (spec.md US4).
       `btree_gist` extension) and an index on `(school_id)`; and `teacher_salary_history(id UUID PK,
       teacher_id UUID NOT NULL REFERENCES teacher, amount NUMERIC(12,2) NOT NULL CHECK (amount >=
       0), effective_on DATE NOT NULL, recorded_by UUID NOT NULL, created_at TIMESTAMPTZ)` with index
-      `(teacher_id, effective_on DESC)` (the salary table is used from US9).
+      `(teacher_id, effective_on DESC)` (the salary table is used from US9). Begin the migration with `CREATE EXTENSION IF NOT EXISTS btree_gist;` and a SQL comment noting that a database user without extension rights needs this run once by a privileged user (research.md section 6).
 - [ ] T063 [P] [US4] `BE/teacher/internal/Teacher.java` (entity with `@Version`, the status
       transition table as a static method, `status_effective_on`) + `TeacherRepository.java`.
 - [ ] T064 [P] [US4] `BE/teacher/internal/TeacherPlacement.java` (status enum `ACTIVE`, `CANCELLED`,
@@ -389,7 +404,7 @@ Manager loses sight and the second gains it (spec.md US4).
       list/get through the scope restriction (T067), `changeStatus` (machine from T063; EXITED ends
       the current placement on the effective date, cancels any scheduled one, clears `user_id`),
       `linkUser` (user must hold `Role.TEACHER`, not already linked, Teacher not exited); publishes
-      `EntityChanged` for `TEACHER`. Depends on T063.
+      `EntityChanged` for `TEACHER`. Depends on T063, T050a and T067 (the scope-filtered list lives here).
 - [ ] T066 [US4] `BE/teacher/internal/TeacherPlacementService.java` implementing research.md
       section 6 exactly (immediate, scheduled, cancel, same-day correction, refusal rules,
       School must exist and be active via `SchoolQueries`); publishes `EntityChanged` for
@@ -402,13 +417,13 @@ Manager loses sight and the second gains it (spec.md US4).
 - [ ] T068 [US4] `BE/teacher/internal/`: `TeacherSchoolDeactivationGuard` (implements
       `SchoolDeactivationGuard`: refuse if any Teacher has an `ACTIVE` placement at the School today
       or in the future) and `SchoolTeacherCountEnricher` (adds `teacherCount` to School views).
-      Depends on T016, T064.
+      Depends on T016, T064. Also add `ManagerTeacherCountEnricher` implementing `organization.api.ManagerViewEnricher`, which adds `teacherCount` to Manager views.
 - [ ] T069 [US4] Public `BE/teacher/api/TeacherQueries.java`, `TeacherCommands.java`, `TeacherView.java`
       (no salary member by design) implemented by the services. Depends on T065, T066.
 - [ ] T070 [US4] `BE/teacher/web/TeacherController.java` for the Teacher endpoints in
       contracts/master-data-api.md (list/get/create/edit/status/user/placements/pending-cancel),
       gated by `TEACHERS.VIEW|CREATE|EDIT`, with Admin/Director-only operations checked by role as
-      well as permission. Depends on T065, T066, T067.
+      well as permission. Depends on T065, T066, T067. The Teacher list and detail take each Teacher's `manager` from `organization.api.ManagerQueries.managerOfSchool` (T050a).
 - [ ] T071 [US4] `FE/features/teachers/teachersApi.ts`, `TeachersPage.tsx`, `TeacherDialog.tsx`,
       `StatusDialog.tsx`, `PlacementDialog.tsx` (date picker, scheduled-move banner with cancel,
       "interim placement" label everywhere a placement is shown, dates DD/MM/YYYY).
@@ -435,7 +450,7 @@ including through filters, counts and guessed ids (spec.md US5).
       for foreign ids with a body identical to a nonexistent id, and `totalElements` equal to own
       counts; Admin and Director see everything; a Manager+Director user sees everything; a Teacher
       user and a System user get 403 on management lists; reassigning a School to the other Manager
-      changes both Managers' results on the next request without signing in again (FR-022).
+      changes both Managers' results on the next request without signing in again (FR-022). Add a case: a Teacher who moved from Manager A's School to Manager B's School shows each Manager only the placements at their own Schools, while Admin sees all.
 - [ ] T074 [P] [US5] `BT/organization/ScopeQueriesTest.java`: `ScopeQueries.scopeOf` for each role and
       multi-role unions; a Manager with no assignments gets an empty scope; ended assignment rows
       are excluded.
@@ -575,7 +590,7 @@ never receives salary.
       salary endpoints; add `zoneId`, `placeId`, `schoolId`, `managerId`, `teacherId` collection
       variables set from create responses.
 - [ ] T095 [P] Run quickstart.md's eight scenarios end-to-end against the running app and record the
-      results (including timing the SC-001 ten-minute setup and the SC-004 1,000-row import).
+      results (including timing the SC-001 ten-minute setup and the SC-004 1,000-row import). Record whether `btree_gist` was already present in the environment used. Time the Manager dashboard against SC-007 (3 seconds) by hand.
 - [ ] T096 [P] Update `docs/spec-roadmap.md` row 005 to "Implemented" once every checkpoint above has
       passed, and note the new shared APIs (`ScopeQueries`, `TeacherScopeQueries`) for specs 008+.
 - [ ] T097 Run the full backend suite (`mvn test`, including `ApplicationModulesTest` and

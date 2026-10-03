@@ -156,6 +156,9 @@ New `PermissionModule` constants: `ZONES`, `SCHOOLS`, `MANAGERS`, `TEACHERS`, `T
 | --- | --- | --- | --- | --- | --- |
 | ZONES | VIEW, CREATE, EDIT, DELETE | VIEW, CREATE, EDIT | - | - | - |
 | SCHOOLS | VIEW, CREATE, EDIT, DELETE | VIEW, CREATE, EDIT | VIEW, EDIT (assigned, field-limited) | - | - |
+
+Deactivating or reactivating a School is an Edit (restricted by role to Admin and Director); `SCHOOLS.DELETE` is
+reserved for a future hard delete and is unused in this spec.
 | MANAGERS | VIEW, CREATE, EDIT | VIEW, CREATE, EDIT | - | - | - |
 | TEACHERS | VIEW, CREATE, EDIT | VIEW, CREATE, EDIT | VIEW, EDIT (assigned) | - | - |
 | TEACHER_SALARY | VIEW, CREATE | VIEW, CREATE | - | - | - |

@@ -32,7 +32,7 @@ permission (`PermissionGuard`) and the caller's data scope, regardless of what t
 | POST | `/api/v1/zones/{zoneId}/places` | `ZONES.EDIT` | `{ "name", "pinCode" }`; 400 if PIN is not six digits; duplicates accepted |
 | PUT | `/api/v1/places/{id}` | `ZONES.EDIT` | `{ "name", "pinCode", "zoneId" }`; 409 if changing `zoneId` while Schools are in it |
 | DELETE | `/api/v1/places/{id}` | `ZONES.EDIT` | 204; 409 while any School is in it |
-| POST | `/api/v1/places/bulk-import` | `ZONES.CREATE` | below |
+| POST | `/api/v1/places/bulk-import` | `ZONES.CREATE` | below (adding, editing and deleting single Places use `ZONES.EDIT`, bulk import uses `ZONES.CREATE`) |
 
 ### POST /api/v1/places/bulk-import
 
@@ -61,8 +61,8 @@ same list. **400** (nothing created) if `rows` is empty, exceeds 5,000, or `zone
 | POST | `/api/v1/schools` | `SCHOOLS.CREATE` | `{ name, placeId, address, contactPerson, contactPhone, billingContact }` -> 201; Place required |
 | PUT | `/api/v1/schools/{id}` | `SCHOOLS.EDIT` | full profile + `version`. A **Manager** caller may change only `contactPerson`, `contactPhone`, `address`; any other changed field -> **403** `"Managers can edit only a School's contact person, phone, and address."` Admin/Director may change `name`, `billingContact` too |
 | PUT | `/api/v1/schools/{id}/place` | `SCHOOLS.EDIT` (Admin/Director only) | `{ "placeId", "version" }`; 409 if the School's Manager does not cover the new Place's Zone |
-| POST | `/api/v1/schools/{id}/deactivate` | `SCHOOLS.DELETE` | 204; 409 while active or scheduled Teachers are placed in it |
-| POST | `/api/v1/schools/{id}/reactivate` | `SCHOOLS.DELETE` | 204 |
+| POST | `/api/v1/schools/{id}/deactivate` | `SCHOOLS.EDIT` (Admin/Director only) | 204; 409 while active or scheduled Teachers are placed in it |
+| POST | `/api/v1/schools/{id}/reactivate` | `SCHOOLS.EDIT` (Admin/Director only) | 204 |
 
 ## Managers and assignments - module `organization`
 
@@ -81,7 +81,7 @@ same list. **400** (nothing created) if `rows` is empty, exceeds 5,000, or `zone
 | Method | Path | Permission | Notes |
 | --- | --- | --- | --- |
 | GET | `/api/v1/teachers` | `TEACHERS.VIEW` | scoped (Manager: placed in their Schools today; Admin/Director: all, including unplaced); filters `query`, `status`, `schoolId`; item: profile, status, current `school`, `manager`, `pendingPlacement` - **no salary field** |
-| GET | `/api/v1/teachers/{id}` | `TEACHERS.VIEW` | scoped; includes placement history |
+| GET | `/api/v1/teachers/{id}` | `TEACHERS.VIEW` | scoped; includes placement history (for a Manager caller, only placements at Schools in their scope) |
 | POST | `/api/v1/teachers` | `TEACHERS.CREATE` | `{ name, phone, email, address, status, userId? }`; Admin/Director only |
 | PUT | `/api/v1/teachers/{id}` | `TEACHERS.EDIT` | contact fields + `version`; Manager allowed for scoped Teachers |
 | POST | `/api/v1/teachers/{id}/status` | `TEACHERS.EDIT` (Admin/Director) | `{ "status", "effectiveOn" }`; 409 `"A Teacher cannot move from X to Y."` for any disallowed transition, including anything from `EXITED` |

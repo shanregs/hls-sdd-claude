@@ -91,6 +91,11 @@ one current School-Manager row per School. "Current" = `ends_on IS NULL`.
 **Rationale**: FR-010 (history retained, nothing overwritten) and later modules needing "who was
 this School's Manager on date X".
 
+**Concurrency**: every operation that changes a Manager's Zones or Schools, and every guard that
+reads them, first takes a pessimistic write lock on the `manager` row (or rows, in id order) inside
+the same transaction, as the last-admin guard does in spec 004. This makes "remove a Manager from a
+Zone" and "assign a School in that Zone to the Manager" mutually exclusive.
+
 ## 6. Teacher placements: dated rows, no scheduler
 
 **Decision**: `teacher_placement` rows (`teacher_id`, `school_id`, `starts_on`, `ends_on`,
@@ -103,7 +108,10 @@ future row per Teacher exists; cancelling it marks it `CANCELLED` and clears the
 `ends_on`. A move dated exactly the current row's `starts_on` marks the old row `CORRECTED` (kept for
 history) and inserts the replacement. A date earlier than the current `starts_on` is refused.
 Database constraints (an exclusion constraint on a date range per Teacher over `ACTIVE` rows)
-back the no-overlap rule.
+back the no-overlap rule. The constraint needs the `btree_gist` extension: `V13` runs
+`CREATE EXTENSION IF NOT EXISTS btree_gist`; if the production database user cannot create
+extensions, the deployment guide lists it as a prerequisite run by a privileged user. The service-level
+overlap check is the primary rule and is always tested; the constraint is a backstop.
 
 **Alternatives considered**: a scheduled job applying future moves (rejected: adds failure modes
 and a second source of truth); storing "current school" on the Teacher row (rejected: loses history
@@ -225,7 +233,22 @@ parts they own, through interfaces `school` defines, rather than `school` import
 scope provider present, a non-Admin/Director caller sees nothing (fail closed), which is why
 Managers see no Schools until US3 lands.
 
+`organization.api` likewise defines `ManagerQueries` (`managerOfSchool(schoolId)`,
+`managerSummary(managerId)`) and `ManagerViewEnricher` (extra attributes per Manager id). `teacher`
+implements the enricher to add `teacherCount` to Manager views and uses `ManagerQueries` to show each
+Teacher's accountable Manager, so `organization` never imports `teacher`.
+
 **Alternatives considered**: moving the School HTTP layer into `organization` (rejected: School
 CRUD is `school`'s responsibility, and `organization` would then own endpoints for data it does not
 own); a frontend that joins School, Manager and Teacher lists (rejected: pushes scoping and
 consistency into the client).
+
+## 18. The access model reports a data scope for the new modules
+
+**Decision**: `AccessModelService.dataScope` also reports `ZONES` and `MANAGERS` -> `ORG_WIDE` for
+Admin/Director, and `SCHOOLS` and `TEACHERS` -> `ORG_WIDE` for Admin/Director and `ASSIGNED` for
+Manager; nothing for Teacher or System. A multi-role user gets the widest scope, as Dashboard does
+today.
+
+**Rationale**: it keeps the frontend and later specs consistent with Constitution Principle III
+without each recomputing scope from roles, at the cost of a few lines in spec 002's service.
