@@ -58,11 +58,18 @@ export function NavigationDrawer({
               {!collapsed && (
                 <ListSubheader
                   component="div"
+                  disableSticky
                   sx={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    lineHeight: "32px",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    lineHeight: "36px",
+                    mt: 1,
+                    color: "primary.main",
+                    bgcolor: "action.hover",
+                    borderLeft: 4,
+                    borderColor: "primary.main",
                   }}
                 >
                   {section.section}
@@ -73,9 +80,13 @@ export function NavigationDrawer({
                   key={item.route}
                   selected={location.pathname === item.route}
                   onClick={() => handleSelect(item.route)}
+                  sx={{ pl: collapsed ? 2 : 4 }}
                 >
                   <ListItemText
                     primary={item.label}
+                    slotProps={{
+                      primary: { sx: { fontSize: 14, fontWeight: 400 } },
+                    }}
                     sx={{ opacity: collapsed ? 0 : 1 }}
                   />
                 </ListItemButton>
