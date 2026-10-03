@@ -35,6 +35,8 @@ import { TeacherDialog } from "../features/teachers/TeacherDialog";
 import { SalaryDialog } from "../features/teachers/SalaryDialog";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
 import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
+import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
+import { MarkDialog } from "../features/attendance/MarkDialog";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
@@ -238,6 +240,56 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       json: async () => ({
         current: { id: "e1", amount: 22000, effectiveOn: "2026-10-01" },
         history: [{ id: "e1", amount: 22000, effectiveOn: "2026-10-01" }],
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/attendance/me")) {
+    const days = Array.from({ length: 31 }, (_, i) => {
+      const date = `2026-10-${String(i + 1).padStart(2, "0")}`;
+      return {
+        date,
+        state: i === 0 ? "MARKED" : "UNMARKED",
+        mark:
+          i === 0
+            ? {
+                date,
+                code: "P",
+                codeName: "Present",
+                category: "WORKED",
+                dayValue: 1,
+                schoolId: "s1",
+                schoolName: "St Mary's",
+                setByKind: "SUPERVISOR",
+                setByUserId: "u2",
+                setByName: "Manoj",
+                setAt: "2026-10-01T05:00:00Z",
+                note: null,
+                version: 0,
+              }
+            : null,
+        editableBy: "NONE",
+      };
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        teacherId: "t1",
+        name: "Tara",
+        month: "2026-10",
+        locked: false,
+        state: "OPEN",
+        rollup: {
+          workingDays: 27,
+          daysWorked: 1,
+          daysLeave: 0,
+          trainingAvailable: 0,
+          trainingAttended: 0,
+          unmarked: 26,
+          weightedTotal: 1,
+          locked: false,
+          frozen: false,
+        },
+        days,
       }),
     } as Response;
   }
@@ -493,6 +545,25 @@ const pages: PageCase[] = [
     name: "AttendanceSetupPage",
     render: () => <AttendanceSetupPage />,
     settle: () => screen.findByText("Gandhi Jayanti"),
+  },
+  {
+    name: "MyAttendancePage",
+    render: () => <MyAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
+  },
+  {
+    name: "MarkDialog",
+    render: () => (
+      <MarkDialog
+        date="2026-10-04"
+        existing={null}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
   },
   {
     name: "Manager dashboard with assigned counts",

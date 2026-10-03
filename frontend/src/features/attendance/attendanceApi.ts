@@ -44,6 +44,9 @@ export interface AttendanceCalendar {
   nonWorkingDates: NonWorkingDate[];
 }
 
+/** Any API result; lets dialogs accept different save functions. */
+export type ApiResultLike = ApiResult<unknown>;
+
 const BASE = "/api/v1/attendance";
 
 export function listStatusCodes(
@@ -134,4 +137,85 @@ export function removeNonWorkingDate(
     "DELETE",
     `${BASE}/calendar/non-working-dates/${onDate}`,
   );
+}
+
+export type DayState =
+  | "MARKED"
+  | "UNMARKED"
+  | "NOT_PLACED"
+  | "WEEKLY_OFF"
+  | "NON_WORKING"
+  | "FUTURE";
+
+export type EditableBy = "SELF" | "SUPERVISOR" | "NONE";
+
+export interface MarkView {
+  date: string;
+  code: string;
+  codeName: string;
+  category: StatusCategory;
+  dayValue: number;
+  schoolId: string;
+  schoolName: string;
+  setByKind: "SELF" | "SUPERVISOR";
+  setByUserId: string;
+  setByName: string;
+  setAt: string;
+  note: string | null;
+  version: number;
+}
+
+export interface DayView {
+  date: string;
+  state: DayState;
+  mark: MarkView | null;
+  editableBy: EditableBy;
+}
+
+export interface RollupView {
+  workingDays: number;
+  daysWorked: number;
+  daysLeave: number;
+  trainingAvailable: number;
+  trainingAttended: number;
+  unmarked: number;
+  weightedTotal: number;
+  locked: boolean;
+  frozen: boolean;
+}
+
+export interface TeacherMonthView {
+  teacherId: string;
+  name: string;
+  month: string;
+  locked: boolean;
+  state: "OPEN" | "LOCKED";
+  rollup: RollupView;
+  days: DayView[];
+}
+
+export interface MarkBody {
+  statusCode: string;
+  dayValue: number;
+  note: string;
+  version?: number;
+}
+
+export function getMyMonth(
+  authFetch: AuthFetch,
+  month: string,
+): Promise<ApiResult<TeacherMonthView>> {
+  return getJson(
+    authFetch,
+    `${BASE}/me?month=${month}`,
+    "Could not load your attendance.",
+  );
+}
+
+export function saveMyMark(
+  authFetch: AuthFetch,
+  date: string,
+  body: MarkBody,
+): Promise<ApiResult<MarkView>> {
+  return sendJson(authFetch, "PUT", `${BASE}/me/marks/${date}`, body);
 }
