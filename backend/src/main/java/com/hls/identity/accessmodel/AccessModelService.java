@@ -25,6 +25,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class AccessModelService {
 
+    private static final List<PermissionModule> MASTER_DATA_MODULES =
+            List.of(
+                    PermissionModule.ZONES,
+                    PermissionModule.SCHOOLS,
+                    PermissionModule.MANAGERS,
+                    PermissionModule.TEACHERS,
+                    PermissionModule.TEACHER_SALARY);
+
     private final PermissionMatrixService permissionMatrixService;
 
     public AccessModelService(PermissionMatrixService permissionMatrixService) {
@@ -72,6 +80,17 @@ public class AccessModelService {
             dataScope.put(PermissionModule.DASHBOARD.name(), widestDashboardScope.name());
         }
 
+        for (PermissionModule module : MASTER_DATA_MODULES) {
+            DataScope widest = callerRoles.stream()
+                    .filter(role -> permissionMatrixService.isGranted(role, module, PermissionAction.VIEW))
+                    .map(this::masterDataScopeFor)
+                    .max(Comparator.comparingInt(Enum::ordinal))
+                    .orElse(null);
+            if (widest != null && widest != DataScope.NONE) {
+                dataScope.put(module.name(), widest.name());
+            }
+        }
+
         List<String> roleNames = callerRoles.stream().map(Enum::name).sorted().toList();
         return new AccessModelResponse(roleNames, navigation, dataScope);
     }
@@ -85,6 +104,15 @@ public class AccessModelService {
             }
         }
         return actions;
+    }
+
+    /** Master-data modules report Org-wide for Admin/Director and Assigned for Manager (research.md section 18). */
+    private DataScope masterDataScopeFor(Role role) {
+        return switch (role) {
+            case ADMIN, DIRECTOR -> DataScope.ORG_WIDE;
+            case MANAGER -> DataScope.ASSIGNED;
+            case TEACHER, SYSTEM -> DataScope.NONE;
+        };
     }
 
     /** Only Dashboard carries a meaningful scope today (data-model.md); Constitution Principle III. */

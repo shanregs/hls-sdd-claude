@@ -3,6 +3,7 @@ package com.hls.audit;
 import com.hls.audit.changehistory.ChangeHistoryEntry;
 import com.hls.audit.changehistory.ChangeHistoryEntryRepository;
 import com.hls.audit.support.AuditPageResponse;
+import com.hls.audit.support.AuditVisibility;
 import com.hls.audit.support.CsvStreamingExporter;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
@@ -41,10 +42,15 @@ public class AuditChangeHistoryController {
 
     private final ChangeHistoryEntryRepository repository;
     private final PermissionGuard permissionGuard;
+    private final AuditVisibility auditVisibility;
 
-    public AuditChangeHistoryController(ChangeHistoryEntryRepository repository, PermissionGuard permissionGuard) {
+    public AuditChangeHistoryController(
+            ChangeHistoryEntryRepository repository,
+            PermissionGuard permissionGuard,
+            AuditVisibility auditVisibility) {
         this.repository = repository;
         this.permissionGuard = permissionGuard;
+        this.auditVisibility = auditVisibility;
     }
 
     @GetMapping
@@ -59,7 +65,9 @@ public class AuditChangeHistoryController {
             @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_CHANGE_HISTORY, PermissionAction.VIEW);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "occurredAt"));
-        Page<ChangeHistoryEntry> result = repository.findAll(spec(actorUserId, entityType, entityId, from, to), pageable);
+        Set<String> hidden = auditVisibility.hiddenEntityTypes(rolesOf(jwt));
+        Page<ChangeHistoryEntry> result =
+                repository.findAll(spec(actorUserId, entityType, entityId, from, to, hidden), pageable);
         return ResponseEntity.ok(AuditPageResponse.from(result.map(ChangeHistoryView::from)));
     }
 
@@ -74,11 +82,12 @@ public class AuditChangeHistoryController {
             HttpServletResponse response)
             throws IOException {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_CHANGE_HISTORY, PermissionAction.EXPORT);
+        Set<String> hidden = auditVisibility.hiddenEntityTypes(rolesOf(jwt));
         CsvStreamingExporter.stream(
                 response,
                 "change-history.csv",
                 List.of("occurredAt", "actorUserId", "entityType", "entityId", "field", "beforeValue", "afterValue"),
-                pageable -> repository.findAll(spec(actorUserId, entityType, entityId, from, to), pageable),
+                pageable -> repository.findAll(spec(actorUserId, entityType, entityId, from, to, hidden), pageable),
                 entry -> List.of(
                         String.valueOf(entry.getOccurredAt()),
                         entry.getActorUserId().toString(),
@@ -90,9 +99,12 @@ public class AuditChangeHistoryController {
     }
 
     private static Specification<ChangeHistoryEntry> spec(
-            UUID actorUserId, String entityType, String entityId, Instant from, Instant to) {
+            UUID actorUserId, String entityType, String entityId, Instant from, Instant to, Set<String> hidden) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            if (!hidden.isEmpty()) {
+                predicates.add(cb.not(root.get("entityType").in(hidden)));
+            }
             if (actorUserId != null) {
                 predicates.add(cb.equal(root.get("actorUserId"), actorUserId));
             }

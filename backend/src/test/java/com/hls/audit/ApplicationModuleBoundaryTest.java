@@ -34,7 +34,8 @@ class ApplicationModuleBoundaryTest {
             "com.hls.identity.activity.AccountActivationChanged",
             "com.hls.identity.activity.UserCreated",
             "com.hls.identity.activity.UserRoleChanged",
-            "com.hls.identity.activity.PasswordResetByAdmin");
+            "com.hls.identity.activity.PasswordResetByAdmin",
+            "com.hls.audit.api.EntityChanged");
 
     // Main production classes only (target/classes) — not target/test-classes, which legitimately
     // use ApplicationEventPublisher in test fixtures to simulate redelivery of consumed events.

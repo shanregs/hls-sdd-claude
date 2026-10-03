@@ -3,6 +3,7 @@ package com.hls.audit;
 import com.hls.audit.logs.AuditLogEntryView;
 import com.hls.audit.logs.AuditLogQueryService;
 import com.hls.audit.support.AuditPageResponse;
+import com.hls.audit.support.AuditVisibility;
 import com.hls.audit.support.CsvStreamingExporter;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
@@ -35,10 +36,15 @@ public class AuditLogsController {
 
     private final AuditLogQueryService auditLogQueryService;
     private final PermissionGuard permissionGuard;
+    private final AuditVisibility auditVisibility;
 
-    public AuditLogsController(AuditLogQueryService auditLogQueryService, PermissionGuard permissionGuard) {
+    public AuditLogsController(
+            AuditLogQueryService auditLogQueryService,
+            PermissionGuard permissionGuard,
+            AuditVisibility auditVisibility) {
         this.auditLogQueryService = auditLogQueryService;
         this.permissionGuard = permissionGuard;
+        this.auditVisibility = auditVisibility;
     }
 
     @GetMapping
@@ -52,7 +58,8 @@ public class AuditLogsController {
             @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_LOGS, PermissionAction.VIEW);
         Set<String> types = (type == null || type.isEmpty()) ? AuditLogQueryService.ALL_TYPES : Set.copyOf(type);
-        Page<AuditLogEntryView> result = auditLogQueryService.query(types, userId, from, to, PageRequest.of(page, size));
+        Page<AuditLogEntryView> result = auditLogQueryService.query(
+                types, userId, from, to, auditVisibility.hiddenEntityTypes(rolesOf(jwt)), PageRequest.of(page, size));
         return ResponseEntity.ok(AuditPageResponse.from(result));
     }
 
@@ -67,11 +74,12 @@ public class AuditLogsController {
             throws IOException {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_LOGS, PermissionAction.EXPORT);
         Set<String> types = (type == null || type.isEmpty()) ? AuditLogQueryService.ALL_TYPES : Set.copyOf(type);
+        Set<String> hidden = auditVisibility.hiddenEntityTypes(rolesOf(jwt));
         CsvStreamingExporter.stream(
                 response,
                 "audit-logs.csv",
                 List.of("occurredAt", "type", "actorUserId", "summary"),
-                pageable -> auditLogQueryService.query(types, userId, from, to, pageable),
+                pageable -> auditLogQueryService.query(types, userId, from, to, hidden, pageable),
                 entry -> List.of(
                         String.valueOf(entry.occurredAt()),
                         entry.type(),

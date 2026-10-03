@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * hls.seed.demo-data=true} is set, and idempotent (skips users that already exist by phone).
  */
 @Component
+@Order(10)
 @ConditionalOnProperty(name = "hls.seed.demo-data", havingValue = "true")
 public class DevDataSeeder implements ApplicationRunner {
 

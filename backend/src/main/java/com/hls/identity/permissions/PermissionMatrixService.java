@@ -63,10 +63,37 @@ public class PermissionMatrixService {
                 seed(role, module, PermissionAction.EXPORT, true);
             }
         }
+        seedMasterData();
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.EDIT, true);
+        }
+    }
+
+    /** Master-data defaults (spec 005, data-model.md): see the grants table there. */
+    private void seedMasterData() {
+        for (PermissionAction action : List.of(
+                PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT, PermissionAction.DELETE)) {
+            seed(Role.ADMIN, PermissionModule.ZONES, action, true);
+            seed(Role.ADMIN, PermissionModule.SCHOOLS, action, true);
+        }
+        for (PermissionAction action :
+                List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+            seed(Role.DIRECTOR, PermissionModule.ZONES, action, true);
+            seed(Role.DIRECTOR, PermissionModule.SCHOOLS, action, true);
+            for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+                seed(role, PermissionModule.MANAGERS, action, true);
+                seed(role, PermissionModule.TEACHERS, action, true);
+            }
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.TEACHER_SALARY, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.TEACHER_SALARY, PermissionAction.CREATE, true);
+        }
+        for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.EDIT)) {
+            seed(Role.MANAGER, PermissionModule.SCHOOLS, action, true);
+            seed(Role.MANAGER, PermissionModule.TEACHERS, action, true);
         }
     }
 

@@ -137,6 +137,12 @@ public class UserAdminService {
         return page.map(u -> new UserWithRoles(u, rolesOf(u.getId())));
     }
 
+    /** Like {@link #get} but without throwing, so callers inside a transaction are not marked rollback-only. */
+    @Transactional(readOnly = true)
+    public java.util.Optional<UserWithRoles> find(UUID userId) {
+        return appUserRepository.findById(userId).map(u -> new UserWithRoles(u, rolesOf(userId)));
+    }
+
     @Transactional(readOnly = true)
     public UserWithRoles get(UUID userId) {
         AppUser user = requireUser(userId);
