@@ -38,6 +38,7 @@ import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage"
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
+import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
@@ -50,6 +51,11 @@ const ACCESS_MODEL = {
           label: "Attendance Setup",
           route: "/operations/attendance-setup",
           actions: ["VIEW", "EDIT"],
+        },
+        {
+          label: "Attendance",
+          route: "/operations/attendance",
+          actions: ["VIEW", "CREATE", "EDIT", "DELETE"],
         },
         {
           label: "Teacher Attendance",
@@ -249,7 +255,10 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       }),
     } as Response;
   }
-  if (url.startsWith("/api/v1/attendance/teacher-grid")) {
+  if (
+    url.startsWith("/api/v1/attendance/teacher-grid") ||
+    url.startsWith("/api/v1/attendance/grid")
+  ) {
     const cells = Array.from({ length: 31 }, (_, i) => ({
       date: `2026-10-${String(i + 1).padStart(2, "0")}`,
       code: i === 0 ? "P" : null,
@@ -601,6 +610,11 @@ const pages: PageCase[] = [
   {
     name: "TeacherAttendancePage",
     render: () => <TeacherAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance grid" }),
+  },
+  {
+    name: "AttendanceGridPage",
+    render: () => <AttendanceGridPage />,
     settle: () => screen.findByRole("table", { name: "Attendance grid" }),
   },
   {

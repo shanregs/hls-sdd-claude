@@ -347,3 +347,14 @@ export function getMarkHistory(
     "Could not load the history.",
   );
 }
+
+export function getGrid(
+  authFetch: AuthFetch,
+  params: GridParams,
+): Promise<ApiResult<GridResponse>> {
+  return getJson(
+    authFetch,
+    `${BASE}/grid?${gridQuery(params)}`,
+    "Could not load the attendance grid.",
+  );
+}

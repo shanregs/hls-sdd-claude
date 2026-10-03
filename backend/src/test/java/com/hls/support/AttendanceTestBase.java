@@ -34,6 +34,8 @@ public abstract class AttendanceTestBase extends MasterDataTestBase {
             ManagerCtx managerB,
             UUID schoolA,
             UUID schoolB,
+            UUID zoneA,
+            UUID zoneB,
             TeacherCtx teacherA,
             TeacherCtx teacherB) {}
 
@@ -70,6 +72,8 @@ public abstract class AttendanceTestBase extends MasterDataTestBase {
                 managerB,
                 a[2],
                 b[2],
+                a[0],
+                b[0],
                 newTeacher(admin, a[2], 60),
                 newTeacher(admin, b[2], 60));
     }
