@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NavigationDrawer } from "./NavigationDrawer";
 
 const mockAccessModel = vi.fn();
@@ -99,5 +100,91 @@ describe("NavigationDrawer (User Story 1, FR-006/FR-007/FR-008)", () => {
     expect(
       screen.getByRole("navigation", { name: /main navigation/i }),
     ).toBeInTheDocument();
+  });
+
+  describe("collapsible sections", () => {
+    beforeEach(() => {
+      const store = new Map<string, string>();
+      vi.stubGlobal("localStorage", {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+        clear: () => store.clear(),
+      });
+      mockAccessModel.mockReturnValue({
+        accessModel: {
+          roles: ["ADMIN"],
+          navigation: [
+            {
+              section: "SYSTEM",
+              items: [
+                {
+                  label: "User Management",
+                  route: "/identity/users",
+                  actions: ["VIEW"],
+                },
+              ],
+            },
+            {
+              section: "AUDIT",
+              items: [
+                {
+                  label: "Audit Logs",
+                  route: "/audit/logs",
+                  actions: ["VIEW"],
+                },
+              ],
+            },
+          ],
+          dataScope: {},
+        },
+        loading: false,
+      });
+    });
+
+    it("starts expanded and hides a section's items when its header is clicked", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+
+      const header = screen.getByRole("button", { name: "SYSTEM" });
+      expect(header).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByText("User Management")).toBeInTheDocument();
+
+      await user.click(header);
+
+      expect(header).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() =>
+        expect(screen.queryByText("User Management")).not.toBeInTheDocument(),
+      );
+      // Other sections are unaffected.
+      expect(screen.getByText("Audit Logs")).toBeInTheDocument();
+    });
+
+    it("shows the items again on a second click", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+      const header = screen.getByRole("button", { name: "AUDIT" });
+
+      await user.click(header);
+      await user.click(header);
+
+      expect(header).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByText("Audit Logs")).toBeInTheDocument();
+    });
+
+    it("remembers which sections were hidden", async () => {
+      const user = userEvent.setup();
+      const first = renderDrawer();
+      await user.click(screen.getByRole("button", { name: "SYSTEM" }));
+      first.unmount();
+
+      renderDrawer();
+
+      expect(screen.getByRole("button", { name: "SYSTEM" })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      expect(screen.queryByText("User Management")).not.toBeInTheDocument();
+    });
   });
 });

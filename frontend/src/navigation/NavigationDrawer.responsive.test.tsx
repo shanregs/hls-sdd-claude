@@ -41,8 +41,8 @@ describe("NavigationDrawer responsive behavior (User Story 5, FR-009)", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Dashboard" }),
-    ).toBeInTheDocument();
+      screen.getAllByRole("button", { name: "Dashboard" }).length,
+    ).toBeGreaterThan(0);
     expect(document.querySelector(".MuiDrawer-docked")).not.toBeNull();
   });
 
@@ -61,7 +61,10 @@ describe("NavigationDrawer responsive behavior (User Story 5, FR-009)", () => {
       </MemoryRouter>,
     );
 
-    const item = await screen.findByRole("button", { name: "Dashboard" });
+    // The section header is also a button named Dashboard; the menu item is the last one.
+    const item = (
+      await screen.findAllByRole("button", { name: "Dashboard" })
+    ).at(-1)!;
     await user.click(item);
 
     expect(onMobileClose).toHaveBeenCalled();
