@@ -1,5 +1,6 @@
 import {
   getJson,
+  queryString,
   sendJson,
   type ApiResult,
   type AuthFetch,
@@ -218,4 +219,131 @@ export function saveMyMark(
   body: MarkBody,
 ): Promise<ApiResult<MarkView>> {
   return sendJson(authFetch, "PUT", `${BASE}/me/marks/${date}`, body);
+}
+
+export interface GridCell {
+  date: string;
+  code: string | null;
+  dayValue: number | null;
+  setByKind: "SELF" | "SUPERVISOR" | null;
+  state: DayState;
+}
+
+export interface GridRow {
+  teacherId: string;
+  name: string;
+  status: string;
+  school: { id: string; name: string } | null;
+  manager: { id: string; name: string } | null;
+  locked: boolean;
+  rollup: RollupView;
+  cells: GridCell[];
+}
+
+export interface GridResponse {
+  month: string;
+  days: number;
+  content: GridRow[];
+  page: number;
+  size: number;
+  totalElements: number;
+}
+
+export interface GridParams {
+  month: string;
+  query: string;
+  page: number;
+  size: number;
+  zoneId?: string;
+  schoolId?: string;
+  managerId?: string;
+  status?: string;
+}
+
+export interface HistoryEntry {
+  action: "CREATED" | "CORRECTED" | "CLEARED";
+  code: string | null;
+  codeName: string | null;
+  dayValue: number | null;
+  schoolName: string | null;
+  note: string | null;
+  setByName: string;
+  setByKind: "SELF" | "SUPERVISOR";
+  setAt: string;
+}
+
+function gridQuery(params: GridParams): string {
+  return queryString({
+    month: params.month,
+    query: params.query.trim(),
+    page: params.page,
+    size: params.size,
+    zoneId: params.zoneId,
+    schoolId: params.schoolId,
+    managerId: params.managerId,
+    status: params.status,
+  });
+}
+
+export function getTeacherGrid(
+  authFetch: AuthFetch,
+  params: GridParams,
+): Promise<ApiResult<GridResponse>> {
+  return getJson(
+    authFetch,
+    `${BASE}/teacher-grid?${gridQuery(params)}`,
+    "Could not load the attendance grid.",
+  );
+}
+
+export function getTeacherMonth(
+  authFetch: AuthFetch,
+  teacherId: string,
+  month: string,
+): Promise<ApiResult<TeacherMonthView>> {
+  return getJson(
+    authFetch,
+    `${BASE}/teachers/${teacherId}?month=${month}`,
+    "Could not load this Teacher's attendance.",
+  );
+}
+
+export function setTeacherMark(
+  authFetch: AuthFetch,
+  teacherId: string,
+  date: string,
+  body: MarkBody,
+): Promise<ApiResult<MarkView>> {
+  return sendJson(
+    authFetch,
+    "PUT",
+    `${BASE}/teachers/${teacherId}/marks/${date}`,
+    body,
+  );
+}
+
+export function clearTeacherMark(
+  authFetch: AuthFetch,
+  teacherId: string,
+  date: string,
+): Promise<ApiResult<void>> {
+  return sendJson(
+    authFetch,
+    "DELETE",
+    `${BASE}/teachers/${teacherId}/marks/${date}`,
+    undefined,
+    false,
+  );
+}
+
+export function getMarkHistory(
+  authFetch: AuthFetch,
+  teacherId: string,
+  date: string,
+): Promise<ApiResult<HistoryEntry[]>> {
+  return getJson(
+    authFetch,
+    `${BASE}/teachers/${teacherId}/marks/${date}/history`,
+    "Could not load the history.",
+  );
 }

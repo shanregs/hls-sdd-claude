@@ -19,6 +19,7 @@ import { UserActivityPage } from "./features/audit/UserActivityPage";
 import { AuditLogsPage } from "./features/audit/AuditLogsPage";
 import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
 import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
+import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -152,6 +153,14 @@ export function App() {
           element={
             <RouteGuard>
               <MyAttendancePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-attendance"
+          element={
+            <RouteGuard>
+              <TeacherAttendancePage />
             </RouteGuard>
           }
         />

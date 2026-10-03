@@ -3,7 +3,6 @@ package com.hls.attendance.internal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hls.attendance.api.MarkView;
 import com.hls.attendance.api.RollupView;
-import com.hls.attendance.internal.RollupCalculator.DayKind;
 import com.hls.attendance.internal.RollupCalculator.DayPlan;
 import com.hls.attendance.internal.RollupCalculator.MarkFacts;
 import com.hls.school.api.NotFoundException;
@@ -126,6 +125,19 @@ public class TeacherMonthViewService {
                 days);
     }
 
+    /** The state of one day; a mark always wins, then placement and calendar, then "not yet". */
+    static DayState stateOf(DayPlan plan, boolean marked, LocalDate today) {
+        if (marked) {
+            return DayState.MARKED;
+        }
+        return switch (plan.kind()) {
+            case NOT_PLACED -> DayState.NOT_PLACED;
+            case WEEKLY_OFF -> DayState.WEEKLY_OFF;
+            case NON_WORKING -> DayState.NON_WORKING;
+            case WORKING -> plan.date().isAfter(today) ? DayState.FUTURE : DayState.UNMARKED;
+        };
+    }
+
     public static RollupView toView(Rollup r, boolean locked) {
         return new RollupView(
                 r.workingDays(),
@@ -142,20 +154,7 @@ public class TeacherMonthViewService {
     private DayView dayOf(
             DayPlan plan, MarkView mark, AttendanceMark raw, LocalDate today, boolean locked, Viewer viewer) {
         LocalDate date = plan.date();
-        DayState state;
-        if (mark != null) {
-            state = DayState.MARKED;
-        } else if (plan.kind() == DayKind.NOT_PLACED) {
-            state = DayState.NOT_PLACED;
-        } else if (plan.kind() == DayKind.WEEKLY_OFF) {
-            state = DayState.WEEKLY_OFF;
-        } else if (plan.kind() == DayKind.NON_WORKING) {
-            state = DayState.NON_WORKING;
-        } else if (date.isAfter(today)) {
-            state = DayState.FUTURE;
-        } else {
-            state = DayState.UNMARKED;
-        }
+        DayState state = stateOf(plan, mark != null, today);
         return new DayView(date, state, mark, editableBy(plan, raw, date, today, locked, viewer));
     }
 

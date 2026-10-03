@@ -37,6 +37,7 @@ import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
 import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
+import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
@@ -49,6 +50,11 @@ const ACCESS_MODEL = {
           label: "Attendance Setup",
           route: "/operations/attendance-setup",
           actions: ["VIEW", "EDIT"],
+        },
+        {
+          label: "Teacher Attendance",
+          route: "/operations/teacher-attendance",
+          actions: ["VIEW", "CREATE", "EDIT"],
         },
       ],
     },
@@ -240,6 +246,47 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       json: async () => ({
         current: { id: "e1", amount: 22000, effectiveOn: "2026-10-01" },
         history: [{ id: "e1", amount: 22000, effectiveOn: "2026-10-01" }],
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/attendance/teacher-grid")) {
+    const cells = Array.from({ length: 31 }, (_, i) => ({
+      date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+      code: i === 0 ? "P" : null,
+      dayValue: i === 0 ? 1 : null,
+      setByKind: i === 0 ? "SUPERVISOR" : null,
+      state: i === 0 ? "MARKED" : i % 7 === 3 ? "WEEKLY_OFF" : "UNMARKED",
+    }));
+    return {
+      ok: true,
+      json: async () => ({
+        month: "2026-10",
+        days: 31,
+        page: 0,
+        size: 50,
+        totalElements: 1,
+        content: [
+          {
+            teacherId: "t1",
+            name: "Tara Teacher",
+            status: "ACTIVE",
+            school: { id: "s1", name: "St Mary's" },
+            manager: null,
+            locked: false,
+            rollup: {
+              workingDays: 27,
+              daysWorked: 1,
+              daysLeave: 0,
+              trainingAvailable: 0,
+              trainingAttended: 0,
+              unmarked: 26,
+              weightedTotal: 1,
+              locked: false,
+              frozen: false,
+            },
+            cells,
+          },
+        ],
       }),
     } as Response;
   }
@@ -550,6 +597,11 @@ const pages: PageCase[] = [
     name: "MyAttendancePage",
     render: () => <MyAttendancePage />,
     settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
+  },
+  {
+    name: "TeacherAttendancePage",
+    render: () => <TeacherAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance grid" }),
   },
   {
     name: "MarkDialog",
