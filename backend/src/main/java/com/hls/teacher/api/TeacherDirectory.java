@@ -1,0 +1,36 @@
+package com.hls.teacher.api;
+
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Read-only lookups of Teachers and their placements for later modules (spec 008 research.md
+ * section 1). Bulk-oriented: callers pass id sets so a grid page needs one query, not one per Teacher.
+ */
+public interface TeacherDirectory {
+
+    record TeacherInfo(UUID id, String name, String status, UUID userId) {}
+
+    /** An ACTIVE placement; {@code endsOn} is inclusive and null while open-ended. */
+    record PlacementSpan(UUID teacherId, UUID schoolId, LocalDate startsOn, LocalDate endsOn) {
+
+        public boolean covers(LocalDate date) {
+            return !date.isBefore(startsOn) && (endsOn == null || !date.isAfter(endsOn));
+        }
+    }
+
+    Map<UUID, TeacherInfo> teacherInfo(Collection<UUID> teacherIds);
+
+    Optional<TeacherInfo> teacherOfUser(UUID userId);
+
+    /** ACTIVE placements of the given Teachers overlapping {@code from..to} inclusive. */
+    List<PlacementSpan> placementsOverlapping(Collection<UUID> teacherIds, LocalDate from, LocalDate to);
+
+    /** Ids of Teachers with an ACTIVE placement overlapping {@code from..to} inclusive. */
+    Set<UUID> teachersPlacedDuring(LocalDate from, LocalDate to);
+}

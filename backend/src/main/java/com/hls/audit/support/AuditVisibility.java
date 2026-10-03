@@ -18,16 +18,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuditVisibility {
 
-    private static final Map<String, PermissionModule> REQUIRED_VIEW = Map.of(
-            "ZONE", PermissionModule.ZONES,
-            "PLACE", PermissionModule.ZONES,
-            "SCHOOL", PermissionModule.SCHOOLS,
-            "MANAGER", PermissionModule.MANAGERS,
-            "ZONE_MANAGER_ASSIGNMENT", PermissionModule.MANAGERS,
-            "SCHOOL_MANAGER_ASSIGNMENT", PermissionModule.MANAGERS,
-            "TEACHER", PermissionModule.TEACHERS,
-            "TEACHER_PLACEMENT", PermissionModule.TEACHERS,
-            "TEACHER_SALARY", PermissionModule.TEACHER_SALARY);
+    private static final Map<String, PermissionModule> REQUIRED_VIEW = Map.ofEntries(
+            Map.entry("ZONE", PermissionModule.ZONES),
+            Map.entry("PLACE", PermissionModule.ZONES),
+            Map.entry("SCHOOL", PermissionModule.SCHOOLS),
+            Map.entry("MANAGER", PermissionModule.MANAGERS),
+            Map.entry("ZONE_MANAGER_ASSIGNMENT", PermissionModule.MANAGERS),
+            Map.entry("SCHOOL_MANAGER_ASSIGNMENT", PermissionModule.MANAGERS),
+            Map.entry("TEACHER", PermissionModule.TEACHERS),
+            Map.entry("TEACHER_PLACEMENT", PermissionModule.TEACHERS),
+            Map.entry("TEACHER_SALARY", PermissionModule.TEACHER_SALARY),
+            Map.entry("ATTENDANCE_MARK", PermissionModule.ATTENDANCE),
+            Map.entry("ATTENDANCE_MONTH", PermissionModule.ATTENDANCE),
+            Map.entry("ATTENDANCE_EXPORT", PermissionModule.ATTENDANCE),
+            Map.entry("ATTENDANCE_CODE", PermissionModule.ATTENDANCE_SETUP),
+            Map.entry("ATTENDANCE_CALENDAR", PermissionModule.ATTENDANCE_SETUP));
 
     private final PermissionMatrixService permissionMatrixService;
 

@@ -64,6 +64,7 @@ public class PermissionMatrixService {
             }
         }
         seedMasterData();
+        seedAttendance();
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
@@ -94,6 +95,29 @@ public class PermissionMatrixService {
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.EDIT)) {
             seed(Role.MANAGER, PermissionModule.SCHOOLS, action, true);
             seed(Role.MANAGER, PermissionModule.TEACHERS, action, true);
+        }
+    }
+
+    /** Attendance defaults (spec 008, Role & Permission Impact table). */
+    private void seedAttendance() {
+        for (PermissionAction action : List.of(
+                PermissionAction.VIEW,
+                PermissionAction.CREATE,
+                PermissionAction.EDIT,
+                PermissionAction.PROCESS,
+                PermissionAction.EXPORT)) {
+            seed(Role.ADMIN, PermissionModule.ATTENDANCE, action, true);
+            seed(Role.DIRECTOR, PermissionModule.ATTENDANCE, action, true);
+        }
+        seed(Role.ADMIN, PermissionModule.ATTENDANCE, PermissionAction.DELETE, true);
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.ATTENDANCE_SETUP, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.ATTENDANCE_SETUP, PermissionAction.EDIT, true);
+        }
+        for (PermissionAction action :
+                List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+            seed(Role.MANAGER, PermissionModule.TEACHER_ATTENDANCE, action, true);
+            seed(Role.TEACHER, PermissionModule.MY_ATTENDANCE, action, true);
         }
     }
 
