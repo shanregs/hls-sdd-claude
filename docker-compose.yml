@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: hls
       POSTGRES_PASSWORD: hls
     ports:
-      - "5432:5432"
+      - "${HLS_DB_PORT:-5432}:5432"
     volumes:
       - hls-postgres-data:/var/lib/postgresql/data
     healthcheck:
