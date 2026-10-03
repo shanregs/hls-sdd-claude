@@ -2,13 +2,12 @@ package com.hls;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Clock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.modulith.Modulith;
-
-import java.time.Clock;
 
 @Modulith
 @SpringBootApplication
@@ -24,7 +23,7 @@ public class HlsApplication {
     }
 
     /**
-     * No Actuator dependency is pulled in (research.md §1), so Spring Boot does not
+     * No Actuator dependency is pulled in, so Spring Boot does not
      * auto-configure a MeterRegistry bean; register a minimal in-process one instead.
      */
     @Bean

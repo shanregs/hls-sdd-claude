@@ -1,98 +1,137 @@
 package com.hls.school.internal;
 
-import com.hls.school.api.ZoneAssignmentConflictException;
-import com.hls.school.api.ZoneCommands;
-import com.hls.school.api.ZoneQueries;
-import com.hls.school.api.dto.CurrentSchoolZoneAssignment;
-import com.hls.school.api.dto.SchoolZoneAnswer;
-import com.hls.school.api.dto.ZoneView;
+import com.hls.school.api.ChangeRecorder;
+import com.hls.school.api.ConflictException;
+import com.hls.school.api.InvalidInputException;
+import com.hls.school.api.NotFoundException;
+import com.hls.school.api.StaleVersion;
+import com.hls.school.api.ZoneChangeGuard;
+import com.hls.school.api.ZoneView;
+import com.hls.school.api.ZoneViewEnricher;
 import java.time.Clock;
-import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implements both {@link ZoneQueries} and {@link ZoneCommands} — one class,
- * mirroring {@code organization.internal.AccountabilityService}'s own
- * reasoning: every operation shares the same "current row has no
- * effective_to" model, and splitting query/command implementations would
- * just duplicate that.
- */
+/** Zone CRUD with audit and the delete guards (spec 005 FR-001). */
 @Service
-public class ZoneService implements ZoneQueries, ZoneCommands {
+public class ZoneService {
 
     private final ZoneRepository zoneRepository;
-    private final SchoolZoneAssignmentRepository assignmentRepository;
+    private final PlaceRepository placeRepository;
+    private final SchoolRepository schoolRepository;
+    private final List<ZoneChangeGuard> deleteGuards;
+    private final List<ZoneViewEnricher> enrichers;
+    private final ChangeRecorder changes;
     private final Clock clock;
 
-    public ZoneService(ZoneRepository zoneRepository, SchoolZoneAssignmentRepository assignmentRepository, Clock clock) {
+    public ZoneService(
+            ZoneRepository zoneRepository,
+            PlaceRepository placeRepository,
+            SchoolRepository schoolRepository,
+            List<ZoneChangeGuard> deleteGuards,
+            List<ZoneViewEnricher> enrichers,
+            ChangeRecorder changes,
+            Clock clock) {
         this.zoneRepository = zoneRepository;
-        this.assignmentRepository = assignmentRepository;
+        this.placeRepository = placeRepository;
+        this.schoolRepository = schoolRepository;
+        this.deleteGuards = deleteGuards;
+        this.enrichers = enrichers;
+        this.changes = changes;
         this.clock = clock;
     }
 
-    // ---- Queries -----------------------------------------------------------------------
-
-    @Override
-    public Optional<ZoneView> findById(UUID zoneId) {
-        return zoneRepository.findById(zoneId).map(z -> new ZoneView(z.getId(), z.getName()));
+    @Transactional(readOnly = true)
+    public Page<ZoneView> list(String query, Pageable pageable) {
+        String term = query == null ? "" : query.trim();
+        Page<Zone> page = zoneRepository.findByNameContainingIgnoreCase(term, pageable);
+        List<UUID> ids = page.getContent().stream().map(Zone::getId).toList();
+        Map<UUID, Map<String, Object>> extras = new HashMap<>();
+        for (ZoneViewEnricher enricher : enrichers) {
+            enricher.enrich(ids).forEach((id, attrs) -> extras.computeIfAbsent(id, k -> new HashMap<>()).putAll(attrs));
+        }
+        return page.map(z -> view(z, extras.getOrDefault(z.getId(), Map.of())));
     }
 
-    @Override
-    public List<UUID> currentSchoolsForZone(UUID zoneId) {
-        return assignmentRepository.findByZoneIdAndEffectiveToIsNull(zoneId).stream()
-                .map(SchoolZoneAssignment::getSchoolId)
-                .toList();
-    }
-
-    @Override
-    public SchoolZoneAnswer currentZoneForSchool(UUID schoolId) {
-        return assignmentRepository.findBySchoolIdAndEffectiveToIsNull(schoolId)
-                .map(a -> SchoolZoneAnswer.currentZone(a.getZoneId()))
-                .orElseGet(SchoolZoneAnswer::unassigned);
-    }
-
-    // ---- Commands ----------------------------------------------------------------------
-
-    @Override
-    @Transactional
-    public UUID createZone(String name, UUID actingUserId) {
-        Zone zone = new Zone(UUID.randomUUID(), name, clock.instant(), actingUserId);
-        zoneRepository.save(zone);
-        return zone.getId();
-    }
-
-    @Override
-    @Transactional
-    public CurrentSchoolZoneAssignment assignSchoolToZone(UUID schoolId, UUID zoneId, UUID endsAssignmentId, UUID actingUserId) {
-        Optional<SchoolZoneAssignment> current = assignmentRepository.findBySchoolIdAndEffectiveToIsNull(schoolId);
-        Instant now = clock.instant();
-
-        if (endsAssignmentId == null) {
-            if (current.isPresent()) {
-                if (current.get().getZoneId().equals(zoneId)) {
-                    // FR-010-equivalent: no-op, no new row (mirrors AccountabilityService.assignSchoolManager).
-                    SchoolZoneAssignment existing = current.get();
-                    return new CurrentSchoolZoneAssignment(existing.getId(), existing.getZoneId(), existing.getEffectiveFrom());
-                }
-                throw new ZoneAssignmentConflictException(
-                        "School " + schoolId + " already has a current Zone; supply endsAssignmentId to reassign");
+    @Transactional(readOnly = true)
+    public ZoneView get(UUID id) {
+        Zone zone = zoneRepository.findById(id).orElseThrow(() -> new NotFoundException("Zone not found."));
+        Map<String, Object> extras = new HashMap<>();
+        for (ZoneViewEnricher enricher : enrichers) {
+            Map<String, Object> attrs = enricher.enrich(List.of(id)).get(id);
+            if (attrs != null) {
+                extras.putAll(attrs);
             }
-            SchoolZoneAssignment created = new SchoolZoneAssignment(UUID.randomUUID(), schoolId, zoneId, now, actingUserId, now);
-            assignmentRepository.save(created);
-            return new CurrentSchoolZoneAssignment(created.getId(), zoneId, now);
         }
+        return view(zone, extras);
+    }
 
-        int updated = assignmentRepository.endIfStillCurrent(endsAssignmentId, now);
-        if (updated == 0) {
-            throw new ZoneAssignmentConflictException(
-                    "School-Zone assignment " + endsAssignmentId + " was already changed by someone else");
+    @Transactional
+    public ZoneView create(UUID actor, String name) {
+        String clean = requireName(name);
+        if (zoneRepository.findByNameIgnoreCase(clean).isPresent()) {
+            throw new ConflictException("A Zone named " + clean + " already exists.");
         }
-        SchoolZoneAssignment created = new SchoolZoneAssignment(UUID.randomUUID(), schoolId, zoneId, now, actingUserId, now);
-        assignmentRepository.save(created);
-        return new CurrentSchoolZoneAssignment(created.getId(), zoneId, now);
+        Zone zone = zoneRepository.saveAndFlush(new Zone(clean, clock.instant()));
+        changes.recordLifecycle(actor, "ZONE", zone.getId(), "created", clean);
+        return view(zone, Map.of());
+    }
+
+    @Transactional
+    public ZoneView rename(UUID actor, UUID id, String name, Long version) {
+        Zone zone = zoneRepository.findById(id).orElseThrow(() -> new NotFoundException("Zone not found."));
+        StaleVersion.check(Zone.class, id, zone.getVersion(), version);
+        String clean = requireName(name);
+        zoneRepository
+                .findByNameIgnoreCase(clean)
+                .filter(other -> !other.getId().equals(id))
+                .ifPresent(other -> {
+                    throw new ConflictException("A Zone named " + clean + " already exists.");
+                });
+        String before = zone.getName();
+        zone.rename(clean, clock.instant());
+        zoneRepository.saveAndFlush(zone);
+        changes.record(actor, "ZONE", id, "name", before, clean);
+        return view(zone, Map.of());
+    }
+
+    @Transactional
+    public void delete(UUID actor, UUID id) {
+        Zone zone = zoneRepository.findById(id).orElseThrow(() -> new NotFoundException("Zone not found."));
+        long places = placeRepository.countByZoneId(id);
+        long schools = schoolRepository.countInZone(id);
+        if (places > 0 || schools > 0) {
+            throw new ConflictException("This Zone cannot be deleted: it still has " + places + " Place(s) and "
+                    + schools + " School(s).");
+        }
+        deleteGuards.forEach(guard -> guard.checkDelete(id));
+        zoneRepository.delete(zone);
+        changes.recordLifecycle(actor, "ZONE", id, "deleted", zone.getName());
+    }
+
+    private ZoneView view(Zone zone, Map<String, Object> extras) {
+        return new ZoneView(
+                zone.getId(),
+                zone.getName(),
+                zone.getVersion(),
+                placeRepository.countByZoneId(zone.getId()),
+                schoolRepository.countInZone(zone.getId()),
+                extras);
+    }
+
+    private static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new InvalidInputException("Zone name is required.");
+        }
+        if (name.trim().length() > 120) {
+            throw new InvalidInputException("Zone name must be at most 120 characters.");
+        }
+        return name.trim();
     }
 }

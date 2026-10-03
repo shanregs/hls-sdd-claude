@@ -2,40 +2,44 @@ package com.hls.school.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * FR-001/FR-009. A named geographic area. Never deleted once created —
- * enforced by {@link ZoneRepository} exposing no delete method at all.
- */
+/** A named grouping of Places and Schools (a district, or a sub-district when split). */
 @Entity
-@Table(name = "school_zone")
+@Table(name = "zone")
 public class Zone {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "created_by", nullable = false)
-    private UUID createdBy;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     protected Zone() {
         // JPA
     }
 
-    public Zone(UUID id, String name, Instant createdAt, UUID createdBy) {
-        this.id = id;
+    public Zone(String name, Instant now) {
         this.name = name;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     public UUID getId() {
@@ -46,11 +50,12 @@ public class Zone {
         return name;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public Long getVersion() {
+        return version;
     }
 
-    public UUID getCreatedBy() {
-        return createdBy;
+    public void rename(String name, Instant now) {
+        this.name = name;
+        this.updatedAt = now;
     }
 }

@@ -1,5 +1,7 @@
 # HLS SDD Implementation Plan & Deliverables Tracker
 
+> **Superseded 2026-09-23.** The project was reset to a fresh start under Constitution v2.0.0 (role-based UI/UX + five fixed roles). The specs and code listed below were removed. The current spec sequence and status live in [spec-roadmap.md](spec-roadmap.md). This file is kept for historical reference only.
+
 2026-09-18 · @Someone
 
 A working plan to build the HLS Teacher Management System as a modular monolith using GitHub spec-kit's Spec-Driven Development workflow, structured as the learning vehicle for SDD itself. Companion to the [requirements doc](https://claude.ai/code/artifact/665d38e4-4058-47eb-8ffb-b2c9a66f236e).

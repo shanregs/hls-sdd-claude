@@ -7,17 +7,13 @@ spring:
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
-      # Kept short so an unreachable data store fails fast — the status check's
-      # 3-second bound (FR-006/SC-004) covers connection acquisition too, not just
-      # the isValid() call itself.
       connection-timeout: 2000
       validation-timeout: 2000
   jpa:
     open-in-view: false
     hibernate:
-      # Flyway owns the schema; Hibernate only validates against it (Constitution:
-      # "Flyway -> schema, Hibernate -> validation" — never let Hibernate auto-DDL
-      # touch financial/identity tables).
+      # Flyway owns the schema; Hibernate only validates against it — never let
+      # Hibernate auto-DDL touch financial/identity tables.
       ddl-auto: validate
   flyway:
     enabled: true
@@ -28,20 +24,25 @@ server:
 hls:
   app:
     version: "@project.version@"
-  identity:
-    # JWT signing key: environment-only, never committed (Constitution Principle VIII).
-    # The default below is for local dev only and must be overridden in every other environment.
-    jwt-signing-key: ${JWT_SIGNING_KEY:dev-only-signing-key-not-for-production-use-------}
-    access-token-ttl-seconds: ${ACCESS_TOKEN_TTL_SECONDS:900}
-    refresh-token-ttl-seconds: ${REFRESH_TOKEN_TTL_SECONDS:1209600}
-    lockout:
-      failed-attempt-threshold: ${LOCKOUT_THRESHOLD:5}
-      lockout-duration-minutes: ${LOCKOUT_DURATION_MINUTES:30}
-    otp:
-      ttl-seconds: ${OTP_TTL_SECONDS:300}
-      rate-limit-per-minute: ${OTP_RATE_LIMIT_PER_MINUTE:3}
-    manager-scope-check-timeout-ms: 2000 # FR-019
-
-status:
-  check:
-    timeout-seconds: 3
+  security:
+    jwt:
+      # Dev-only default; every real deployment MUST override via JWT_SECRET (Constitution
+      # Principle X: secrets never in source control). Base64-encoded, >= 32 bytes for HS256.
+      secret: ${JWT_SECRET:ZGV2LW9ubHktaW5zZWN1cmUtc2VjcmV0LWtleS1kby1ub3QtdXNlLWluLXByb2Q=}
+      access-token-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
+    cookie:
+      secure: ${COOKIE_SECURE:true}
+  session:
+    renewal-ttl-days: ${SESSION_RENEWAL_TTL_DAYS:14}
+  sms:
+    # "dev-stub" (default) logs the code instead of sending real SMS. Set SMS_PROVIDER=msg91 for a
+    # real deployment (research.md §15) — MSG91_AUTH_KEY and MSG91_TEMPLATE_ID then become required
+    # (no defaults here on purpose: a real deployment must supply real credentials, never a
+    # source-controlled placeholder, Constitution Principle X).
+    provider: ${SMS_PROVIDER:dev-stub}
+    msg91:
+      # No defaults here on purpose: with provider=msg91, a missing MSG91_AUTH_KEY or
+      # MSG91_TEMPLATE_ID fails startup clearly rather than silently sending with blank credentials.
+      auth-key: ${MSG91_AUTH_KEY}
+      template-id: ${MSG91_TEMPLATE_ID}
+      base-url: ${MSG91_BASE_URL:https://control.msg91.com}

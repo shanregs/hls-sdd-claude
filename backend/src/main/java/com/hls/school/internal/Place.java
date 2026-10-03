@@ -2,21 +2,22 @@ package com.hls.school.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-/**
- * FR-001. A named locality (city/town/village) with a PIN code, belonging to
- * one Zone. Never deleted once added — enforced by {@link PlaceRepository}
- * exposing no delete method at all (FR-007).
- */
+/** A town, city or village in a Zone; neither name nor PIN code is unique (spec 005 FR-002). */
 @Entity
-@Table(name = "school_place")
+@Table(name = "place")
 public class Place {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "zone_id", nullable = false)
@@ -25,26 +26,22 @@ public class Place {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "pincode", nullable = false)
-    private String pincode;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "pin_code", nullable = false, length = 6)
+    private String pinCode;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    @Column(name = "created_by", nullable = false)
-    private UUID createdBy;
 
     protected Place() {
         // JPA
     }
 
-    public Place(UUID id, UUID zoneId, String name, String pincode, Instant createdAt, UUID createdBy) {
-        this.id = id;
+    public Place(UUID zoneId, String name, String pinCode, Instant now) {
         this.zoneId = zoneId;
         this.name = name;
-        this.pincode = pincode;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
+        this.pinCode = pinCode;
+        this.createdAt = now;
     }
 
     public UUID getId() {
@@ -59,15 +56,13 @@ public class Place {
         return name;
     }
 
-    public String getPincode() {
-        return pincode;
+    public String getPinCode() {
+        return pinCode;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public UUID getCreatedBy() {
-        return createdBy;
+    public void update(String name, String pinCode, UUID zoneId) {
+        this.name = name;
+        this.pinCode = pinCode;
+        this.zoneId = zoneId;
     }
 }

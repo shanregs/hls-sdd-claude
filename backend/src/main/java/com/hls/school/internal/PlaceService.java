@@ -1,111 +1,143 @@
 package com.hls.school.internal;
 
-import com.hls.school.api.BulkImportBatchException;
-import com.hls.school.api.PlaceCommands;
-import com.hls.school.api.PlaceQueries;
-import com.hls.school.api.dto.BulkImportResponse;
-import com.hls.school.api.dto.BulkImportRowResult;
-import com.hls.school.api.dto.BulkPlaceRow;
-import com.hls.school.api.dto.PlaceView;
+import com.hls.school.api.ChangeRecorder;
+import com.hls.school.api.ConflictException;
+import com.hls.school.api.InvalidInputException;
+import com.hls.school.api.NotFoundException;
+import com.hls.school.api.PlaceView;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implements both {@link PlaceQueries} and {@link PlaceCommands} — one
- * class, mirroring {@code ZoneService}'s own reasoning.
- */
+/** Places of a Zone: add, edit, delete, list and lookup (spec 005 FR-002, FR-005a). */
 @Service
-public class PlaceService implements PlaceQueries, PlaceCommands {
+public class PlaceService {
 
-    private static final int MAX_BULK_IMPORT_ROWS = 5000;
+    static final Pattern PIN_CODE = Pattern.compile("^[0-9]{6}$");
 
     private final PlaceRepository placeRepository;
     private final ZoneRepository zoneRepository;
+    private final SchoolRepository schoolRepository;
+    private final ChangeRecorder changes;
     private final Clock clock;
 
-    public PlaceService(PlaceRepository placeRepository, ZoneRepository zoneRepository, Clock clock) {
+    public PlaceService(
+            PlaceRepository placeRepository,
+            ZoneRepository zoneRepository,
+            SchoolRepository schoolRepository,
+            ChangeRecorder changes,
+            Clock clock) {
         this.placeRepository = placeRepository;
         this.zoneRepository = zoneRepository;
+        this.schoolRepository = schoolRepository;
+        this.changes = changes;
         this.clock = clock;
     }
 
-    // ---- Queries -----------------------------------------------------------------------
-
-    @Override
-    public List<PlaceView> findByPincode(String pincode) {
-        return placeRepository.findByPincode(pincode.trim()).stream().map(this::toView).toList();
+    @Transactional(readOnly = true)
+    public Page<PlaceView> listInZone(UUID zoneId, String query, Pageable pageable) {
+        Zone zone = requireZone(zoneId);
+        String term = query == null ? "" : query.trim();
+        return placeRepository.searchInZone(zoneId, term, pageable).map(p -> view(p, zone.getName()));
     }
 
-    @Override
-    public List<PlaceView> findByName(String name) {
-        return placeRepository.findByNameIgnoreCase(name.trim()).stream().map(this::toView).toList();
-    }
-
-    @Override
-    public List<PlaceView> findByZoneId(UUID zoneId) {
-        return placeRepository.findByZoneId(zoneId).stream().map(this::toView).toList();
-    }
-
-    // ---- Commands ----------------------------------------------------------------------
-
-    @Override
-    @Transactional
-    public PlaceView addPlace(UUID zoneId, String name, String pincode, UUID actingUserId) {
-        Place place = new Place(UUID.randomUUID(), zoneId, name, pincode, clock.instant(), actingUserId);
-        placeRepository.save(place);
-        return toView(place);
-    }
-
-    @Override
-    @Transactional
-    public BulkImportResponse bulkImportPlaces(List<BulkPlaceRow> rows, UUID actingUserId) {
-        if (rows.isEmpty()) {
-            throw new BulkImportBatchException("batch must not be empty");
+    /** Every Place matching the PIN code and/or name (names and PIN codes are not unique). */
+    @Transactional(readOnly = true)
+    public List<PlaceView> lookup(String pinCode, String name) {
+        if ((pinCode == null || pinCode.isBlank()) && (name == null || name.isBlank())) {
+            throw new InvalidInputException("Give a PIN code or a name to look up.");
         }
-        if (rows.size() > MAX_BULK_IMPORT_ROWS) {
-            throw new BulkImportBatchException("batch exceeds the maximum of " + MAX_BULK_IMPORT_ROWS + " rows");
-        }
-
-        List<BulkImportRowResult> results = new ArrayList<>(rows.size());
-        int successCount = 0;
-        int failureCount = 0;
-
-        for (int index = 0; index < rows.size(); index++) {
-            BulkPlaceRow row = rows.get(index);
-            String failureReason = validateRow(row);
-            if (failureReason != null) {
-                results.add(BulkImportRowResult.failure(index, failureReason));
-                failureCount++;
-                continue;
+        List<Place> matches = new ArrayList<>();
+        if (pinCode != null && !pinCode.isBlank()) {
+            matches.addAll(placeRepository.findByPinCode(pinCode.trim()));
+            if (name != null && !name.isBlank()) {
+                String lower = name.trim().toLowerCase(java.util.Locale.ROOT);
+                matches.removeIf(p -> !p.getName().toLowerCase(java.util.Locale.ROOT).contains(lower));
             }
-            Place place = new Place(UUID.randomUUID(), row.zoneId(), row.name(), row.pincode(), clock.instant(), actingUserId);
-            placeRepository.save(place);
-            results.add(BulkImportRowResult.success(index, toView(place)));
-            successCount++;
+        } else {
+            matches.addAll(placeRepository.findByNameContainingIgnoreCase(name.trim()));
         }
-
-        return new BulkImportResponse(results, successCount, failureCount);
+        Map<UUID, String> zoneNames = zoneNames(matches);
+        return matches.stream().map(p -> view(p, zoneNames.get(p.getZoneId()))).toList();
     }
 
-    /** @return a failure reason, or null if the row is valid (FR-004). */
-    private String validateRow(BulkPlaceRow row) {
-        if (row.name() == null || row.name().isBlank()) {
-            return "name is required";
-        }
-        if (row.pincode() == null || row.pincode().isBlank()) {
-            return "pincode is required";
-        }
-        if (row.zoneId() == null || zoneRepository.findById(row.zoneId()).isEmpty()) {
-            return "zone " + row.zoneId() + " does not exist";
-        }
-        return null;
+    @Transactional
+    public PlaceView add(UUID actor, UUID zoneId, String name, String pinCode) {
+        Zone zone = requireZone(zoneId);
+        Place place = placeRepository.saveAndFlush(
+                new Place(zoneId, requireName(name), requirePin(pinCode), clock.instant()));
+        changes.recordLifecycle(actor, "PLACE", place.getId(), "created", place.getName() + " " + place.getPinCode());
+        return view(place, zone.getName());
     }
 
-    private PlaceView toView(Place place) {
-        return new PlaceView(place.getId(), place.getZoneId(), place.getName(), place.getPincode());
+    @Transactional
+    public PlaceView edit(UUID actor, UUID id, String name, String pinCode, UUID zoneId) {
+        Place place = placeRepository.findById(id).orElseThrow(() -> new NotFoundException("Place not found."));
+        String newName = requireName(name);
+        String newPin = requirePin(pinCode);
+        UUID newZoneId = zoneId == null ? place.getZoneId() : zoneId;
+        Zone zone = requireZone(newZoneId);
+        if (!newZoneId.equals(place.getZoneId()) && schoolRepository.existsByPlaceId(id)) {
+            throw new ConflictException("This Place cannot move to another Zone while Schools are located in it.");
+        }
+        String beforeName = place.getName();
+        String beforePin = place.getPinCode();
+        UUID beforeZone = place.getZoneId();
+        place.update(newName, newPin, newZoneId);
+        placeRepository.saveAndFlush(place);
+        changes.record(actor, "PLACE", id, "name", beforeName, newName);
+        changes.record(actor, "PLACE", id, "pinCode", beforePin, newPin);
+        changes.record(actor, "PLACE", id, "zone", beforeZone, newZoneId);
+        return view(place, zone.getName());
+    }
+
+    @Transactional
+    public void delete(UUID actor, UUID id) {
+        Place place = placeRepository.findById(id).orElseThrow(() -> new NotFoundException("Place not found."));
+        if (schoolRepository.existsByPlaceId(id)) {
+            throw new ConflictException("This Place cannot be deleted while Schools are located in it.");
+        }
+        placeRepository.delete(place);
+        changes.recordLifecycle(actor, "PLACE", id, "deleted", place.getName());
+    }
+
+    static String requirePin(String pinCode) {
+        if (pinCode == null || !PIN_CODE.matcher(pinCode.trim()).matches()) {
+            throw new InvalidInputException("PIN code must be six digits.");
+        }
+        return pinCode.trim();
+    }
+
+    static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new InvalidInputException("Place name is required.");
+        }
+        if (name.trim().length() > 160) {
+            throw new InvalidInputException("Place name must be at most 160 characters.");
+        }
+        return name.trim();
+    }
+
+    private Zone requireZone(UUID zoneId) {
+        return zoneRepository.findById(zoneId).orElseThrow(() -> new NotFoundException("Zone not found."));
+    }
+
+    private Map<UUID, String> zoneNames(List<Place> places) {
+        return zoneRepository
+                .findAllById(places.stream().map(Place::getZoneId).distinct().toList())
+                .stream()
+                .collect(Collectors.toMap(Zone::getId, Zone::getName));
+    }
+
+    private static PlaceView view(Place place, String zoneName) {
+        return new PlaceView(place.getId(), place.getName(), place.getPinCode(), place.getZoneId(), zoneName);
     }
 }

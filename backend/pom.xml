@@ -70,6 +70,15 @@
             <artifactId>spring-modulith-starter-core</artifactId>
         </dependency>
         <dependency>
+            <!-- JPA-backed event publication registry (research.md §1): durable, at-least-once
+                 delivery for @ApplicationModuleListener consumers like spec 003's audit module.
+                 Not present before spec 003 — plan.md's "no new backend dependency" claim was
+                 wrong; spring-modulith-starter-core alone does not provide
+                 @ApplicationModuleListener, only module-boundary verification. -->
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-jpa</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-flyway</artifactId>
         </dependency>

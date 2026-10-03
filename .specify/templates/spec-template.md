@@ -103,6 +103,29 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
+## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
+
+<!--
+  ACTION REQUIRED: For each of the five fixed roles, state what this feature adds or uses.
+  Menu = navigation section + item (only authorized items are rendered).
+  Actions = default grants among View / Create / Edit / Delete / Approve / Process / Export
+  (seeded defaults; runtime-editable via Role & Permission Management).
+  Scope = Org-wide / Assigned (Manager's Zones → Schools → Teachers) / Own / None.
+  If this feature is (or touches) Role & Permission Management itself, note that only Admin,
+  Director, and System may edit the role→permission matrix (Constitution Principle II);
+  Manager and Teacher get no access to it.
+-->
+
+| Role     | Menu (section → item) | Default actions | Data scope |
+| -------- | --------------------- | --------------- | ---------- |
+| Admin    | [e.g. OPERATIONS → Attendance] | [e.g. All] | Org-wide |
+| Director | [...] | [...] | Org-wide |
+| Manager  | [...] | [...] | Assigned |
+| Teacher  | [...] | [...] | Own |
+| System   | [usually none for business features] | [...] | None |
+
+**New permission keys**: [module.action keys this feature introduces into the permission matrix]
+
 ## Success Criteria *(mandatory)*
 
 <!--

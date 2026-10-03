@@ -2,26 +2,20 @@ package com.hls.organization.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * FR-001/FR-002. One period during which a Manager was (or is) assigned to
- * cover a Zone. {@code effectiveTo == null} means this is a <em>current</em>
- * assignment — unlike {@link SchoolAssignment}/{@link TeacherAssignment},
- * more than one can be currently open for the same Zone at once (different
- * Managers), enforced as unique per {@code (zoneId, managerId)} by a partial
- * DB index (research.md §2), not here. Rows are never updated except to set
- * {@code effectiveTo} exactly once, and never deleted (Constitution
- * Principle I).
- */
+/** A dated, never-overwritten Zone-Manager link; current while {@code endsOn} is null. */
 @Entity
-@Table(name = "organization_zone_manager_assignment")
+@Table(name = "zone_manager_assignment")
 public class ZoneManagerAssignment {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "zone_id", nullable = false)
@@ -30,30 +24,20 @@ public class ZoneManagerAssignment {
     @Column(name = "manager_id", nullable = false)
     private UUID managerId;
 
-    @Column(name = "effective_from", nullable = false)
-    private Instant effectiveFrom;
+    @Column(name = "starts_on", nullable = false)
+    private LocalDate startsOn;
 
-    @Column(name = "effective_to")
-    private Instant effectiveTo;
-
-    @Column(name = "assigned_by", nullable = false)
-    private UUID assignedBy;
-
-    @Column(name = "assigned_at", nullable = false)
-    private Instant assignedAt;
+    @Column(name = "ends_on")
+    private LocalDate endsOn;
 
     protected ZoneManagerAssignment() {
         // JPA
     }
 
-    public ZoneManagerAssignment(UUID id, UUID zoneId, UUID managerId, Instant effectiveFrom,
-                                  UUID assignedBy, Instant assignedAt) {
-        this.id = id;
+    public ZoneManagerAssignment(UUID zoneId, UUID managerId, LocalDate startsOn) {
         this.zoneId = zoneId;
         this.managerId = managerId;
-        this.effectiveFrom = effectiveFrom;
-        this.assignedBy = assignedBy;
-        this.assignedAt = assignedAt;
+        this.startsOn = startsOn;
     }
 
     public UUID getId() {
@@ -68,31 +52,15 @@ public class ZoneManagerAssignment {
         return managerId;
     }
 
-    public Instant getEffectiveFrom() {
-        return effectiveFrom;
+    public LocalDate getStartsOn() {
+        return startsOn;
     }
 
-    public Instant getEffectiveTo() {
-        return effectiveTo;
+    public LocalDate getEndsOn() {
+        return endsOn;
     }
 
-    public boolean isCurrent() {
-        return effectiveTo == null;
-    }
-
-    public UUID getAssignedBy() {
-        return assignedBy;
-    }
-
-    public Instant getAssignedAt() {
-        return assignedAt;
-    }
-
-    /** Ends this assignment. Settable exactly once. */
-    public void end(Instant when) {
-        if (this.effectiveTo != null) {
-            throw new IllegalStateException("Zone-Manager assignment " + id + " was already ended");
-        }
-        this.effectiveTo = when;
+    public void end(LocalDate on) {
+        this.endsOn = on;
     }
 }
