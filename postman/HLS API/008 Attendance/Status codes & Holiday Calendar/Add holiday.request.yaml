@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Admin, Director. 409 if the date is already a holiday."
+url: "{{baseUrl}}/api/v1/attendance/calendar/non-working-dates"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "onDate": "2026-12-26",
+      "description": "Boxing Day"
+    }
+order: 8000

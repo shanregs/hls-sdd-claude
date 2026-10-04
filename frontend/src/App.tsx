@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from "./auth/ForgotPasswordPage";
 import { ProfilePage } from "./account/ProfilePage";
 import { AttendanceHistoryPage } from "./features/attendance/AttendanceHistoryPage";
 import { HolidayCalendarPage } from "./features/attendance/HolidayCalendarPage";
+import { SessionsPage } from "./account/SessionsPage";
 import { SettingsPage } from "./account/SettingsPage";
 import { AppShell } from "./app/AppShell";
 import { RouteGuard } from "./app/RouteGuard";
@@ -206,6 +207,14 @@ export function App() {
           element={
             <RouteGuard>
               <SettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/account/sessions"
+          element={
+            <RouteGuard>
+              <SessionsPage />
             </RouteGuard>
           }
         />

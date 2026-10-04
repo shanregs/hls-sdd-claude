@@ -1,0 +1,28 @@
+$kind: collection
+description: HLS backend API. Folders map to specs (001 identity, 002 access model, 003 audit, 004 user and role management, 005 master data, 008 attendance). Append a folder per new spec. Run "Password Login" first; it stores accessToken for all other requests.
+variables:
+  accessToken: ""
+  userId: ""
+  resetToken: ""
+  sessionId: ""
+  targetUserId: ""
+  zoneId: ""
+  zoneVersion: ""
+  placeId: ""
+  schoolId: ""
+  schoolVersion: ""
+  managerId: ""
+  managerVersion: ""
+  teacherId: ""
+  teacherVersion: ""
+  month: "2026-09"
+  markDate: "2026-09-10"
+  statusCodeId: ""
+  statusCodeVersion: ""
+  calendarVersion: ""
+auth:
+  - id: d2f95a8d-318a-4265-b479-fdd587e14f17
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{accessToken}}"

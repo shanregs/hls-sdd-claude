@@ -1,0 +1,3 @@
+$kind: collection
+description: "Attendance (spec 008). Set the collection variables month (YYYY-MM), markDate (YYYY-MM-DD) and teacherId (create or get a Teacher in 005 first). Roles: Teacher marks own days; Manager marks assigned Teachers; Admin and Director see every Teacher, lock months and export; everyone can read the Holiday Calendar."
+order: 8000

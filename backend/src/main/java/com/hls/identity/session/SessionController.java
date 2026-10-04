@@ -1,21 +1,14 @@
 package com.hls.identity.session;
 
-import com.hls.identity.activity.SessionEnded;
 import com.hls.identity.clientcontext.ClientSource;
-import com.hls.identity.loginhistory.LoginEventType;
-import com.hls.identity.loginhistory.LoginHistoryPublisher;
-import com.hls.identity.loginhistory.LoginMethod;
-import com.hls.identity.user.AppUserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,28 +16,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Self-service session management (FR-015, User Story 5): a signed-in user may list and end only
- * their own sessions, never another user's (contracts/auth-api.md).
+ * their own sessions, one at a time or all at once, never another user's (contracts/auth-api.md).
+ * Ending the current session, or all of them, is allowed; the web app then signs the user out.
  */
 @RestController
 public class SessionController {
 
     private final SessionRepository sessionRepository;
-    private final AppUserRepository appUserRepository;
-    private final LoginHistoryPublisher loginHistoryPublisher;
-    private final ApplicationEventPublisher eventPublisher;
-    private final Clock clock;
+    private final SessionEndingService ending;
 
-    public SessionController(
-            SessionRepository sessionRepository,
-            AppUserRepository appUserRepository,
-            LoginHistoryPublisher loginHistoryPublisher,
-            ApplicationEventPublisher eventPublisher,
-            Clock clock) {
+    public SessionController(SessionRepository sessionRepository, SessionEndingService ending) {
         this.sessionRepository = sessionRepository;
-        this.appUserRepository = appUserRepository;
-        this.loginHistoryPublisher = loginHistoryPublisher;
-        this.eventPublisher = eventPublisher;
-        this.clock = clock;
+        this.ending = ending;
     }
 
     @GetMapping("/api/v1/me/sessions")
@@ -52,6 +35,7 @@ public class SessionController {
         UUID userId = UUID.fromString(jwt.getSubject());
         UUID currentSessionId = UUID.fromString(jwt.getClaimAsString("sid"));
         List<SessionView> views = sessionRepository.findByUserIdAndStatus(userId, SessionStatus.ACTIVE).stream()
+                .sorted(java.util.Comparator.comparing(Session::getSignedInAt))
                 .map(session -> new SessionView(
                         session.getId(),
                         session.getDeviceDescription(),
@@ -65,7 +49,6 @@ public class SessionController {
     }
 
     @DeleteMapping("/api/v1/me/sessions/{sessionId}")
-    @Transactional
     public ResponseEntity<Void> endSession(
             @PathVariable UUID sessionId, @AuthenticationPrincipal Jwt jwt, HttpServletRequest httpRequest) {
         UUID userId = UUID.fromString(jwt.getSubject());
@@ -73,26 +56,24 @@ public class SessionController {
         if (session == null || !session.getUserId().equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-
-        session.end();
-        sessionRepository.save(session);
-
-        String phone = appUserRepository.findById(userId).map(u -> u.getPhone()).orElse(null);
-        loginHistoryPublisher.record(
-                userId,
-                phone,
-                LoginMethod.PASSWORD,
-                LoginEventType.SESSION_ENDED_BY_USER,
-                "Session ended from Profile",
-                httpRequest.getRemoteAddr(),
-                userAgent(httpRequest));
-        eventPublisher.publishEvent(
-                new SessionEnded(UUID.randomUUID(), clock.instant(), userId, userId, sessionId));
-
+        ending.end(List.of(session), userId, false, httpRequest.getRemoteAddr(), userAgent(httpRequest));
         return ResponseEntity.noContent().build();
     }
 
-    private static String userAgent(HttpServletRequest request) {
+    /**
+     * Ends every active session of the caller, including the one making this request. The web app
+     * signs the user out straight after.
+     */
+    @DeleteMapping("/api/v1/me/sessions")
+    public ResponseEntity<Map<String, Integer>> endAllSessions(
+            @AuthenticationPrincipal Jwt jwt, HttpServletRequest httpRequest) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        List<Session> mine = sessionRepository.findByUserIdAndStatus(userId, SessionStatus.ACTIVE);
+        int ended = ending.end(mine, userId, false, httpRequest.getRemoteAddr(), userAgent(httpRequest));
+        return ResponseEntity.ok(Map.of("ended", ended));
+    }
+
+    static String userAgent(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
         return userAgent != null ? userAgent : "Unknown device";
     }

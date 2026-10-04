@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Every value the day has had, newest first, with who set it."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/marks/{{markDate}}/history"
+method: GET
+order: 4000

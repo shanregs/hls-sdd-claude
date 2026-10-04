@@ -1,0 +1,10 @@
+name: HLS - Prod
+values:
+  - key: baseUrl
+    value: 'https://hls.example.com'
+  - key: loginIdentifier
+    value: ''
+  - key: loginPassword
+    value: ''
+  - key: loginPhone
+    value: ''

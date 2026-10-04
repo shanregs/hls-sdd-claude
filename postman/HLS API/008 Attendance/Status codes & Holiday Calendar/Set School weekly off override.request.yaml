@@ -1,0 +1,13 @@
+$kind: http-request
+description: "Admin, Director. Replaces (does not merge with) the default for this School."
+url: "{{baseUrl}}/api/v1/attendance/calendar/schools/{{schoolId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "weeklyOff": ["SUN", "SAT"]
+    }
+order: 6000

@@ -48,6 +48,19 @@ describe("SettingsPage", () => {
     expect(screen.getByText(/Roles: TEACHER/)).toBeInTheDocument();
   });
 
+  it("holds the password form but not the sessions, which have their own page", async () => {
+    mockApi();
+    render(<SettingsPage />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Change password" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("My sessions")).toBeNull();
+    expect(authFetch.mock.calls.map((c) => String(c[0]))).not.toContain(
+      "/api/v1/me/sessions",
+    );
+  });
+
   it("saves an edited name, username and email", async () => {
     mockApi(json({ ...PROFILE, displayName: "Tara T", username: "tara.t" }));
     render(<SettingsPage />);

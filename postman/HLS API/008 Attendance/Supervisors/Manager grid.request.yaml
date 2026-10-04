@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Manager: assigned Teachers placed during the month. Cells include the status category for colouring."
+url: "{{baseUrl}}/api/v1/attendance/teacher-grid?month={{month}}&query="
+method: GET
+queryParams:
+  - key: month
+    value: "{{month}}"
+    disabled: false
+  - key: query
+    value: ""
+    disabled: true
+  - key: page
+    value: "0"
+    disabled: true
+  - key: size
+    value: "50"
+    disabled: true
+order: 5000

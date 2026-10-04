@@ -37,6 +37,12 @@ Notes:
 - Every role dashboard starts as a skeleton in 002. Later specs add widgets.
 - 005 consolidates what were separate zones/schools, manager-scoping, and teacher specs into a
   single Master Data module (one spec, multiple user stories) per product decision on 2026-09-24.
+- 018 is the first mobile spec. It adds no new business rules: the app is another client of the same
+  APIs, scope rules and permission matrix as the web app. Follow-on mobile specs (suggested
+  `019-mobile-attendance`: monthly view, mark present/absent on a date, Holiday Calendar view
+  defaulting to the current month with any month of the current year selectable) are added once 018
+  is implemented. A later web spec adds a heat map of where audited actions were performed (from the
+  locations 018 stores), admin area, System role only. Spec 008 deferred the native app, offline capture and geo/photo evidence to these.
 - 016 consolidates training and recruitment/marketing into a single HR Calendars module for the
 - 018 is the first mobile spec. It adds no new business rules: the app is another client of the same APIs, scope rules and permission matrix as the web app. Follow-on specs: `019-mobile-attendance` (monthly view, mark present/absent, Holiday Calendar), a System-only heat map of action locations (web admin area), and moving the three `hls.mobile.*` settings into spec 011.
   same reason.

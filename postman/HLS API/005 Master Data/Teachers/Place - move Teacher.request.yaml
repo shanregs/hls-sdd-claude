@@ -1,0 +1,15 @@
+$kind: http-request
+name: Place / move Teacher
+description: Interim placement. A future effectiveOn schedules the move.
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/placements"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "schoolId": "{{schoolId}}",
+      "effectiveOn": null
+    }
+order: 7000

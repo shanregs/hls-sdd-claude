@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Today and the previous 3 days only; refused for a day your Manager set, a locked month or a date without a placement. dayValue is 1 or 0.5."
+url: "{{baseUrl}}/api/v1/attendance/me/marks/{{markDate}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "statusCode": "P",
+      "dayValue": 1,
+      "note": ""
+    }
+order: 2000

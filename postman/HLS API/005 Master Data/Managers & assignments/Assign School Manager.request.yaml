@@ -1,0 +1,13 @@
+$kind: http-request
+description: managerId null unassigns. 409 if the Manager does not cover the School Zone.
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/manager"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "managerId": "{{managerId}}"
+    }
+order: 6000

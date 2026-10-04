@@ -1,0 +1,18 @@
+$kind: http-request
+description: PIN code must be six digits. Duplicate names and PIN codes are accepted.
+url: "{{baseUrl}}/api/v1/zones/{{zoneId}}/places"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Madurantakam",
+      "pinCode": "603306"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { pm.collectionVariables.set("placeId", pm.response.json().id); }
+    language: text/javascript
+order: 6000

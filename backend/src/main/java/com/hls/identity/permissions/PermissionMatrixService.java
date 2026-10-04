@@ -66,6 +66,9 @@ public class PermissionMatrixService {
         }
         seedMasterData();
         seedAttendance();
+        // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
@@ -146,12 +149,16 @@ public class PermissionMatrixService {
     }
 
     /**
-     * Sets one grant, rejecting outright (no partial change) if doing so would leave no
+     * Sets one grant, rejecting outright (no partial change) if the grant does not apply to the role
+     * and module ({@link PermissionEligibility}) or if doing so would leave no
      * {@link #MATRIX_MANAGER_ROLES} role still able to manage the matrix (FR-004, research.md §8).
      */
     @Transactional
     public UpdateResult updateGrant(
             Role role, PermissionModule module, PermissionAction action, boolean granted, UUID actorUserId) {
+        if (!PermissionEligibility.isEligible(role, module, action)) {
+            return UpdateResult.rejected("That permission does not apply to this role and module.");
+        }
         if (isLastMatrixManagerRemoval(role, module, action, granted)) {
             return UpdateResult.rejected("This would leave no one able to manage the permission matrix.");
         }

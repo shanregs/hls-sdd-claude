@@ -1,0 +1,17 @@
+$kind: http-request
+description: 201. 409 for a duplicate name (case-insensitive).
+url: "{{baseUrl}}/api/v1/zones"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Chengalpattu"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const z = pm.response.json(); pm.collectionVariables.set("zoneId", z.id); pm.collectionVariables.set("zoneVersion", z.version); }
+    language: text/javascript
+order: 2000

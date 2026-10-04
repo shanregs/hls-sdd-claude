@@ -1,0 +1,14 @@
+$kind: http-request
+description: IN_TRAINING to ACTIVE, ACTIVE and ON_LEAVE both ways, any to EXITED (final). Others 409.
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/status"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "ACTIVE",
+      "effectiveOn": null
+    }
+order: 5000

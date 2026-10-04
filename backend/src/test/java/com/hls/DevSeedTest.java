@@ -25,6 +25,7 @@ class DevSeedTest extends IntegrationTestBase {
 
         Signed manoj = signIn(null, "9800000003", "Password123!");
         assertThat(total(get("/api/v1/schools", manoj.token()))).isEqualTo(1);
-        assertThat(total(get("/api/v1/teachers", manoj.token()))).isEqualTo(1);
+        // Tara plus the two other demo Teachers placed in Demo School One by the Teacher seeder.
+        assertThat(total(get("/api/v1/teachers", manoj.token()))).isEqualTo(3);
     }
 }

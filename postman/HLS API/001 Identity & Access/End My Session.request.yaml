@@ -1,0 +1,5 @@
+$kind: http-request
+description: 403 if the session is not yours.
+url: "{{baseUrl}}/api/v1/me/sessions/{{sessionId}}"
+method: DELETE
+order: 11000

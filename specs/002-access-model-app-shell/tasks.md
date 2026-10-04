@@ -338,6 +338,49 @@ pattern and absence of horizontal scroll at each.
 
 ---
 
+## Phase 8: Compact Module × Role matrix screen (added 2026-10-04, User Story 3)
+
+**Purpose**: the 2026-10-04 clarification (spec.md): replace the one-row-per-grant DataGrid with a
+compact module × role table of action icons, define which grants are eligible, and refuse the rest.
+
+- [x] T046 [US3] Backend eligibility: give each `PermissionModule` constant its applicable actions
+      (`actions()`), add `PermissionEligibility` (module actions minus `IDENTITY_PERMISSIONS` for
+      roles other than Admin/Director/System, and minus every teacher/school business module for
+      System), and make `PermissionMatrixService.updateGrant` refuse an ineligible grant first, with
+      "That permission does not apply to this role and module." and no change (FR-004b)
+- [x] T047 [US3] Backend response: `GET /api/v1/identity/permission-matrix` also returns `modules`
+      (each module with its eligible actions per role, fixed order) next to `entries`
+      (`PermissionMatrixDtos.ModuleView`, `MatrixListResponse`); the PUT's 409 now covers both the
+      last-manager safeguard and an ineligible grant (`contracts/access-model-api.md`)
+- [x] T048 [US3] Backend tests in `PermissionEligibilityTest`: every module has an action, every
+      seeded grant is eligible, only matrix managers can hold Role & Permissions, System has no
+      business module but keeps Holiday Calendar and audit, the response lists every module with its
+      per-role eligible actions, and ineligible edits return 409 and change nothing
+- [x] T049 [US3] Frontend: rebuild `RolePermissionsGrid.tsx` as a Module × Role table (a row per
+      module, a column per role, an icon per eligible action: coloured when granted, grey when not,
+      a dash where nothing applies), each icon with a tooltip ("Edit - granted") and an accessible
+      name that includes role, action, module and state; a click (editors only) opens
+      `EditGrantDialog`, view-only users get non-clickable icons; legend limited to the actions in use;
+      new `MatrixResponse`/`MatrixModule` types (FR-004a)
+- [x] T050 [US3] Frontend tests in `RolePermissionsGrid.test.tsx` (rows and columns, granted vs grey
+      icons including a switched-off grant and an action with no stored row, dash cells, click opens
+      the confirmation and saves, server refusal shown, read-only mode, load error) and add the
+      screen to the axe suite in both themes
+- [x] T051 [US3] Update spec.md (clarification, acceptance scenarios 5-7, FR-004a/FR-004b, SC-005a),
+      data-model.md (eligibility), contracts/access-model-api.md, research.md (§3 addendum), plan.md,
+      quickstart.md (Scenario 3 step 0) and verify the screen against the running app (toggle one
+      grant on and off)
+
+- [x] T052 [US1] Menu section order (spec.md FR-008a, data-model.md `order` bands): renumber
+      `NavigationCatalog` so the sections run Dashboard, MASTER DATA, OPERATIONS (MY ATTENDANCE for
+      Teachers), SYSTEM (SYSTEM CONFIGURATION for System), AUDIT, ACCOUNT; test per role in
+      `NavigationSectionOrderTest`; the frontend renders the server's order unchanged
+- [x] T053 [US3] Role & Permissions layout follow-up: each action in its own small cell under each
+      role, roles ordered System, Admin, Director, Manager, Teacher, and a Module column sized to the
+      longest module name plus 5 characters (`RolePermissionsGrid.tsx`, tests)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

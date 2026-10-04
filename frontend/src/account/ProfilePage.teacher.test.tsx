@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProfilePage } from "./ProfilePage";
 
@@ -16,13 +17,30 @@ function jsonResponse(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
+const PROFILE = {
+  id: "u1",
+  displayName: "Tara Teacher",
+  phone: "9800000004",
+  username: null,
+  email: null,
+  roles: ["TEACHER"],
+};
+
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <ProfilePage />
+    </MemoryRouter>,
+  );
+}
+
 describe("ProfilePage Teacher block (spec 005 User Story 7)", () => {
   beforeEach(() => {
     authFetch.mockReset();
     roles = ["TEACHER"];
   });
 
-  it("shows the teacher's own profile above their sessions", async () => {
+  it("shows the account details with the teacher's own record below", async () => {
     authFetch.mockImplementation(async (url: string) =>
       url === "/api/v1/teachers/me"
         ? jsonResponse({
@@ -35,37 +53,39 @@ describe("ProfilePage Teacher block (spec 005 User Story 7)", () => {
             statusEffectiveOn: "2026-04-01",
             school: { id: "s1", name: "St Mary's" },
           })
-        : jsonResponse([]),
+        : jsonResponse(PROFILE),
     );
 
-    render(<ProfilePage />);
+    renderPage();
 
+    expect(await screen.findByText("Account details")).toBeInTheDocument();
     expect(
       await screen.findByText(/current school \(interim placement\)/i),
     ).toBeInTheDocument();
-    expect(screen.getByText("My sessions")).toBeInTheDocument();
+    expect(screen.getByText("My teacher record")).toBeInTheDocument();
+    expect(screen.queryByText("My sessions")).toBeNull();
   });
 
   it("explains a missing record without an error", async () => {
     authFetch.mockImplementation(async (url: string) =>
       url === "/api/v1/teachers/me"
         ? jsonResponse({ reason: "Your profile has not been set up yet." }, 404)
-        : jsonResponse([]),
+        : jsonResponse(PROFILE),
     );
 
-    render(<ProfilePage />);
+    renderPage();
 
     expect(
       await screen.findByText(/your profile has not been set up yet/i),
     ).toBeInTheDocument();
   });
 
-  it("does not ask for a teacher profile when the user is not a Teacher", async () => {
+  it("does not ask for a teacher record when the user is not a Teacher", async () => {
     roles = ["MANAGER"];
-    authFetch.mockResolvedValue(jsonResponse([]));
+    authFetch.mockResolvedValue(jsonResponse({ ...PROFILE, roles: roles }));
 
-    render(<ProfilePage />);
-    await screen.findByText(/no active sessions/i);
+    renderPage();
+    await screen.findByText("Account details");
 
     expect(authFetch.mock.calls.map((c) => String(c[0]))).not.toContain(
       "/api/v1/teachers/me",

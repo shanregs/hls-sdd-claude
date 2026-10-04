@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Locked, reopened (with reason) and locked-again events in order."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/months/{{month}}/events"
+method: GET
+order: 6000

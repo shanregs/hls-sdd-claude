@@ -252,7 +252,7 @@ function PasswordCard() {
   );
 }
 
-/** Settings (every signed-in user): edit your own profile and change your own password. */
+/** Settings (every signed-in user): edit your own profile and change your own password. Sessions have their own menu item. */
 export function SettingsPage() {
   const { authFetch } = useAuth();
   const [profile, setProfile] = useState<AccountProfile | null>(null);

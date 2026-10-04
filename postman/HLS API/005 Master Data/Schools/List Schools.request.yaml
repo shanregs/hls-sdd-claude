@@ -1,0 +1,21 @@
+$kind: http-request
+description: "Scoped: a Manager sees only assigned Schools."
+url: "{{baseUrl}}/api/v1/schools?page=0&size=25&query=&zoneId={{zoneId}}&active=true"
+method: GET
+queryParams:
+  - key: page
+    value: "0"
+    disabled: false
+  - key: size
+    value: "25"
+    disabled: false
+  - key: query
+    value: ""
+    disabled: true
+  - key: zoneId
+    value: "{{zoneId}}"
+    disabled: true
+  - key: active
+    value: "true"
+    disabled: true
+order: 1000

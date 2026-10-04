@@ -1,0 +1,13 @@
+$kind: http-request
+description: Path is /{role}/{module}/{action}. 409 if it would remove the last IDENTITY_PERMISSIONS.EDIT grant.
+url: "{{baseUrl}}/api/v1/identity/permission-matrix/MANAGER/DASHBOARD/VIEW"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "granted": true
+    }
+order: 3000

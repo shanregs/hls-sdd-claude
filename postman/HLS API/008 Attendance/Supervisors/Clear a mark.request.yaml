@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Manager and Admin only (a Director corrects by marking over). The cleared value stays in history."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/marks/{{markDate}}"
+method: DELETE
+order: 3000

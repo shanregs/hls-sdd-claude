@@ -50,8 +50,9 @@ Returns the resolved access model for the caller, per data-model.md's "Access Mo
 
 ## GET /api/v1/identity/permission-matrix
 
-Returns the full current matrix (all role × module × action rows), for the Role & Permissions
-screen.
+Returns the full current matrix (all stored role × module × action rows) and, for every module, the
+actions that can be granted to each role, for the Role & Permissions screen (a module × role grid of
+icons; data-model.md "Eligibility").
 
 **Authorization**: `ADMIN`, `DIRECTOR`, or `SYSTEM` only. Any other caller receives 403, and per
 FR-002 the frontend never renders a route that would call this for a Manager/Teacher.
@@ -63,9 +64,30 @@ FR-002 the frontend never renders a route that would call this for a Manager/Tea
   "entries": [
     { "role": "MANAGER", "module": "DASHBOARD", "action": "VIEW", "granted": true },
     { "role": "MANAGER", "module": "IDENTITY_PERMISSIONS", "action": "VIEW", "granted": false }
+  ],
+  "modules": [
+    {
+      "module": "USER_MANAGEMENT",
+      "eligible": {
+        "ADMIN": ["VIEW", "CREATE", "EDIT"], "DIRECTOR": ["VIEW", "CREATE", "EDIT"],
+        "MANAGER": ["VIEW", "CREATE", "EDIT"], "TEACHER": ["VIEW", "CREATE", "EDIT"],
+        "SYSTEM": ["VIEW", "CREATE", "EDIT"]
+      }
+    },
+    {
+      "module": "IDENTITY_PERMISSIONS",
+      "eligible": {
+        "ADMIN": ["VIEW", "EDIT"], "DIRECTOR": ["VIEW", "EDIT"], "MANAGER": [],
+        "TEACHER": [], "SYSTEM": ["VIEW", "EDIT"]
+      }
+    }
   ]
 }
 ```
+
+`modules` lists every module in the fixed order, each with, per role, the eligible actions in the fixed
+action order; an empty list means nothing applies to that role (shown as a dash). A stored entry with
+`granted: false`, and an eligible action with no stored entry, both read as "not granted".
 
 **Response 403**: caller lacks `IDENTITY_PERMISSIONS.VIEW`.
 
@@ -91,6 +113,13 @@ invariant). Body includes a plain-language `reason` field; no partial state chan
 
 ```json
 { "reason": "This would leave no one able to manage the permission matrix." }
+```
+
+**Response 409 (Conflict)**, second cause: the grant is not eligible (the action does not apply to the
+module, or the role may not hold the module). Checked first; no state change.
+
+```json
+{ "reason": "That permission does not apply to this role and module." }
 ```
 
 **Response 403**: caller lacks `IDENTITY_PERMISSIONS.EDIT` (e.g., a Manager somehow reaching the

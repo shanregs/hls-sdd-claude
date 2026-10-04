@@ -1,0 +1,5 @@
+$kind: http-request
+description: 204. Restores sign-in with the roles held at deactivation.
+url: "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/reactivate"
+method: POST
+order: 5000

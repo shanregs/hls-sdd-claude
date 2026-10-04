@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/places/{{placeId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Madurantakam",
+      "pinCode": "603306",
+      "zoneId": "{{zoneId}}"
+    }
+order: 7000
