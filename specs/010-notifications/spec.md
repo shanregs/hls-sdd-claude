@@ -8,6 +8,18 @@
 
 **Input**: User description: "010-notifications: In-app notifications for the business roles (Admin, Director, Manager, Teacher; System gets none). A bell in the app header with an unread count and a NOTIFICATIONS item opening a list (newest first, unread highlighted, mark one or all as read, delete one or clear read). Everyone sees only their own. First events (specs 008 and 009): to the Teacher when their leave is approved, rejected (with the reason), revoked or cancelled by a supervisor; to the supervisors in scope (the Teacher's Manager, or Admin and Director when there is no Manager) when a Teacher submits a leave request or cancels a pending or approved one; to the Teacher when a supervisor sets or corrects one of their attendance marks (not their own marks, not leave-made marks); to the Teacher when a month of their attendance is locked or reopened. Created in the same transaction as the event, linked to the related screen, kept 90 days, paged. In-app only now, with room for SMS or push later. Follows docs/spec-roadmap.md row 010; depends on 002 and 009."
 
+## Clarifications
+
+### Session 2026-10-05
+
+- Q: When a Teacher with a Manager submits or cancels a leave request, are Admin and Director also notified?
+  → A: No. Only the Teacher's Manager(s) are notified; Admin and Director are notified only when the Teacher
+  has no Manager. They can still see every request in Leave Management.
+- Q: Should several attendance changes to one Teacher in quick succession be one notification or one per day?
+  → A: One. Changes by the same person to the same Teacher in the same month within 10 minutes are merged
+  into a single unread notification with a day count; once the Teacher has read it, the next change starts a
+  new one.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Teacher Hears About Their Leave Decision (Priority: P1) 🎯 MVP
