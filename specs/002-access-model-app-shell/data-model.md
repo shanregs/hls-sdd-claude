@@ -31,6 +31,17 @@ The only new persisted entity in this feature. One row per (role, module, action
 - Every write produces a change record (actor, timestamp, before/after) published for spec 003's
   Audit module. The change record is not owned by this feature — see Assumptions in spec.md.
 
+**Eligibility (added 2026-10-04, not persisted)**: which `(role, module, action)` rows may exist is
+defined in code, not in the table. Each module declares the actions that apply to it
+(`PermissionModule.actions()`, e.g. `DASHBOARD` → View; `USER_MANAGEMENT` → View, Create, Edit;
+`ATTENDANCE` → View, Create, Edit, Delete, Process, Export), and `PermissionEligibility` removes the
+combinations the Constitution rules out: `IDENTITY_PERMISSIONS` for any role other than `ADMIN`,
+`DIRECTOR`, `SYSTEM`, and every teacher/school business module (`ZONES`, `SCHOOLS`, `MANAGERS`,
+`TEACHERS`, `TEACHER_SALARY`, `ATTENDANCE`, `TEACHER_ATTENDANCE`, `MY_ATTENDANCE`,
+`ATTENDANCE_SETUP`) for `SYSTEM`. A missing row for an eligible combination means "not granted".
+`updateGrant` refuses an ineligible combination before anything else. No schema change; every row
+seeded by any spec is eligible (checked by a test).
+
 No state machine: a row is either granted or not, toggled directly. No soft-delete/versioning of
 rows themselves; history lives in the published change records, not in this table.
 

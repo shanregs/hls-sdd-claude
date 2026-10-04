@@ -41,6 +41,7 @@ import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
 import { ReopenDialog } from "../features/attendance/ReopenDialog";
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
+import { RolePermissionsGrid } from "../features/permissions/RolePermissionsGrid";
 import { SessionsPage } from "../account/SessionsPage";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
@@ -160,6 +161,57 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   }
   if (url.includes("/me/sessions")) {
     return { ok: true, json: async () => [] } as Response;
+  }
+  if (url === "/api/v1/identity/permission-matrix") {
+    const roles = ["ADMIN", "DIRECTOR", "MANAGER", "TEACHER", "SYSTEM"];
+    return {
+      ok: true,
+      json: async () => ({
+        entries: [
+          {
+            role: "ADMIN",
+            module: "USER_MANAGEMENT",
+            action: "VIEW",
+            granted: true,
+          },
+          {
+            role: "ADMIN",
+            module: "USER_MANAGEMENT",
+            action: "EDIT",
+            granted: true,
+          },
+          {
+            role: "MANAGER",
+            module: "DASHBOARD",
+            action: "VIEW",
+            granted: true,
+          },
+        ],
+        modules: [
+          {
+            module: "DASHBOARD",
+            eligible: Object.fromEntries(roles.map((r) => [r, ["VIEW"]])),
+          },
+          {
+            module: "USER_MANAGEMENT",
+            eligible: Object.fromEntries(
+              roles.map((r) => [r, ["VIEW", "CREATE", "EDIT"]]),
+            ),
+          },
+          {
+            module: "IDENTITY_PERMISSIONS",
+            eligible: Object.fromEntries(
+              roles.map((r) => [
+                r,
+                ["ADMIN", "DIRECTOR", "SYSTEM"].includes(r)
+                  ? ["VIEW", "EDIT"]
+                  : [],
+              ]),
+            ),
+          },
+        ],
+      }),
+    } as Response;
   }
   const emptyPage = { content: [], page: 0, size: 25, totalElements: 0 };
   if (url.startsWith("/api/v1/zones?")) {
@@ -650,6 +702,12 @@ const pages: PageCase[] = [
     name: "SettingsPage",
     render: () => <SettingsPage />,
     settle: () => screen.findByText("Change password", { selector: "h2" }),
+  },
+  {
+    name: "RolePermissionsGrid",
+    render: () => <RolePermissionsGrid />,
+    settle: () =>
+      screen.findByRole("table", { name: "Role and permission matrix" }),
   },
   {
     name: "SessionsPage",

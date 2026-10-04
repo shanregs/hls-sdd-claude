@@ -34,7 +34,12 @@ JWT exists for each of the five roles. PostgreSQL running (or Testcontainers for
 
 ## Scenario 3: Matrix edit and safeguard (User Story 3, SC-004/SC-005)
 
-1. As Admin, open Role & Permissions and revoke Manager's `DASHBOARD.VIEW` grant.
+0. As Admin, open Role & Permissions. **Expect**: one table, a row per module and a column per role;
+   coloured icons for granted actions (view, create, edit, delete, process, export), grey icons for
+   actions that apply but are not granted, and a dash where nothing applies (for example Manager and
+   Teacher on `IDENTITY_PERMISSIONS`, or System on any teacher or school module). Hover an icon:
+   the tooltip reads, for example, "Edit - granted".
+1. As Admin, click Manager's `DASHBOARD` View icon (a confirmation opens) and revoke the grant.
 2. As the already-signed-in Manager (separate session), wait for the next renewal (or trigger one)
    and confirm the Dashboard item disappears from their nav without them logging out.
 3. As Admin, attempt to revoke `IDENTITY_PERMISSIONS.EDIT` from Admin, Director, and System all the

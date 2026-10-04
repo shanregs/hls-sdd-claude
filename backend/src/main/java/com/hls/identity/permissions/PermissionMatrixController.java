@@ -39,7 +39,7 @@ public class PermissionMatrixController {
     public ResponseEntity<MatrixListResponse> list(@AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(rolesOf(jwt), PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.VIEW);
         var entries = permissionMatrixService.findAll().stream().map(EntryView::from).toList();
-        return ResponseEntity.ok(new MatrixListResponse(entries));
+        return ResponseEntity.ok(MatrixListResponse.of(entries));
     }
 
     @PutMapping("/{role}/{module}/{action}")

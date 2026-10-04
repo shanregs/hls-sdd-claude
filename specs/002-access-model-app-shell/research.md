@@ -46,6 +46,21 @@ the decisions and their reasoning survive past this conversation.
   headless, meaning the grid UI, editing affordances, and accessibility behavior would need to be
   built by hand, which MUI X already provides).
 
+**Addendum (2026-10-04) — the matrix screen is not a DataGrid.** The Role & Permissions screen was
+first built as a DataGrid with one row per `(role, module, action)`, which is several hundred rows
+and hard to read as a whole. It is now a compact **Module × Role table** (a plain MUI `Table`, which
+the theme borders like every other table), one row per module and one column per role, with an icon
+per applicable action in each cell (`VisibilityOutlined`, `AddCircleOutlineOutlined`,
+`EditOutlined`, `DeleteOutlined`, `PlayCircleOutlined`, `FileDownloadOutlined`, `TaskAltOutlined`):
+coloured when granted, grey when applicable but not granted, a dash when nothing applies. The grid
+needs no sorting, filtering or paging (about 18 modules by 5 roles), so DataGrid adds nothing there;
+DataGrid remains the choice for the master-data lists. Which actions apply is defined in code
+(`PermissionModule.actions()` and `PermissionEligibility`), not stored, so later specs add a module
+by adding one enum constant with its actions — no migration, no screen change. Icons carry the state
+in their accessible name and a tooltip, so colour is never the only cue (WCAG 1.4.1). A click opens
+the existing confirmation dialog rather than toggling at once, to keep a permission change
+deliberate and to reuse the audited, safeguarded edit path.
+
 ## 4. Form handling (matrix-edit dialog, and later record create/edit dialogs)
 
 - **Decision**: react-hook-form.

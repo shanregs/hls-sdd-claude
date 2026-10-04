@@ -24,8 +24,9 @@ with every change audit-ready and a safeguard against locking everyone out of it
   tests) — all already in `backend/pom.xml`.
 - Frontend: React Router, MUI / Material UI core + `ThemeProvider`, and `react-hook-form` — all
   introduced by spec 001 (which ships first) and reused here unchanged, no new dependency. MUI X
-  DataGrid Community edition (the Role & Permissions matrix grid and every later master-data
-  list/edit grid) is the one genuinely new dependency this spec adds — MIT-licensed, no paid tier
+  DataGrid Community edition (every later master-data list/edit grid; the Role & Permissions
+  matrix itself became a compact module × role icon table on 2026-10-04, research.md §3 addendum)
+  is the one genuinely new dependency this spec adds — MIT-licensed, no paid tier
   required for sorting/filtering/pagination/inline editing.
 
 **Storage**: PostgreSQL via Flyway migration, adding `permission_matrix` (role, module, action,
@@ -153,7 +154,7 @@ frontend/src/
 │   └── SystemDashboard.tsx
 ├── features/
 │   └── permissions/
-│       ├── RolePermissionsGrid.tsx        # MUI X DataGrid over the matrix
+│       ├── RolePermissionsGrid.tsx        # Module × Role table of action icons (2026-10-04; was a DataGrid)
 │       └── EditGrantDialog.tsx            # react-hook-form dialog for a single grant edit
 └── account/
     └── ProfilePage.tsx                    # reused from spec 001, not rebuilt here

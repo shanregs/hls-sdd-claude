@@ -12,3 +12,14 @@ export interface MatrixEntry {
   action: string;
   granted: boolean;
 }
+
+/** One module and, per role, the actions that can be granted; an empty list means "not applicable". */
+export interface MatrixModule {
+  module: string;
+  eligible: Record<string, string[]>;
+}
+
+export interface MatrixResponse {
+  entries: MatrixEntry[];
+  modules: MatrixModule[];
+}
