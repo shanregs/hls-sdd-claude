@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Admin, Director. The School goes back to the default weekly off days."
+url: "{{baseUrl}}/api/v1/attendance/calendar/schools/{{schoolId}}"
+method: DELETE
+order: 7000

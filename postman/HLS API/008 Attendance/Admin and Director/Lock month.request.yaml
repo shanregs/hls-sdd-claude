@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Only after the month has ended and every placed Teacher has every working day marked; otherwise 409 with the Teachers and dates still unmarked."
+url: "{{baseUrl}}/api/v1/attendance/months/{{month}}/lock"
+method: POST
+order: 3000

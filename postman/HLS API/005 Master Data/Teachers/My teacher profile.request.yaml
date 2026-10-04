@@ -1,0 +1,5 @@
+$kind: http-request
+description: The signed-in Teacher own record, or 404 when not set up.
+url: "{{baseUrl}}/api/v1/teachers/me"
+method: GET
+order: 9000

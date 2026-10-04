@@ -1,0 +1,14 @@
+$kind: http-request
+description: No body. Uses the HttpOnly renewal cookie from login.
+url: "{{baseUrl}}/api/v1/auth/renew"
+method: POST
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const b = pm.response.json();
+      if (b.accessToken) { pm.collectionVariables.set("accessToken", b.accessToken); }
+      if (b.user && b.user.id) { pm.collectionVariables.set("userId", b.user.id); }
+    language: text/javascript
+order: 4000

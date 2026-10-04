@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Any unlocked date inside a placement. Once a supervisor sets a day the Teacher can no longer change it."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/marks/{{markDate}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "statusCode": "P",
+      "dayValue": 1,
+      "note": ""
+    }
+order: 2000

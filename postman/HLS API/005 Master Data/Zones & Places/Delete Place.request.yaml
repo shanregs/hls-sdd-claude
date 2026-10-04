@@ -1,0 +1,5 @@
+$kind: http-request
+description: 409 while any School is located in it.
+url: "{{baseUrl}}/api/v1/places/{{placeId}}"
+method: DELETE
+order: 8000

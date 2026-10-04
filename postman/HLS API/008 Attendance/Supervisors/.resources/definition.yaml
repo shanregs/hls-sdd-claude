@@ -1,0 +1,3 @@
+$kind: collection
+description: "Manager (assigned Teachers only), Admin and Director. A Teacher outside the caller's scope returns 404, same as a missing one."
+order: 3000

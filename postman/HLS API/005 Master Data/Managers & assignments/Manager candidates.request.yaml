@@ -1,0 +1,5 @@
+$kind: http-request
+description: Active users with the Manager role and no Manager record yet.
+url: "{{baseUrl}}/api/v1/managers/candidates"
+method: GET
+order: 2000

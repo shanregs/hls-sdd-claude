@@ -1,0 +1,9 @@
+$kind: http-request
+description: "Day-by-day calendar and rollup. Locked months show the frozen figures and nothing editable."
+url: "{{baseUrl}}/api/v1/attendance/me?month={{month}}"
+method: GET
+queryParams:
+  - key: month
+    value: "{{month}}"
+    disabled: false
+order: 1000

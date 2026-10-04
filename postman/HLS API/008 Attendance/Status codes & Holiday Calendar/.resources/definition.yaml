@@ -1,0 +1,3 @@
+$kind: collection
+description: "Status codes (Admin, Director; readable by Manager and Teacher). Holiday Calendar: readable by every role, edited by Admin and Director."
+order: 1000

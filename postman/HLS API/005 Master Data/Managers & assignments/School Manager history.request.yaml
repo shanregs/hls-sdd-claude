@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/manager-history"
+method: GET
+order: 7000

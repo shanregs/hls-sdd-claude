@@ -1,0 +1,9 @@
+$kind: http-request
+description: "P, L, T, N are built in; S, H, A are ordinary codes. activeOnly=false includes deactivated codes."
+url: "{{baseUrl}}/api/v1/attendance/status-codes?activeOnly=true"
+method: GET
+queryParams:
+  - key: activeOnly
+    value: "true"
+    disabled: false
+order: 1000

@@ -1,0 +1,5 @@
+$kind: http-request
+description: 409 while Teachers are placed or scheduled.
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/deactivate"
+method: POST
+order: 6000

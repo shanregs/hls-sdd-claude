@@ -1,0 +1,24 @@
+$kind: http-request
+description: ADMIN/SYSTEM only. All filters optional.
+url: "{{baseUrl}}/api/v1/audit/login-history?page=0&size=25&method=PASSWORD&outcome=FAILURE&from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z"
+method: GET
+queryParams:
+  - key: page
+    value: "0"
+    disabled: false
+  - key: size
+    value: "25"
+    disabled: false
+  - key: method
+    value: PASSWORD
+    disabled: true
+  - key: outcome
+    value: FAILURE
+    disabled: true
+  - key: from
+    value: 2026-01-01T00:00:00Z
+    disabled: true
+  - key: to
+    value: 2026-12-31T23:59:59Z
+    disabled: true
+order: 1000

@@ -1,0 +1,18 @@
+$kind: http-request
+description: A Manager may change only contact person, phone and address (403 otherwise).
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "St Marys",
+      "address": "1 Main Road",
+      "contactPerson": "Head Teacher",
+      "contactPhone": "9000000000",
+      "billingContact": "accounts@school.example",
+      "version": "{{schoolVersion}}"
+    }
+order: 4000

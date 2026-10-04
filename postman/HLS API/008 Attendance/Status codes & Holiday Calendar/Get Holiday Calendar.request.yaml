@@ -1,0 +1,9 @@
+$kind: http-request
+description: "Every role. Default weekly off days, per-School overrides and the holiday dates. Saves calendarVersion."
+url: "{{baseUrl}}/api/v1/attendance/calendar"
+method: GET
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 200) { pm.collectionVariables.set("calendarVersion", pm.response.json().defaultVersion); }
+    language: text/javascript
+order: 4000

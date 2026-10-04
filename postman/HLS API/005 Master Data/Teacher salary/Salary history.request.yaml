@@ -1,0 +1,5 @@
+$kind: http-request
+description: TEACHER_SALARY.VIEW (Admin/Director).
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/salary"
+method: GET
+order: 1000

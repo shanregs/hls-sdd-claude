@@ -1,0 +1,13 @@
+$kind: http-request
+description: The user must hold the Teacher role. userId null unlinks.
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/user"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userId": "{{targetUserId}}"
+    }
+order: 6000

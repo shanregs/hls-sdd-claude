@@ -1,0 +1,14 @@
+$kind: http-request
+description: Send the loaded version; 409 if stale.
+url: "{{baseUrl}}/api/v1/zones/{{zoneId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Chengalpattu North",
+      "version": "{{zoneVersion}}"
+    }
+order: 3000

@@ -1,0 +1,5 @@
+$kind: http-request
+description: ZONES.DELETE (Admin only). 409 while Places, Schools or Managers depend on it.
+url: "{{baseUrl}}/api/v1/zones/{{zoneId}}"
+method: DELETE
+order: 4000

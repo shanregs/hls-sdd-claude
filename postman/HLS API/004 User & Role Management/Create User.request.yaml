@@ -1,0 +1,24 @@
+$kind: http-request
+description: 201 on success. 409 for a duplicate phone/username/email; 400 for empty or unknown roles.
+url: "{{baseUrl}}/api/v1/identity/users"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "displayName": "New Teacher",
+      "phone": "9800000099",
+      "roles": [
+        "TEACHER"
+      ],
+      "username": null,
+      "email": null,
+      "initialPassword": null
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { pm.collectionVariables.set("targetUserId", pm.response.json().id); }
+    language: text/javascript
+order: 2000

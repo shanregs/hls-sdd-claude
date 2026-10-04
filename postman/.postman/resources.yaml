@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: 0fd7d45c-2078-4970-8193-fdb99f93ef78
+
+localResources:
+  collections:
+    - ../HLS API
+  environments:
+    - ../HLS - Dev.environment.yaml
+    - ../HLS - Local.environment.yaml
+    - ../HLS - Prod.environment.yaml

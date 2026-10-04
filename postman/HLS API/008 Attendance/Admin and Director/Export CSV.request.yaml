@@ -1,0 +1,24 @@
+$kind: http-request
+description: "Admin, Director (ATTENDANCE.EXPORT). One row per Teacher in the filter, a column per day. Recorded in Change History."
+url: "{{baseUrl}}/api/v1/attendance/export?month={{month}}"
+method: GET
+queryParams:
+  - key: month
+    value: "{{month}}"
+    disabled: false
+  - key: schoolId
+    value: "{{schoolId}}"
+    disabled: true
+  - key: zoneId
+    value: ""
+    disabled: true
+  - key: managerId
+    value: "{{managerId}}"
+    disabled: true
+  - key: status
+    value: ""
+    disabled: true
+  - key: query
+    value: ""
+    disabled: true
+order: 2000

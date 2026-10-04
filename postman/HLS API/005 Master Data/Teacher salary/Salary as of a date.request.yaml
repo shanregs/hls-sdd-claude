@@ -1,0 +1,7 @@
+$kind: http-request
+description: amount null when none recorded by then.
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/salary?asOf=2026-06-15"
+method: GET
+queryParams:
+  asOf: 2026-06-15
+order: 2000
