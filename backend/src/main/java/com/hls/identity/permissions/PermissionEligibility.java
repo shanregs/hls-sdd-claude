@@ -2,6 +2,7 @@ package com.hls.identity.permissions;
 
 import com.hls.identity.user.Role;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -28,13 +29,24 @@ public final class PermissionEligibility {
             PermissionModule.ATTENDANCE,
             PermissionModule.TEACHER_ATTENDANCE,
             PermissionModule.MY_ATTENDANCE,
-            PermissionModule.ATTENDANCE_SETUP);
+            PermissionModule.ATTENDANCE_SETUP,
+            PermissionModule.LEAVE_MANAGEMENT,
+            PermissionModule.MY_LEAVE);
+
+    /** Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. */
+    static final Map<PermissionModule, Set<Role>> ROLE_RESTRICTED_MODULES = Map.of(
+            PermissionModule.LEAVE_MANAGEMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.MY_LEAVE, EnumSet.of(Role.TEACHER));
 
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
     public static Set<PermissionAction> actionsFor(Role role, PermissionModule module) {
         if (MATRIX_MANAGER_ONLY_MODULES.contains(module) && !MATRIX_MANAGER_ROLES.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> only = ROLE_RESTRICTED_MODULES.get(module);
+        if (only != null && !only.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

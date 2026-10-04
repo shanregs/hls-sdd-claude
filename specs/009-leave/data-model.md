@@ -18,6 +18,7 @@ Migration `V17__create_leave_tables.sql`. Plain ids, no cross-module foreign key
 | --- | --- | --- |
 | id | uuid PK | |
 | teacher_id | uuid not null | plain id (teacher module) |
+| school_id | uuid not null | School of placement on the first working day, kept for display and the School filter (plain id) |
 | leave_type_id | uuid not null | FK to `leave_type` (same module) |
 | first_date | date not null | |
 | last_date | date not null | `last_date >= first_date`, at most 90 days span (check constraint) |

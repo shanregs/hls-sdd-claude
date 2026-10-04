@@ -51,6 +51,10 @@ public class AttendanceMark {
     @Column(name = "set_at", nullable = false)
     private Instant setAt;
 
+    /** The leave request that made this mark (spec 009), cleared by any later hand-made change. */
+    @Column(name = "leave_request_id")
+    private UUID leaveRequestId;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -79,6 +83,16 @@ public class AttendanceMark {
         this.setByUserId = setByUserId;
         this.setByKind = kind;
         this.setAt = now;
+        this.leaveRequestId = null;
+    }
+
+    /** Tags the mark just set as made by approved leave; call after {@link #set}. */
+    public void markFromLeave(UUID requestId) {
+        this.leaveRequestId = requestId;
+    }
+
+    public UUID getLeaveRequestId() {
+        return leaveRequestId;
     }
 
     public UUID getId() {

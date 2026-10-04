@@ -21,4 +21,5 @@ public record MarkView(
         String setByName,
         Instant setAt,
         String note,
-        Long version) {}
+        Long version,
+        UUID leaveRequestId) {}

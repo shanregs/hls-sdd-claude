@@ -134,6 +134,78 @@ public class MarkService {
         return views.of(saved);
     }
 
+    /**
+     * Writes a Leave mark made by approved leave (spec 009). Unlike {@link #setMark} it accepts future
+     * dates and ignores the self-mark window; the caller has already taken the Teacher-month locks and
+     * validated the days, but the lock state is re-read here as a last line of defence.
+     */
+    @Transactional
+    public void setLeaveMark(
+            UUID approverUserId, UUID teacherId, LocalDate date, UUID schoolId, BigDecimal dayValue, UUID leaveRequestId) {
+        YearMonth month = YearMonth.from(date);
+        if (monthLock.isLocked(teacherId, month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        StatusCode code = codes.requireByShortCode("L");
+        BigDecimal value = requireDayValue(dayValue);
+        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date).orElse(null);
+        String before = existing == null ? null : describe(existing);
+        AttendanceMark mark = existing != null ? existing : new AttendanceMark(teacherId, date);
+        String note = "Leave request " + leaveRequestId;
+        mark.set(code.getId(), value, schoolId, note, approverUserId, SetByKind.SUPERVISOR, clock.instant());
+        mark.markFromLeave(leaveRequestId);
+        AttendanceMark saved = marks.saveAndFlush(mark);
+        history.save(new MarkHistoryEntry(
+                teacherId,
+                date,
+                existing == null ? MarkAction.CREATED : MarkAction.CORRECTED,
+                code.getId(),
+                value,
+                schoolId,
+                note,
+                approverUserId,
+                SetByKind.SUPERVISOR,
+                saved.getSetAt(),
+                leaveRequestId));
+        audit.changed(
+                approverUserId,
+                AttendanceAudit.MARK,
+                teacherId + ":" + date,
+                "mark",
+                before,
+                code.getShortCode() + " " + value.toPlainString() + " (leave request " + leaveRequestId + ")");
+    }
+
+    /** Removes a mark that approved leave made (spec 009 revoke or cancel); the caller holds the locks. */
+    @Transactional
+    public void clearLeaveMark(UUID actorUserId, AttendanceMark existing, UUID leaveRequestId) {
+        YearMonth month = YearMonth.from(existing.getMarkDate());
+        if (monthLock.isLocked(existing.getTeacherId(), month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        history.save(new MarkHistoryEntry(
+                existing.getTeacherId(),
+                existing.getMarkDate(),
+                MarkAction.CLEARED,
+                null,
+                null,
+                existing.getSchoolId(),
+                null,
+                actorUserId,
+                SetByKind.SUPERVISOR,
+                clock.instant(),
+                leaveRequestId));
+        audit.changed(
+                actorUserId,
+                AttendanceAudit.MARK,
+                existing.getTeacherId() + ":" + existing.getMarkDate(),
+                "mark",
+                describe(existing) + " (leave request " + leaveRequestId + ")",
+                null);
+        marks.delete(existing);
+        marks.flush();
+    }
+
     @Transactional(readOnly = true)
     public boolean hasMark(UUID teacherId, LocalDate date) {
         return marks.findByTeacherIdAndMarkDate(teacherId, date).isPresent();

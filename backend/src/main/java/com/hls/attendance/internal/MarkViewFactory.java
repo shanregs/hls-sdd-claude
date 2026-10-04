@@ -63,7 +63,8 @@ public class MarkViewFactory {
                             userNames.getOrDefault(m.getSetByUserId(), "Unknown user"),
                             m.getSetAt(),
                             m.getNote(),
-                            m.getVersion());
+                            m.getVersion(),
+                            m.getLeaveRequestId());
                 })
                 .toList();
     }

@@ -52,7 +52,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void teacherSeesMyAttendanceInTheOperationsSlotBeforeAccount() {
         assertThat(sectionsFor(Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "ACCOUNT");
     }
 
     @Test
@@ -84,6 +84,31 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void aUserWithSeveralRolesGetsOneCombinedOrder() {
         assertThat(sectionsFor(Role.MANAGER, Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "MY ATTENDANCE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "MY ATTENDANCE", "LEAVE", "ACCOUNT");
+    }
+
+    @Test
+    void leaveItemsAppearOnlyForTheRolesThatHoldThem() {
+        record Expect(Role role, boolean applyLeave, boolean leaveManagement) {}
+        for (Expect e : new Expect[] {
+            new Expect(Role.TEACHER, true, false),
+            new Expect(Role.MANAGER, false, true),
+            new Expect(Role.ADMIN, false, true),
+            new Expect(Role.DIRECTOR, false, true),
+            new Expect(Role.SYSTEM, false, false)
+        }) {
+            var navigation = client.get()
+                    .uri("/api/v1/me/access-model")
+                    .header("Authorization", "Bearer " + signInAs(e.role()).token())
+                    .exchange()
+                    .expectBody(AccessModelDtos.AccessModelResponse.class)
+                    .returnResult()
+                    .getResponseBody()
+                    .navigation();
+            var routes = navigation.stream().flatMap(sec -> sec.items().stream()).map(i -> i.route()).toList();
+            assertThat(routes.contains("/leave/apply")).as(e.role() + " apply").isEqualTo(e.applyLeave());
+            assertThat(routes.contains("/leave/history")).as(e.role() + " history").isEqualTo(e.applyLeave());
+            assertThat(routes.contains("/operations/leave")).as(e.role() + " management").isEqualTo(e.leaveManagement());
+        }
     }
 }
