@@ -1,0 +1,5 @@
+$kind: http-request
+description: "System only. Ends every session of the user in targetUserId. Omit userId to end everyone's, including your own."
+url: "{{baseUrl}}/api/v1/admin/sessions?userId={{targetUserId}}"
+method: DELETE
+order: 15000

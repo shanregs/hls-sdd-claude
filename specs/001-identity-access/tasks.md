@@ -535,6 +535,33 @@ complete, and spec 002 can now build on a real authenticated principal.
 
 ---
 
+## Phase: Sessions grid and System session management (added 2026-10-04, User Story 5)
+
+- [x] T063 [US5] Backend: `DELETE /api/v1/me/sessions` ends all of the caller's sessions including
+      the current one; list oldest first; `SessionEndingService` ends sessions and records each for
+      audit (`SESSION_ENDED_BY_USER` / new `SESSION_ENDED_BY_ADMIN`, `SessionEnded` event) (FR-015)
+- [x] T064 [US5] Permissions: new modules `MY_SESSIONS` (View, Delete; seeded true for all five
+      roles; the Sessions menu item and the three `/me/sessions` endpoints enforce it) and
+      `SESSION_MANAGEMENT` (View, Delete; seeded for System, grantable only to matrix managers)
+      in `PermissionModule`, `PermissionEligibility`, `PermissionMatrixService.seedDefaults`
+      (idempotent) and `NavigationCatalog` (All Sessions for System) (FR-015, FR-015a)
+- [x] T065 [US5] Backend: `AdminSessionController` (`/api/v1/admin/sessions`: list with owner and
+      optional user filter, end one, end all of a user or of everyone) (FR-015a)
+- [x] T066 [US5] Backend tests in `SessionEndingTest`: list order and current marker, end current,
+      end all, another user's session refused, System list and filter, System end one / a user's /
+      everyone's including its own, other roles refused, every role holds MY_SESSIONS by default,
+      taking Delete or View away from a role is enforced and restorable
+- [x] T067 [US5] Frontend: `SessionsTable` (session number, since when, origin, delete icon),
+      `SessionsPage` (ACCOUNT → Sessions; delete icon per row and delete-all at the top, each after a
+      confirmation, signing out when the current session is among them; no delete icons without
+      `MY_SESSIONS.DELETE`), `AllSessionsPage` (System: user filter, per-row delete, delete-all for
+      the chosen user or everyone, paging), `sessionOrigin.ts` (browser/OS or Android app + version),
+      shared `ConfirmDialog`; the sessions list no longer sits on Profile or Settings
+- [x] T068 [US5] Frontend tests (`SessionsPage`, `AllSessionsPage`, `sessionOrigin`) and both pages in
+      the axe suite in both themes
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

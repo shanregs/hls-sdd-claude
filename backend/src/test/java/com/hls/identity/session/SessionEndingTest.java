@@ -2,12 +2,16 @@ package com.hls.identity.session;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.hls.identity.permissions.PermissionAction;
+import com.hls.identity.permissions.PermissionMatrixService;
+import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.support.IntegrationTestBase;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Spec 001 FR-015 and FR-015a: a user ends one or all of their own sessions (the current one
@@ -17,6 +21,9 @@ class SessionEndingTest extends IntegrationTestBase {
 
     private static final String ME = "/api/v1/me/sessions";
     private static final String ADMIN = "/api/v1/admin/sessions";
+
+    @Autowired
+    private PermissionMatrixService matrix;
 
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> mySessions(String token) {
@@ -141,6 +148,53 @@ class SessionEndingTest extends IntegrationTestBase {
         assertThat(((Number) resp.map().get("ended")).intValue()).isGreaterThanOrEqualTo(2);
         assertThat(get(ME, teacher.token()).status()).isEqualTo(401);
         assertThat(get(ME, system.token()).status()).isEqualTo(401);
+    }
+
+    @Test
+    void everyRoleMayViewAndDeleteItsOwnSessionsByDefault() {
+        for (Role role : Role.values()) {
+            for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.DELETE)) {
+                assertThat(matrix.isGranted(role, PermissionModule.MY_SESSIONS, action))
+                        .as("%s %s", role, action)
+                        .isTrue();
+            }
+            Signed me = signInAs(role);
+            assertThat(get(ME, me.token()).status()).as("%s list", role).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void takingDeleteAwayFromARoleStopsItEndingSessionsButNotListingThem() {
+        Signed teacher = signInAs(Role.TEACHER);
+        String sessionId = (String) mySessions(teacher.token()).get(0).get("id");
+        UUID actor = UUID.randomUUID();
+        matrix.updateGrant(Role.TEACHER, PermissionModule.MY_SESSIONS, PermissionAction.DELETE, false, actor);
+        try {
+            assertThat(get(ME, teacher.token()).status()).isEqualTo(200);
+            assertThat(delete(ME + "/" + sessionId, teacher.token()).status()).isEqualTo(403);
+            assertThat(delete(ME, teacher.token()).status()).isEqualTo(403);
+            // Another role is unaffected.
+            Signed manager = signInAs(Role.MANAGER);
+            assertThat(delete(ME, manager.token()).status()).isEqualTo(200);
+        } finally {
+            matrix.updateGrant(Role.TEACHER, PermissionModule.MY_SESSIONS, PermissionAction.DELETE, true, actor);
+        }
+        assertThat(delete(ME + "/" + sessionId, teacher.token()).status()).isEqualTo(204);
+    }
+
+    @Test
+    void takingViewAwayStopsListingAndHidesTheSessionsMenuItem() {
+        Signed director = signInAs(Role.DIRECTOR);
+        UUID actor = UUID.randomUUID();
+        matrix.updateGrant(Role.DIRECTOR, PermissionModule.MY_SESSIONS, PermissionAction.VIEW, false, actor);
+        try {
+            assertThat(get(ME, director.token()).status()).isEqualTo(403);
+            Resp access = get("/api/v1/me/access-model", director.token());
+            assertThat(access.body()).doesNotContain("/account/sessions");
+        } finally {
+            matrix.updateGrant(Role.DIRECTOR, PermissionModule.MY_SESSIONS, PermissionAction.VIEW, true, actor);
+        }
+        assertThat(get(ME, director.token()).status()).isEqualTo(200);
     }
 
     @Test

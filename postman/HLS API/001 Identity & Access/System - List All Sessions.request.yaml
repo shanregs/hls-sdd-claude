@@ -1,0 +1,9 @@
+$kind: http-request
+description: "System only (SESSION_MANAGEMENT.VIEW). Every user's active sessions with the owner; add &userId= to filter to one user. Saves the first session shown as sessionId."
+url: "{{baseUrl}}/api/v1/admin/sessions?page=0&size=25"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (b.content && b.content.length) { pm.collectionVariables.set("sessionId", b.content[0].id); }
+    language: text/javascript
+order: 13000

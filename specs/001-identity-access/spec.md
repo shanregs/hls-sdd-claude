@@ -155,8 +155,12 @@ as locked, even with the correct password. Confirm the unlock time is shown and 
 
 ### User Story 5 - Manage My Sessions and Reset My Password (Priority: P3)
 
-A signed-in user opens ACCOUNT → Profile. They see their active sessions (device, sign-in time, last
-activity) and can end any of them. A user who forgot their password resets it with a code sent to
+A signed-in user opens ACCOUNT → Sessions (until 2026-10-04 this list sat on the Profile page). They
+see their active sessions as a grid — session number, since when (sign-in date and time), and the
+origin (which client started it: a browser and operating system, or the Android app and its
+version) — with a delete icon on each row, and a delete-all icon at the top that also ends the
+session they are using and signs them out. System has a second item, SYSTEM CONFIGURATION → All
+Sessions, with the same grid for every user. A user who forgot their password resets it with a code sent to
 their registered phone, their registered email, or both at once if they have both registered — their
 choice each time.
 
@@ -169,10 +173,20 @@ a code sent to the registered email, and sign in with the new password each time
 
 **Acceptance Scenarios**:
 
-1. **Given** a user signed in on two devices, **When** they view Profile, **Then** both sessions
-   are listed and the current one is marked "this device".
-2. **Given** that list, **When** they end the other session, **Then** that device is signed out at
-   its next action.
+1. **Given** a user signed in on two devices, **When** they open Sessions, **Then** both sessions
+   are listed in a grid numbered 1, 2, … oldest first, each with its sign-in date and time and its
+   origin, and the current one is marked "this device".
+2. **Given** that list, **When** they delete the other session (icon, then confirm), **Then** that
+   device is signed out at its next action.
+2a. **Given** that list, **When** they delete the session they are using, or choose delete-all,
+   **Then** after confirming, every session chosen ends, including the current one, and the user is
+   signed out.
+2b. **Given** a role that has had the permission to delete sessions taken away, **When** its users
+   open Sessions, **Then** they see the grid without any delete icons, and a direct attempt to end a
+   session is refused.
+2c. **Given** System, **When** it opens All Sessions, **Then** it sees every user's sessions with
+   the owner, can filter to one user, delete one session, delete all of one user's sessions, or
+   delete everyone's; deleting its own session among them signs it out. Any other role is refused.
 3. **Given** a user who forgot their password, **When** they choose to receive the reset code by
    SMS, enter the code received, and set a new password that meets the password policy, **Then** the
    new password works, the old one does not, and all their existing sessions are ended.
@@ -311,8 +325,18 @@ their session ends and they cannot sign in again.
 - **FR-014**: A signed-in user MUST be able to log out, which ends their current session
   immediately.
 - **FR-015**: A signed-in user MUST be able to list their own active sessions (device/browser,
-  sign-in time, last activity, current-session marker) and end any of them. They MUST NOT be able to
+  sign-in time, last activity, current-session marker) and end any of them, or all of them at once,
+  including the session they are using (the web app then signs them out). The screen is a grid with a
+  session number, the sign-in date and time, the origin and a delete icon per row plus a delete-all
+  icon. Listing needs the `MY_SESSIONS` View permission and ending needs `MY_SESSIONS` Delete; every
+  role holds both by default and the matrix can take either away from a role. They MUST NOT be able to
   see or end other users' sessions.
+- **FR-015a**: System MUST be able to list every user's active sessions (optionally for one user),
+  end one, end all of one user's, or end every user's, including its own. This needs the
+  `SESSION_MANAGEMENT` permission (View to list, Delete to end), held by System by default and only
+  grantable to the matrix-manager roles. An ended session stops being accepted at once, and each one
+  ended is recorded for the audit trail (Login History and User Activity), marked as ended by System
+  when it was not the owner who ended it.
 - **FR-016**: Any user MUST be able to reset their password using a one-time code, delivered to
   their registered phone by SMS, to their registered email, or to both at once — the user's choice
   at the time of the request. Only channels the user actually has registered are offered ("both" is
@@ -404,14 +428,16 @@ spec 002.
 
 | Role     | Menu (section → item)                     | Default actions                        | Data scope                   |
 | -------- | ----------------------------------------- | -------------------------------------- | ---------------------------- |
-| Admin    | ACCOUNT → Profile (my sessions), Logout   | Sign in (password or OTP), manage own sessions | Own sessions only     |
-| Director | ACCOUNT → Profile (my sessions), Logout   | Sign in (password or OTP), manage own sessions | Own sessions only     |
-| Manager  | ACCOUNT → Profile (my sessions), Logout   | Sign in (password or OTP), manage own sessions | Own sessions only     |
-| Teacher  | ACCOUNT → My Profile (my sessions), Logout | Sign in (password or OTP), manage own sessions | Own sessions only    |
-| System   | ACCOUNT → Profile (my sessions), Logout   | Sign in (password or OTP), manage own sessions | Own sessions only     |
+| Admin    | ACCOUNT → Profile, Settings, Sessions, Logout | Sign in (password or OTP), manage own sessions | Own sessions only     |
+| Director | ACCOUNT → Profile, Settings, Sessions, Logout | Sign in (password or OTP), manage own sessions | Own sessions only     |
+| Manager  | ACCOUNT → Profile, Settings, Sessions, Logout | Sign in (password or OTP), manage own sessions | Own sessions only     |
+| Teacher  | ACCOUNT → My Profile, Settings, Sessions, Logout | Sign in (password or OTP), manage own sessions | Own sessions only    |
+| System   | ACCOUNT → Profile, Settings, Sessions, Logout | Sign in (password or OTP), manage own sessions | Own sessions only     |
 
-**New permission keys**: none. Spec 002 will seed `account.profile.view` and related keys when the
-matrix is introduced. The minimal user-creation capability (FR-021) is internal only in this
+**New permission keys**: none at the time of writing; spec 002 seeded `account.profile.view` and
+related keys when the matrix was introduced. Added 2026-10-04: `MY_SESSIONS` (View, Delete; every role
+by default) for a user's own sessions, and `SESSION_MANAGEMENT` (View, Delete; System by default) for
+everyone's. The ACCOUNT menu is Profile, Settings and Sessions. The minimal user-creation capability (FR-021) is internal only in this
 feature and has no user-facing endpoint.
 
 ## Success Criteria *(mandatory)*

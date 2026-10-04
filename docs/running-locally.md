@@ -104,6 +104,12 @@ original placement date, so she has history only from then on.
 - Everyone: MASTER DATA -> **Holiday Calendar** shows the year or a month with holidays highlighted
   (the demo data has the 2026 Tamil Nadu public holidays) and a download icon that saves the year or
   month as a PDF. Only Admin and Director see the editing controls below the calendar.
+- Everyone: ACCOUNT -> **Profile** shows your details, **Settings** edits them and changes your password,
+  and **Sessions** lists where you are signed in as a grid (number, since when, which client). Each row
+  has a delete icon, and the icon at the top deletes them all, including the one you are using, which
+  signs you out. In Role & Permissions, the `MY_SESSIONS` row controls this per role.
+- As **System** (Sunil): SYSTEM CONFIGURATION -> **All Sessions** lists every user's sessions; filter to
+  one user, delete one, delete all of one user's, or everyone's (yours included).
 - Admin/Director: MASTER DATA -> **Attendance Setup** lists the status codes. P, L, T and N are
   built in; S (Substitution), H (Holiday) and A (Absent, like Leave) are ordinary codes you can edit.
 
