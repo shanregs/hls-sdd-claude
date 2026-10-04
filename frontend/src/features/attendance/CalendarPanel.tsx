@@ -6,7 +6,6 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
-  IconButton,
   MenuItem,
   Paper,
   Stack,
@@ -14,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
+import { RowActionButton } from "../common/RowActionButton";
 import {
   addNonWorkingDate,
   getCalendar,
@@ -189,15 +189,13 @@ export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
               {o.weeklyOff.length ? o.weeklyOff.join(", ") : "No off days"}
             </Typography>
             {canEdit && (
-              <Button
-                size="small"
-                color="error"
+              <RowActionButton
+                action="Delete"
+                subject={`override for ${o.schoolName}`}
                 onClick={async () =>
                   apply(await removeSchoolOverride(authFetch, o.schoolId))
                 }
-              >
-                Remove override for {o.schoolName}
-              </Button>
+              />
             )}
           </Stack>
         ))}
@@ -260,15 +258,13 @@ export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
               {d.description}
             </Typography>
             {canEdit && (
-              <IconButton
-                size="small"
-                aria-label={`Remove ${formatDate(d.date)}`}
+              <RowActionButton
+                action="Delete"
+                subject={formatDate(d.date)}
                 onClick={async () =>
                   apply(await removeNonWorkingDate(authFetch, d.date))
                 }
-              >
-                ✕
-              </IconButton>
+              />
             )}
           </Stack>
         ))}

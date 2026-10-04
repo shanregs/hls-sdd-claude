@@ -25,6 +25,7 @@ import {
   type TeacherListParams,
   type TeacherSummary,
 } from "./teachersApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 const ROUTE = "/master-data/teachers";
 
@@ -142,9 +143,11 @@ export function TeachersPage() {
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <Button size="small" onClick={() => setEditing(params.row)}>
-            Edit
-          </Button>
+          <RowActionButton
+            action="Edit"
+            subject={params.row.name}
+            onClick={() => setEditing(params.row)}
+          />
           {!limitedEdit && (
             <Button size="small" onClick={() => setStatusFor(params.row)}>
               Status

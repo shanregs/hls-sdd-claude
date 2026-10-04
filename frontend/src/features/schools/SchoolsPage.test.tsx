@@ -166,7 +166,7 @@ describe("SchoolsPage (User Story 2)", () => {
 
     render(<SchoolsPage />);
     await screen.findAllByText("St Mary's");
-    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Edit / })[0]);
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: /^save$/i }));
 
@@ -242,7 +242,7 @@ describe("SchoolsPage (User Story 2)", () => {
       screen.queryByRole("button", { name: "Deactivate" }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Edit / })[0]);
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByLabelText(/school name/i)).toBeDisabled();
     expect(within(dialog).getByLabelText(/billing contact/i)).toBeDisabled();
@@ -259,7 +259,7 @@ describe("SchoolsPage (User Story 2)", () => {
     await screen.findAllByText("St Mary's");
 
     expect(
-      screen.queryByRole("button", { name: "Edit" }),
+      screen.queryByRole("button", { name: /^Edit / }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /create school/i }),

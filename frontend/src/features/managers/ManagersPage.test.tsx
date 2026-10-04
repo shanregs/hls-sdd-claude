@@ -175,7 +175,9 @@ describe("ManagersPage (User Story 3)", () => {
 
     render(<ManagersPage />);
     await screen.findAllByText("Manoj Manager");
-    await user.click(screen.getAllByRole("button", { name: "Zones" })[0]);
+    await user.click(
+      screen.getAllByRole("button", { name: /^Edit zones of / })[0],
+    );
     const dialog = await screen.findByRole("dialog");
     await user.click(
       await within(dialog).findByRole("checkbox", { name: "North Zone" }),
@@ -206,7 +208,7 @@ describe("ManagersPage (User Story 3)", () => {
       screen.queryByRole("button", { name: /create manager/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Zones" }),
+      screen.queryByRole("button", { name: /^Edit zones of / }),
     ).not.toBeInTheDocument();
   });
 });

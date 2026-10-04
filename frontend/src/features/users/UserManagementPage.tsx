@@ -28,6 +28,7 @@ import {
   type Role,
   type UserSummary,
 } from "./userManagementApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 const ROUTE = "/identity/users";
 
@@ -139,9 +140,11 @@ export function UserManagementPage() {
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <Button size="small" onClick={() => setEditingRoles(params.row)}>
-            Roles
-          </Button>
+          <RowActionButton
+            action="Edit"
+            subject={`roles of ${params.row.displayName}`}
+            onClick={() => setEditingRoles(params.row)}
+          />
           <Button size="small" onClick={() => requestToggle(params.row)}>
             {params.row.active ? "Deactivate" : "Reactivate"}
           </Button>

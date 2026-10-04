@@ -16,6 +16,7 @@ import {
   type PlaceSummary,
   type ZoneSummary,
 } from "./zonesApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 interface PlacesPanelProps {
   zone: ZoneSummary;
@@ -96,12 +97,16 @@ export function PlacesPanel({
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <Button size="small" onClick={() => setEditing(params.row)}>
-            Edit
-          </Button>
-          <Button size="small" color="error" onClick={() => remove(params.row)}>
-            Delete
-          </Button>
+          <RowActionButton
+            action="Edit"
+            subject={params.row.name}
+            onClick={() => setEditing(params.row)}
+          />
+          <RowActionButton
+            action="Delete"
+            subject={params.row.name}
+            onClick={() => remove(params.row)}
+          />
         </Stack>
       ),
     });

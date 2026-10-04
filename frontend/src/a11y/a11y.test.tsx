@@ -732,6 +732,8 @@ describe.each(["light", "dark"] as const)(
         );
         expect(summary).toEqual([]);
       },
+      // axe on the larger bordered tables is slow in jsdom; the default 5s is too tight under load.
+      30_000,
     );
   },
 );

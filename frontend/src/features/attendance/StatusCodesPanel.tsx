@@ -30,6 +30,7 @@ import {
   type StatusCategory,
   type StatusCode,
 } from "./attendanceApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 interface FormValues {
   shortCode: string;
@@ -267,9 +268,11 @@ export function StatusCodesPanel({ canEdit }: { canEdit: boolean }) {
                   <TableCell>{code.active ? "Active" : "Inactive"}</TableCell>
                   {canEdit && (
                     <TableCell>
-                      <Button size="small" onClick={() => setEditing(code)}>
-                        Edit
-                      </Button>
+                      <RowActionButton
+                        action="Edit"
+                        subject={code.name}
+                        onClick={() => setEditing(code)}
+                      />
                       {!code.system && (
                         <Button size="small" onClick={() => toggleActive(code)}>
                           {code.active ? "Deactivate" : "Activate"}

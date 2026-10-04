@@ -317,7 +317,7 @@ describe("TeachersPage (User Story 4)", () => {
     expect(
       screen.queryByRole("button", { name: "Placement" }),
     ).not.toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Edit / })[0]);
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByLabelText(/teacher name/i)).toBeDisabled();
     expect(within(dialog).getByLabelText(/phone/i)).toBeEnabled();
@@ -331,7 +331,7 @@ describe("TeachersPage (User Story 4)", () => {
     await screen.findAllByText("Tara Teacher");
 
     expect(
-      screen.queryByRole("button", { name: "Edit" }),
+      screen.queryByRole("button", { name: /^Edit / }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /create teacher/i }),

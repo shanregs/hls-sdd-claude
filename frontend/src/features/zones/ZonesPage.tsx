@@ -15,6 +15,7 @@ import { PlaceLookup } from "./PlaceLookup";
 import { PlacesPanel } from "./PlacesPanel";
 import { ZoneDialog } from "./ZoneDialog";
 import { deleteZone, listZones, type ZoneSummary } from "./zonesApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 const ROUTE = "/master-data/zones";
 
@@ -96,22 +97,24 @@ export function ZonesPage() {
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <Button size="small" onClick={() => setSelected(params.row)}>
-            Places
-          </Button>
+          <RowActionButton
+            action="View"
+            subject={params.row.name}
+            onClick={() => setSelected(params.row)}
+          />
           {canEdit && (
-            <Button size="small" onClick={() => setRenaming(params.row)}>
-              Rename
-            </Button>
+            <RowActionButton
+              action="Edit"
+              subject={params.row.name}
+              onClick={() => setRenaming(params.row)}
+            />
           )}
           {canDelete && (
-            <Button
-              size="small"
-              color="error"
+            <RowActionButton
+              action="Delete"
+              subject={params.row.name}
               onClick={() => remove(params.row)}
-            >
-              Delete
-            </Button>
+            />
           )}
         </Stack>
       ),
