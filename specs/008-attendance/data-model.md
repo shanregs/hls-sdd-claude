@@ -1,6 +1,10 @@
 # Phase 1 Data Model: Attendance
 
-One migration, `V14__create_attendance_tables.sql`. No foreign key leaves the module: `teacher_id`,
+Two migrations: `V14__create_attendance_tables.sql` (all tables, the four built-in status codes and
+the default calendar row) and `V15__seed_more_attendance_status_codes.sql` (data only: the `S`, `H`
+and `A` codes). The Holiday Calendar screen (User Story 9) and its PDF need **no schema change**: they
+read the existing `attendance_non_working_date` and `attendance_calendar_setting` rows. No foreign
+key leaves the module: `teacher_id`,
 `school_id` and `user_id` are plain ids validated through the owning module's public API at write
 time. "Mutable" rows carry a `version` for optimistic locking. History and event tables are
 append-only: the application has no update or delete path for them.
@@ -15,12 +19,15 @@ append-only: the application has no update or delete path for them.
 | category | VARCHAR(12) NOT NULL | `WORKED`, `LEAVE`, `TRAINING`, `NON_WORKING` (`CHECK`) |
 | weight | NUMERIC(4,2) NOT NULL | `CHECK (weight >= 0 AND weight <= 1)` |
 | active | BOOLEAN NOT NULL DEFAULT true | |
-| system | BOOLEAN NOT NULL DEFAULT false | the four seeded defaults; cannot be deleted or deactivated |
+| system | BOOLEAN NOT NULL DEFAULT false | the four built-in defaults (`P`, `L`, `T`, `N`); cannot be deleted or deactivated |
 | sort_order | INT NOT NULL | |
 | version | BIGINT NOT NULL | |
 
 Seeded by the migration: `P` Present (WORKED, 1.00), `L` Leave (LEAVE, 0.00), `T` Training day
-(TRAINING, 1.00), `N` Non-working (NON_WORKING, 0.00), all `system = true`. A code referenced by any
+(TRAINING, 1.00), `N` Non-working (NON_WORKING, 0.00), all `system = true`. `V15` adds three
+ordinary codes (`system = false`, so Admin can rename, re-weight or deactivate them): `S`
+Substitution (WORKED, 1.00), `H` Holiday (NON_WORKING, 0.00) and `A` Absent (LEAVE, 0.00, treated
+like `L`); each is inserted only if no code with that short code exists. A code referenced by any
 mark is never deleted (only deactivated).
 
 ## Attendance Mark (`attendance_mark`) - mutable, one per Teacher per date
@@ -122,7 +129,9 @@ Absence of a row means the Teacher-month is open and never locked.
 ## `identity` and `audit` additions (no schema change)
 
 New `PermissionModule` constants `ATTENDANCE`, `TEACHER_ATTENDANCE`, `MY_ATTENDANCE`,
-`ATTENDANCE_SETUP` seeded per the spec table. New `change_history_entry.entity_type` values
+`ATTENDANCE_SETUP` and `HOLIDAY_CALENDAR` (VIEW for every role, EDIT for Admin and Director) seeded
+per the spec table. Navigation: MASTER DATA → `Holiday Calendar` (`HOLIDAY_CALENDAR`, all roles) and
+`Attendance Setup` (`ATTENDANCE_SETUP`, Admin/Director). New `change_history_entry.entity_type` values
 `ATTENDANCE_MARK`, `ATTENDANCE_MONTH`, `ATTENDANCE_CODE`, `ATTENDANCE_CALENDAR`,
 `ATTENDANCE_EXPORT`, mapped in `AuditVisibility` to `ATTENDANCE.VIEW` (marks, months, exports) and
 `ATTENDANCE_SETUP.VIEW` (codes, calendar).
@@ -131,5 +140,11 @@ New `PermissionModule` constants `ATTENDANCE`, `TEACHER_ATTENDANCE`, `MY_ATTENDA
 
 - **Rollup** from `RollupCalculator` (live) or `attendance_teacher_month` (frozen).
 - **Grid** rows: Teachers allowed by scope and filters, placed during the month, with one cell per
-  actual day of the month (code short letter, half-day flag, set-by kind, locked flag, and
-  not-placed / weekly-off / non-working variants).
+  actual day of the month (code short letter, the code's `category`, half-day flag, set-by kind,
+  locked flag, and not-placed / weekly-off / non-working variants). The `category` lets the screen
+  colour leave/absent and holiday-status marks without knowing individual codes.
+- **Holiday calendar view** (User Story 9): the year or month is derived on the client from
+  `GET /api/v1/attendance/calendar` (`defaultWeeklyOff` plus `nonWorkingDates`); a date in
+  `nonWorkingDates` is a holiday even when it is also a weekly off day. School overrides are not
+  part of this organization-wide view. The PDF is drawn on the client from the same data; nothing
+  is stored.

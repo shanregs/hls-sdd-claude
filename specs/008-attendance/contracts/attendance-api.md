@@ -13,12 +13,14 @@ stale-version refusal; `400` invalid input. Dates are `YYYY-MM-DD`, months `YYYY
 | GET | `/api/v1/attendance/status-codes` | any of `ATTENDANCE.VIEW`, `TEACHER_ATTENDANCE.VIEW`, `MY_ATTENDANCE.VIEW`, `ATTENDANCE_SETUP.VIEW` | `activeOnly` default true |
 | POST | `/api/v1/attendance/status-codes` | `ATTENDANCE_SETUP.EDIT` | `{shortCode,name,category,weight}` -> 201; 409 duplicate short code |
 | PUT | `/api/v1/attendance/status-codes/{id}` | `ATTENDANCE_SETUP.EDIT` | `{name,weight,active,version}`; a system code cannot be deactivated |
-| GET | `/api/v1/attendance/calendar` | `ATTENDANCE_SETUP.VIEW` | `{defaultWeeklyOff:[..], schoolOverrides:[{schoolId,schoolName,weeklyOff:[..]}], nonWorkingDates:[..]}` |
-| PUT | `/api/v1/attendance/calendar/default` | `ATTENDANCE_SETUP.EDIT` | `{weeklyOff:["SUN"],version}` |
-| PUT | `/api/v1/attendance/calendar/schools/{schoolId}` | `ATTENDANCE_SETUP.EDIT` | `{weeklyOff:["SUN","SAT"]}` creates/replaces the override |
-| DELETE | `/api/v1/attendance/calendar/schools/{schoolId}` | `ATTENDANCE_SETUP.EDIT` | back to the default |
-| POST | `/api/v1/attendance/calendar/non-working-dates` | `ATTENDANCE_SETUP.EDIT` | `{onDate,description}`; 409 duplicate |
-| DELETE | `/api/v1/attendance/calendar/non-working-dates/{onDate}` | `ATTENDANCE_SETUP.EDIT` | |
+| GET | `/api/v1/attendance/calendar` | `HOLIDAY_CALENDAR.VIEW` (every role) | `{defaultWeeklyOff:[..], defaultVersion, schoolOverrides:[{schoolId,schoolName,weeklyOff:[..]}], nonWorkingDates:[{date,description}]}`; the Holiday Calendar screen builds its yearly and monthly views and the PDF from this one response |
+| PUT | `/api/v1/attendance/calendar/default` | `HOLIDAY_CALENDAR.EDIT` (Admin, Director) | `{weeklyOff:["SUN"],version}` |
+| PUT | `/api/v1/attendance/calendar/schools/{schoolId}` | `HOLIDAY_CALENDAR.EDIT` | `{weeklyOff:["SUN","SAT"]}` creates/replaces the override |
+| DELETE | `/api/v1/attendance/calendar/schools/{schoolId}` | `HOLIDAY_CALENDAR.EDIT` | back to the default |
+| POST | `/api/v1/attendance/calendar/non-working-dates` | `HOLIDAY_CALENDAR.EDIT` | `{onDate,description}`; 409 duplicate |
+| DELETE | `/api/v1/attendance/calendar/non-working-dates/{onDate}` | `HOLIDAY_CALENDAR.EDIT` | |
+
+The PDF is produced in the browser; there is no server endpoint for it.
 
 Changing the calendar never alters a locked Teacher-month.
 
@@ -46,9 +48,12 @@ Changing the calendar never alters a locked Teacher-month.
 | GET | `/api/v1/attendance/grid?month=&query=&zoneId=&schoolId=&managerId=&status=&page=&size=` | `ATTENDANCE.VIEW` | Admin/Director: all placed Teachers; filters combine with AND |
 
 **GridResponse**: `{ month, days: <actual number of days>, content: [ { teacherId, name, status,
-school, manager, locked, rollup, cells: [ { date, code, dayValue, setByKind, state } ] } ], page,
-size, totalElements }` where `state` is one of `MARKED`, `UNMARKED`, `NOT_PLACED`, `WEEKLY_OFF`,
-`NON_WORKING`, `FUTURE`.
+school, manager, locked, rollup, cells: [ { date, code, category, dayValue, setByKind, state } ] }
+], page, size, totalElements }` where `state` is one of `MARKED`, `UNMARKED`, `NOT_PLACED`,
+`WEEKLY_OFF`, `NON_WORKING`, `FUTURE`, and `category` (only on `MARKED` cells) is the mark's status
+category: `WORKED`, `LEAVE`, `TRAINING` or `NON_WORKING`. The screen labels `WEEKLY_OFF` with the
+weekday abbreviation, `NON_WORKING` with `H`, and colours leave/absent (`LEAVE`) and holiday
+(`NON_WORKING`) marks.
 
 ## Month, lock and reopen (module `ATTENDANCE`, action `PROCESS`)
 
@@ -63,7 +68,8 @@ size, totalElements }` where `state` is one of `MARKED`, `UNMARKED`, `NOT_PLACED
 
 `GET /api/v1/attendance/export?month=&zoneId=&schoolId=&managerId=&status=&query=` -> `text/csv`, one
 row per Teacher: name, status, School, Manager, rollup figures, then one column per day (short
-code, `0.5` suffix for half days). Streams; records one audit event.
+code, `0.5` suffix for half days; a weekly off day shows the weekday abbreviation such as `Sun`, a
+non-working date shows `H`). Built in page-sized batches; records one audit event.
 
 ## TeacherMonthView
 

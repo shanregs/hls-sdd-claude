@@ -18,14 +18,14 @@ tests on every endpoint and per-scope-boundary tests (Manager A vs Manager B) on
 detail and export; the rollup rules, lock invariants and supervisor-protection rule are only
 trustworthy with tests.
 
-**Organization**: grouped by user story in priority order (spec.md US1-US8). Foundational work
+**Organization**: grouped by user story in priority order (spec.md US1-US9). Foundational work
 (permissions, navigation, audit visibility, `TeacherDirectory`, migration, business calendar) comes
 first. Migration V14 is written once in Foundational because every story reads its tables.
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: can run in parallel (different files, no dependency on an incomplete task)
-- **[Story]**: US1-US8; absent for Setup/Foundational/Polish
+- **[Story]**: US1-US9; absent for Setup/Foundational/Polish
 
 ## Path Conventions
 
@@ -217,6 +217,29 @@ refused.
 
 ---
 
+## Phase 13: Holiday Calendar, day colours and master-data moves (added 2026-10-04, User Story 9)
+
+**Purpose**: the 2026-10-04 clarifications: holiday calendar and Attendance Setup are Master Data,
+the calendar is readable by everyone, three more status codes, coloured day cells, and a yearly /
+monthly Holiday Calendar view with PDF download. T067 and T068 (Phase 12) run after this phase.
+
+Already built before this phase was written down (checked off here so the record is complete):
+
+- [X] T069 [US9] Add the `HOLIDAY_CALENDAR` permission module (`VIEW` for every role, `EDIT` for Admin and Director) to `PermissionModule` and `PermissionMatrixService` (add-only seeding), the MASTER DATA -> "Holiday Calendar" navigation item for all roles, and move the calendar endpoints in `SetupController` onto it (read `VIEW`, writes `EDIT`; status codes stay on `ATTENDANCE_SETUP`); tests in `SetupControllerTest` and `MasterDataAccessModelTest`
+- [X] T070 [US5] Move "Attendance Setup" to MASTER DATA (`/master-data/attendance-setup`, `ATTENDANCE_SETUP`) and take the calendar panel off it; add `V15__seed_more_attendance_status_codes.sql` seeding `S` Substitution (WORKED 1.00), `H` Holiday (NON_WORKING 0) and `A` Absent (LEAVE 0) as non-system codes, skipped when the short code exists; test in `SetupControllerTest`
+- [X] T071 [US9] Build `FE/features/attendance/HolidayCalendarPage.tsx` (route `/master-data/holiday-calendar`, `HOLIDAY_CALENDAR`) hosting `CalendarPanel` with edit controls only for `EDIT`, the Schools lookup only for editors; `HolidayCalendarPage.test.tsx` and the axe suite
+- [X] T072 Cross-cutting UI: light cell borders on every table and DataGrid in `theme/tokens.ts`, and `features/common/RowActionButton.tsx` (icon + tooltip Edit / Delete / View) used by every grid and the calendar panel
+
+To do:
+
+- [ ] T074 [US4] Backend: add `category` to the grid `Cell` in `AttendanceGridService` (the mark's status category, null for unmarked days) and make the CSV export day text match the screen (weekly off shows the weekday abbreviation such as `Sun`, non-working shows `H`); update `AttendanceGridControllerTest` and `AttendanceExportTest` (a Leave mark reports `LEAVE`, a Holiday-code mark `NON_WORKING`, a Sunday exports `Sun`)
+- [ ] T075 [US4] Frontend: add `FE/features/attendance/dayStyle.ts` (one helper returning label and tinted background by kind of day: weekly off = weekday abbreviation on a neutral tint, holiday or `NON_WORKING` mark = "H" on an amber tint, `LEAVE` mark = its code on a red tint, using theme palette tints that work in both themes) with unit tests; use it in `AttendanceGrid.tsx` and `MonthCalendar.tsx`, add a `DayLegend` shown under both, keep every cell's accessible name carrying the same words (spec FR-013, SC-010)
+- [ ] T076 [US9] Build `FE/features/attendance/HolidayCalendarView.tsx`: a Year / Month switch, previous and next, a year (twelve mini-months, Monday-first) and a month (one larger month with each holiday cell naming the holiday), holidays highlighted amber, weekly off days neutral, a holiday on a weekly off day shown as a holiday, a legend and the year's holiday list; mount it above `CalendarPanel` in `HolidayCalendarPage.tsx`; `HolidayCalendarView.test.tsx` (year shows 12 months and the highlighted days, month navigation, holiday on a Sunday stays a holiday) and the axe suite in both themes
+- [ ] T077 [US9] Add the `jspdf` dependency and `FE/features/attendance/holidayPdf.ts` (dynamic import; draws the title, the highlighted year or month, legend and holiday list; file name `holiday-calendar-YYYY.pdf` or `holiday-calendar-YYYY-MM.pdf`), and a download icon button with the tooltip "Download PDF" in `HolidayCalendarView.tsx`; tests that the right document content and file name are produced for a year and for a month (the PDF library is mocked) and that the icon is present for a read-only user
+- [ ] T078 [US9] Update the seeded demo walkthrough: confirm `AttendanceDevSeeder` data shows holidays, Sundays and leave days in the new colours; walk quickstart Scenario 8 in the browser as Asha, Manoj and Tara and record the result in the commit message
+
+---
+
 ## Dependencies & Execution Order
 
 - **Phase 1 -> Phase 2** strictly; Phase 2 blocks everything.
@@ -226,7 +249,8 @@ refused.
   `TeacherMonthViewService`). **Phase 7 (US4)** needs Phase 6 (`AttendanceGridService`,
   `AttendanceGrid.tsx`). **Phase 8 (US6)** needs Phases 5-7. **Phase 9 (US7)** needs Phase 5 and
   benefits from Phase 8 (locked display). **Phase 10 (US8)** needs Phase 7. **Phase 11** needs
-  Phases 5 and 8. **Phase 12** last.
+  Phases 5 and 8. **Phase 13** (US9, day colours) needs Phases 4-7 and the Holiday Calendar page
+  of T071. **Phase 12** last, with T067 and T068 run after Phase 13 so they cover it.
 - Within a story: tests first (they fail), then services, controllers, then frontend.
 - Tasks touching the same file are sequential: `attendanceApi.ts` (T021, T032, T041, T047, T054),
   `AttendanceGridPage.tsx` (T048, T055, T062), `a11y.test.tsx` and `App.tsx` routes
@@ -260,4 +284,5 @@ refused.
 | US6 Lock/reopen | P2 | T050-T056 |
 | US7 History | P2 | T057-T059 |
 | US8 Export | P3 | T060-T062 |
-| Foundation / contract / polish | - | T001-T016, T063-T068 |
+| US9 Holiday Calendar (year/month, PDF), day colours | P2 | T069-T078 (T071 page, T074-T075 colours, T076-T077 calendar and PDF) |
+| Foundation / contract / polish | - | T001-T016, T063-T068 (T065 seeder is done) |

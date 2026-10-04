@@ -24,6 +24,12 @@ Adds the `attendance` bounded context (Constitution Principle VII) on top of spe
   ended; reopen needs a reason; the rollup is frozen at lock.
 - A small public **read contract** (`attendance.api`) so leave, payroll and reports never recompute
   attendance.
+- *(2026-10-04)* A **Holiday Calendar** screen under MASTER DATA, visible to every role and editable
+  by Admin and Director (permission module `HOLIDAY_CALENDAR`), with a yearly and a monthly calendar
+  that highlight holidays and a download icon that saves the year or month as a **PDF** (built in
+  the browser). **Day cells** in the grids and calendars are coloured by kind (weekly off, holiday,
+  leave/absent) with a text label as well. Three more status codes (`S`, `H`, `A`) are seeded by
+  `V15`, and Attendance Setup moves to MASTER DATA.
 
 `attendance` depends on `teacher`, `organization` and `school` only through their public APIs
 (`attendance -> teacher -> organization -> school`). `teacher.api` gains one read-only
@@ -39,11 +45,13 @@ dependency of `audit` on any module.
 **Primary Dependencies**: Spring Web, Spring Data JPA (`@Version`), Spring Security, Spring
 Modulith, Flyway, ArchUnit - all already present. Frontend: React Router, MUI core, `react-hook-form`
 - all present; the month grid is a custom MUI table (28-31 day columns, sticky first column), not a
-DataGrid. No new dependency on either side.
+DataGrid. One new frontend dependency, added for User Story 9: `jspdf` (client-side PDF of the
+holiday calendar, loaded on demand; research.md section 16). No new backend dependency.
 
-**Storage**: PostgreSQL via Flyway: one migration `V14__create_attendance_tables.sql` (status codes
-with seeded defaults, marks, mark history, weekly-off settings, non-working dates, teacher-month
-state and events). No cross-module foreign keys; `teacher_id`, `school_id`, `user_id` are plain ids
+**Storage**: PostgreSQL via Flyway: `V14__create_attendance_tables.sql` (status codes with seeded
+defaults, marks, mark history, weekly-off settings, non-working dates, teacher-month state and
+events) and the data-only `V15__seed_more_attendance_status_codes.sql` (`S`, `H`, `A`). The Holiday
+Calendar view and PDF add no tables. No cross-module foreign keys; `teacher_id`, `school_id`, `user_id` are plain ids
 validated through the owning module's public API.
 
 **Testing**: JUnit 5, Spring Boot Test, Testcontainers (shared singleton container via
@@ -141,10 +149,16 @@ frontend/src/features/attendance/
 ├── MyAttendancePage.tsx, AttendanceHistoryPage.tsx     # Teacher
 ├── AttendanceGridPage.tsx, TeacherAttendancePage.tsx    # Admin/Director and Manager (one shared AttendanceGrid)
 ├── AttendanceGrid.tsx, MarkDialog.tsx, TeacherMonthPanel.tsx
-├── LockMonthDialog.tsx, ReopenDialog.tsx
-├── AttendanceSetupPage.tsx (StatusCodesPanel, CalendarPanel)
+├── LockMonthDialog.tsx, ReopenDialog.tsx, LockControls.tsx
+├── AttendanceSetupPage.tsx (StatusCodesPanel)           # MASTER DATA → Attendance Setup
+├── HolidayCalendarPage.tsx                              # MASTER DATA → Holiday Calendar (all roles)
+│     ├── HolidayCalendarView.tsx   # yearly / monthly calendar with highlighted holidays
+│     ├── holidayPdf.ts             # jspdf: year or month → PDF (dynamic import)
+│     └── CalendarPanel.tsx         # weekly off + holiday editing (Admin/Director)
+├── dayStyle.ts                     # label + tinted background per kind of day, shared by grids and calendars
 └── attendanceApi.ts, monthUtils.ts
-frontend/src/App.tsx                                # + five guarded routes
+frontend/src/features/common/RowActionButton.tsx    # icon + tooltip Edit/Delete/View (shared by all grids)
+frontend/src/App.tsx                                # + guarded routes
 ```
 
 **Structure Decision**: Web application (`backend/` + `frontend/`, unchanged layout). One new backend
@@ -162,6 +176,9 @@ module following the `api` / `internal` / `web` split, one migration, additive c
 4. **Grids and history (US4, US7)**: Manager and Admin/Director grids with filters, Teacher
    calendar and history, rollup detail.
 5. **Lock, reopen, export (US6, US8)**: lock validation, reopen/relock, frozen rollups, CSV export.
+6. **Holiday Calendar and day colours (US9, FR-013 colours)**: `HOLIDAY_CALENDAR` permission and
+   MASTER DATA navigation, `V15` status codes, the grid cell `category`, the shared day-colour
+   helper, the yearly/monthly calendar view and the PDF download.
 
 ## Complexity Tracking
 

@@ -65,6 +65,18 @@ Tara's placement starts the day the demo data was seeded, so mark days from then
    Teacher; a Manager or Teacher request for it is refused; AUDIT -> Change History shows the
    export (and System sees nothing about attendance).
 
+## Scenario 8: Day colours and the Holiday Calendar (User Story 9, FR-013, FR-025-FR-027)
+
+1. As Asha open Attendance and go back a month. **Expect**: Sundays read "Sun" on a grey tint,
+   holidays read "H" on an amber tint, Leave and Absent marks show their code on a red tint, and a
+   legend explains them; the same words are in each cell's accessible name.
+2. Open MASTER DATA -> Holiday Calendar. **Expect**: the year with every holiday highlighted; switch
+   to Month and move between months; the holiday list matches the highlights.
+3. Choose the download icon in each view. **Expect**: a PDF of the year, then of the month, each with
+   the highlighted days, legend and holiday list.
+4. Sign in as Tara and as Manoj, open Holiday Calendar. **Expect**: the same calendar and PDF, no
+   edit controls; as Asha the weekly-off and holiday editing is available below the calendar.
+
 ## Automated verification
 
 Run the backend suite (`mvn test` in `backend/`) and the frontend suite (`npm run test` in

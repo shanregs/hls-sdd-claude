@@ -180,6 +180,12 @@ case-insensitively.
 
 **Rationale**: FR-007; shipping working defaults means marking works from the first run.
 
+**Addendum (2026-10-04)**: `V15` seeds three further ordinary codes: `S` Substitution (WORKED, 1),
+`H` Holiday (NON_WORKING, 0) and `A` Absent (LEAVE, 0, treated like `L`). They are `system = false`
+so Admin can change them, and each insert is skipped if the short code already exists (a database
+may already hold an Admin-created code of that letter). An explicit `H` or `N` mark makes that day
+non-working for the rollup, as research section 4 already defines for NON_WORKING marks.
+
 ## 14. Audit visibility and entity types
 
 **Decision**: new `entity_type` values `ATTENDANCE_MARK`, `ATTENDANCE_MONTH`, `ATTENDANCE_CODE`,
@@ -201,3 +207,30 @@ month is a toolbar action that lists unmarked Teachers/days when refused.
 
 **Rationale**: spec User Stories 2, 4, 7 and the accessibility success criterion; one grid avoids two
 diverging implementations.
+
+## 16. Day colours and the Holiday Calendar view with PDF (added 2026-10-04)
+
+**Decision**:
+- *Day colours*: one small helper maps a day's kind to a label and a tinted background taken from
+  the theme palette so it works in both themes: weekly off = weekday abbreviation on a neutral
+  (`action.hover`) tint; holiday (`NON_WORKING` state or a `NON_WORKING`-category mark) = "H" on a
+  `warning` tint; leave or absent (`LEAVE`-category mark) = its code on an `error` tint. The grid
+  cell gains the mark's `category` so the screen needs no list of code letters. Text always carries
+  the meaning; colour is reinforcement (FR-013, SC-010). The grids, the Teacher calendar and the
+  Holiday Calendar share the helper and a legend.
+- *Holiday Calendar view*: a `HolidayCalendarView` component draws a year (twelve mini-months) or a
+  month from the one `GET /api/v1/attendance/calendar` response (weekly off set plus holiday
+  dates), so no new endpoint or table is needed. The screen keeps the existing editing panel below
+  the calendar for Admin and Director.
+- *PDF*: generated in the browser with `jspdf`, drawing text and rectangles directly (no screenshot
+  library), loaded on demand with a dynamic import so it does not add to the first page load. The
+  PDF repeats the on-screen colours, a legend and the holiday list. No server endpoint, no stored
+  file, nothing to audit (it exports organization-wide non-sensitive data).
+
+**Alternatives considered**: a server-side PDF (OpenPDF/PDFBox) adds a backend dependency and an
+endpoint for data the browser already holds; `window.print()` gives a print dialog rather than a
+downloaded file and varies by browser; rasterising the screen (`html2canvas`) produces blurry,
+non-selectable text. Standard PDF fonts cover the English holiday names; non-Latin names would need
+an embedded font (out of scope, noted in the plan).
+
+**Rationale**: FR-013, FR-025, FR-026, SC-009, SC-010; the smallest design that downloads a real PDF.

@@ -31,6 +31,26 @@
   again? → A: No. After a supervisor has set a day, only a Manager (in scope), Admin or Director
   can change it. The Teacher sees it as set by their Manager, and can ask them to correct it.
 
+### Session 2026-10-04
+
+- Q: Where do the holiday calendar and the status codes live in the menu, and who may see them? →
+  A: Both are master data. MASTER DATA → **Holiday Calendar** is visible to every role (a read-only
+  calendar for Manager, Teacher and System) and editable by Admin and Director only, under its own
+  permission module `HOLIDAY_CALENDAR`. MASTER DATA → **Attendance Setup** holds the status codes
+  (Admin and Director). Neither is under OPERATIONS.
+- Q: Which further status codes ship by default? → A: **S** Substitution (worked, weight 1.00),
+  **H** Holiday (non-working, weight 0) and **A** Absent (leave category, weight 0, treated like
+  **L** Leave). They are ordinary, editable codes; the four built-in codes P, L, T and N stay
+  protected.
+- Q: How should a day look in the grids and calendars? → A: Each kind of day has its own
+  background colour *and* a text label, so colour is never the only cue: weekly off days show the
+  weekday abbreviation (for example "Sun") on a neutral background, holidays and non-working
+  statuses show "H" on an amber background, and leave or absent days show their code on a red
+  background.
+- Q: How is the holiday calendar presented? → A: A yearly view (twelve small months) and a monthly
+  view, switchable and navigable, with holidays highlighted in a distinct colour and weekly off days
+  in the neutral colour. A download icon produces a PDF of the year or month being viewed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Teacher Marks Their Own Attendance (Priority: P1) 🎯 MVP
@@ -157,6 +177,10 @@ Teacher's own calendar.
    cleared value stays in history; a Director corrects a day by marking over it.
 5. **Given** a user with only Teacher or System access, **When** they try to reach Attendance by
    menu or direct link, **Then** nothing is shown and the route says "not authorized".
+6. **Given** the grid, **When** it is shown, **Then** weekly off days read "Sun" (or the School's
+   off day) on a neutral background, holidays read "H" on an amber background, and Leave or Absent
+   marks show their code on a red background, with a legend; the same text is in each cell's
+   accessible name so the colours are never the only cue.
 
 ---
 
@@ -177,8 +201,9 @@ that month with no individual marks; add a custom code and mark with it.
 **Acceptance Scenarios**:
 
 1. **Given** the defaults, **When** a user opens the code list, **Then** Present, Leave, Training
-   day and Non-working exist, each with a category (worked, leave, training, non-working) and a
-   weight.
+   day and Non-working exist as built-in codes, and Substitution (S, worked), Holiday (H,
+   non-working) and Absent (A, leave) as editable codes, each with a category (worked, leave,
+   training, non-working) and a weight.
 2. **Given** an Admin, **When** they add a code with a name, short code, category and weight,
    **Then** it can be used in marks from then on; codes already used in marks cannot be deleted,
    only deactivated.
@@ -278,6 +303,43 @@ one row per Teacher with the rollup figures and optionally each day's status.
 
 ---
 
+### User Story 9 - See the Holiday Calendar by Year or Month and Download It as PDF (Priority: P2)
+
+Any signed-in user opens MASTER DATA → Holiday Calendar and sees the organization's holidays on a
+calendar: a yearly view with all twelve months, or a monthly view for one month, with the holiday
+days highlighted in a distinct colour and the weekly off days in a neutral colour. A download icon
+saves the year or month being viewed as a PDF. Admin and Director can also edit the calendar from
+the same screen (add or remove a holiday, change the weekly off days); everyone else sees it
+read-only.
+
+**Why this priority**: teachers and managers need to know which days are not working days without
+asking an administrator, and the PDF can be printed or shared. Nothing else depends on it.
+
+**Independent Test**: sign in as a Teacher, open Holiday Calendar, switch between the year and a
+month, confirm the seeded holidays are highlighted, and download the PDF; sign in as Admin and
+confirm the edit controls appear.
+
+**Acceptance Scenarios**:
+
+1. **Given** holidays on the calendar, **When** any user opens Holiday Calendar, **Then** the
+   current year is shown as twelve months with each holiday highlighted and each weekly off day in
+   the neutral colour, and a list of the year's holidays with their descriptions.
+2. **Given** the yearly view, **When** the user picks a month (or switches to Month), **Then** one
+   month is shown larger, each holiday cell naming the holiday, and they can move to the previous
+   or next month, or year, without leaving the screen.
+3. **Given** either view, **When** the user chooses the download icon (tooltip "Download PDF"),
+   **Then** a PDF of exactly the year or month on screen is saved, with the title, the highlighted
+   days, a legend and the list of holidays; its file name carries the year or the year and month.
+4. **Given** a Manager, Teacher or System user, **When** they open Holiday Calendar, **Then** they
+   see the calendar and can download the PDF, but no edit controls, and any attempt to change the
+   calendar is refused.
+5. **Given** an Admin or Director, **When** they add or remove a holiday, **Then** the calendar and
+   the list update at once and the change is audited (FR-021).
+6. **Given** a holiday that falls on a weekly off day, **When** it is shown, **Then** it is shown as
+   a holiday.
+
+---
+
 ### Edge Cases
 
 - A Teacher is placed in a School for part of a month: only dates inside a placement can be marked;
@@ -335,10 +397,12 @@ one row per Teacher with the rollup figures and optionally each day's status.
 
 **Status codes and calendar**
 
-- **FR-007**: The system MUST provide default status codes — Present, Leave, Training day, and
-  Non-working — each with a category (worked, leave, training, non-working) and a weight used in
-  the weighted total, and MUST let Admin and Director add codes and deactivate (not delete) codes
-  that have been used.
+- **FR-007**: The system MUST provide default status codes — Present (P), Leave (L), Training day
+  (T), Non-working (N) as protected built-in codes, plus Substitution (S, worked, weight 1.00),
+  Holiday (H, non-working, weight 0) and Absent (A, leave category, weight 0) as ordinary codes —
+  each with a category (worked, leave, training, non-working) and a weight used in the weighted
+  total, and MUST let Admin and Director add codes and deactivate (not delete) codes that have
+  been used. Status codes are maintained under MASTER DATA → Attendance Setup.
 - **FR-008**: The system MUST keep a non-working calendar made of an organization-wide default
   weekly off day set (Sunday by default), optional per-School overrides of the weekly off days, and
   specific organization-wide non-working dates, all maintained by Admin and Director. A Teacher's
@@ -365,7 +429,12 @@ one row per Teacher with the rollup figures and optionally each day's status.
 - **FR-013**: Manager, Admin and Director MUST get a month grid (one row per Teacher, one column
   per actual day of the month) scoped to their data scope, with search by Teacher name; Admin and
   Director MUST additionally be able to filter by Zone, School, Manager and Teacher status. The
-  grid MUST page its rows.
+  grid MUST page its rows. Each day cell MUST combine a text label with a background colour by kind
+  of day (never colour alone): a weekly off day shows the weekday abbreviation (for example "Sun")
+  on a neutral background; a holiday (non-working date, or a mark in a non-working status such as
+  H) shows "H" on an amber background; a leave or absent mark shows its code on a red background;
+  other marks show their code on the default background. The same colours apply to the Teacher's
+  calendar and a legend explains them.
 - **FR-014**: A Teacher MUST get a calendar of the current month (My Attendance) and an Attendance
   History browser for earlier months showing each day's status, School, and the month's rollup.
 - **FR-015**: A cell in a locked month MUST be shown as locked and not editable, and any direct
@@ -399,6 +468,21 @@ one row per Teacher with the rollup figures and optionally each day's status.
 - **FR-024**: All lists and grids MUST support search, pagination, and consistent loading, empty
   and error states, and every form MUST show inline validation; dates are DD/MM/YYYY.
 
+**Holiday Calendar**
+
+- **FR-025**: MASTER DATA → Holiday Calendar MUST be visible to every role and MUST show the
+  organization's non-working dates as a yearly calendar (twelve months) and as a monthly calendar,
+  switchable and navigable by month and year, with holidays highlighted in a distinct colour, weekly
+  off days in a neutral colour, and a list of the holidays with their descriptions. A holiday that
+  falls on a weekly off day MUST be shown as a holiday.
+- **FR-026**: The calendar MUST offer a download icon (tooltip "Download PDF") that saves the year
+  or the month being viewed as a PDF containing the title, the highlighted days, a legend and the
+  list of holidays, named for the year or the year and month.
+- **FR-027**: Only Admin and Director MUST be able to change the calendar (holidays and weekly off
+  days); Manager, Teacher and System MUST see it read-only, and a change attempt by them MUST be
+  refused. The permission is the module `HOLIDAY_CALENDAR` (`VIEW` for all roles, `EDIT` for Admin
+  and Director).
+
 ### Key Entities
 
 - **Attendance Mark**: one Teacher's current status for one date — the status code, the day value
@@ -419,14 +503,15 @@ one row per Teacher with the rollup figures and optionally each day's status.
 | -------- | --------------------- | --------------- | ---------- |
 | Admin    | OPERATIONS → Attendance; MASTER DATA → Attendance Setup (status codes) and Holiday Calendar | All, including lock/reopen (Process) and Export | Org-wide |
 | Director | OPERATIONS → Attendance; MASTER DATA → Attendance Setup, Holiday Calendar | View, Create, Edit, Process (lock/reopen), Export | Org-wide |
-| Manager  | OPERATIONS → Teacher Attendance | View, Create, Edit for Teachers in scope; no Process, Export or Setup | Assigned (Zones → Schools → Teachers) |
-| Teacher  | MY ATTENDANCE → My Attendance, Attendance History | View, Create, Edit own marks in unlocked months | Own |
-| System   | none | none | None (System MUST NOT see teacher or school business data) |
+| Manager  | OPERATIONS → Teacher Attendance; MASTER DATA → Holiday Calendar (read-only) | View, Create, Edit for Teachers in scope; no Process, Export or Setup; Holiday Calendar View | Assigned (Zones → Schools → Teachers) |
+| Teacher  | MY ATTENDANCE → My Attendance, Attendance History; MASTER DATA → Holiday Calendar (read-only) | View, Create, Edit own marks in unlocked months; Holiday Calendar View | Own |
+| System   | MASTER DATA → Holiday Calendar (read-only) | Holiday Calendar View only; no attendance | None for attendance (System MUST NOT see teacher or school business data; the holiday calendar is organization-wide, not teacher data) |
 
 **New permission keys**: modules `ATTENDANCE` (Admin and Director: `VIEW`, `CREATE`, `EDIT`,
 `PROCESS`, `EXPORT`; Admin also `DELETE`), `TEACHER_ATTENDANCE` (Manager: `VIEW`, `CREATE`, `EDIT`
-within scope), `MY_ATTENDANCE` (Teacher: `VIEW`, `CREATE`, `EDIT` own), and `ATTENDANCE_SETUP`
-(Admin and Director: `VIEW`, `EDIT`). All false for the other roles; all runtime-editable. Only
+within scope), `MY_ATTENDANCE` (Teacher: `VIEW`, `CREATE`, `EDIT` own), `ATTENDANCE_SETUP`
+(Admin and Director: `VIEW`, `EDIT`; the status codes), and `HOLIDAY_CALENDAR` (every role: `VIEW`;
+Admin and Director: `EDIT`). All false for the other roles; all runtime-editable. Only
 Admin, Director and System may edit the role→permission matrix; this spec does not change that.
 
 ## Success Criteria *(mandatory)*
@@ -448,6 +533,12 @@ Admin, Director and System may edit the role→permission matrix; this spec does
   export for the same filter completes in under 30 seconds.
 - **SC-008**: Every attendance screen is usable by keyboard alone and passes the same accessibility
   checks as earlier screens in both light and dark themes.
+- **SC-009**: A user can find whether a date is a holiday on the Holiday Calendar in under 10
+  seconds, and the PDF of a year or month downloads within 5 seconds and shows exactly the
+  highlighted days of the view it came from.
+- **SC-010**: In the grids and calendars, 100% of weekly off, holiday and leave/absent days carry a
+  text label as well as their colour, and the labels and colours meet the same contrast checks in
+  both themes.
 
 ## Assumptions
 
