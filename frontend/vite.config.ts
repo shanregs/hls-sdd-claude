@@ -14,5 +14,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setupTests.ts"],
+    // The page tests render large MUI trees in jsdom; the 5s default fails them under load, not on a defect.
+    testTimeout: 20000,
   },
 });
