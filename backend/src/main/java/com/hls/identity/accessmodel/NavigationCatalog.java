@@ -70,6 +70,14 @@ public final class NavigationCatalog {
                     41,
                     EnumSet.of(Role.SYSTEM)),
             new NavItem(
+                    "All Sessions",
+                    "/identity/sessions",
+                    PermissionModule.SESSION_MANAGEMENT,
+                    PermissionAction.VIEW,
+                    "SYSTEM CONFIGURATION",
+                    42,
+                    EnumSet.of(Role.SYSTEM)),
+            new NavItem(
                     "Zones",
                     "/master-data/zones",
                     PermissionModule.ZONES,

@@ -47,6 +47,21 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void sessionManagementIsSystemsByDefaultAndOnlyMatrixManagersMayHoldIt() {
+        assertThat(matrix.isGranted(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW)).isTrue();
+        assertThat(matrix.isGranted(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE)).isTrue();
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
+            assertThat(matrix.isGranted(role, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW))
+                    .as("%s granted by default", role)
+                    .isFalse();
+        }
+        assertThat(PermissionEligibility.actionsFor(Role.ADMIN, PermissionModule.SESSION_MANAGEMENT))
+                .containsExactly(PermissionAction.VIEW, PermissionAction.DELETE);
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, PermissionModule.SESSION_MANAGEMENT)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.SESSION_MANAGEMENT)).isEmpty();
+    }
+
+    @Test
     void systemHasNoBusinessDataModulesButKeepsTheHolidayCalendarAndAudit() {
         for (PermissionModule business : List.of(
                 PermissionModule.ZONES,

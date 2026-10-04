@@ -124,7 +124,7 @@ class AccessModelResolutionTest {
 
         assertThat(itemLabelsIn(response, "SYSTEM DASHBOARD")).containsExactly("Dashboard");
         assertThat(itemLabelsIn(response, "SYSTEM CONFIGURATION"))
-                .containsExactly("User Management", "Role & Permissions");
+                .containsExactly("User Management", "Role & Permissions", "All Sessions");
         assertThat(itemLabelsIn(response, "Dashboard")).isEmpty();
         assertThat(itemLabelsIn(response, "SYSTEM")).isEmpty();
         assertThat(response.dataScope()).containsEntry("DASHBOARD", "NONE");

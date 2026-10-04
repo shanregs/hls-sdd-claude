@@ -66,6 +66,9 @@ public class PermissionMatrixService {
         }
         seedMasterData();
         seedAttendance();
+        // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);

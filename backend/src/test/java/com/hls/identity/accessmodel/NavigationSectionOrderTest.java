@@ -63,6 +63,25 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     }
 
     @Test
+    void systemHasAnAllSessionsItemInItsConfigurationSectionAndNobodyElseDoes() {
+        for (Role role : Role.values()) {
+            String token = signInAs(role).token();
+            var navigation = client.get()
+                    .uri("/api/v1/me/access-model")
+                    .header("Authorization", "Bearer " + token)
+                    .exchange()
+                    .expectBody(AccessModelDtos.AccessModelResponse.class)
+                    .returnResult()
+                    .getResponseBody()
+                    .navigation();
+            boolean hasItem = navigation.stream()
+                    .flatMap(s -> s.items().stream())
+                    .anyMatch(i -> i.label().equals("All Sessions") && i.route().equals("/identity/sessions"));
+            assertThat(hasItem).as(role.name()).isEqualTo(role == Role.SYSTEM);
+        }
+    }
+
+    @Test
     void aUserWithSeveralRolesGetsOneCombinedOrder() {
         assertThat(sectionsFor(Role.MANAGER, Role.TEACHER))
                 .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "MY ATTENDANCE", "ACCOUNT");

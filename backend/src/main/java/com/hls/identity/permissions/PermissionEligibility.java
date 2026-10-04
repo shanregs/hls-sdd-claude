@@ -11,8 +11,12 @@ import java.util.Set;
  */
 public final class PermissionEligibility {
 
-    /** Only these roles may hold the Role &amp; Permissions capability (Constitution Principle II). */
+    /** Only these roles may hold the capabilities in {@link #MATRIX_MANAGER_ONLY_MODULES} (Constitution Principle II). */
     static final Set<Role> MATRIX_MANAGER_ROLES = EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.SYSTEM);
+
+    /** Capabilities only the matrix-manager roles may hold: the matrix itself and every user's sessions. */
+    static final Set<PermissionModule> MATRIX_MANAGER_ONLY_MODULES =
+            EnumSet.of(PermissionModule.IDENTITY_PERMISSIONS, PermissionModule.SESSION_MANAGEMENT);
 
     /** Teacher and school business data, which System must never see (Constitution Principle III). */
     static final Set<PermissionModule> BUSINESS_MODULES = EnumSet.of(
@@ -30,7 +34,7 @@ public final class PermissionEligibility {
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
     public static Set<PermissionAction> actionsFor(Role role, PermissionModule module) {
-        if (module == PermissionModule.IDENTITY_PERMISSIONS && !MATRIX_MANAGER_ROLES.contains(role)) {
+        if (MATRIX_MANAGER_ONLY_MODULES.contains(module) && !MATRIX_MANAGER_ROLES.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
