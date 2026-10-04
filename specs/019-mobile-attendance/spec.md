@@ -12,7 +12,7 @@
 
 ### Session 2026-10-04
 
-- Q: Which attendance statuses can a Teacher choose when marking their own day on the phone? → A: Whatever the server allows for self-marking, shown with Present first and the rest in the server's order. The app hard-codes no status list, so a status added on the web appears without an app update.
+- Q: Which attendance statuses can a Teacher choose when marking their own day on the phone? → A: Every active status the server lists, except the non-working (Holiday) one, with Present first and the rest in the server's order. The app hard-codes no status list, so a status added on the web appears without an app update. The server remains the judge of each save.
 - Q: Should the Manager's list of Teachers have a search box? → A: Yes, always shown above the list, so a Manager can find one Teacher by name among many.
 - Q: Besides the month view, should the Holiday Calendar offer an "all holidays this year" list? → A: Yes. The monthly view stays the default, and a button on the same screen opens a read-only list of every holiday of the current year.
 - Q: When a Teacher's mark is refused because a supervisor set the day or the month is locked, should the app offer a way to contact the Manager? → A: No. The app only explains in plain words (for example "Your Manager set this day. Ask them to correct it."). There is no contact shortcut or correction request in this release; messaging and notifications are separate specs.
@@ -188,8 +188,10 @@ disappears after the next menu refresh.
 - The month picker on My Attendance and the Holiday Calendar never offers months outside the current
   year. Attendance History also offers the previous year (clarified 2026-10-04), so a check in January
   can still reach December.
-- Leave days marked by a supervisor appear coloured and labelled as leave; holiday days are labelled as
-  holidays and cannot be marked.
+- Leave days marked by a supervisor appear coloured and labelled as leave; holiday and weekly-off days are
+  labelled as such. Whether such a day can be changed is decided by the server for the viewer (the day's
+  "who may change it" value), exactly as on the web; the app offers a change only where the server does,
+  and shows the server's reason if a save is refused.
 
 ## Requirements *(mandatory)*
 
@@ -204,8 +206,9 @@ disappears after the next menu refresh.
 - **FR-002**: The default month MUST be the current month. A month picker MUST let the user choose any
   month of the current year, and MUST NOT offer months of other years, except that Attendance History
   also offers the previous year (FR-006).
-- **FR-003**: A Teacher MUST be able to mark a day with a status from the list the server allows for
-  self-marking (Present first, the rest in the server's order, none hard-coded in the app), a whole or half day, and an
+- **FR-003**: A Teacher MUST be able to mark a day with a status from the active statuses the server
+  lists, except the non-working (Holiday) one (Present first, the rest in the server's order, none
+  hard-coded in the app), a whole or half day, and an
   optional note, on today or any of the previous 3 days, and to correct an existing mark of their own on
   those days. The app MUST offer saving only on days the server says the Teacher may change.
 - **FR-004**: When the server refuses a mark (future date, older than 3 days, locked month, not inside a
@@ -324,12 +327,12 @@ matrix (Constitution Principle II); this feature does not change that.
   self-marking, month locks, supervisor marks taking precedence, status codes and weights, and audit.
 - The app uses the server's own results (totals, day states, who may change a day) and computes none of
   them.
-- Teachers choose from the statuses the server allows for self-marking (clarified 2026-10-04): the app
-  shows that list, Present first and the rest in the server's order, and does not hard-code it.
+- Teachers choose from the active statuses the server lists, except the non-working (Holiday) one
+  (clarified 2026-10-04): the app shows them with Present first and the rest in the server's order, and
+  does not hard-code any code. The server accepts or refuses each save.
 - The Holiday Calendar in the app is monthly (with weekly offs and holidays) plus an "all holidays this
   year" list (clarified 2026-10-04), not the yearly grid overview or PDF of the web. School-specific weekly offs are shown for the School the user's data belongs to.
-- My Attendance, the Teacher picker months and the Holiday Calendar reach the current year only, as
-  requested. Attendance History also reaches the previous year (clarified 2026-10-04). Older years may be
+- My Attendance and the Holiday Calendar reach the current year only, as requested. Attendance History also reaches the previous year (clarified 2026-10-04). Older years may be
   added later.
 - Offline capture, push notifications, leave, photos or geo-tags, grids and month lock for Admin and
   Director, CSV or PDF export, and iOS are out of scope and tracked in later specs.

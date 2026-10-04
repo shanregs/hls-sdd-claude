@@ -54,15 +54,15 @@ does not offer is never shown, and `canOpen(route)` still guards every navigatio
   status short code for a marked day, a half-day marker when `dayValue` is 0.5. Each cell has an
   accessible label (weekday, date, state, status, day value).
 - Legend for the states and colours, with light and dark variants.
-- Tapping a cell opens the day sheet: read-only details for any day; an editable form only when
-  `editableBy` allows it for the viewer (`SELF` on Teacher screens; any unlocked in-placement day on a
-  Manager's Teacher view).
+- Tapping a cell opens the day sheet: read-only details for any day; an editable form only when the
+  day's `editableBy` allows it for the viewer: `SELF` on a Teacher's own screens, `SUPERVISOR` on a
+  Manager's Teacher view. The app never works this out from the day's state, the month or the phone's date.
 - Loading, empty and error states with a Retry; an error never leaves stale data shown as current.
 
 ### Day sheet
 - Shows the date, school, state, status, day value, note, who set it and when. A supervisor mark shows
   "Set by <name>" and the sentence "Ask your Manager to correct it" for a Teacher.
-- Edit form: status list (server order, no hard-coded codes), whole or half day, note, Save. Manager
+- Edit form: status list (active codes in server order, minus the non-working Holiday code, no hard-coded codes), whole or half day, note, Save. Manager
   view adds Clear and History.
 - Save is disabled with the reason shown when the day is not editable. The draft stays on screen after a
   failure; nothing is shown as saved before a 2xx (FR-005).

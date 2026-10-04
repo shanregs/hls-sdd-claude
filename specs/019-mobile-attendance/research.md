@@ -43,6 +43,8 @@ attendance screens (`frontend/src/features/attendance/`), and the app from spec 
 
 - **Finding**: `GET /api/v1/attendance/status-codes` returns active codes with `shortCode`, `name`,
   `category`, `weight`. The web mark dialog uses the same list.
+- **Finding**: the server has no "self-markable" flag; `MarkService` accepts any active code for a
+  Teacher and refuses an inactive one.
 - **Decision**: show the active codes in the server's order, except codes of category `NON_WORKING`
   (Holiday), which are not a Teacher's choice. Do not hard-code any code. The server remains the
   judge: a refused status shows its reason (FR-004).
@@ -94,7 +96,9 @@ attendance screens (`frontend/src/features/attendance/`), and the app from spec 
 
 ## 11. Marking and clearing as a Manager
 
-- **Decision**: reuse the same day sheet (status, whole or half day, note) with a Clear action added. A
+- **Decision**: reuse the same day sheet (status, whole or half day, note) with a Clear action added. Offer editing only where the day's
+  `editableBy` is `SUPERVISOR` (the server returns that for any past, placed day in an unlocked month,
+  weekly-off and holiday days included), never from the day state or the phone's date. A
   Manager's PUT and DELETE go to `/attendance/teachers/{id}/marks/{date}`; the day-history endpoint feeds
   the history list. Scope is enforced by the server; a 404 shows "not found" and no data (US4 scenario 7).
 

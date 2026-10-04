@@ -20,6 +20,8 @@ view, day sheet, picker, API client) come first because three screens use them.
 
 ## Format: `[ID] [P?] [Story] Description`
 
+> **Note**: T041 was added after `/speckit-analyze` and sits at the end of Phase 7; its ID is out of numeric order.
+
 - **[P]**: can run in parallel (different files, no dependency on an incomplete task)
 - **[Story]**: US1-US5; absent for Setup/Foundational/Polish
 
@@ -71,8 +73,8 @@ are not changed. Always run commands from the `mobile` folder with JDK 17 (see `
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] `MOBT/attendance/myAttendance.test.tsx`: opens on the current month in the business time zone using the server's `Date` header even when the phone clock is a day off; shows one cell per day with state, status and half-day marker, and the rollup totals from the server; changing month and returning works; `404 "Your profile has not been set up yet."` is shown as given
-- [ ] T017 [P] [US1] `MOBT/attendance/myAttendanceMark.test.tsx`: Present whole day on today saves with the right body (`{statusCode, dayValue: 1, note}`) and the month is re-fetched so the cell and totals update; changing to half day and another status sends the previous mark's `version`; the status list is the server's active codes in server order with the `NON_WORKING` code (Holiday) not offered and no code hard-coded; Save is not offered on a day whose `editableBy` is not `SELF`
+- [ ] T016 [P] [US1] `MOBT/attendance/myAttendance.test.tsx`: opens on the current month in the business time zone using the server's `Date` header even when the phone clock is a day off; shows one cell per day with state, status and half-day marker, and the rollup totals from the server (including a weekly-off or holiday day that the server marks `editableBy: "SELF"`, which offers Save, and one marked `NONE`, which does not); changing month and returning works; `404 "Your profile has not been set up yet."` is shown as given
+- [ ] T017 [P] [US1] `MOBT/attendance/myAttendanceMark.test.tsx`: Present whole day on today saves with the right body (`{statusCode, dayValue: 1, note}`) and the month is re-fetched so the cell and totals update; changing to half day and another status sends the previous mark's `version`; the status list is the server's active codes in server order with the `NON_WORKING` code (Holiday) not offered and no code hard-coded; Save is offered exactly when the day's `editableBy` is `SELF` and never otherwise, whatever the day's state
 - [ ] T018 [P] [US1] `MOBT/attendance/myAttendanceRefusals.test.tsx`: for every Teacher refusal in the count found in T009 (future date, older than 3 days, locked month, no placement that date, already set by a supervisor, exited, changed meanwhile) the server's 409 `{reason}` shows the plain wording, the day is unchanged and the draft is kept; "changed meanwhile" re-loads the month and shows the new value; a day set by a supervisor shows who set it and "Ask your Manager to correct it"
 - [ ] T019 [P] [US1] `MOBT/attendance/myAttendanceOffline.test.tsx`: with the fake server offline, Save shows "No connection", keeps the entered status, day value and note, shows nothing as saved and does not change the cell; going back online and saving again succeeds (SC-006); a failed month load shows an error with Retry and never leaves old data shown as current
 
@@ -131,13 +133,13 @@ are not changed. Always run commands from the `mobile` folder with JDK 17 (see `
 ### Tests for User Story 4
 
 - [ ] T027 [P] [US4] `MOBT/attendance/teacherAttendanceList.test.tsx`: the list shows only the Teachers the server returned (a fixture with two Managers' Teachers where the server answers for the first Manager) with School and the rollup figures; the search box is always visible, debounced by 300 ms, sends `query` and narrows the list; "load more" requests the next page of 25; month change reloads; empty state "No Teachers found"; failed load shows Retry
-- [ ] T028 [P] [US4] `MOBT/attendance/teacherMonth.test.tsx`: opening a Teacher loads `GET /api/v1/attendance/teachers/{id}?month=` and shows the month view; an unlocked day inside a placement offers Save and Clear; marking sends `PUT .../teachers/{id}/marks/{date}` with `{statusCode, dayValue, note, version?}`; Clear sends `DELETE` and the day becomes unmarked after the re-fetch; the day's History lists every earlier value newest first with who and when; a supervisor change makes the Teacher's own screen show "Set by <name>"
+- [ ] T028 [P] [US4] `MOBT/attendance/teacherMonth.test.tsx`: opening a Teacher loads `GET /api/v1/attendance/teachers/{id}?month=` and shows the month view; a day with `editableBy: "SUPERVISOR"` offers Save and Clear, including a weekly-off day, and a day with `NONE` (locked month, not placed, or future) offers neither; marking sends `PUT .../teachers/{id}/marks/{date}` with `{statusCode, dayValue, note, version?}`; Clear sends `DELETE` and the day becomes unmarked after the re-fetch; the day's History lists every earlier value newest first with who and when; a supervisor change makes the Teacher's own screen show "Set by <name>"
 - [ ] T029 [P] [US4] `MOBT/attendance/teacherScope.test.tsx`: a 404 for a Teacher the server does not return shows "Not found" and no data about the Teacher (US4 scenario 7); the app never requests or shows a Teacher id that was not in the server's list or an earlier successful view; a locked month refuses with the plain message and the day is unchanged; every Manager refusal in the count found in T009 shows plain wording and keeps the draft
 
 ### Implementation for User Story 4
 
 - [ ] T030 [US4] Create `MOB/screens/TeacherAttendanceScreen.tsx`: month selector (kind `current`), always-visible search box with a 300 ms debounce, `getTeacherGrid({month, query, page, size: 25})`, rows showing name, School and the rollup figures, "load more", loading, empty and error states, and an `onOpen(teacherId, name)` callback; wire the `teacherAttendance` key in `MOB/navigation/AppShell.tsx`
-- [ ] T031 [US4] Create `MOB/screens/TeacherMonthScreen.tsx`: opened from the list, loads `getTeacherMonth(teacherId, month)`, reuses `MonthPicker`, `RollupStrip`, `MonthGrid`, `DayLegend` and `DaySheet`; editable when the month is not locked and the day state is `UNMARKED` or `MARKED` (the server's state), with Save through `saveTeacherMark`, Clear through `clearTeacherMark`, and History through `getDayHistory` shown as a list; 404 shows "Not found"; re-fetches after every change; Android back returns to the list with its search and month kept
+- [ ] T031 [US4] Create `MOB/screens/TeacherMonthScreen.tsx`: opened from the list, loads `getTeacherMonth(teacherId, month)`, reuses `MonthPicker`, `RollupStrip`, `MonthGrid`, `DayLegend` and `DaySheet`; editable exactly when the day's `editableBy` is `SUPERVISOR` (the server returns it for any past, placed day in an unlocked month, weekly-off and holiday days included; never derive it from `state`, `locked` or the phone's date), with Save through `saveTeacherMark`, Clear through `clearTeacherMark`, and History through `getDayHistory` shown as a list; 404 shows "Not found"; re-fetches after every change; Android back returns to the list with its search and month kept
 - [ ] T032 [US4] Create `MOB/attendance/DayHistoryList.tsx` (every earlier value newest first with who changed it and when, and whether it was a create, correction or clear) with `MOBT/attendance/DayHistoryList.test.tsx`
 
 **Checkpoint**: Teachers and Managers both have their attendance screens.
@@ -157,6 +159,8 @@ are not changed. Always run commands from the `mobile` folder with JDK 17 (see `
 - [ ] T035 [P] [US5] `MOBT/api/attendanceContract.test.ts`: every call of `MOB/api/attendanceApi.ts` sends the method, path, query and body of contracts/mobile-attendance-screens.md, carries `X-HLS-Client` and either `X-HLS-Location` or `X-HLS-Location-Status`, and `Authorization`; month parameters are "YYYY-MM" and dates "YYYY-MM-DD"
 - [ ] T036 [US5] Confirm by test and by code review that no file under `MOB/attendance/` or the new screens chooses content by role name, hard-codes a status code, computes a total, or decides whether a day may be changed from the phone's date (only from `editableBy`, `state` and `locked`); fix any finding
 
+- [ ] T041 [US5] Update `mobile/src/screens/HomeScreen.tsx` so a business section of the menu that now has a screen in the app (MY ATTENDANCE, OPERATIONS, MASTER DATA) is not shown as a "Coming to the app soon" skeleton card; sections without a screen keep their card; add a test in `mobile/__tests__/screens/notAuthorized.test.tsx` (the existing Home tests) for a Teacher, a Manager and a Director that no card says "coming soon" for a section with a screen
+
 **Checkpoint**: all five stories work together.
 
 ---
@@ -166,7 +170,7 @@ are not changed. Always run commands from the `mobile` folder with JDK 17 (see `
 - [ ] T037 [P] Add the new screens to the accessibility checks in `MOBT/a11y/screens.a11y.test.tsx`: every button and input has an accessible name, calendar cells announce weekday, date, state and status, and `minTouchTarget` (48 dp) is used for cells, arrows and sheet actions; confirm light and dark rendering in `MOBT/theme/theme.test.tsx`
 - [ ] T038 [P] Verify against the real server data that Present is listed first by the status-code order: read the seed in `backend/src/main/java/com/hls/attendance/internal/` (default codes and `sortOrder`) and, with the backend running, the real `GET /api/v1/attendance/status-codes` response; if Present is not first, order the chooser by the server's position only and record the finding in `specs/019-mobile-attendance/quickstart-results.md`
 - [ ] T039 [P] Update `docs/running-mobile.md` section 5 (manual checklist) with the attendance scenarios from quickstart.md, and `docs/spec-roadmap.md` row 019 to the current status
-- [ ] T040 Run the full mobile suite, lint, typecheck and `npm run check:manifest`; run the quickstart scenarios 1-15 on the emulator against the real backend, including TalkBack and the wrong-phone-clock scenario, and record results and any open items in `specs/019-mobile-attendance/quickstart-results.md`
+- [ ] T040 Run the full mobile suite, lint, typecheck and `npm run check:manifest`; run the quickstart scenarios 1-15 on the emulator against the real backend, including TalkBack and the wrong-phone-clock scenario, and record results and any open items in `specs/019-mobile-attendance/quickstart-results.md`; SC-001 (mark in under 30 seconds) and SC-009 (every change audited as from the Android app, checked in AUDIT → Change History and API Access) are verified manually here, because the audit itself is tested on the server in specs 003 and 008
 
 ---
 

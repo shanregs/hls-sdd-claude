@@ -56,9 +56,10 @@ create, correction or clear (server shape; the app renders it as a list).
 
 - `dayValue` is whole (1) or half (0.5); no other value is offered (FR-003).
 - The note is optional and plain text; the server's length limit is shown as given if it refuses.
-- A save is offered only when the day's `editableBy` is `SELF` (Teacher screens) or the Manager
-  screens' days are inside a placement and the month is not locked (the server's `state` and `locked`
-  say so).
+- A save is offered only when the server says so through the day's `editableBy`: `SELF` on a Teacher's
+  own screens, `SUPERVISOR` on a Manager's view of a Teacher (the server returns it for any past, placed
+  day in an unlocked month, including weekly-off and holiday days). The app never derives this from the
+  day `state`, the month, or the phone's clock.
 - Months outside the allowed range are not offered (FR-002).
 - A mark is "saved" only after a 2xx response (FR-005, SC-006).
 
