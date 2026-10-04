@@ -1,78 +1,62 @@
 import { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
   Box,
-  Button,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
+  Link,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import { useAuth } from "../auth/useAuth";
-import type { SessionSummary } from "../auth/authApi";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
+import { getProfile, type AccountProfile } from "./accountApi";
+
+function Detail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary" component="dt">
+        {label}
+      </Typography>
+      <Typography component="dd" sx={{ m: 0 }}>
+        {value && value.length > 0 ? value : "Not set"}
+      </Typography>
+    </Box>
+  );
+}
 
 /**
- * Self-service session management (FR-015, User Story 5): shows only the caller's own active
- * sessions, marks the current one, and lets them end any other one. Uses {@link useAuth}'s
- * `authFetch` so an expired access token renews silently instead of surfacing an error here
- * (User Story 3).
+ * My profile (every signed-in user): the caller's own account details, read-only, from
+ * {@code GET /api/v1/me/profile}. A Teacher also sees their Teacher record. Editing the details,
+ * changing the password and managing sessions are on the Settings page.
  */
 export function ProfilePage() {
   const { user, authFetch } = useAuth();
-  const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [reloadCount, setReloadCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const response = await authFetch("/api/v1/me/sessions");
-        if (!response.ok) {
-          throw new Error("Could not load your sessions.");
-        }
-        const data = (await response.json()) as SessionSummary[];
-        if (!cancelled) {
-          setSessions(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Could not load your sessions.");
-        }
-      }
+      const result = await getProfile(authFetch);
+      if (cancelled) return;
+      if (result.ok) setProfile(result.data);
+      else setError(result.reason);
     })();
     return () => {
       cancelled = true;
     };
-  }, [authFetch, reloadCount]);
-
-  const handleEnd = async (sessionId: string) => {
-    setError(null);
-    try {
-      const response = await authFetch(`/api/v1/me/sessions/${sessionId}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Could not end that session.");
-      }
-      setReloadCount((count) => count + 1);
-    } catch {
-      setError("Could not end that session.");
-    }
-  };
+  }, [authFetch]);
 
   if (!user) {
     return null;
   }
 
   return (
-    <Box sx={{ p: 4, maxWidth: 600 }}>
-      {user.roles.includes("TEACHER") && <MyTeacherProfile />}
+    <Box sx={{ maxWidth: 640 }}>
       <Typography variant="h5" component="h1" gutterBottom>
-        My sessions
+        My profile
       </Typography>
 
       {error && (
@@ -80,42 +64,60 @@ export function ProfilePage() {
           {error}
         </Alert>
       )}
+      {!profile && !error && <Typography>Loading your profile…</Typography>}
 
-      {sessions === null && !error && <Typography>Loading…</Typography>}
-      {sessions !== null && sessions.length === 0 && (
-        <Typography>No active sessions.</Typography>
+      {profile && (
+        <Paper
+          variant="outlined"
+          sx={{ p: 3, mb: 3 }}
+          component="section"
+          aria-labelledby="account-details-heading"
+        >
+          <Typography
+            variant="h6"
+            component="h2"
+            id="account-details-heading"
+            gutterBottom
+          >
+            Account details
+          </Typography>
+          <Stack component="dl" spacing={1.5} sx={{ m: 0 }}>
+            <Detail label="Name" value={profile.displayName} />
+            <Detail label="Phone number" value={profile.phone} />
+            <Detail label="Username" value={profile.username} />
+            <Detail label="Email" value={profile.email} />
+            <Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                component="dt"
+              >
+                Roles
+              </Typography>
+              <Stack
+                component="dd"
+                direction="row"
+                spacing={1}
+                sx={{ m: 0, mt: 0.5 }}
+              >
+                {profile.roles.map((role) => (
+                  <Chip key={role} label={role} size="small" />
+                ))}
+              </Stack>
+            </Box>
+          </Stack>
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            To change your details or password, or to manage your signed-in
+            devices, go to{" "}
+            <Link component={RouterLink} to="/account/settings">
+              Settings
+            </Link>
+            .
+          </Typography>
+        </Paper>
       )}
 
-      <List>
-        {sessions?.map((session) => (
-          <ListItem
-            key={session.id}
-            secondaryAction={
-              !session.current && (
-                <Button size="small" onClick={() => handleEnd(session.id)}>
-                  End session
-                </Button>
-              )
-            }
-          >
-            <ListItemText
-              primary={
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ alignItems: "center" }}
-                >
-                  <span>{session.deviceDescription}</span>
-                  {session.current && (
-                    <Chip label="This device" size="small" color="primary" />
-                  )}
-                </Stack>
-              }
-              secondary={`Signed in ${new Date(session.signedInAt).toLocaleString()} · last active ${new Date(session.lastActivityAt).toLocaleString()}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      {user.roles.includes("TEACHER") && <MyTeacherProfile />}
     </Box>
   );
 }

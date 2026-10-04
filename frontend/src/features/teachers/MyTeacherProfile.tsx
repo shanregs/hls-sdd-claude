@@ -45,9 +45,9 @@ export function MyTeacherProfile() {
   }, [authFetch]);
 
   return (
-    <Paper variant="outlined" sx={{ p: 3, mb: 4 }}>
-      <Typography variant="h5" component="h1" gutterBottom>
-        My profile
+    <Paper variant="outlined" sx={{ p: 3 }}>
+      <Typography variant="h6" component="h2" gutterBottom>
+        My teacher record
       </Typography>
       {state.kind === "loading" && <Typography>Loading…</Typography>}
       {state.kind === "error" && (

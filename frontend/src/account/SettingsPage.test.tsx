@@ -25,6 +25,17 @@ const PROFILE = {
 function mockApi(write: Response = json(PROFILE)) {
   authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
     if (init?.method) return write;
+    if (url === "/api/v1/me/sessions") {
+      return json([
+        {
+          id: "s1",
+          deviceDescription: "Chrome on Windows",
+          signedInAt: "2026-01-01T00:00:00Z",
+          lastActivityAt: "2026-01-01T00:05:00Z",
+          current: true,
+        },
+      ]);
+    }
     return json(PROFILE);
   });
 }
@@ -46,6 +57,20 @@ describe("SettingsPage", () => {
     expect(await screen.findByLabelText(/^Name/)).toHaveValue("Tara Teacher");
     expect(screen.getByLabelText("Phone number")).toBeDisabled();
     expect(screen.getByText(/Roles: TEACHER/)).toBeInTheDocument();
+  });
+
+  it("also holds the password form and the signed-in sessions", async () => {
+    mockApi();
+    render(<SettingsPage />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Change password" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "My sessions" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Chrome on Windows")).toBeInTheDocument();
+    expect(screen.getByText("This device")).toBeInTheDocument();
   });
 
   it("saves an edited name, username and email", async () => {

@@ -16,6 +16,7 @@ import {
   updateProfile,
   type AccountProfile,
 } from "./accountApi";
+import { SessionsCard } from "./SessionsCard";
 
 interface ProfileForm {
   displayName: string;
@@ -252,7 +253,7 @@ function PasswordCard() {
   );
 }
 
-/** Settings (every signed-in user): edit your own profile and change your own password. */
+/** Settings (every signed-in user): edit your own profile, change your own password and manage your sessions. */
 export function SettingsPage() {
   const { authFetch } = useAuth();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
@@ -286,6 +287,7 @@ export function SettingsPage() {
         <Stack spacing={3}>
           <ProfileCard profile={profile} onSaved={setProfile} />
           <PasswordCard />
+          <SessionsCard />
         </Stack>
       )}
     </Box>

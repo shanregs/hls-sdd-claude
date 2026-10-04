@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProfilePage } from "./ProfilePage";
 
 const authFetch = vi.fn();
@@ -15,89 +15,74 @@ vi.mock("../auth/useAuth", () => ({
 function jsonResponse(body: unknown, ok = true) {
   return {
     ok,
+    status: ok ? 200 : 500,
     json: async () => body,
   } as Response;
 }
 
-describe("ProfilePage (User Story 5, FR-015)", () => {
+const PROFILE = {
+  id: "u1",
+  displayName: "Priya Manager",
+  phone: "9800000003",
+  username: "priya.m",
+  email: null,
+  roles: ["MANAGER"],
+};
+
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <ProfilePage />
+    </MemoryRouter>,
+  );
+}
+
+describe("ProfilePage: the caller's own account details", () => {
   beforeEach(() => {
     authFetch.mockReset();
   });
 
-  it("marks the caller's own device and lists other sessions", async () => {
-    authFetch.mockResolvedValueOnce(
-      jsonResponse([
-        {
-          id: "s1",
-          deviceDescription: "Chrome on Windows",
-          signedInAt: "2026-01-01T00:00:00Z",
-          lastActivityAt: "2026-01-01T00:05:00Z",
-          current: true,
-        },
-        {
-          id: "s2",
-          deviceDescription: "Safari on iPhone",
-          signedInAt: "2026-01-01T00:00:00Z",
-          lastActivityAt: "2026-01-01T00:05:00Z",
-          current: false,
-        },
-      ]),
-    );
+  it("shows the account details from the profile API, read-only", async () => {
+    authFetch.mockResolvedValue(jsonResponse(PROFILE));
 
-    render(<ProfilePage />);
+    renderPage();
 
-    expect(await screen.findByText("Chrome on Windows")).toBeInTheDocument();
-    expect(screen.getByText("Safari on iPhone")).toBeInTheDocument();
-    expect(screen.getByText("This device")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /end session/i }),
+      await screen.findByRole("heading", { name: "My profile" }),
     ).toBeInTheDocument();
+    expect(await screen.findByText("Priya Manager")).toBeInTheDocument();
+    expect(screen.getByText("9800000003")).toBeInTheDocument();
+    expect(screen.getByText("priya.m")).toBeInTheDocument();
+    expect(screen.getByText("MANAGER")).toBeInTheDocument();
+    // An email that was never set reads "Not set", not blank.
+    expect(screen.getByText("Not set")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(authFetch).toHaveBeenCalledWith("/api/v1/me/profile");
   });
 
-  it("ends another session and refreshes the list", async () => {
-    authFetch
-      .mockResolvedValueOnce(
-        jsonResponse([
-          {
-            id: "s1",
-            deviceDescription: "Chrome on Windows",
-            signedInAt: "2026-01-01T00:00:00Z",
-            lastActivityAt: "2026-01-01T00:05:00Z",
-            current: true,
-          },
-          {
-            id: "s2",
-            deviceDescription: "Safari on iPhone",
-            signedInAt: "2026-01-01T00:00:00Z",
-            lastActivityAt: "2026-01-01T00:05:00Z",
-            current: false,
-          },
-        ]),
-      )
-      .mockResolvedValueOnce(jsonResponse({}))
-      .mockResolvedValueOnce(
-        jsonResponse([
-          {
-            id: "s1",
-            deviceDescription: "Chrome on Windows",
-            signedInAt: "2026-01-01T00:00:00Z",
-            lastActivityAt: "2026-01-01T00:05:00Z",
-            current: true,
-          },
-        ]),
-      );
+  it("does not load or show sessions here; they are on Settings", async () => {
+    authFetch.mockResolvedValue(jsonResponse(PROFILE));
 
-    const user = userEvent.setup();
-    render(<ProfilePage />);
+    renderPage();
+    await screen.findByText("Priya Manager");
 
-    await screen.findByText("Safari on iPhone");
-    await user.click(screen.getByRole("button", { name: /end session/i }));
-
-    await waitFor(() =>
-      expect(screen.queryByText("Safari on iPhone")).not.toBeInTheDocument(),
+    expect(authFetch.mock.calls.map((c) => String(c[0]))).not.toContain(
+      "/api/v1/me/sessions",
     );
-    expect(authFetch).toHaveBeenCalledWith("/api/v1/me/sessions/s2", {
-      method: "DELETE",
-    });
+    expect(screen.queryByText("My sessions")).toBeNull();
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/account/settings",
+    );
+  });
+
+  it("shows an error when the profile cannot be loaded", async () => {
+    authFetch.mockResolvedValue(jsonResponse({}, false));
+
+    renderPage();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not load your profile.",
+    );
   });
 });

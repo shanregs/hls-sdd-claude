@@ -499,7 +499,7 @@ const pages: PageCase[] = [
   {
     name: "ProfilePage",
     render: () => <ProfilePage />,
-    settle: () => screen.findByText(/no active sessions/i),
+    settle: () => screen.findByText("Account details"),
   },
   {
     name: "AppShell",
@@ -648,7 +648,10 @@ const pages: PageCase[] = [
   {
     name: "SettingsPage",
     render: () => <SettingsPage />,
-    settle: () => screen.findByText("Change password", { selector: "h2" }),
+    settle: async () => {
+      await screen.findByText("Change password", { selector: "h2" });
+      await screen.findByText(/no active sessions/i);
+    },
   },
   {
     name: "MarkDialog",
