@@ -15,6 +15,8 @@
 - Q: How long should a user stay signed in on the Android app before signing in again? → A: Same as the web app. Spec 001's session settings apply unchanged, with no mobile-specific lifetime.
 - Q: How precise should the stored location be? → A: Store exactly as captured (full coordinates and accuracy). Raw location stays visible only to Admin and System on the audit screens. It is kept at full precision so a later heat map can show where actions were performed; that heat map is a later web feature, shown only to the System role, and is not built in this release.
 - Q: What should a user see when they open the app with no internet? → A: A "no connection" screen with Retry. No menus or data are shown until the server is reachable; nothing cached is shown as current.
+- Q: Should the app run on rooted (modified) Android phones? → A: Yes, but the app records "device appears rooted" on the Login History entry so Admin and System can see it. It never blocks sign-in or any action.
+- Q: What is the oldest Android version the app must support? → A: Android 10 and later.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -192,6 +194,7 @@ minutes and confirm no location is recorded.
 - Many API calls fire together (for example loading a home screen): they may share one location
   reading taken at the start of that burst, so the user's battery and the screen's speed are not
   affected.
+- A rooted or modified device: sign-in and use proceed normally; the Login History entry is flagged "device appears rooted" (FR-028a).
 - Mock or spoofed location on the device: the server records what was sent and cannot verify it. The
   location is for audit, not for allowing or blocking anything.
 - The device clock is wrong: the capture time on a location is compared with the server time and an
@@ -300,6 +303,7 @@ minutes and confirm no location is recorded.
 
 **Release control**
 
+- **FR-028a**: When the app detects that the device appears rooted or modified, it MUST report that with the sign-in, and the server MUST store it on the Login History entry and show it on that entry on the audit screens. It MUST NOT block sign-in or any other action, and, like location, it is for audit only. The detection is best-effort and not proof.
 - **FR-029**: The server MUST be able to name a minimum supported app version. An app below it MUST be
   told to update and MUST NOT be allowed to continue past Sign In.
 
@@ -374,8 +378,7 @@ who may edit the matrix. Manager and Teacher have no new access.
   wording of the privacy notice is set by HLS and is outside this spec.
 - Sessions on more than one device are allowed, as on the web. The session lengths of spec 001
   apply to the app unchanged (clarified 2026-10-04); there is no mobile-specific lifetime.
-- The app targets recent Android versions and phones. The exact minimum Android version, rooted-device
-  policy and distribution method (store listing or private distribution) are planning decisions.
+- The app supports Android 10 and later (clarified 2026-10-04). The distribution method (store listing or private distribution) is a planning decision.
 - Sign-in method, rate limits and messages come from spec 001 without change, and the navigation
   model comes from spec 002 without change. The audit store is spec 003's, extended only with the new
   optional fields in this spec.

@@ -14,14 +14,30 @@ class AttendanceModuleRulesTest {
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages("com.hls");
 
+    /**
+     * Later modules (leave, payroll, reports) read attendance through {@code attendance.api} only, so no
+     * other module can compute rollups or touch marks itself.
+     */
     @Test
-    void otherModulesDoNotDependOnAttendance() {
+    void otherModulesUseAttendanceOnlyThroughItsApiPackage() {
         noClasses()
                 .that()
                 .resideOutsideOfPackage("com.hls.attendance..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAPackage("com.hls.attendance..")
+                .resideInAnyPackage("com.hls.attendance.internal..", "com.hls.attendance.web..")
+                .allowEmptyShould(true)
+                .check(MAIN);
+    }
+
+    @Test
+    void theApiPackageDoesNotReachIntoTheModulesInternals() {
+        noClasses()
+                .that()
+                .resideInAPackage("com.hls.attendance.api..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("com.hls.attendance.internal..", "com.hls.attendance.web..")
                 .allowEmptyShould(true)
                 .check(MAIN);
     }

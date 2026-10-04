@@ -202,7 +202,7 @@ refused.
 
 ## Phase 11: Read contract for later modules
 
-- [ ] T063 Add `BE/attendance/api/AttendanceReadApi.java` (`rollupOf(teacherId, yearMonth)` returning `RollupView` with `locked` flag, frozen if locked; `marksOf(teacherId, yearMonth)` returning `List<MarkView>`; `isLocked(teacherId, yearMonth)`) and implement in `BE/attendance/internal/AttendanceReadApiImpl.java` reusing `TeacherMonthViewService`/`MonthLockService`; test in `BT/attendance/AttendanceReadApiTest.java` (open month live, locked month frozen, unknown Teacher -> empty/zero without error); ArchUnit check that no other module computes attendance itself
+- [X] T063 Add `BE/attendance/api/AttendanceReadApi.java` (`rollupOf(teacherId, yearMonth)` returning `RollupView` with `locked` flag, frozen if locked; `marksOf(teacherId, yearMonth)` returning `List<MarkView>`; `isLocked(teacherId, yearMonth)`) and implement in `BE/attendance/internal/AttendanceReadApiImpl.java` reusing `TeacherMonthViewService`/`MonthLockService`; test in `BT/attendance/AttendanceReadApiTest.java` (open month live, locked month frozen, unknown Teacher -> empty/zero without error); ArchUnit check that no other module computes attendance itself
 
 ---
 
