@@ -38,6 +38,8 @@ class ApplicationModuleBoundaryTest {
             // Settings page: a user changing their own password or editing their own profile.
             "com.hls.identity.activity.PasswordChanged",
             "com.hls.identity.activity.ProfileUpdated",
+            // Spec 018: every Android API request is recorded in the API access log.
+            "com.hls.identity.clientcontext.ApiAccessRecorded",
             "com.hls.audit.api.EntityChanged");
 
     // Main production classes only (target/classes) — not target/test-classes, which legitimately
