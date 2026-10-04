@@ -50,6 +50,15 @@ class SetupControllerTest extends AttendanceTestBase {
     }
 
     @Test
+    void substitutionHolidayAndAbsentAreSeededAsOrdinaryCodes() {
+        String token = signInAs(Role.ADMIN).token();
+
+        assertThat(codeByShort(token, "S")).containsEntry("name", "Substitution").containsEntry("category", "WORKED").containsEntry("system", false);
+        assertThat(codeByShort(token, "H")).containsEntry("name", "Holiday").containsEntry("category", "NON_WORKING").containsEntry("system", false);
+        assertThat(codeByShort(token, "A")).containsEntry("name", "Absent").containsEntry("category", "LEAVE").containsEntry("system", false);
+    }
+
+    @Test
     void managerAndTeacherMayReadCodesButNotChangeThem() {
         for (Role role : new Role[] {Role.MANAGER, Role.TEACHER}) {
             String token = signInAs(role).token();

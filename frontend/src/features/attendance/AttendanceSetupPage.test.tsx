@@ -18,11 +18,11 @@ vi.mock("../../access-model/useAccessModel", () => ({
       dataScope: {},
       navigation: [
         {
-          section: "OPERATIONS",
+          section: "MASTER DATA",
           items: [
             {
               label: "Attendance Setup",
-              route: "/operations/attendance-setup",
+              route: "/master-data/attendance-setup",
               actions: grantedActions,
             },
           ],

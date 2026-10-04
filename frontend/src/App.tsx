@@ -145,7 +145,7 @@ export function App() {
           }
         />
         <Route
-          path="/operations/attendance-setup"
+          path="/master-data/attendance-setup"
           element={
             <RouteGuard>
               <AttendanceSetupPage />

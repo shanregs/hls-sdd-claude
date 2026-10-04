@@ -119,11 +119,11 @@ public final class NavigationCatalog {
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
                     "Attendance Setup",
-                    "/operations/attendance-setup",
+                    "/master-data/attendance-setup",
                     PermissionModule.ATTENDANCE_SETUP,
                     PermissionAction.VIEW,
-                    "OPERATIONS",
-                    51,
+                    "MASTER DATA",
+                    45,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
                     "Teacher Attendance",

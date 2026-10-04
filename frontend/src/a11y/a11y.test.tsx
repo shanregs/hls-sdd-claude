@@ -54,7 +54,7 @@ const ACCESS_MODEL = {
       items: [
         {
           label: "Attendance Setup",
-          route: "/operations/attendance-setup",
+          route: "/master-data/attendance-setup",
           actions: ["VIEW", "EDIT"],
         },
         {

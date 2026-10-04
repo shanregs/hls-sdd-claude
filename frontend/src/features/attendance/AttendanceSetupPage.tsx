@@ -2,7 +2,7 @@ import { Box, Typography } from "@mui/material";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { StatusCodesPanel } from "./StatusCodesPanel";
 
-const ROUTE = "/operations/attendance-setup";
+const ROUTE = "/master-data/attendance-setup";
 
 /** Attendance setup (spec 008 US5): status codes (the calendar lives under Master Data > Holiday Calendar). */
 export function AttendanceSetupPage() {

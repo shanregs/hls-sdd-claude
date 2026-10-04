@@ -417,8 +417,8 @@ one row per Teacher with the rollup figures and optionally each day's status.
 
 | Role     | Menu (section → item) | Default actions | Data scope |
 | -------- | --------------------- | --------------- | ---------- |
-| Admin    | OPERATIONS → Attendance; Attendance Setup (status codes, non-working calendar) | All, including lock/reopen (Process) and Export | Org-wide |
-| Director | OPERATIONS → Attendance; Attendance Setup | View, Create, Edit, Process (lock/reopen), Export | Org-wide |
+| Admin    | OPERATIONS → Attendance; MASTER DATA → Attendance Setup (status codes) and Holiday Calendar | All, including lock/reopen (Process) and Export | Org-wide |
+| Director | OPERATIONS → Attendance; MASTER DATA → Attendance Setup, Holiday Calendar | View, Create, Edit, Process (lock/reopen), Export | Org-wide |
 | Manager  | OPERATIONS → Teacher Attendance | View, Create, Edit for Teachers in scope; no Process, Export or Setup | Assigned (Zones → Schools → Teachers) |
 | Teacher  | MY ATTENDANCE → My Attendance, Attendance History | View, Create, Edit own marks in unlocked months | Own |
 | System   | none | none | None (System MUST NOT see teacher or school business data) |

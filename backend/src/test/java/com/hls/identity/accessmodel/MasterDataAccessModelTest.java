@@ -35,7 +35,7 @@ class MasterDataAccessModelTest extends IntegrationTestBase {
                 .filter(s -> s.section().equals("MASTER DATA"))
                 .flatMap(s -> s.items().stream())
                 .map(AccessModelDtos.NavItemView::label)
-                .filter(label -> !label.equals("Holiday Calendar"))
+                .filter(label -> !label.equals("Holiday Calendar") && !label.equals("Attendance Setup"))
                 .toList();
     }
 

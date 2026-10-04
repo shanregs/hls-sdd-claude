@@ -116,7 +116,9 @@ a genuine race).
 **Decision**: modules `ATTENDANCE` (Admin/Director: VIEW, CREATE, EDIT, PROCESS, EXPORT; Admin also
 DELETE), `TEACHER_ATTENDANCE` (Manager VIEW, CREATE, EDIT), `MY_ATTENDANCE` (Teacher VIEW, CREATE,
 EDIT), `ATTENDANCE_SETUP` (Admin/Director VIEW, EDIT). Navigation: OPERATIONS -> "Attendance"
-(`/operations/attendance`), "Attendance Setup" (`/operations/attendance-setup`) for Admin/Director;
+(`/operations/attendance`) for Admin/Director; MASTER DATA -> "Attendance Setup"
+(`/master-data/attendance-setup`) for Admin/Director and "Holiday Calendar"
+(`/master-data/holiday-calendar`) for everyone;
 OPERATIONS -> "Teacher Attendance" (`/operations/teacher-attendance`) for Manager; MY ATTENDANCE ->
 "My Attendance" (`/my-attendance`), "Attendance History" (`/my-attendance/history`) for Teacher. The
 access model reports `ATTENDANCE` org-wide, `TEACHER_ATTENDANCE` assigned, `MY_ATTENDANCE` own.

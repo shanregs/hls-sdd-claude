@@ -52,7 +52,8 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
     void adminAndDirectorSeeAttendanceAndSetupWithOrgWideScope() {
         for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
             var response = accessModelFor(role);
-            assertThat(labels(response, "OPERATIONS")).containsExactly("Attendance", "Attendance Setup");
+            assertThat(labels(response, "OPERATIONS")).containsExactly("Attendance");
+            assertThat(labels(response, "MASTER DATA")).contains("Attendance Setup");
             assertThat(response.dataScope())
                     .containsEntry("ATTENDANCE", "ORG_WIDE")
                     .containsEntry("ATTENDANCE_SETUP", "ORG_WIDE");
