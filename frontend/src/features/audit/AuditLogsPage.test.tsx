@@ -89,4 +89,48 @@ describe("AuditLogsPage (User Story 4, FR-008/FR-009)", () => {
       expect.stringContaining("/api/v1/audit/logs?"),
     );
   });
+
+  it("shows the origin of login and activity rows, and leaves change rows blank", async () => {
+    authFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            occurredAt: "2026-10-04T09:30:00Z",
+            type: "LOGIN",
+            actorUserId: "u1",
+            summary: "Sign-in (password) signed in",
+            source: "ANDROID",
+            appVersion: "1.0.0",
+            location: {
+              status: "AVAILABLE",
+              latitude: 12.5,
+              longitude: 77.25,
+              accuracyMeters: 9.2,
+              capturedAt: "2026-10-04T09:29:59Z",
+            },
+            deviceRooted: false,
+          },
+          {
+            occurredAt: "2026-10-04T09:00:00Z",
+            type: "CHANGE",
+            actorUserId: "u2",
+            summary: "MANAGERS.VIEW set to true",
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 2,
+      }),
+    });
+
+    render(<AuditLogsPage />);
+
+    expect(
+      await screen.findByText("12.500000, 77.250000 (±9 m)"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Android app")).toBeInTheDocument();
+    expect(screen.getByText("MANAGERS.VIEW set to true")).toBeInTheDocument();
+    expect(screen.getAllByText("Android app")).toHaveLength(1);
+  });
 });

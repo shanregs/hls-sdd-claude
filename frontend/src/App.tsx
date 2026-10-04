@@ -20,6 +20,7 @@ import { LoginHistoryPage } from "./features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "./features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "./features/audit/UserActivityPage";
 import { AuditLogsPage } from "./features/audit/AuditLogsPage";
+import { ApiAccessPage } from "./features/audit/ApiAccessPage";
 import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
 import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
 import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
@@ -133,6 +134,14 @@ export function App() {
           element={
             <RouteGuard>
               <ChangeHistoryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/audit/api-access"
+          element={
+            <RouteGuard>
+              <ApiAccessPage />
             </RouteGuard>
           }
         />

@@ -182,6 +182,14 @@ public final class NavigationCatalog {
                     33,
                     EnumSet.of(Role.ADMIN, Role.SYSTEM)),
             new NavItem(
+                    "API Access",
+                    "/audit/api-access",
+                    PermissionModule.AUDIT_API_ACCESS,
+                    PermissionAction.VIEW,
+                    "AUDIT",
+                    34,
+                    EnumSet.of(Role.ADMIN, Role.SYSTEM)),
+            new NavItem(
                     "Profile",
                     "/account/profile",
                     PermissionModule.ACCOUNT_PROFILE,

@@ -5,8 +5,14 @@ import { useAuth } from "../../auth/useAuth";
 import { AuditFilterBar, type AuditFilters } from "./AuditFilterBar";
 import { useAuditExport } from "./useAuditExport";
 import { dateRangeToInstants } from "./dateRangeToInstants";
+import {
+  formatLocation,
+  sourceLabel,
+  SourceFilterField,
+  type OriginFields,
+} from "./origin";
 
-interface UserActivityRow {
+interface UserActivityRow extends OriginFields {
   id: string;
   occurredAt: string;
   actorUserId: string | null;
@@ -37,6 +43,19 @@ const columns: GridColDef<UserActivityRow>[] = [
     valueGetter: (_value, row) => ACTION_LABELS[row.action] ?? row.action,
   },
   { field: "detail", headerName: "Detail", flex: 1 },
+  {
+    field: "source",
+    headerName: "Source",
+    flex: 0.8,
+    valueGetter: (_value, row) => sourceLabel(row.source),
+  },
+  { field: "appVersion", headerName: "App version", flex: 0.7 },
+  {
+    field: "location",
+    headerName: "Location",
+    flex: 1.6,
+    valueGetter: (_value, row) => formatLocation(row.location),
+  },
 ];
 
 /** User Story 3: search/filter/export User Activity (FR-003/FR-007/FR-009). */
@@ -60,6 +79,7 @@ export function UserActivityPage() {
         if (from) query.set("from", from);
         if (to) query.set("to", to);
         if (filters.userId) query.set("affectedUserId", filters.userId);
+        if (filters.source) query.set("source", filters.source);
         const response = await authFetch(
           `/api/v1/audit/user-activity?${query.toString()}`,
         );
@@ -91,6 +111,7 @@ export function UserActivityPage() {
     const { from, to } = dateRangeToInstants(filters.from, filters.to);
     exportCsv("/api/v1/audit/user-activity/export", {
       affectedUserId: filters.userId,
+      source: filters.source,
       from,
       to,
     }).catch(() => {
@@ -107,7 +128,12 @@ export function UserActivityPage() {
         filters={filters}
         onChange={setFilters}
         onExport={handleExport}
-      />
+      >
+        <SourceFilterField
+          value={filters.source ?? ""}
+          onChange={(source) => setFilters({ ...filters, source })}
+        />
+      </AuditFilterBar>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} role="alert">
           {error}

@@ -1,12 +1,13 @@
 package com.hls.identity.auth;
 
-import com.hls.identity.auth.AuthDtos.AuthResponse;
 import com.hls.identity.auth.AuthDtos.ErrorResponse;
 import com.hls.identity.auth.AuthDtos.LoginRequest;
 import com.hls.identity.auth.AuthDtos.SignedInUser;
+import com.hls.identity.clientcontext.ClientContextHolder;
 import com.hls.identity.loginhistory.LoginEventType;
 import com.hls.identity.loginhistory.LoginHistoryPublisher;
 import com.hls.identity.loginhistory.LoginMethod;
+import com.hls.identity.mobile.MobileRoleEligibility;
 import com.hls.identity.otp.OtpChannel;
 import com.hls.identity.session.SessionService;
 import com.hls.identity.user.AppUser;
@@ -105,6 +106,18 @@ public class AuthController {
             return ResponseEntity.status(401).body(new ErrorResponse(GENERIC_INVALID_CREDENTIALS_MESSAGE));
         }
 
+        if (ClientContextHolder.current().isAndroid() && !MobileRoleEligibility.isEligible(result.roles())) {
+            loginHistoryPublisher.record(
+                    result.user().getId(),
+                    result.identifierNormalized(),
+                    LoginMethod.PASSWORD,
+                    LoginEventType.SIGN_IN_FAILURE,
+                    MobileRoleEligibility.REFUSED_OUTCOME,
+                    clientIp,
+                    deviceDescription);
+            return MobileRoleEligibility.refusal();
+        }
+
         SessionService.CreatedSession created =
                 sessionService.createSession(result.user().getId(), deviceDescription);
         String accessToken =
@@ -119,18 +132,16 @@ public class AuthController {
                 clientIp,
                 deviceDescription);
 
-        return ResponseEntity.ok()
-                .header(
-                        "Set-Cookie",
-                        RenewalCookies.issue(created.plainRenewalCredential(), cookieSecure, renewalTtlDays)
-                                .toString())
-                .body(new AuthResponse(
-                        accessToken,
-                        jwtTokenProvider.getAccessTokenTtlSeconds(),
-                        new SignedInUser(
-                                result.user().getId(),
-                                result.user().getDisplayName(),
-                                result.roles().stream().map(Role::name).toList())));
+        return SignInResponses.ok(
+                accessToken,
+                jwtTokenProvider.getAccessTokenTtlSeconds(),
+                new SignedInUser(
+                        result.user().getId(),
+                        result.user().getDisplayName(),
+                        result.roles().stream().map(Role::name).toList()),
+                created.plainRenewalCredential(),
+                cookieSecure,
+                renewalTtlDays);
     }
 
     @PostMapping("/api/v1/auth/logout")
@@ -147,16 +158,27 @@ public class AuthController {
                 "Logged out",
                 httpRequest.getRemoteAddr(),
                 deviceDescriptionOf(httpRequest));
-        return ResponseEntity.noContent()
-                .header("Set-Cookie", RenewalCookies.expire(cookieSecure).toString())
-                .build();
+        var response = ResponseEntity.noContent();
+        if (!SignInResponses.isAndroid()) {
+            response.header("Set-Cookie", RenewalCookies.expire(cookieSecure).toString());
+        }
+        return response.build();
     }
 
+    /**
+     * Renews the access token, rotating the renewal credential (FR-009/FR-010). The web sends the
+     * credential as an HttpOnly cookie; the Android app, which has none, sends it in the body
+     * (spec 018 research.md §3) and gets the rotated one back in the body. Everything else, including
+     * reuse detection, is the same {@link SessionService#renew} for both.
+     */
     @PostMapping("/api/v1/auth/renew")
     public ResponseEntity<?> renew(
-            @CookieValue(name = RenewalCookies.COOKIE_NAME, required = false) String renewalCredential,
+            @CookieValue(name = RenewalCookies.COOKIE_NAME, required = false) String cookieCredential,
+            @RequestBody(required = false) AuthDtos.RenewRequest body,
             HttpServletRequest httpRequest) {
-        if (renewalCredential == null) {
+        boolean android = SignInResponses.isAndroid();
+        String renewalCredential = android ? (body != null ? body.renewalCredential() : null) : cookieCredential;
+        if (renewalCredential == null || renewalCredential.isBlank()) {
             return ResponseEntity.status(401).body(new ErrorResponse("Please sign in again."));
         }
 
@@ -175,13 +197,11 @@ public class AuthController {
                         "Renewal credential reuse detected; session revoked",
                         httpRequest.getRemoteAddr(),
                         deviceDescriptionOf(httpRequest));
-                return ResponseEntity.status(401)
-                        .header("Set-Cookie", RenewalCookies.expire(cookieSecure).toString())
+                return SignInResponses.expiringCookieForWeb(ResponseEntity.status(401), cookieSecure)
                         .body(new ErrorResponse("Please sign in again."));
             }
             case EXPIRED, INVALID -> {
-                return ResponseEntity.status(401)
-                        .header("Set-Cookie", RenewalCookies.expire(cookieSecure).toString())
+                return SignInResponses.expiringCookieForWeb(ResponseEntity.status(401), cookieSecure)
                         .body(new ErrorResponse("Please sign in again."));
             }
             case SUCCESS -> {
@@ -193,17 +213,16 @@ public class AuthController {
                 String accessToken = jwtTokenProvider.issueAccessToken(
                         result.session().getUserId(), result.session().getId(), roles);
                 AppUser user = appUserRepository.findById(result.session().getUserId()).orElseThrow();
-                return ResponseEntity.ok()
-                        .header(
-                                "Set-Cookie",
-                                RenewalCookies.issue(result.plainRenewalCredential(), cookieSecure, renewalTtlDays)
-                                        .toString())
-                        .body(new AuthResponse(
-                                accessToken,
-                                jwtTokenProvider.getAccessTokenTtlSeconds(),
-                                new SignedInUser(user.getId(), user.getDisplayName(), roles.stream()
-                                        .map(Role::name)
-                                        .toList())));
+                return SignInResponses.ok(
+                        accessToken,
+                        jwtTokenProvider.getAccessTokenTtlSeconds(),
+                        new SignedInUser(
+                                user.getId(),
+                                user.getDisplayName(),
+                                roles.stream().map(Role::name).toList()),
+                        result.plainRenewalCredential(),
+                        cookieSecure,
+                        renewalTtlDays);
             }
         }
         throw new IllegalStateException("Unreachable");

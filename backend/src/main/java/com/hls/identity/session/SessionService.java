@@ -1,5 +1,7 @@
 package com.hls.identity.session;
 
+import com.hls.identity.clientcontext.ClientContext;
+import com.hls.identity.clientcontext.ClientContextHolder;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -47,7 +49,9 @@ public class SessionService {
     @Transactional
     public CreatedSession createSession(UUID userId, String deviceDescription) {
         Instant now = clock.instant();
-        Session session = sessionRepository.save(new Session(userId, deviceDescription, now));
+        ClientContext client = ClientContextHolder.current();
+        Session session = sessionRepository.save(
+                new Session(userId, deviceDescription, now, client.source(), client.appVersion()));
         String plainCredential = hasher.generatePlainValue();
         renewalCredentialRepository.save(
                 new RenewalCredential(session.getId(), hasher.hash(plainCredential), now));

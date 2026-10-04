@@ -1,6 +1,7 @@
 package com.hls.identity.session;
 
 import com.hls.identity.activity.SessionEnded;
+import com.hls.identity.clientcontext.ClientSource;
 import com.hls.identity.loginhistory.LoginEventType;
 import com.hls.identity.loginhistory.LoginHistoryPublisher;
 import com.hls.identity.loginhistory.LoginMethod;
@@ -56,7 +57,9 @@ public class SessionController {
                         session.getDeviceDescription(),
                         session.getSignedInAt(),
                         session.getLastActivityAt(),
-                        session.getId().equals(currentSessionId)))
+                        session.getId().equals(currentSessionId),
+                        session.getClientType(),
+                        session.getAppVersion()))
                 .toList();
         return ResponseEntity.ok(views);
     }
@@ -94,6 +97,16 @@ public class SessionController {
         return userAgent != null ? userAgent : "Unknown device";
     }
 
+    /**
+     * {@code clientType} (WEB or ANDROID) and {@code appVersion} let the session list show which
+     * sessions came from the Android app (spec 018 FR-007).
+     */
     public record SessionView(
-            UUID id, String deviceDescription, Instant signedInAt, Instant lastActivityAt, boolean current) {}
+            UUID id,
+            String deviceDescription,
+            Instant signedInAt,
+            Instant lastActivityAt,
+            boolean current,
+            ClientSource clientType,
+            String appVersion) {}
 }

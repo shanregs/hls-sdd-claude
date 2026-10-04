@@ -46,4 +46,72 @@ describe("UserActivityPage (User Story 3, FR-003/FR-007)", () => {
       /could not load user activity/i,
     );
   });
+
+  it("shows where an action came from: source, app version and location, or the reason", async () => {
+    authFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            occurredAt: "2026-10-04T09:40:00Z",
+            actorUserId: "user-1",
+            affectedUserId: "user-1",
+            action: "PROFILE_UPDATED",
+            detail: "display name",
+            source: "ANDROID",
+            appVersion: "1.1.0",
+            location: {
+              status: "AVAILABLE",
+              latitude: 12.34,
+              longitude: 56.78,
+              accuracyMeters: 7.4,
+              capturedAt: "2026-10-04T09:39:59Z",
+            },
+          },
+          {
+            occurredAt: "2026-10-04T09:41:00Z",
+            actorUserId: "user-2",
+            affectedUserId: "user-2",
+            action: "SESSION_ENDED",
+            detail: null,
+            source: "ANDROID",
+            appVersion: "1.1.0",
+            location: {
+              status: "SERVICES_OFF",
+              latitude: null,
+              longitude: null,
+              accuracyMeters: null,
+              capturedAt: null,
+            },
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 2,
+      }),
+    });
+
+    render(<UserActivityPage />);
+
+    expect(
+      await screen.findByText("12.340000, 56.780000 (±7 m)"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Android app")).toHaveLength(2);
+    expect(
+      screen.getByText("Location unavailable — location services off"),
+    ).toBeInTheDocument();
+  });
+
+  it("has a Source filter", async () => {
+    authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [], page: 0, size: 25, totalElements: 0 }),
+    });
+
+    render(<UserActivityPage />);
+
+    expect(
+      await screen.findByRole("combobox", { name: "Source" }),
+    ).toBeInTheDocument();
+  });
 });

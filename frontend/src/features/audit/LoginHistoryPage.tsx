@@ -5,8 +5,14 @@ import { useAuth } from "../../auth/useAuth";
 import { AuditFilterBar, type AuditFilters } from "./AuditFilterBar";
 import { useAuditExport } from "./useAuditExport";
 import { dateRangeToInstants } from "./dateRangeToInstants";
+import {
+  formatLocation,
+  sourceLabel,
+  SourceFilterField,
+  type OriginFields,
+} from "./origin";
 
-interface LoginHistoryRow {
+interface LoginHistoryRow extends OriginFields {
   id: string;
   occurredAt: string;
   userId: string | null;
@@ -14,6 +20,7 @@ interface LoginHistoryRow {
   method: string;
   eventType: string;
   outcome: string;
+  deviceRooted?: boolean;
 }
 
 const columns: GridColDef<LoginHistoryRow>[] = [
@@ -22,6 +29,26 @@ const columns: GridColDef<LoginHistoryRow>[] = [
   { field: "method", headerName: "Method", flex: 0.8 },
   { field: "eventType", headerName: "Event Type", flex: 1 },
   { field: "outcome", headerName: "Outcome", flex: 1 },
+  {
+    field: "source",
+    headerName: "Source",
+    flex: 0.8,
+    valueGetter: (_value, row) => sourceLabel(row.source),
+  },
+  { field: "appVersion", headerName: "App version", flex: 0.7 },
+  {
+    field: "location",
+    headerName: "Location",
+    flex: 1.6,
+    valueGetter: (_value, row) => formatLocation(row.location),
+  },
+  {
+    field: "deviceRooted",
+    headerName: "Device",
+    flex: 0.9,
+    valueGetter: (_value, row) =>
+      row.deviceRooted ? "Rooted device suspected" : "",
+  },
 ];
 
 /** User Story 1: search/filter/export Login History (FR-001/FR-005/FR-009). */
@@ -32,6 +59,7 @@ export function LoginHistoryPage() {
     from: "",
     to: "",
     userId: "",
+    source: "",
   });
   const [rows, setRows] = useState<LoginHistoryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +73,7 @@ export function LoginHistoryPage() {
         if (from) query.set("from", from);
         if (to) query.set("to", to);
         if (filters.userId) query.set("userId", filters.userId);
+        if (filters.source) query.set("source", filters.source);
         const response = await authFetch(
           `/api/v1/audit/login-history?${query.toString()}`,
         );
@@ -92,7 +121,12 @@ export function LoginHistoryPage() {
         filters={filters}
         onChange={setFilters}
         onExport={handleExport}
-      />
+      >
+        <SourceFilterField
+          value={filters.source ?? ""}
+          onChange={(source) => setFilters({ ...filters, source })}
+        />
+      </AuditFilterBar>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} role="alert">
           {error}

@@ -19,6 +19,7 @@ import { LoginHistoryPage } from "../features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "../features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "../features/audit/UserActivityPage";
 import { AuditLogsPage } from "../features/audit/AuditLogsPage";
+import { ApiAccessPage } from "../features/audit/ApiAccessPage";
 import { UserManagementPage } from "../features/users/UserManagementPage";
 import { CreateUserDialog } from "../features/users/CreateUserDialog";
 import { EditRolesDialog } from "../features/users/EditRolesDialog";
@@ -529,6 +530,11 @@ const pages: PageCase[] = [
   {
     name: "AuditLogsPage",
     render: () => <AuditLogsPage />,
+    settle: () => screen.findByText(/no rows/i),
+  },
+  {
+    name: "ApiAccessPage",
+    render: () => <ApiAccessPage />,
     settle: () => screen.findByText(/no rows/i),
   },
   {

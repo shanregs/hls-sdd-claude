@@ -5,6 +5,8 @@ export interface AuditFilters {
   from: string;
   to: string;
   userId: string;
+  /** Optional source filter (spec 018): "", "WEB" or "ANDROID". */
+  source?: string;
 }
 
 interface AuditFilterBarProps {

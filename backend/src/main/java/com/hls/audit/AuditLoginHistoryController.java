@@ -4,6 +4,8 @@ import com.hls.audit.loginhistory.LoginHistoryEntry;
 import com.hls.audit.loginhistory.LoginHistoryEntryRepository;
 import com.hls.audit.support.AuditPageResponse;
 import com.hls.audit.support.CsvStreamingExporter;
+import com.hls.audit.support.LocationView;
+import com.hls.audit.support.SourceFilter;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
@@ -54,12 +56,14 @@ public class AuditLoginHistoryController {
             @RequestParam(required = false) Instant to,
             @RequestParam(required = false) String method,
             @RequestParam(required = false) String outcome,
+            @RequestParam(required = false) String source,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_LOGIN_HISTORY, PermissionAction.VIEW);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "occurredAt"));
-        Page<LoginHistoryEntry> result = repository.findAll(spec(userId, from, to, method, outcome), pageable);
+        Page<LoginHistoryEntry> result =
+                repository.findAll(spec(userId, from, to, method, outcome, SourceFilter.parse(source)), pageable);
         return ResponseEntity.ok(AuditPageResponse.from(result.map(LoginHistoryView::from)));
     }
 
@@ -70,26 +74,37 @@ public class AuditLoginHistoryController {
             @RequestParam Instant to,
             @RequestParam(required = false) String method,
             @RequestParam(required = false) String outcome,
+            @RequestParam(required = false) String source,
             @AuthenticationPrincipal Jwt jwt,
             HttpServletResponse response)
             throws IOException {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_LOGIN_HISTORY, PermissionAction.EXPORT);
+        String sourceFilter = SourceFilter.parse(source);
         CsvStreamingExporter.stream(
                 response,
                 "login-history.csv",
-                List.of("occurredAt", "userId", "phoneMasked", "method", "eventType", "outcome"),
-                pageable -> repository.findAll(spec(userId, from, to, method, outcome), pageable),
+                List.of(
+                        "occurredAt", "userId", "phoneMasked", "method", "eventType", "outcome",
+                        "source", "appVersion", "locationStatus", "latitude", "longitude", "accuracyMeters", "deviceRooted"),
+                pageable -> repository.findAll(spec(userId, from, to, method, outcome, sourceFilter), pageable),
                 entry -> List.of(
                         String.valueOf(entry.getOccurredAt()),
                         entry.getUserId() == null ? "" : entry.getUserId().toString(),
                         entry.getPhoneMasked(),
                         entry.getMethod(),
                         entry.getEventType(),
-                        entry.getOutcome()));
+                        entry.getOutcome(),
+                        entry.getOrigin().getSource(),
+                        entry.getOrigin().getAppVersion() == null ? "" : entry.getOrigin().getAppVersion(),
+                        entry.getOrigin().getLocationStatus(),
+                        entry.getOrigin().getLatitude() == null ? "" : entry.getOrigin().getLatitude().toPlainString(),
+                        entry.getOrigin().getLongitude() == null ? "" : entry.getOrigin().getLongitude().toPlainString(),
+                        entry.getOrigin().getAccuracyMeters() == null ? "" : entry.getOrigin().getAccuracyMeters().toString(),
+                        String.valueOf(entry.isDeviceRooted())));
     }
 
     private static Specification<LoginHistoryEntry> spec(
-            UUID userId, Instant from, Instant to, String method, String outcome) {
+            UUID userId, Instant from, Instant to, String method, String outcome, String source) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (userId != null) {
@@ -106,6 +121,9 @@ public class AuditLoginHistoryController {
             }
             if (outcome != null) {
                 predicates.add(cb.equal(root.get("outcome"), outcome));
+            }
+            if (source != null) {
+                predicates.add(cb.equal(root.get("origin").get("source"), source));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -126,7 +144,11 @@ public class AuditLoginHistoryController {
             String phoneMasked,
             String method,
             String eventType,
-            String outcome) {
+            String outcome,
+            String source,
+            String appVersion,
+            LocationView location,
+            boolean deviceRooted) {
         static LoginHistoryView from(LoginHistoryEntry entry) {
             return new LoginHistoryView(
                     entry.getId(),
@@ -135,7 +157,11 @@ public class AuditLoginHistoryController {
                     entry.getPhoneMasked(),
                     entry.getMethod(),
                     entry.getEventType(),
-                    entry.getOutcome());
+                    entry.getOutcome(),
+                    entry.getOrigin().getSource(),
+                    entry.getOrigin().getAppVersion(),
+                    entry.getOrigin().location(),
+                    entry.isDeviceRooted());
         }
     }
 }
