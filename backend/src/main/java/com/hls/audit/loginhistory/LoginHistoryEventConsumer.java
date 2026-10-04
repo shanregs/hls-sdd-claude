@@ -1,5 +1,6 @@
 package com.hls.audit.loginhistory;
 
+import com.hls.audit.support.ClientOrigin;
 import com.hls.identity.loginhistory.LoginHistoryRecorded;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,8 @@ public class LoginHistoryEventConsumer {
                 event.phoneMasked(),
                 event.method().name(),
                 event.eventType().name(),
-                event.outcome()));
+                event.outcome(),
+                ClientOrigin.from(event.clientContext()),
+                event.clientContext().deviceRooted()));
     }
 }

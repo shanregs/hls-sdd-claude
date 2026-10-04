@@ -1,6 +1,8 @@
 package com.hls.audit.loginhistory;
 
+import com.hls.audit.support.ClientOrigin;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,6 +45,14 @@ public class LoginHistoryEntry {
     @Column(name = "outcome", nullable = false)
     private String outcome;
 
+    /** Where the sign-in came from: client, app version and device location (spec 018). */
+    @Embedded
+    private ClientOrigin origin = ClientOrigin.from(null);
+
+    /** The Android app suspected the device is rooted or modified (spec 018 FR-028a). Audit only. */
+    @Column(name = "device_rooted", nullable = false)
+    private boolean deviceRooted;
+
     protected LoginHistoryEntry() {
         // JPA
     }
@@ -62,6 +72,29 @@ public class LoginHistoryEntry {
         this.method = method;
         this.eventType = eventType;
         this.outcome = outcome;
+    }
+
+    public LoginHistoryEntry(
+            Instant occurredAt,
+            UUID sourceEventId,
+            UUID userId,
+            String phoneMasked,
+            String method,
+            String eventType,
+            String outcome,
+            ClientOrigin origin,
+            boolean deviceRooted) {
+        this(occurredAt, sourceEventId, userId, phoneMasked, method, eventType, outcome);
+        this.origin = origin;
+        this.deviceRooted = deviceRooted;
+    }
+
+    public ClientOrigin getOrigin() {
+        return origin;
+    }
+
+    public boolean isDeviceRooted() {
+        return deviceRooted;
     }
 
     public UUID getId() {

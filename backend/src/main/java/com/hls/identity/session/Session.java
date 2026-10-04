@@ -1,5 +1,6 @@
 package com.hls.identity.session;
 
+import com.hls.identity.clientcontext.ClientSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,11 +37,25 @@ public class Session {
     @Column(name = "status", nullable = false)
     private SessionStatus status;
 
+    /** Which client signed in (spec 018 FR-007): the web app or the Android app. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "client_type", nullable = false)
+    private ClientSource clientType = ClientSource.WEB;
+
+    @Column(name = "app_version")
+    private String appVersion;
+
     protected Session() {
         // JPA
     }
 
     public Session(UUID userId, String deviceDescription, Instant now) {
+        this(userId, deviceDescription, now, ClientSource.WEB, null);
+    }
+
+    public Session(UUID userId, String deviceDescription, Instant now, ClientSource clientType, String appVersion) {
+        this.clientType = clientType;
+        this.appVersion = appVersion;
         this.userId = userId;
         this.deviceDescription = deviceDescription;
         this.signedInAt = now;
@@ -70,6 +85,14 @@ public class Session {
 
     public SessionStatus getStatus() {
         return status;
+    }
+
+    public ClientSource getClientType() {
+        return clientType;
+    }
+
+    public String getAppVersion() {
+        return appVersion;
     }
 
     public void touch(Instant now) {

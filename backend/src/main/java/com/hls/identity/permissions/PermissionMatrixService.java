@@ -28,7 +28,8 @@ public class PermissionMatrixService {
             PermissionModule.AUDIT_LOGS,
             PermissionModule.AUDIT_LOGIN_HISTORY,
             PermissionModule.AUDIT_CHANGE_HISTORY,
-            PermissionModule.AUDIT_USER_ACTIVITY);
+            PermissionModule.AUDIT_USER_ACTIVITY,
+            PermissionModule.AUDIT_API_ACCESS);
 
     private final PermissionMatrixRepository repository;
     private final ApplicationEventPublisher eventPublisher;
