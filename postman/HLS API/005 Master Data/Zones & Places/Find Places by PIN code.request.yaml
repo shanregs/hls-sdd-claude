@@ -1,0 +1,7 @@
+$kind: http-request
+description: Returns every match with its Zone.
+url: "{{baseUrl}}/api/v1/places?pinCode=603306"
+method: GET
+queryParams:
+  pinCode: "603306"
+order: 9000

@@ -152,8 +152,8 @@ Same fields as above, without `deviceRooted`.
 
 ### GET /api/v1/audit/{login-history|user-activity|logs}/export
 
-The CSV adds columns `source`, `appVersion`, `locationStatus`, `latitude`, `longitude`,
-`accuracyMeters`, and, for login history, `deviceRooted` (camelCase, matching the existing exports). The combined `logs` view carries the
+The CSV adds columns `source`, `app_version`, `location_status`, `latitude`, `longitude`,
+`accuracy_meters`, and, for login history, `device_rooted`. The combined `logs` view carries the
 first set for rows that came from either source. Change history is unchanged.
 
 Query filter added to both list endpoints: `source=WEB|ANDROID` (optional).
@@ -176,7 +176,7 @@ Others get 403.
 
 ```json
 {
-  "content": [
+  "items": [
     {
       "id": "...",
       "occurredAt": "2026-10-04T09:30:12Z",
@@ -191,7 +191,7 @@ Others get 403.
                     "accuracyMeters": 18.5, "capturedAt": "2026-10-04T09:30:10Z" }
     }
   ],
-  "page": 0, "size": 25, "totalElements": 1234
+  "page": 0, "size": 50, "totalElements": 1234
 }
 ```
 
@@ -199,9 +199,9 @@ Others get 403.
 
 ### New: GET /api/v1/audit/api-access/export
 
-CSV of the same rows and filters, with columns `occurredAt`, `userId`, `sessionId`,
-`httpMethod`, `routeTemplate`, `statusCode`, `source`, `appVersion`, `locationStatus`,
-`latitude`, `longitude`, `accuracyMeters`, `locationCapturedAt`. Same authorization.
+CSV of the same rows and filters, with columns `occurred_at`, `user_id`, `session_id`,
+`http_method`, `route_template`, `status_code`, `source`, `app_version`, `location_status`,
+`latitude`, `longitude`, `accuracy_meters`, `location_captured_at`. Same authorization.
 
 ### Not exposed
 

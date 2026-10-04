@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V13) and the demo data seeded itself.
+(V1-V15) and the demo data seeded itself.
 
 ## Prerequisites
 
@@ -85,6 +85,33 @@ original placement date, so she has history only from then on.
 - As **Teacher** (Tara): ACCOUNT -> Profile shows her own details and no salary.
 - As **System**: no MASTER DATA menu, and the Audit screens show no school/teacher entries.
 - As **Admin** again: AUDIT -> Change History shows every change you made.
+
+### Attendance
+
+- As **Teacher** (Tara, one-time code): MY ATTENDANCE -> My Attendance shows the current month as a
+  calendar. Click today (or use "Mark today") to mark it; you may also mark or correct the previous
+  3 days, but not older days, future days, or a day your Manager already set. Attendance History
+  shows earlier months, read-only, with a Locked banner for locked ones.
+- As **Manager** (Manoj): OPERATIONS -> Teacher Attendance is the month grid of your Teachers. Click a
+  cell to mark or correct any unlocked day (a day you set can no longer be changed by the Teacher);
+  click a name for the rollup and each mark's history.
+- As **Admin** (Asha) or **Director**: OPERATIONS -> Attendance is the organization-wide grid with Zone,
+  School, Manager and status filters. Sundays read "Sun" on grey, holidays read "H" on amber, Leave
+  and Absent show their code on red. **Export CSV** downloads the filtered month. To try locking, go
+  back to a past month (the demo data marks every earlier month completely) and choose **Lock month**;
+  open a Teacher's name to **Reopen** a locked month with a reason and **Lock again**. A month that
+  has not ended, or has an unmarked working day, is refused with the list of what is missing.
+- Everyone: MASTER DATA -> **Holiday Calendar** shows the year or a month with holidays highlighted
+  (the demo data has the 2026 Tamil Nadu public holidays) and a download icon that saves the year or
+  month as a PDF. Only Admin and Director see the editing controls below the calendar.
+- Everyone: ACCOUNT -> **Profile** shows your details, **Settings** edits them and changes your password,
+  and **Sessions** lists where you are signed in as a grid (number, since when, which client). Each row
+  has a delete icon, and the icon at the top deletes them all, including the one you are using, which
+  signs you out. In Role & Permissions, the `MY_SESSIONS` row controls this per role.
+- As **System** (Sunil): SYSTEM CONFIGURATION -> **All Sessions** lists every user's sessions; filter to
+  one user, delete one, delete all of one user's, or everyone's (yours included).
+- Admin/Director: MASTER DATA -> **Attendance Setup** lists the status codes. P, L, T and N are
+  built in; S (Substitution), H (Holiday) and A (Absent, like Leave) are ordinary codes you can edit.
 
 ## Postman
 

@@ -1,0 +1,14 @@
+$kind: http-request
+description: Append-only; a correction is a new entry.
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/salary"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "amount": 22000,
+      "effectiveOn": "2026-10-01"
+    }
+order: 3000

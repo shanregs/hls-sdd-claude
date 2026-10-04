@@ -1,0 +1,10 @@
+name: HLS - Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:8080'
+  - key: loginIdentifier
+    value: asha.admin
+  - key: loginPassword
+    value: Password123!
+  - key: loginPhone
+    value: '9800000004'

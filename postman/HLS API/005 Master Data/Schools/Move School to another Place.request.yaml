@@ -1,0 +1,14 @@
+$kind: http-request
+description: Admin/Director only. 409 if the School Manager does not cover the new Zone.
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/place"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "placeId": "{{placeId}}",
+      "version": "{{schoolVersion}}"
+    }
+order: 5000

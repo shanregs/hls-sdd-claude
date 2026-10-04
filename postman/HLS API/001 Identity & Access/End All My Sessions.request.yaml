@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Ends every session of the caller, the current one included, so the next request needs a new sign-in. Needs MY_SESSIONS.DELETE."
+url: "{{baseUrl}}/api/v1/me/sessions"
+method: DELETE
+order: 12000

@@ -1,0 +1,13 @@
+$kind: http-request
+description: "A reason is required (up to 500 characters). Only this Teacher's month opens."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/months/{{month}}/reopen"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Wrong day recorded"
+    }
+order: 4000

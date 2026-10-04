@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/managers?page=0&size=25&query="
+method: GET
+queryParams:
+  - key: page
+    value: "0"
+    disabled: false
+  - key: size
+    value: "25"
+    disabled: false
+  - key: query
+    value: ""
+    disabled: true
+order: 1000

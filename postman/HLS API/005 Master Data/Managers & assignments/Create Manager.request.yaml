@@ -1,0 +1,17 @@
+$kind: http-request
+description: targetUserId must belong to a user holding the Manager role.
+url: "{{baseUrl}}/api/v1/managers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userId": "{{targetUserId}}"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const m = pm.response.json(); pm.collectionVariables.set("managerId", m.id); pm.collectionVariables.set("managerVersion", m.version); }
+    language: text/javascript
+order: 3000

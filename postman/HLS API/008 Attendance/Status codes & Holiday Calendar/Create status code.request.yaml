@@ -1,0 +1,20 @@
+$kind: http-request
+description: "Short code up to 8 characters, unique ignoring case. category: WORKED, LEAVE, TRAINING or NON_WORKING; weight 0 to 1. Saves statusCodeId and statusCodeVersion."
+url: "{{baseUrl}}/api/v1/attendance/status-codes"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "shortCode": "SK",
+      "name": "Sick leave",
+      "category": "LEAVE",
+      "weight": 0
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const c = pm.response.json(); pm.collectionVariables.set("statusCodeId", c.id); pm.collectionVariables.set("statusCodeVersion", c.version); }
+    language: text/javascript
+order: 2000

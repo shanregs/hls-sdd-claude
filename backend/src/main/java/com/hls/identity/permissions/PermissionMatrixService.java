@@ -53,6 +53,9 @@ public class PermissionMatrixService {
             seed(role, PermissionModule.DASHBOARD, PermissionAction.VIEW, true);
             seed(role, PermissionModule.ACCOUNT_PROFILE, PermissionAction.VIEW, true);
             seed(role, PermissionModule.ACCOUNT_PROFILE, PermissionAction.EDIT, true);
+            // Every role may see and end its own sessions (spec 001 FR-015); Admin can switch it off per role.
+            seed(role, PermissionModule.MY_SESSIONS, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.MY_SESSIONS, PermissionAction.DELETE, true);
         }
         for (Role role : MATRIX_MANAGER_ROLES) {
             seed(role, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.VIEW, true);
@@ -66,6 +69,9 @@ public class PermissionMatrixService {
         }
         seedMasterData();
         seedAttendance();
+        // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
+        seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
@@ -146,12 +152,16 @@ public class PermissionMatrixService {
     }
 
     /**
-     * Sets one grant, rejecting outright (no partial change) if doing so would leave no
+     * Sets one grant, rejecting outright (no partial change) if the grant does not apply to the role
+     * and module ({@link PermissionEligibility}) or if doing so would leave no
      * {@link #MATRIX_MANAGER_ROLES} role still able to manage the matrix (FR-004, research.md §8).
      */
     @Transactional
     public UpdateResult updateGrant(
             Role role, PermissionModule module, PermissionAction action, boolean granted, UUID actorUserId) {
+        if (!PermissionEligibility.isEligible(role, module, action)) {
+            return UpdateResult.rejected("That permission does not apply to this role and module.");
+        }
         if (isLastMatrixManagerRemoval(role, module, action, granted)) {
             return UpdateResult.rejected("This would leave no one able to manage the permission matrix.");
         }

@@ -1,0 +1,17 @@
+$kind: http-request
+description: A Manager may edit contact details only (not the name).
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Tara Teacher",
+      "phone": "9800000004",
+      "email": "tara@example.com",
+      "address": "1 Main Road",
+      "version": "{{teacherVersion}}"
+    }
+order: 4000

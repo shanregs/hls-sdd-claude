@@ -42,6 +42,9 @@ import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
 import { ReopenDialog } from "../features/attendance/ReopenDialog";
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
+import { RolePermissionsGrid } from "../features/permissions/RolePermissionsGrid";
+import { SessionsPage } from "../account/SessionsPage";
+import { AllSessionsPage } from "../features/sessions/AllSessionsPage";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -73,6 +76,21 @@ const ACCESS_MODEL = {
     {
       section: "Dashboard",
       items: [{ label: "Dashboard", route: "/dashboard", actions: ["VIEW"] }],
+    },
+    {
+      section: "ACCOUNT",
+      items: [
+        {
+          label: "Sessions",
+          route: "/account/sessions",
+          actions: ["VIEW", "DELETE"],
+        },
+        {
+          label: "All Sessions",
+          route: "/identity/sessions",
+          actions: ["VIEW", "DELETE"],
+        },
+      ],
     },
     {
       section: "SYSTEM",
@@ -158,8 +176,87 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   if (url.includes("/access-model")) {
     return { ok: true, json: async () => ACCESS_MODEL } as Response;
   }
+  const aSession = {
+    id: "s1",
+    deviceDescription:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/154.0.0.0 Safari/537.36",
+    signedInAt: "2026-10-04T08:30:00Z",
+    lastActivityAt: "2026-10-04T09:00:00Z",
+    current: true,
+    clientType: "WEB",
+    appVersion: null,
+  };
   if (url.includes("/me/sessions")) {
-    return { ok: true, json: async () => [] } as Response;
+    return { ok: true, json: async () => [aSession] } as Response;
+  }
+  if (url.startsWith("/api/v1/admin/sessions")) {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            ...aSession,
+            userId: "u1",
+            userName: "Priya Manager",
+            userPhone: "9800000003",
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+      }),
+    } as Response;
+  }
+  if (url === "/api/v1/identity/permission-matrix") {
+    const roles = ["ADMIN", "DIRECTOR", "MANAGER", "TEACHER", "SYSTEM"];
+    return {
+      ok: true,
+      json: async () => ({
+        entries: [
+          {
+            role: "ADMIN",
+            module: "USER_MANAGEMENT",
+            action: "VIEW",
+            granted: true,
+          },
+          {
+            role: "ADMIN",
+            module: "USER_MANAGEMENT",
+            action: "EDIT",
+            granted: true,
+          },
+          {
+            role: "MANAGER",
+            module: "DASHBOARD",
+            action: "VIEW",
+            granted: true,
+          },
+        ],
+        modules: [
+          {
+            module: "DASHBOARD",
+            eligible: Object.fromEntries(roles.map((r) => [r, ["VIEW"]])),
+          },
+          {
+            module: "USER_MANAGEMENT",
+            eligible: Object.fromEntries(
+              roles.map((r) => [r, ["VIEW", "CREATE", "EDIT"]]),
+            ),
+          },
+          {
+            module: "IDENTITY_PERMISSIONS",
+            eligible: Object.fromEntries(
+              roles.map((r) => [
+                r,
+                ["ADMIN", "DIRECTOR", "SYSTEM"].includes(r)
+                  ? ["VIEW", "EDIT"]
+                  : [],
+              ]),
+            ),
+          },
+        ],
+      }),
+    } as Response;
   }
   const emptyPage = { content: [], page: 0, size: 25, totalElements: 0 };
   if (url.startsWith("/api/v1/zones?")) {
@@ -500,7 +597,7 @@ const pages: PageCase[] = [
   {
     name: "ProfilePage",
     render: () => <ProfilePage />,
-    settle: () => screen.findByText(/no active sessions/i),
+    settle: () => screen.findByText("Account details"),
   },
   {
     name: "AppShell",
@@ -655,6 +752,22 @@ const pages: PageCase[] = [
     name: "SettingsPage",
     render: () => <SettingsPage />,
     settle: () => screen.findByText("Change password", { selector: "h2" }),
+  },
+  {
+    name: "RolePermissionsGrid",
+    render: () => <RolePermissionsGrid />,
+    settle: () =>
+      screen.findByRole("table", { name: "Role and permission matrix" }),
+  },
+  {
+    name: "SessionsPage",
+    render: () => <SessionsPage />,
+    settle: () => screen.findByRole("table", { name: "Sessions" }),
+  },
+  {
+    name: "AllSessionsPage",
+    render: () => <AllSessionsPage />,
+    settle: () => screen.findByText("Priya Manager"),
   },
   {
     name: "MarkDialog",

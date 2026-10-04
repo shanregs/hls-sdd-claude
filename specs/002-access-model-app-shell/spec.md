@@ -8,6 +8,39 @@
 
 **Input**: User description: "Access Model & App Shell (roadmap spec 002, modules `identity` + frontend shell) under Constitution v2.2.0. Depends on 001-identity-access. Scope: seed the role→permission matrix (module × action) from the Constitution's default access-matrix table, with Admin/Director/System able to edit it at runtime (audited, last-admin-safeguard); expose a per-user access-model API returning the union of the signed-in user's roles' menus, actions, and data scope; build the shared frontend app shell — persistent left navigation (collapsible, becomes a drawer on tablet/phone), main content area, light/dark theme (persisted, matches the toggle introduced in 001), a real client-side router with route guards and a "not authorized" page for unauthorized deep links; role-based landing dashboards for each of the five roles (Admin, Director, Manager, Teacher, System) showing skeleton widgets appropriate to that role, and ACCOUNT section (Profile, Logout) reusing 001's Profile screen. Only authorized menu items/actions render (hidden, not disabled). Menus are never hard-coded per role in the frontend; they come from the server-provided navigation model. Out of scope: audit screens (003), user & role management screens (004), business-module menus/widgets beyond skeletons (005+), mobile app."
 
+## Clarifications
+
+### Session 2026-10-04
+
+- Q: How should the Role & Permissions screen look? → A: One compact **Module × Role grid**: a row per
+  module, a column per role (Admin, Director, Manager, Teacher, System), and in each cell an icon per
+  action that applies to that module (View, Create, Edit, Delete, Process, Export, Approve). An icon
+  is **coloured when the action is granted** and **grey when it could be granted but is not**; a
+  cell where nothing applies to that role shows a dash. Sketch (V = view, E = edit, D = delete; a
+  letter in backticks is a coloured icon, a plain letter a grey one):
+
+  | Module          | ADMIN   | DIRECTOR | MANAGER |
+  | --------------- | ------- | -------- | ------- |
+  | DASHBOARD       | `V`     | `V`      | `V`     |
+  | ACCOUNT_PROFILE | `V E`   | `V E`    | `V E`   |
+  | USERS           | `V E D` | `V` E D  | `V` E D |
+  | REPORTS         | `V`     | `V`      | —       |
+- Q: What does "eligible" mean? → A: An action is eligible for a role on a module when the module
+  offers that action and the Constitution does not rule the combination out: only Admin, Director
+  and System can hold Role & Permissions, and System holds no teacher or school business module.
+  The server refuses a grant that is not eligible, so the screen and the API agree.
+- Q: In what order do the navigation sections appear? → A: Dashboard, MASTER DATA, OPERATIONS,
+  SYSTEM, AUDIT, ACCOUNT (previously Dashboard, SYSTEM, AUDIT, MASTER DATA, OPERATIONS, ACCOUNT),
+  so the everyday business screens come first and the administrative ones after them. A Teacher's
+  MY ATTENDANCE sits in the OPERATIONS position; System's SYSTEM CONFIGURATION in the SYSTEM one.
+- Q: How are the permission icons laid out? → A: Each action has its own small cell under each
+  role, and the roles run System, Admin, Director, Manager, Teacher (this refines the first bullet
+  above, which put all of a role's icons in one cell). The Module column is as wide as the longest
+  module name plus 5 characters.
+- Q: How is a grant changed? → A: Clicking an icon (for a user who may edit the matrix) opens the
+  existing confirmation to switch it on or off; the audit record and the last-manager safeguard are
+  unchanged. A user who can only view the matrix sees the same icons without any click action.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Every Role Lands on Its Own Dashboard With Its Own Menu (Priority: P1)
@@ -94,6 +127,18 @@ rejected.
 4. **Given** a matrix change just took effect, **When** an affected, already-signed-in user's
    session next renews (at most 15 minutes), **Then** their menu and actions reflect the change
    without requiring them to log out.
+5. **Given** the Role & Permissions screen, **When** it opens, **Then** it shows one row per module
+   and one column per role, with an icon for each action that applies to that module in each cell:
+   a coloured icon where the action is granted, a grey icon where it could be granted but is not,
+   and a dash where no action applies to that role; each icon names the role, action, module and
+   whether it is granted (never colour alone), and a tooltip reads, for example, "Edit - granted".
+6. **Given** a user who may edit the matrix, **When** they click an icon, **Then** a confirmation
+   opens to switch that grant on or off, the matrix reloads on save, and a refusal (the last-manager
+   safeguard, or a grant that does not apply) is shown inside the confirmation; **Given** a user who
+   may only view the matrix, **Then** the icons are shown but cannot be clicked.
+7. **Given** a grant that does not apply (for example Delete on Dashboard, Role & Permissions for a
+   Teacher, or any business module for System), **When** it is submitted directly to the API,
+   **Then** it is refused with a plain-language reason and nothing changes.
 
 ---
 
@@ -185,6 +230,17 @@ phone width, with no horizontal page scroll at any width.
   (spec 003) to surface. This feature does not build an audit screen itself.
 - **FR-004**: The system MUST reject any matrix edit that would leave no user, through any role,
   able to view and edit the matrix, and MUST explain why the edit was refused.
+- **FR-004a**: The Role & Permissions screen MUST present the matrix as a compact grid of modules
+  (rows) by roles (columns), with an icon per applicable action in each cell — coloured when
+  granted, grey when applicable but not granted, and a dash when nothing applies to that role —
+  with a tooltip and an accessible name stating the role, action, module and state. A user who may
+  edit the matrix MUST be able to change a grant by clicking its icon and confirming; a view-only
+  user MUST see the icons without a click action.
+- **FR-004b**: The system MUST define, for each module, which actions apply to it, and, for each
+  role, which modules it may hold at all (only Admin, Director and System may hold Role &
+  Permissions; System holds no teacher or school business module). The matrix response MUST say
+  which actions are eligible per module and role, and an edit for an ineligible grant MUST be
+  refused with a reason and no change.
 - **FR-005**: The system MUST expose an access-model capability for the current signed-in user that
   resolves, from the union of their roles' grants: the navigation sections and items they may see,
   the actions available within each, and a data-scope classification (Org-wide / Assigned / Own /
@@ -196,6 +252,11 @@ phone width, with no horizontal page scroll at any width.
   returned access model or the rendered UI. Unauthorized items are absent, never shown disabled.
 - **FR-008**: A navigation section with no authorized item for the current user MUST be omitted
   entirely.
+- **FR-008a**: The navigation sections MUST always appear in this order: **Dashboard, MASTER DATA,
+  OPERATIONS, SYSTEM, AUDIT, ACCOUNT**. A Teacher's MY ATTENDANCE section takes the OPERATIONS
+  position, and for the System role SYSTEM DASHBOARD takes the Dashboard position and SYSTEM
+  CONFIGURATION the SYSTEM position. The order is decided by the server in the access model (the
+  frontend renders the sections as given), and the items inside a section keep their own order.
 - **FR-009**: The application MUST provide one persistent left navigation panel on desktop and
   tablet widths (roughly 25-30% of the width, user-collapsible) and a collapsible overlay drawer at
   phone widths, with no horizontal page scrolling at 360px width.
@@ -210,8 +271,11 @@ phone width, with no horizontal page scroll at any width.
   (self-service placeholder widgets: my attendance, my leave, my notifications), System (system
   health, users, and audit activity placeholders). Since no business module exists yet, widgets MUST
   show a clear empty/"coming soon" state rather than fabricated data.
-- **FR-013**: Every role MUST have an ACCOUNT section with Profile (Teacher: "My Profile") and
-  Logout, reusing spec 001's session-management screen rather than building a second one.
+- **FR-013**: Every role MUST have an ACCOUNT section with Profile (Teacher: "My Profile"), Settings
+  and Sessions, and Logout. Profile shows the user's own details; Settings edits them and changes the
+  password; Sessions is spec 001's session-management grid (FR-015). The Sessions item needs
+  `MY_SESSIONS.VIEW`, which every role holds by default. System additionally has SYSTEM
+  CONFIGURATION → All Sessions (`SESSION_MANAGEMENT.VIEW`, spec 001 FR-015a).
 - **FR-014**: The application MUST offer a light/dark theme toggle applying consistent design tokens
   (color, spacing, type) across the shell, navigation, and dashboards; MUST meet WCAG 2.2 AA in both
   themes; and MUST persist the chosen theme on the same device across sign-out/sign-in, defaulting
@@ -260,6 +324,9 @@ phone width, with no horizontal page scroll at any width.
 - **SC-004**: 100% of permission-matrix edits by an authorized user apply and are visible to affected
   already-signed-in users within one session-renewal cycle (15 minutes), without requiring logout.
 - **SC-005**: 100% of matrix edits that would remove the last remaining matrix-manager are rejected.
+- **SC-005a**: The whole matrix (every module and role) is readable on one screen without leaving
+  the page, and a grant can be changed in two clicks (icon, then confirm); 100% of edits for a grant
+  that does not apply are refused by the server.
 - **SC-006**: A chosen theme persists across 100% of tested sign-out/sign-in cycles on the same
   device.
 - **SC-007**: The shell, navigation, and all five dashboards pass an automated WCAG 2.2 AA check with

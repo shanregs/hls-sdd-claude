@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Admin, Director."
+url: "{{baseUrl}}/api/v1/attendance/calendar/non-working-dates/2026-12-26"
+method: DELETE
+order: 9000

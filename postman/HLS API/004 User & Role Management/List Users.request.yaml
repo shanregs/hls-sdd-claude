@@ -1,0 +1,21 @@
+$kind: http-request
+description: ADMIN/SYSTEM only. query matches display name or phone; role and active are optional filters.
+url: "{{baseUrl}}/api/v1/identity/users?page=0&size=25&query=&role=MANAGER&active=true"
+method: GET
+queryParams:
+  - key: page
+    value: "0"
+    disabled: false
+  - key: size
+    value: "25"
+    disabled: false
+  - key: query
+    value: ""
+    disabled: true
+  - key: role
+    value: MANAGER
+    disabled: true
+  - key: active
+    value: "true"
+    disabled: true
+order: 1000

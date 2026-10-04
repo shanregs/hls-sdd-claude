@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Admin, Director. Unlocked months follow the change; locked months keep their frozen figures."
+url: "{{baseUrl}}/api/v1/attendance/calendar/default"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "weeklyOff": ["SUN"],
+      "version": {{calendarVersion}}
+    }
+order: 5000

@@ -1,0 +1,30 @@
+$kind: http-request
+description: "Admin, Director. Filters combine with AND; size is capped at 100."
+url: "{{baseUrl}}/api/v1/attendance/grid?month={{month}}"
+method: GET
+queryParams:
+  - key: month
+    value: "{{month}}"
+    disabled: false
+  - key: query
+    value: ""
+    disabled: true
+  - key: zoneId
+    value: ""
+    disabled: true
+  - key: schoolId
+    value: "{{schoolId}}"
+    disabled: true
+  - key: managerId
+    value: "{{managerId}}"
+    disabled: true
+  - key: status
+    value: "ACTIVE"
+    disabled: true
+  - key: page
+    value: "0"
+    disabled: true
+  - key: size
+    value: "50"
+    disabled: true
+order: 1000

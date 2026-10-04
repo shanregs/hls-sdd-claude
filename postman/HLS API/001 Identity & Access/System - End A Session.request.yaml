@@ -1,0 +1,5 @@
+$kind: http-request
+description: "System only (SESSION_MANAGEMENT.DELETE). Ends one session of any user; 404 if it is not an active session. includesCurrent is true when it was your own."
+url: "{{baseUrl}}/api/v1/admin/sessions/{{sessionId}}"
+method: DELETE
+order: 14000

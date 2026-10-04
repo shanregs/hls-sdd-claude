@@ -1,0 +1,23 @@
+$kind: http-request
+description: "Per-row report: ADDED, ALREADY_EXISTS, REJECTED. 400 if empty or over 5,000 rows."
+url: "{{baseUrl}}/api/v1/places/bulk-import"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "zoneId": "{{zoneId}}",
+      "rows": [
+        {
+          "name": "Maraimalai Nagar",
+          "pinCode": "603209"
+        },
+        {
+          "name": "Bad Row",
+          "pinCode": "12"
+        }
+      ]
+    }
+order: 11000

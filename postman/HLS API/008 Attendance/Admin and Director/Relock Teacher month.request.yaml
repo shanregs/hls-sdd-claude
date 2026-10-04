@@ -1,0 +1,5 @@
+$kind: http-request
+description: "409 if a working day is unmarked; otherwise the rollup is frozen again."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/months/{{month}}/relock"
+method: POST
+order: 5000

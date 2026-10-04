@@ -23,6 +23,9 @@ The only new persisted entity in this feature. One row per (role, module, action
   and `(role, ACCOUNT_PROFILE, VIEW, true)` / `(role, ACCOUNT_PROFILE, EDIT, true)` for all five
   roles (own-record only, enforced at the resolver, not a matrix column). Seeding MUST NOT
   overwrite existing rows on restart (idempotent).
+- `(role, MY_SESSIONS, VIEW, true)` and `(role, MY_SESSIONS, DELETE, true)` for all five roles
+  (added 2026-10-04: a user's own sessions, spec 001 FR-015), and `(SYSTEM, SESSION_MANAGEMENT, VIEW |
+  DELETE, true)` (everyone's sessions, spec 001 FR-015a).
 - `(role, IDENTITY_PERMISSIONS, VIEW, true)` and `(role, IDENTITY_PERMISSIONS, EDIT, true)` are
   seeded `true` only for `ADMIN`, `DIRECTOR`, `SYSTEM`; `false`/absent for `MANAGER`, `TEACHER`.
 - **Invariant enforced on every write** (FR-004): after applying a proposed edit, at least one of
@@ -30,6 +33,17 @@ The only new persisted entity in this feature. One row per (role, module, action
   edits are rejected in the same transaction; nothing is partially applied.
 - Every write produces a change record (actor, timestamp, before/after) published for spec 003's
   Audit module. The change record is not owned by this feature — see Assumptions in spec.md.
+
+**Eligibility (added 2026-10-04, not persisted)**: which `(role, module, action)` rows may exist is
+defined in code, not in the table. Each module declares the actions that apply to it
+(`PermissionModule.actions()`, e.g. `DASHBOARD` → View; `USER_MANAGEMENT` → View, Create, Edit;
+`ATTENDANCE` → View, Create, Edit, Delete, Process, Export), and `PermissionEligibility` removes the
+combinations the Constitution rules out: `IDENTITY_PERMISSIONS` for any role other than `ADMIN`,
+`DIRECTOR`, `SYSTEM` (and likewise `SESSION_MANAGEMENT`), and every teacher/school business module (`ZONES`, `SCHOOLS`, `MANAGERS`,
+`TEACHERS`, `TEACHER_SALARY`, `ATTENDANCE`, `TEACHER_ATTENDANCE`, `MY_ATTENDANCE`,
+`ATTENDANCE_SETUP`) for `SYSTEM`. A missing row for an eligible combination means "not granted".
+`updateGrant` refuses an ineligible combination before anything else. No schema change; every row
+seeded by any spec is eligible (checked by a test).
 
 No state machine: a row is either granted or not, toggled directly. No soft-delete/versioning of
 rows themselves; history lives in the published change records, not in this table.
@@ -45,7 +59,7 @@ the access-model resolver filters against `Permission Matrix Entry`.
 | `label` | string | e.g. "Role & Permissions", "Profile" |
 | `route` | string | frontend route path this item links to |
 | `requiredModule` / `requiredAction` | reference into the matrix's enums | the grant that makes this item visible |
-| `order` | integer | position within its section |
+| `order` | integer | position within its section **and** the section's position in the menu: the catalogue is sorted by `order` and a section appears where its first item sits. Fixed bands (FR-008a): Dashboard 10, MASTER DATA 20-29, OPERATIONS 30-34, MY ATTENDANCE 35-39, SYSTEM / SYSTEM CONFIGURATION 40-49, AUDIT 50-59, ACCOUNT 90-99 |
 
 At this spec's scope the catalog holds exactly: Dashboard, under section "Dashboard" (Admin,
 Director, Manager, Teacher only — System does not use this section); Dashboard, under section

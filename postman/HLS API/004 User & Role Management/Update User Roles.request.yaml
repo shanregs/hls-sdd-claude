@@ -1,0 +1,16 @@
+$kind: http-request
+description: Replaces the full role set. 400 if empty; 409 if it would remove the last active Admin.
+url: "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/roles"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "roles": [
+        "MANAGER",
+        "DIRECTOR"
+      ]
+    }
+order: 3000

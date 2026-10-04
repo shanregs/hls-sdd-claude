@@ -1,0 +1,16 @@
+$kind: http-request
+description: "Rename, re-weight or deactivate (a built-in code cannot be deactivated). Send the current version; a stale version returns 409."
+url: "{{baseUrl}}/api/v1/attendance/status-codes/{{statusCodeId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Sick leave",
+      "weight": 0,
+      "active": true,
+      "version": {{statusCodeVersion}}
+    }
+order: 3000

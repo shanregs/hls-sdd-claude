@@ -1,0 +1,5 @@
+$kind: http-request
+description: The caller own Zone/School counts.
+url: "{{baseUrl}}/api/v1/me/scope"
+method: GET
+order: 8000

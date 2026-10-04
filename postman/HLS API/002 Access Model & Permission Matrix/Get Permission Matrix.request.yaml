@@ -1,0 +1,5 @@
+$kind: http-request
+description: ADMIN/DIRECTOR/SYSTEM only.
+url: "{{baseUrl}}/api/v1/identity/permission-matrix"
+method: GET
+order: 2000

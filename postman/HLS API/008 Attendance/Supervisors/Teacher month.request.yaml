@@ -1,0 +1,9 @@
+$kind: http-request
+description: "One Teacher's calendar and rollup."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}?month={{month}}"
+method: GET
+queryParams:
+  - key: month
+    value: "{{month}}"
+    disabled: false
+order: 1000

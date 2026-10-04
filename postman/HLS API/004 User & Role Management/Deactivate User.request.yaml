@@ -1,0 +1,5 @@
+$kind: http-request
+description: 204. Ends all their sessions; their access tokens are refused on the next request. 409 for the last active Admin.
+url: "{{baseUrl}}/api/v1/identity/users/{{targetUserId}}/deactivate"
+method: POST
+order: 4000
