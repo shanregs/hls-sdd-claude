@@ -271,5 +271,45 @@ class MyAttendanceControllerTest extends AttendanceTestBase {
         assertThat(resp.status()).isEqualTo(200);
         assertThat(resp.map()).containsEntry("locked", true);
         assertThat(resp.body()).contains("\"frozen\":true").doesNotContain("\"editableBy\":\"SELF\"");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> days = (List<Map<String, Object>>) resp.map().get("days");
+        assertThat(days).isNotEmpty().allSatisfy(d -> assertThat(d).containsEntry("editableBy", "NONE"));
+    }
+
+    @Test
+    void anEarlierMonthShowsTheSameFiguresTheTeachersManagerSees() {
+        World w = newWorld();
+        YearMonth previous = YearMonth.from(today()).minusMonths(1);
+        LocalDate day = previous.atDay(10);
+        String teacherId = w.teacherA().teacherId().toString();
+        Resp marked = put("/api/v1/attendance/teachers/" + teacherId + "/marks/" + day, w.managerA().token(), body("P", 1));
+        assertThat(marked.status()).as(marked.body()).isEqualTo(200);
+
+        Resp mine = get(ME + "?month=" + previous, w.teacherA().token());
+        Resp theirs = get("/api/v1/attendance/teachers/" + teacherId + "?month=" + previous, w.managerA().token());
+
+        assertThat(mine.status()).isEqualTo(200);
+        assertThat(theirs.status()).isEqualTo(200);
+        assertThat(mine.map().get("rollup")).isEqualTo(theirs.map().get("rollup"));
+        assertThat(mine.body()).contains("\"daysWorked\":1");
+    }
+
+    @Test
+    void aTeacherCanNeverReadAnotherTeachersMonth() {
+        World w = newWorld();
+        String otherTeacher = w.teacherB().teacherId().toString();
+        String month = YearMonth.from(today()).toString();
+
+        Resp asTeacher = get("/api/v1/attendance/teachers/" + otherTeacher + "?month=" + month, w.teacherA().token());
+        Resp asWrongManager = get("/api/v1/attendance/teachers/" + otherTeacher + "?month=" + month, w.managerA().token());
+        Resp missing = get(
+                "/api/v1/attendance/teachers/" + UUID.randomUUID() + "?month=" + month, w.managerA().token());
+
+        assertThat(asTeacher.status()).isEqualTo(403);
+        assertThat(asWrongManager.status()).isEqualTo(404);
+        assertThat(asWrongManager.body()).isEqualTo(missing.body());
+        // /me only ever returns the caller's own record, whatever the Teacher id of someone else is.
+        Resp mine = get(ME + "?month=" + month, w.teacherA().token());
+        assertThat(mine.body()).contains(w.teacherA().teacherId().toString()).doesNotContain(otherTeacher);
     }
 }

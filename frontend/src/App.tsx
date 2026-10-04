@@ -3,6 +3,7 @@ import { useAuth } from "./auth/useAuth";
 import { SignInPage } from "./auth/SignInPage";
 import { ForgotPasswordPage } from "./auth/ForgotPasswordPage";
 import { ProfilePage } from "./account/ProfilePage";
+import { AttendanceHistoryPage } from "./features/attendance/AttendanceHistoryPage";
 import { HolidayCalendarPage } from "./features/attendance/HolidayCalendarPage";
 import { SettingsPage } from "./account/SettingsPage";
 import { AppShell } from "./app/AppShell";
@@ -164,6 +165,14 @@ export function App() {
           element={
             <RouteGuard>
               <MyAttendancePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/history"
+          element={
+            <RouteGuard>
+              <AttendanceHistoryPage />
             </RouteGuard>
           }
         />

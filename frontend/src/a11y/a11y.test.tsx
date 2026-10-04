@@ -35,6 +35,7 @@ import { TeacherDialog } from "../features/teachers/TeacherDialog";
 import { SalaryDialog } from "../features/teachers/SalaryDialog";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
 import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
+import { AttendanceHistoryPage } from "../features/attendance/AttendanceHistoryPage";
 import { HolidayCalendarPage } from "../features/attendance/HolidayCalendarPage";
 import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
 import { ReopenDialog } from "../features/attendance/ReopenDialog";
@@ -627,6 +628,11 @@ const pages: PageCase[] = [
   {
     name: "MyAttendancePage",
     render: () => <MyAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
+  },
+  {
+    name: "AttendanceHistoryPage",
+    render: () => <AttendanceHistoryPage />,
     settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
   },
   {

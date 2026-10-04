@@ -182,9 +182,9 @@ refused.
 
 **Independent Test**: quickstart Scenario 7, step 1.
 
-- [ ] T057 [US7] Add tests to `BT/attendance/MyAttendanceControllerTest.java`: earlier-month `GET /me?month=` returns the same figures a Manager sees for that Teacher; a locked month returns frozen rollup and `editableBy: NONE` for every day; a Teacher can never read another Teacher's month by any route (Teacher role on `/teachers/{id}` -> 403; Manager B on Manager A's Teacher -> 404)
-- [ ] T058 [US7] Build `FE/features/attendance/AttendanceHistoryPage.tsx`: month picker with previous/next, read-only `MonthCalendar` plus `RollupSummary`, a "Locked" banner for frozen months, loading/empty/error states; register route `/my-attendance/history` guarded by `MY_ATTENDANCE`
-- [ ] T059 [US7] Add `FE/features/attendance/AttendanceHistoryPage.test.tsx` (locked month shows banner and no edit affordance) and add to the axe suite in both themes
+- [X] T057 [US7] Add tests to `BT/attendance/MyAttendanceControllerTest.java`: earlier-month `GET /me?month=` returns the same figures a Manager sees for that Teacher; a locked month returns frozen rollup and `editableBy: NONE` for every day; a Teacher can never read another Teacher's month by any route (Teacher role on `/teachers/{id}` -> 403; Manager B on Manager A's Teacher -> 404)
+- [X] T058 [US7] Build `FE/features/attendance/AttendanceHistoryPage.tsx`: month picker with previous/next, read-only `MonthCalendar` plus `RollupSummary`, a "Locked" banner for frozen months, loading/empty/error states; register route `/my-attendance/history` guarded by `MY_ATTENDANCE`
+- [X] T059 [US7] Add `FE/features/attendance/AttendanceHistoryPage.test.tsx` (locked month shows banner and no edit affordance) and add to the axe suite in both themes
 
 ---
 
