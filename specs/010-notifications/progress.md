@@ -1,0 +1,44 @@
+# Spec 010 notifications: progress and handoff (2026-10-05)
+
+Branch `feature/010-notifications` (stacked on `feature/009-leave`, PR #13). Spec, clarifications, plan, research,
+data model, contract, quickstart and tasks are done and pushed. Implementation is in progress.
+
+## Done and pushed
+
+- T001-T009 (commit `acd31b4`): `notification` module skeleton, migration `V18`, `Notification` entity and
+  repository, `NotificationService` (create, merge, own-scope operations, purge), `MessageFactory`, permission module
+  `NOTIFICATIONS`, ACCOUNT -> Notifications navigation item (order 93, after Sessions), tests for all of these.
+  Passing: `NotificationModuleRulesTest`, `MessageFactoryTest` (8), `NotificationServiceTest` (7),
+  `PermissionEligibilityTest`, `NavigationSectionOrderTest`, `ApplicationModulesTest`.
+
+## Written but NOT yet run (committed as work in progress)
+
+- T010: `notification/web/NotificationController.java` (six endpoints) and `com.hls.notification` added to
+  `MasterDataExceptionAdvice`.
+- T011: `backend/src/test/java/com/hls/notification/NotificationApiTest.java`. Just changed
+  `turnedOff.accepted()` to `turnedOff.success()` (the record method is `success()`); never compiled since.
+  Run: `cd backend; mvn -o test -Dtest=NotificationApiTest`.
+
+## Next, in order (see tasks.md)
+
+1. Run `NotificationApiTest`, fix anything, tick T010/T011.
+2. T012-T013 frontend: `NotificationBell.tsx` (30 s polling), mount in `frontend/src/app/AppShell.tsx`,
+   `NotificationsPage.tsx`, route `/account/notifications` in `App.tsx`, `notificationsApi.ts`, tests, a11y cases
+   (mock `/api/v1/me/notifications` and `/unread-count` in `src/a11y/a11y.test.tsx`).
+3. T014-T018 leave events (publish from `LeaveRequestService`/`LeaveDecisionService`, listeners, `RecipientResolver`).
+4. T019-T021 attendance events (`MarkService`, `MonthLockService`), merge already built in the service.
+5. T022-T024 retention job (`@EnableScheduling`), demo seeder.
+6. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
+
+## Environment notes
+
+- Local app: backend on 8080 (`scripts/run-backend.ps1`, demo data on), frontend on 5173, Postgres in Docker on 5433.
+  The running backend does not have the notification code yet; restart it after the backend work to apply `V18`.
+- Demo logins (all `Password123!`, or a one-time code): Asha 9800000001, Divya 9800000002, Manoj 9800000003,
+  Tara 9800000004, Sunil 9800000005.
+- Machine is slow: a single `mvn -o test -Dtest=...` run takes minutes; run one class at a time.
+
+## Open pull requests
+
+- #10 Role & Permissions icon colours, #11 Settings tabs, #13 Spec 009 leave (includes dashboard widget, Tara
+  password, one-time code link), #14 Sunday-first calendars. All waiting for the user to merge.
