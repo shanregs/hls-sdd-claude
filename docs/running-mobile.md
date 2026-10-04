@@ -45,22 +45,43 @@ on private networks. Keep it running while you use the app. Start the web app to
 
 ## 3. Run the app on the emulator
 
-1. Start the emulator from Device Manager and wait for the home screen.
-2. In a terminal:
+**Order matters: emulator online first, then the build.**
+
+1. **Start the emulator and wait until it is online.** Use Device Manager's play button, or from a
+   terminal (software graphics, no GPU use):
+   ```powershell
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+   $env:Path = "$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:Path"
+   emulator -avd Pixel_7 -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -memory 3072 -cores 4
+   ```
+   (Add `-wipe-data` only the first time, or when the phone is stuck.) In a second window run
+   `adb devices` until it shows `emulator-5554   device`. `offline` means it is still booting; the
+   first boot can take 3 to 5 minutes.
+2. **Build and install the app.** In a new terminal, from the **`mobile`** folder (not
+   `mobile\android`):
    ```powershell
    $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
    $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
    $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
    java -version          # must say 17.0.x
-   cd mobile
+   cd D:\me\work\HiCitizen\HLS-App\hls-018-android\mobile
    copy .env.example .env
    npm install
    npx expo run:android
    ```
-   The first build takes 10 to 20 minutes; later runs take about a minute. It installs the app and
-   starts Metro. Edits to files under `mobile/src` reload automatically.
+   - The first build takes 10 to 20 minutes and needs the internet: it downloads Gradle, the Android
+     platform, the NDK and CMake. Later runs take about a minute. It installs the app on the emulator
+     and starts Metro. Edits under `mobile/src` reload automatically.
+   - You will see `userInterfaceStyle: Install expo-system-ui`. That is only a warning; ignore it.
+   - **Do not pin SDK versions in `app.config.ts`** (compileSdk, targetSdk, buildTools). The libraries
+     need compile SDK 35 or 36, and Expo already chooses the right values. Pinning 34 makes the build
+     fail at `checkDebugAarMetadata`. The only build setting in `app.config.ts` is `minSdkVersion: 29`.
 3. `.env` already has `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8080`. **`10.0.2.2` is how the
    emulator reaches `localhost` on your PC.** Do not use `localhost` inside the emulator.
+
+**Next days (the app is already installed):** start the emulator, the database and backend, then run
+`npx expo start` in `mobile` and press `a` to open the app on the emulator. You only need
+`npx expo run:android` again after changing native packages or `app.config.ts`.
 
 If the app shows "No connection" over plain `http://`, allow cleartext traffic for the dev build by
 adding `usesCleartextTraffic: true` to the `expo-build-properties` android settings in
@@ -155,6 +176,10 @@ That signs in as the Manager, opens the menu and Profile, and logs out.
 | Build fails with another Java or Gradle error | Use JDK 17. Run `cd mobile\android && .\gradlew clean`, then retry. |
 | Gradle download times out | Raise `networkTimeout` (for example to 300000) in `mobile\android\gradle\wrapper\gradle-wrapper.properties`, or check VPN or proxy settings. |
 | `No Android connected device found` | The emulator is not online yet. Run `adb devices` until it shows `device`, then run the build again. |
+| `adb devices` shows `offline`, or the emulator says it cannot connect | Wait a few minutes (first boot). Run `adb kill-server` then `adb start-server`. Make sure `where.exe adb` lists only the SDK's `adb.exe`. Restart the emulator with the command in step 3 (software graphics). Note that `-gpu angle_indirect` is not a valid option. |
+| `ConfigError: ... package.json does not exist` | You ran the command inside `mobile\android`. Run `npx expo run:android` from the `mobile` folder. |
+| `app:checkDebugAarMetadata` fails: "requires ... compile against version 35 or later" | `compileSdkVersion`, `targetSdkVersion` or `buildToolsVersion` is pinned to 34 in `app.config.ts` or `mobile\android\gradle.properties`. Remove the pin (keep only `minSdkVersion: 29`) and rebuild. If `android\gradle.properties` still has the old values, delete those lines or run `npx expo prebuild --platform android --clean` (this regenerates `android`, so re-apply any timeout edit). |
+| Build needs a missing Android platform, NDK or CMake | Gradle downloads them automatically on the first build (licences are accepted in `Sdk\licenses`). It needs the internet. If it fails, run the build again, or install them from Android Studio → SDK Manager. |
 | App cannot reach the backend | Backend running? `.env` uses `10.0.2.2`, not `localhost`? Rebuild after changing `.env`. See the cleartext note in step 3. |
 | Code login shows nothing | Read the code from the backend console (the dev SMS stub). Codes expire; there is a 30 second resend wait. |
 | Location is always "unavailable" | Emulator: send a location from `...` → Location. Check the app's permission under Settings → Apps → HLS → Permissions. |
