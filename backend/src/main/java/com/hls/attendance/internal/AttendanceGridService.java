@@ -51,7 +51,8 @@ public class AttendanceGridService {
     public record Ref(UUID id, String name) {}
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    public record Cell(LocalDate date, String code, BigDecimal dayValue, String setByKind, DayState state) {}
+    public record Cell(
+            LocalDate date, String code, String category, BigDecimal dayValue, String setByKind, DayState state) {}
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Row(
@@ -212,6 +213,7 @@ public class AttendanceGridService {
                 cells.add(new Cell(
                         plan.date(),
                         m == null ? null : codeById.get(m.getStatusCodeId()).getShortCode(),
+                        m == null ? null : codeById.get(m.getStatusCodeId()).getCategory().name(),
                         m == null ? null : m.getDayValue(),
                         m == null ? null : m.getSetByKind().name(),
                         TeacherMonthViewService.stateOf(plan, m != null, today)));

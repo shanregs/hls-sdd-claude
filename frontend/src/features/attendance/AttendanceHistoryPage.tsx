@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { getMyMonth, type TeacherMonthView } from "./attendanceApi";
+import { DayLegend } from "./DayLegend";
 import { MonthCalendar } from "./MonthCalendar";
 import { currentMonth, monthLabel, shiftMonth } from "./monthUtils";
 import { RollupSummary } from "./RollupSummary";
@@ -74,6 +75,7 @@ export function AttendanceHistoryPage() {
             </Alert>
           )}
           <MonthCalendar days={view.days} locked={view.locked} />
+          <DayLegend />
           <RollupSummary rollup={view.rollup} />
         </Stack>
       )}

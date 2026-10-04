@@ -20,6 +20,7 @@ import {
 } from "./attendanceApi";
 import type { ApiResult, AuthFetch } from "../common/masterDataApi";
 import { AttendanceGrid } from "./AttendanceGrid";
+import { DayLegend } from "./DayLegend";
 import { MarkDialog } from "./MarkDialog";
 import { currentMonth, monthLabel, shiftMonth } from "./monthUtils";
 import { TeacherMonthPanel } from "./TeacherMonthPanel";
@@ -190,6 +191,9 @@ export function AttendanceGridScreen({
       )}
       {grid && grid.content.length > 0 && (
         <>
+          <Box sx={{ mb: 1 }}>
+            <DayLegend />
+          </Box>
           <AttendanceGrid
             rows={grid.content}
             canEdit={canMark}

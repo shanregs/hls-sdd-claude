@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { DayView } from "./attendanceApi";
+import { dayAppearance, dayBackground } from "./dayStyle";
 import { describeDay } from "./dayText";
 import { formatDate, WEEKDAY_LABELS, weekdayIndex } from "./monthUtils";
 
@@ -91,10 +92,15 @@ function DayCell({
 }) {
   const number = Number(day.date.slice(8));
   const label = describeDay(day);
-  const code =
-    day.state === "MARKED"
-      ? `${day.mark!.code}${day.mark!.dayValue < 1 ? " ½" : ""}`
-      : "";
+  const appearance = dayAppearance({
+    date: day.date,
+    state: day.state,
+    code: day.mark?.code,
+    category: day.mark?.category,
+    dayValue: day.mark?.dayValue,
+  });
+  const code = appearance.text;
+  const tint = dayBackground(appearance.kind);
   const content = (
     <Box>
       <Typography variant="caption" component="div">
@@ -117,7 +123,13 @@ function DayCell({
       <Button
         onClick={() => onSelect?.(day)}
         aria-label={`${formatDate(day.date)}: ${label}`}
-        sx={{ width: "100%", minWidth: 0, p: 0.5, textTransform: "none" }}
+        sx={{
+          width: "100%",
+          minWidth: 0,
+          p: 0.5,
+          textTransform: "none",
+          bgcolor: tint,
+        }}
       >
         {content}
       </Button>
@@ -127,7 +139,7 @@ function DayCell({
     <Box
       role="group"
       aria-label={`${formatDate(day.date)}: ${label}`}
-      sx={{ p: 0.5 }}
+      sx={{ p: 0.5, borderRadius: 1, bgcolor: tint }}
     >
       {content}
     </Box>

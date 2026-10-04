@@ -16,6 +16,7 @@
 - Q: How precise should the stored location be? → A: Store exactly as captured (full coordinates and accuracy). Raw location stays visible only to Admin and System on the audit screens. It is kept at full precision so a later heat map can show where actions were performed; that heat map is a later web feature, shown only to the System role, and is not built in this release.
 - Q: What should a user see when they open the app with no internet? → A: A "no connection" screen with Retry. No menus or data are shown until the server is reachable; nothing cached is shown as current.
 - Q: Should the app run on rooted (modified) Android phones? → A: Yes, but the app records "device appears rooted" on the Login History entry so Admin and System can see it. It never blocks sign-in or any action.
+- Q: Should location be taken on every API call even though only some calls create an audit row? → A: Yes, on every call, and it is stored for every call. A new API Access entry records each Android request with its location (analysis 2026-10-04).
 - Q: What is the oldest Android version the app must support? → A: Android 10 and later.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -126,9 +127,9 @@ changes on its next refresh without an app update.
    with a way back home.
 6. **Given** the user opens ACCOUNT, **When** the screen loads, **Then** they can open Profile
    (their own details, as on the web) and Logout.
-7. **Given** a Teacher, Manager or Director, **When** the home screen loads, **Then** it shows a
-   role-appropriate placeholder home (their name and roles, and the same skeleton widgets as the web
-   dashboard) until business screens are added by later specs.
+7. **Given** a Teacher, Manager or Director, **When** the home screen loads, **Then** it shows their
+   name, their roles and one skeleton card for each section of their server-provided menu, with no
+   content chosen by role name in the app, until business screens are added by later specs.
 8. **Given** the device is set to light or dark mode, or the user picks one in the app, **When** any
    screen is shown, **Then** it uses that theme and remembers the choice.
 
@@ -137,8 +138,9 @@ changes on its next refresh without an app update.
 ### User Story 4 - Location Recorded With Each API Call (Priority: P2)
 
 Every time the app sends data to the server or receives data from it, the app notes where the device
-is at that moment and sends that with the request. The server keeps it with the matching Login
-History or User Activity entry so an Admin or System user can see where an action came from. Nothing
+is at that moment and sends that with the request. The server keeps it on an API Access entry for
+every request, and also on the matching Login History or User Activity entry, so an Admin or System
+user can see where each action came from. Nothing
 is collected at any other time. The user is asked once, in plain words, to allow location while the
 app is in use. If they refuse, or location is off or cannot be found quickly, the request still goes
 ahead and the server records that location was unavailable and why.
@@ -146,8 +148,9 @@ ahead and the server records that location was unavailable and why.
 **Why this priority**: it is the one new capability beyond reusing the web's rules, it carries the
 privacy risk, and it is audit-only. It must never get in the way of signing in or working.
 
-**Independent Test**: sign in with location allowed and confirm the Login History entry shows a
-place; repeat with location denied and then with location services off and confirm sign-in succeeds
+**Independent Test**: sign in with location allowed and confirm the Login History entry and an API
+Access entry show a place; open a screen that only reads data and confirm its API Access entries show
+a place too; repeat with location denied and then with location services off and confirm sign-in succeeds
 and the entry shows "location unavailable" with the reason. Leave the app open and idle for several
 minutes and confirm no location is recorded.
 
@@ -157,8 +160,9 @@ minutes and confirm no location is recorded.
    entry for that sign-in shows the device's coordinates, how accurate they were and when they were
    captured.
 2. **Given** a signed-in user who has allowed location, **When** the app makes any API call that
-   sends or receives data, **Then** the location at the moment of that call is sent with it and
-   stored with the User Activity entry, if the action creates one.
+   sends or receives data (including one that only reads), **Then** the location at the moment of that
+   call is sent with it and stored on an API Access entry for that call, and also on the User
+   Activity entry if the action creates one.
 3. **Given** the app is open but no API call is being made, **When** time passes, **Then** the app
    does not read the device's location and nothing is recorded; it also never reads location while in
    the background.
@@ -171,8 +175,8 @@ minutes and confirm no location is recorded.
    short time, **When** the app makes a call, **Then** the call is not delayed beyond that short
    wait, goes ahead without location, and the server records "location unavailable" with the reason
    (services off, or no fix in time).
-7. **Given** an Admin or System user viewing Login History or User Activity on the web, **When** an
-   entry came from the Android app, **Then** they can see its location (or the unavailable reason),
+7. **Given** an Admin or System user viewing Login History, User Activity or API Access on the web,
+   **When** an entry came from the Android app, **Then** they can see its location (or the unavailable reason),
    the app version and that it came from the Android app.
 8. **Given** a Teacher, Manager or Director, **When** they use the web app or the mobile app, **Then**
    they cannot see location data, their own or anyone else's.
@@ -187,13 +191,17 @@ minutes and confirm no location is recorded.
 
 - A user's only roles are Admin and/or System: sign-in is refused on the app with a message to use
   the web application (User Story 1, scenario 7). A user with Admin plus Teacher, Manager or Director
-  is allowed, and sees the menus for their app-eligible roles only.
+  is allowed. Their menu is the union of their roles, filtered to items the app has a screen for, so
+  Admin-only items do not appear.
 - The app is opened with no network: a signed-in user sees a "no connection" screen with Retry and no menu or data until the server is reachable (clarified 2026-10-04). A signed-out user sees Sign In with a clear "no connection" message. No business action is possible offline in this release.
 - A request is made while a location lookup is still running: the app does not wait longer than the
   short limit and never starts a second lookup for the same call.
 - Many API calls fire together (for example loading a home screen): they may share one location
   reading taken at the start of that burst, so the user's battery and the screen's speed are not
-  affected.
+  affected. Each call still gets its own API Access entry, carrying the shared reading.
+- A busy day produces many API Access entries (about 7 million a year at 100 users). The entries are
+  small, indexed by time and user, and kept with the other audit data.
+- A person shares a phone: Sign In never pre-fills the previous user's identity.
 - A rooted or modified device: sign-in and use proceed normally; the Login History entry is flagged "device appears rooted" (FR-028a).
 - Mock or spoofed location on the device: the server records what was sent and cannot verify it. The
   location is for audit, not for allowing or blocking anything.
@@ -248,15 +256,16 @@ minutes and confirm no location is recorded.
 - **FR-011**: The app MUST show only the menu items for which it has a screen. Unknown or not-yet-built
   server items MUST be ignored without error.
 - **FR-012**: The app MUST refresh the access model when it starts, when it returns from the
-  background after a set period, and after a sign-in, so permission changes made on the web take
+  background after 5 minutes, and after a sign-in, so permission changes made on the web take
   effect without an app update.
 - **FR-013**: The app MUST show a "not authorized" screen with a way back home when a destination is
   not in the user's navigation.
 - **FR-014**: The app MUST provide an ACCOUNT section with Profile and Logout for every signed-in
   user. Profile shows the user's own details as in spec 001, and the user's sessions (FR-007) are
   reachable from it.
-- **FR-015**: Each of Teacher, Manager and Director MUST get a home screen that shows the user's name,
-  role or roles and skeleton widgets, as the web dashboards do in spec 002.
+- **FR-015**: Each user MUST get a home screen that shows their name, their roles and one skeleton
+  card for each section of their server-provided menu. The app MUST NOT choose home content by role
+  name.
 - **FR-016**: The app MUST support light and dark themes, follow the device setting by default, let
   the user override it, and remember the choice. The screens MUST be readable and operable on phone
   screen sizes, with accessible labels, touch-target sizes and colour contrast.
@@ -277,35 +286,48 @@ minutes and confirm no location is recorded.
   captured. Precise location SHOULD be used where the device allows; approximate location MUST be
   accepted if the user grants only that.
 - **FR-021**: If permission is denied, location services are off, or no position is found within a
-  short wait, the API call MUST proceed without location and MUST NOT fail or be noticeably delayed
+  short wait (4 seconds by default), the API call MUST proceed without location and MUST NOT fail or be noticeably delayed
   because of it. The app MUST report the reason with the call: permission denied, services off, no
   fix in time, or other.
 - **FR-022**: Several API calls made together MAY share one location reading taken at the start of
-  that group. A reading MUST NOT be reused for calls made later than a short freshness limit after it
+  that group. A reading MUST NOT be reused for calls made later than the freshness limit (10 seconds by default) after it
   was taken.
-- **FR-023**: The server MUST store the location, or the unavailable reason, with the Login History
-  entry for a sign-in event and with the User Activity entry for an action that creates one, and with
-  no other record. The server MUST also store the app version and that the call came from the Android
-  app.
+- **FR-023**: The server MUST store the location, or the unavailable reason, on the Login History
+  entry for a sign-in event, on the User Activity entry for an action that creates one, and on the
+  API Access entry of FR-023a. It MUST NOT store location on any other record. The server MUST also
+  store the app version and that the call came from the Android app.
+- **FR-023a**: The server MUST record one API Access entry for every request made by the Android app
+  to the HLS API, except the public app-configuration request (FR-030). Each entry holds the user (if
+  signed in), the session, the time, the HTTP method, the route pattern (for example
+  `/api/v1/me/sessions/{sessionId}`, never the actual query string), the response status, the app
+  version, and the location or its unavailable reason. It MUST NOT store request or response bodies,
+  headers, query strings or any business data. API Access entries are append-only.
 - **FR-024**: The server MUST validate a received location (coordinate ranges, accuracy, and a
   capture time close to the server time). An invalid location MUST NOT reject the request; it MUST be
   stored as "location unavailable — invalid" and the submitted values discarded.
 - **FR-025**: Location MUST be used only to show where an audited action came from. The system MUST NOT
   use it to allow, deny, approve or reject any action, and MUST NOT use it for any other purpose.
-- **FR-026**: Location data MUST be visible on the audit screens (spec 003) only to users who have
-  access to those screens (Admin and System by default). It MUST NOT be shown to Teacher, Manager or
+- **FR-026**: Location data MUST be visible on the audit screens (spec 003) and the API Access screen
+  only to users who have access to those screens (Admin and System by default). It MUST NOT be shown to Teacher, Manager or
   Director, and MUST be included in the existing audit exports under the same permission.
-- **FR-026a**: Location MUST be stored at the precision captured, with no rounding or masking, so that it can later be plotted on a map. This release builds no map or heat map; a later feature will add a heat map view of where audited actions were performed, in the web app's admin area and shown only to the System role (it will bring its own permission key).
+- **FR-026a**: Location MUST be stored at the precision captured, to at least 6 decimal places (about 0.1 metre), with no further rounding or masking, so that it can later be plotted on a map. This release builds no map or heat map; a later feature will add a heat map view of where audited actions were performed, in the web app's admin area and shown only to the System role (it will bring its own permission key).
 - **FR-027**: Location data MUST follow the same retention as the audit entry it belongs to, and MUST
   NOT be editable or deletable separately.
-- **FR-028**: The audit screens MUST add a way to see an entry's location, its unavailable reason, the
-  app version and the source (Android app or web).
+- **FR-028**: Login History, User Activity and the combined Audit Logs screens MUST add a way to see
+  an entry's location, its unavailable reason, the app version and the source (Android app or web).
+  A new **API Access** screen under the AUDIT menu MUST list the entries of FR-023a with filters by
+  user, date range, location status and HTTP method, and a CSV export, for Admin and System. API
+  Access entries are not part of the combined Audit Logs timeline, to keep it readable.
 
 **Release control**
 
 - **FR-028a**: When the app detects that the device appears rooted or modified, it MUST report that with the sign-in, and the server MUST store it on the Login History entry and show it on that entry on the audit screens. It MUST NOT block sign-in or any other action, and, like location, it is for audit only. The detection is best-effort and not proof.
 - **FR-029**: The server MUST be able to name a minimum supported app version. An app below it MUST be
   told to update and MUST NOT be allowed to continue past Sign In.
+- **FR-030**: The server MUST provide a public, unauthenticated app-configuration response with only
+  non-sensitive values: the minimum supported app version, the location wait, and the freshness limit.
+  It is the one endpoint of this feature that needs no sign-in. It is an addition to spec 001's list of
+  public capabilities (FR-001) and changes no other rule there.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -313,9 +335,12 @@ minutes and confirm no location is recorded.
   facts that it came from the Android app and from which app version and device description.
 - **Location Capture**: the device position sent with one API call: latitude, longitude, accuracy,
   capture time, and either "available" or an unavailable reason (permission denied, services off, no
-  fix in time, invalid, other). Belongs to exactly one Login History or User Activity entry.
+  fix in time, invalid, other). Belongs to exactly one Login History, User Activity or API Access entry.
 - **Login History Entry / User Activity Entry** (spec 003): gain an optional Location Capture, the
   app version, and a source (Android app or web).
+- **API Access Entry** (new, audit): an immutable record of one request from the Android app: user,
+  session, time, method, route pattern, response status, app version, source and Location Capture.
+  No request or response content.
 - **Navigation Model** (spec 002): the server-provided menus, actions and scope the app renders. Not
   changed by this feature.
 - **Minimum App Version**: the oldest app version the server accepts.
@@ -324,16 +349,19 @@ minutes and confirm no location is recorded.
 
 | Role     | Menu (section → item) | Default actions | Data scope |
 | -------- | --------------------- | --------------- | ---------- |
-| Admin    | None in the app (app sign-in is refused if Admin and/or System are the user's only roles, FR-003). On the web: AUDIT screens gain location, app version and source fields | View, Export (existing `AUDIT` permissions) | Org-wide (audit data) |
+| Admin    | None in the app (app sign-in is refused if Admin and/or System are the user's only roles, FR-003). On the web: AUDIT screens gain location, app version and source fields, plus a new AUDIT → API Access screen | View, Export (existing `AUDIT` permissions, plus `AUDIT_API_ACCESS`) | Org-wide (audit data) |
 | Director | Home, ACCOUNT → Profile, Logout. Any other items come from the server navigation if the app has a screen for them (none yet) | View own profile | Own (this release adds no business screens) |
 | Manager  | Home, ACCOUNT → Profile, Logout. Same rule | View own profile | Own (this release adds no business screens) |
 | Teacher  | Home, ACCOUNT → Profile, Logout. Same rule | View own profile | Own |
-| System   | None in the app. On the web: AUDIT screens gain location, app version and source fields | View, Export (existing `AUDIT` permissions) | Org-wide (audit data only; System still sees no business data) |
+| System   | None in the app. On the web: AUDIT screens gain location, app version and source fields, plus AUDIT → API Access | View, Export (existing `AUDIT` permissions, plus `AUDIT_API_ACCESS`) | Org-wide (audit data only; System still sees no business data) |
 
-**New permission keys**: none. The app reads the existing access model from spec 002. Seeing
-location data reuses the existing `AUDIT` view/export permissions from spec 003, so the matrix editor
-(Admin, Director and System only, Constitution Principle II) can grant or remove it with no change to
-who may edit the matrix. Manager and Teacher have no new access.
+**New permission keys**: one new module, `AUDIT_API_ACCESS` (actions View and Export), for the new
+AUDIT → API Access screen, seeded true for Admin and System and false for everyone else, like the
+other audit modules in spec 003. The app itself reads the existing access model from spec 002. Seeing
+location on Login History, User Activity and Audit Logs reuses those screens' existing view/export
+permissions, so the matrix editor (Admin, Director and System only, Constitution Principle II) can
+grant or remove it with no change to who may edit the matrix. Manager and Teacher have no new
+access.
 
 ## Success Criteria *(mandatory)*
 
@@ -352,13 +380,14 @@ who may edit the matrix. Manager and Teacher have no new access.
 - **SC-005**: A permission change made on the web appears in an affected user's app menu on its next
   refresh with no app update, in 100% of test cases.
 - **SC-006**: In test runs with location allowed, 100% of Login History entries from the app carry a
-  location, and 100% of audited actions made through the app carry a location or a stated reason.
+  location, and 100% of requests the app makes, including reads, have an API Access entry carrying a
+  location or a stated reason.
 - **SC-007**: With the app idle or in the background for 10 minutes, 0 location readings are taken
   and 0 are stored.
 - **SC-008**: With permission denied or services off, sign-in and every other call still succeed, and
   the added delay from location handling is no more than the stated short wait, in 100% of tests.
 - **SC-009**: Admin and System can find where an app sign-in came from within 3 clicks from the AUDIT
-  menu, and Teacher, Manager and Director test users see no location data anywhere in 100% of tests.
+  menu, and can list all requests a user made from the app on a given day from AUDIT → API Access, and Teacher, Manager and Director test users see no location data anywhere in 100% of tests.
 - **SC-010**: All Sign In, Home, ACCOUNT, sessions and not-authorized screens pass the accessibility
   checks in both light and dark themes.
 
@@ -371,9 +400,13 @@ who may edit the matrix. Manager and Teacher have no new access.
   geofence or other rule that depends on it. Making location mandatory for a later action, such as
   marking attendance, would be a separate decision in that later spec.
 - Admin and System see location through the AUDIT screens; no other role does. Retention follows the
-  audit entry it belongs to, so there is no separate purge.
-- The short wait for a position and the freshness limit for sharing a reading are configurable, with
-  defaults of a few seconds and under a minute. These are working values to confirm in planning.
+  audit entry it belongs to, so there is no separate purge. API Access entries, which are far more
+  numerous than other audit rows, are kept the same way for now; a retention period for them is a
+  question for HLS before go-live.
+- The short wait for a position (4 seconds), the freshness limit for sharing a reading (10 seconds)
+  and the background period before the menu is refreshed (5 minutes) are the defaults used in this
+  spec. The first two are served by the server's app-configuration response (FR-030) so they can be
+  tuned without a new app release.
 - Users agree to the privacy notice and the permission prompt when they first use the app. The exact
   wording of the privacy notice is set by HLS and is outside this spec.
 - Sessions on more than one device are allowed, as on the web. The session lengths of spec 001

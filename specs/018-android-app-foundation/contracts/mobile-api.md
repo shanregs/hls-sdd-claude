@@ -16,6 +16,8 @@ the existing contract of spec 001 (`auth-api.md`), 002 (`access-model-api.md`) a
 | `User-Agent` | `HLS-Android/<semver> (Android <os>; <model>)` | always; becomes the session's device description |
 
 Rules for the server:
+- Every request that carries `X-HLS-Client` (except `app-config`) produces one API Access entry
+  (see "New: API Access" below).
 - Headers are optional for every endpoint. A missing or malformed location header never causes an
   error response; it is stored as `OTHER` or `INVALID` (research.md §8).
 - `X-HLS-Location` MUST NOT be written to application or access logs.
@@ -156,8 +158,54 @@ first set for rows that came from either source. Change history is unchanged.
 
 Query filter added to both list endpoints: `source=WEB|ANDROID` (optional).
 
+### Extended: GET /api/v1/audit/logs
+
+Login-history and user-activity rows in the combined list carry the same `source`, `appVersion` and
+`location` fields as above (and `deviceRooted` for login-history rows). API Access entries are not
+part of this list.
+
+### New: GET /api/v1/audit/api-access
+
+**Authorization**: permission module `AUDIT_API_ACCESS`, action View (Admin and System by default).
+Others get 403.
+
+**Query**: `userId`, `from`, `to` (ISO instants, `to` not before `from`), `locationStatus`,
+`httpMethod`, `page`, `size` (same pagination rules as the other audit lists).
+
+**Response 200**:
+
+```json
+{
+  "items": [
+    {
+      "id": "...",
+      "occurredAt": "2026-10-04T09:30:12Z",
+      "userId": "...",
+      "sessionId": "...",
+      "httpMethod": "GET",
+      "routeTemplate": "/api/v1/me/access-model",
+      "statusCode": 200,
+      "source": "ANDROID",
+      "appVersion": "1.0.0",
+      "location": { "status": "AVAILABLE", "latitude": 12.971599, "longitude": 77.594566,
+                    "accuracyMeters": 18.5, "capturedAt": "2026-10-04T09:30:10Z" }
+    }
+  ],
+  "page": 0, "size": 50, "totalElements": 1234
+}
+```
+
+**Response 400**: `to` before `from`, or an unknown `locationStatus`.
+
+### New: GET /api/v1/audit/api-access/export
+
+CSV of the same rows and filters, with columns `occurred_at`, `user_id`, `session_id`,
+`http_method`, `route_template`, `status_code`, `source`, `app_version`, `location_status`,
+`latitude`, `longitude`, `accuracy_meters`, `location_captured_at`. Same authorization.
+
 ### Not exposed
 
 No endpoint returns location to a Teacher, Manager or Director, and no endpoint returns raw
-location for any user other than through the audit routes above. The planned heat map is a later
+location for any user other than through the audit routes above (login history, user activity, logs
+and API access). The planned heat map is a later
 spec and will add its own System-only permission and endpoint.

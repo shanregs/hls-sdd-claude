@@ -63,7 +63,14 @@ function WeekdayChecks({
 }
 
 /** Default weekly off days, per-School overrides and organization-wide non-working dates (FR-008). */
-export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
+export function CalendarPanel({
+  canEdit,
+  onChange,
+}: {
+  canEdit: boolean;
+  /** Called with the calendar after every load and save, so a calendar view can follow the edits. */
+  onChange?: (calendar: AttendanceCalendar) => void;
+}) {
   const { authFetch } = useAuth();
   const [calendar, setCalendar] = useState<AttendanceCalendar | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +89,7 @@ export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
     setError(null);
     setCalendar(result.data);
     setDefaultOff(result.data.defaultWeeklyOff);
+    onChange?.(result.data);
     return true;
   };
 

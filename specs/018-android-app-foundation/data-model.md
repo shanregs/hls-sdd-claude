@@ -1,8 +1,9 @@
 # Data Model: Android App Foundation
 
-This feature adds columns to existing tables and one small in-request value object. It adds no new
-table. All additions are nullable or defaulted, so existing rows stay valid and the audit tables
-remain append-only (rows are only ever inserted).
+This feature adds columns to existing tables, one new append-only audit table
+(`api_access_entry`) and one small in-request value object. All column additions are nullable or
+defaulted, so existing rows stay valid and the audit tables remain append-only (rows are only ever
+inserted).
 
 Migration: `V16__add_client_context_to_audit_and_session.sql`. The number is the next free one after
 `V15` at the time of planning; if spec 008 or another branch adds a migration first, take the next
@@ -68,6 +69,38 @@ lock expiry) have `source = 'WEB'` and `location_status = 'NOT_APPLICABLE'`.
 
 Shown in `GET /api/v1/me/sessions` so the list can mark Android sessions (FR-007).
 
+## New table: `api_access_entry` (audit module)
+
+One row per request made by the Android app to the HLS API, except `GET /api/v1/mobile/app-config`
+(FR-023a). No foreign key into another module's tables, like the other audit tables.
+
+| Column | Type | Notes |
+| ------ | ---- | ----- |
+| id | UUID PRIMARY KEY | |
+| occurred_at | TIMESTAMPTZ NOT NULL | server time the request finished |
+| source_event_id | UUID NOT NULL UNIQUE | makes redelivery idempotent |
+| user_id | UUID | null when the request was not authenticated (for example a failed sign-in) |
+| session_id | UUID | null when not authenticated |
+| http_method | VARCHAR(10) NOT NULL | `GET`, `POST`, `PUT`, `DELETE`, ... |
+| route_template | VARCHAR(200) NOT NULL | the matched route pattern, e.g. `/api/v1/me/sessions/{sessionId}`; `UNMATCHED` when no route matched. Never the query string or actual id values |
+| status_code | SMALLINT NOT NULL | HTTP response status |
+| source | VARCHAR(10) NOT NULL | | always `ANDROID` in this release |
+| app_version | VARCHAR(20) | null | |
+| location_status | VARCHAR(20) NOT NULL | | enum above |
+| latitude | NUMERIC(9,6) | null | |
+| longitude | NUMERIC(9,6) | null | |
+| accuracy_meters | REAL | null | |
+| location_captured_at | TIMESTAMPTZ | null | |
+
+Indexes: `(occurred_at DESC)` and `(user_id, occurred_at DESC)`. Same CHECK as the other audit tables:
+`location_status = 'AVAILABLE'` if and only if latitude, longitude, accuracy_meters and
+location_captured_at are all non-null. Never stored: request or response bodies, headers, query
+strings, or any business data.
+
+Volume: about 100 users with a few hundred calls a day is on the order of 7 million rows a year. Rows
+are small, and the two indexes cover the screen's filters. A retention period is a question for HLS
+before go-live (spec Assumptions); until then rows live with the rest of the audit data.
+
 ## Unchanged
 
 `change_history_entry` has no location (spec FR-023 limits location to login history and user
@@ -80,6 +113,7 @@ are unchanged.
 | ----- | ------ |
 | `LoginHistoryRecorded` | adds `ClientContext clientContext` (nullable; null means web) |
 | Request-triggered events in `identity.activity` (`SessionEnded`, `PasswordChanged`, `PasswordResetByAdmin`, `PasswordResetCompleted`, `ProfileUpdated`, `UserCreated`, `UserRoleChanged`, `AccountActivationChanged`) | add `ClientContext clientContext` (nullable) |
+| `ApiAccessRecorded` (new, `identity.clientcontext`) | published by the API-access filter for every Android request; consumed by `audit` into `api_access_entry` |
 | `AccountLockChanged`, `PasswordResetRequested` | add it too; they are triggered by an unauthenticated request, so the context is still the caller's |
 
 The audit consumers copy the context to the columns above. Redelivery stays idempotent through the

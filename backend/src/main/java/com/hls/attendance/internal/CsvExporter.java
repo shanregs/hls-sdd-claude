@@ -8,8 +8,10 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -86,12 +88,15 @@ public class CsvExporter {
         return join(cols);
     }
 
-    /** A marked day shows its code (half days get a 0.5 suffix); off days are labelled; the rest are blank. */
+    /**
+     * A marked day shows its code (half days get a 0.5 suffix); a weekly off day shows its weekday ("Sun"),
+     * a non-working date "H", matching the screen; the rest are blank.
+     */
     static String dayText(Cell cell) {
         return switch (cell.state()) {
             case MARKED -> cell.code() + (cell.dayValue().compareTo(BigDecimal.ONE) < 0 ? cell.dayValue().stripTrailingZeros().toPlainString() : "");
-            case WEEKLY_OFF -> "Off";
-            case NON_WORKING -> "Hol";
+            case WEEKLY_OFF -> cell.date().getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+            case NON_WORKING -> "H";
             default -> "";
         };
     }

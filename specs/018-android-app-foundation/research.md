@@ -103,6 +103,27 @@ and the specs it reuses (001 auth, 002 access model, 003 audit).
   not depend on the web layer); a new audit table for location (the spec says it belongs on the
   entry itself).
 
+## 7a. Recording every request (API Access trail)
+
+- **Decision (analysis 2026-10-04)**: location is captured on every call and stored for every call. A
+  second servlet filter in `identity.clientcontext` (`ApiAccessFilter`) runs around the whole request,
+  and after the response is written publishes `ApiAccessRecorded` (user and session from the JWT if
+  present, method, matched route pattern, status code, and the `ClientContext`). Only requests with an
+  Android `ClientContext` are recorded; `GET /api/v1/mobile/app-config` is excluded. The `audit`
+  module consumes the event into the new `api_access_entry` table, deduplicating on the event id.
+- **Rationale**: it makes the stated purpose ("where did each action come from") true for reads as
+  well as writes, and gives the later heat map real density. Publishing after the response means the
+  status code is known and a failure to record never changes the response.
+- **Route pattern, not path**: the matched pattern (Spring's best-matching-pattern attribute) is
+  stored, so ids and query strings never reach the audit table.
+- **Costs accepted**: a fresh fix can delay a call by up to the wait limit (mitigated by the 10 s
+  reuse window); roughly 7 million small rows a year at 100 users; and more sensitive location data
+  about staff, which is why access is limited to Admin and System and a separate permission key
+  (`AUDIT_API_ACCESS`) lets them be switched off independently.
+- **Alternatives considered**: capture only on calls that create an audit row (rejected by the
+  product owner); log in the web server's access log (not append-only, not queryable by the audit
+  screens, and would put coordinates in log files).
+
 ## 8. Validation of a received location
 
 - **Decision**: a location is valid when latitude is within -90..90, longitude within -180..180,
@@ -115,7 +136,7 @@ and the specs it reuses (001 auth, 002 access model, 003 audit).
 ## 9. Minimum app version and app configuration
 
 - **Finding**: spec 011 (system settings) does not exist yet, so there is no settings UI.
-- **Decision**: `hls.mobile.min-app-version`, `hls.mobile.location-wait-seconds` and
+- **Decision**: the app-config response is public by design (spec FR-030) and carries no secrets. `hls.mobile.min-app-version`, `hls.mobile.location-wait-seconds` and
   `hls.mobile.location-reuse-seconds` are deployment configuration for now. A public, cacheable
   `GET /api/v1/mobile/app-config` returns them. When a request carries `X-HLS-Client` below the
   minimum, the filter answers `426` with `{ "code": "APP_UPDATE_REQUIRED", "minimumVersion": "..." }`

@@ -110,6 +110,40 @@ class AttendanceGridControllerTest extends AttendanceTestBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void everyMarkedCellCarriesItsStatusCategoryForColouring() {
+        World w = newWorld();
+        YearMonth month = YearMonth.from(today()).minusMonths(1);
+        String teacher = w.teacherA().teacherId().toString();
+        for (Object[] mark : new Object[][] {{10, "P"}, {11, "L"}, {12, "A"}, {13, "H"}, {14, "S"}}) {
+            Resp resp = put(
+                    "/api/v1/attendance/teachers/" + teacher + "/marks/" + month.atDay((Integer) mark[0]),
+                    w.managerA().token(),
+                    Map.of("statusCode", mark[1], "dayValue", 1));
+            assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+        }
+
+        Resp resp = get(GRID + "?month=" + month + "&schoolId=" + w.schoolA(), w.admin());
+
+        List<Map<String, Object>> cells = (List<Map<String, Object>>)
+                ((Map<String, Object>) ((List<Object>) resp.map().get("content")).get(0)).get("cells");
+        Map<String, String> categoryByCode = new java.util.HashMap<>();
+        for (Map<String, Object> cell : cells) {
+            if (cell.get("code") != null) {
+                categoryByCode.put((String) cell.get("code"), (String) cell.get("category"));
+            } else {
+                assertThat(cell.get("category")).as("unmarked cell %s", cell.get("date")).isNull();
+            }
+        }
+        assertThat(categoryByCode)
+                .containsEntry("P", "WORKED")
+                .containsEntry("S", "WORKED")
+                .containsEntry("L", "LEAVE")
+                .containsEntry("A", "LEAVE")
+                .containsEntry("H", "NON_WORKING");
+    }
+
+    @Test
     void aPageOf500TeachersLoadsQuicklyWithBulkQueries() {
         String admin = signInAs(Role.ADMIN).token();
         UUID school = schoolInNewZone(admin)[2];

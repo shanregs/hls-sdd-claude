@@ -1,4 +1,5 @@
 import type { DayView, GridCell } from "./attendanceApi";
+import { WEEKDAY_LABELS, weekdayIndex } from "./monthUtils";
 
 /** The words that describe a day, used on screen and as its accessible name (never colour alone). */
 export function describeDay(day: DayView): string {
@@ -17,9 +18,9 @@ export function describeDay(day: DayView): string {
     case "NOT_PLACED":
       return "Not placed";
     case "WEEKLY_OFF":
-      return "Weekly off";
+      return `Weekly off, ${WEEKDAY_LABELS[weekdayIndex(day.date)]}`;
     case "NON_WORKING":
-      return "Non-working date";
+      return "Holiday";
     case "FUTURE":
       return "Not yet";
   }
@@ -41,9 +42,9 @@ export function describeCell(cell: GridCell): string {
     case "NOT_PLACED":
       return "Not placed";
     case "WEEKLY_OFF":
-      return "Weekly off";
+      return `Weekly off, ${WEEKDAY_LABELS[weekdayIndex(cell.date)]}`;
     case "NON_WORKING":
-      return "Non-working date";
+      return "Holiday";
     case "FUTURE":
       return "Not yet";
   }

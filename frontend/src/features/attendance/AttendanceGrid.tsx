@@ -13,24 +13,17 @@ import {
   Typography,
 } from "@mui/material";
 import type { GridCell, GridRow } from "./attendanceApi";
+import { dayAppearance, dayBackground } from "./dayStyle";
 import { describeCell } from "./dayText";
 import { formatDate } from "./monthUtils";
 
+/** The text in a cell: the day's own label (code, "H", weekday), or a marker for an open or empty day. */
 function shortText(cell: GridCell): string {
-  switch (cell.state) {
-    case "MARKED":
-      return `${cell.code}${(cell.dayValue ?? 1) < 1 ? "½" : ""}`;
-    case "UNMARKED":
-      return "?";
-    case "NOT_PLACED":
-      return "–";
-    case "WEEKLY_OFF":
-      return "Off";
-    case "NON_WORKING":
-      return "Hol";
-    case "FUTURE":
-      return "";
-  }
+  const { text } = dayAppearance(cell);
+  if (text) return text;
+  if (cell.state === "UNMARKED") return "?";
+  if (cell.state === "NOT_PLACED") return "–";
+  return "";
 }
 
 interface AttendanceGridProps {
@@ -191,7 +184,14 @@ export function AttendanceGrid({
                   const label = `${row.name}, ${formatDate(cell.date)}: ${describeCell(cell)}`;
                   const text = shortText(cell);
                   return (
-                    <TableCell key={c} align="center" sx={{ p: 0 }}>
+                    <TableCell
+                      key={c}
+                      align="center"
+                      sx={{
+                        p: 0,
+                        bgcolor: dayBackground(dayAppearance(cell).kind),
+                      }}
+                    >
                       {editable(row, cell, canEdit) ? (
                         <Button
                           size="small"
@@ -214,7 +214,10 @@ export function AttendanceGrid({
                           sx={{
                             minWidth: 34,
                             py: 0.5,
-                            color: "text.secondary",
+                            color:
+                              dayAppearance(cell).kind === "plain"
+                                ? "text.secondary"
+                                : "text.primary",
                           }}
                         >
                           <Typography variant="caption">{text}</Typography>

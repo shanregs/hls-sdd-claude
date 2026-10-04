@@ -224,6 +224,8 @@ export function saveMyMark(
 export interface GridCell {
   date: string;
   code: string | null;
+  /** The mark's status category, so leave/absent and holiday marks can be coloured. */
+  category?: StatusCategory | null;
   dayValue: number | null;
   setByKind: "SELF" | "SUPERVISOR" | null;
   state: DayState;

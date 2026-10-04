@@ -86,6 +86,24 @@ class AttendanceExportTest extends AttendanceTestBase {
     }
 
     @Test
+    void weeklyOffDaysShowTheWeekdayAndMarkedHolidayCodesShowH() {
+        World w = newWorld();
+        YearMonth month = previousMonth();
+        LocalDate sunday = month.atDay(1);
+        while (sunday.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
+            sunday = sunday.plusDays(1);
+        }
+        LocalDate holiday = sunday.plusDays(2);
+        supervisorMark(w.managerA().token(), w.teacherA().teacherId(), holiday, "H", 1);
+
+        Csv csv = download(EXPORT + "?month=" + month + "&schoolId=" + w.schoolA(), w.admin());
+
+        List<String> row = Arrays.asList(csv.lines().get(1).split(",", -1));
+        assertThat(row.get(12 + sunday.getDayOfMonth() - 1)).isEqualTo("Sun");
+        assertThat(row.get(12 + holiday.getDayOfMonth() - 1)).isEqualTo("H");
+    }
+
+    @Test
     void theFilterLeavesOutTheOtherManagersTeachers() {
         World w = newWorld();
         YearMonth month = previousMonth();

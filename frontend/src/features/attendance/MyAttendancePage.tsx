@@ -7,6 +7,7 @@ import {
   type DayView,
   type TeacherMonthView,
 } from "./attendanceApi";
+import { DayLegend } from "./DayLegend";
 import { MarkDialog } from "./MarkDialog";
 import { MonthCalendar } from "./MonthCalendar";
 import { currentMonth, monthLabel, todayKey } from "./monthUtils";
@@ -90,6 +91,7 @@ export function MyAttendancePage() {
             You can mark today and the previous 3 days. Older days or days your
             Manager set must be corrected by your Manager.
           </Typography>
+          <DayLegend />
           <RollupSummary rollup={view.rollup} />
         </Stack>
       )}
