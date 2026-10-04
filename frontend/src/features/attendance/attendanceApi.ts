@@ -358,3 +358,85 @@ export function getGrid(
     "Could not load the attendance grid.",
   );
 }
+
+export interface UnmarkedTeacher {
+  teacherId: string;
+  name: string;
+  dates: string[];
+}
+
+export type LockResult =
+  | { ok: true; locked: number }
+  | { ok: false; reason: string; unmarked: UnmarkedTeacher[] };
+
+export interface MonthEvent {
+  event: "LOCKED" | "REOPENED" | "RELOCKED";
+  reason: string | null;
+  actorUserId: string;
+  occurredAt: string;
+}
+
+/** Locks the month for every placed Teacher; a refusal lists the unmarked Teachers and days. */
+export async function lockMonth(
+  authFetch: AuthFetch,
+  month: string,
+): Promise<LockResult> {
+  try {
+    const response = await authFetch(`${BASE}/months/${month}/lock`, {
+      method: "POST",
+    });
+    if (response.ok) {
+      const body = (await response.json()) as { locked: number };
+      return { ok: true, locked: body.locked };
+    }
+    const body = (await response.json().catch(() => ({}))) as {
+      reason?: string;
+      unmarked?: UnmarkedTeacher[];
+    };
+    return {
+      ok: false,
+      reason: body.reason ?? "Could not lock the month.",
+      unmarked: body.unmarked ?? [],
+    };
+  } catch {
+    return { ok: false, reason: "Could not lock the month.", unmarked: [] };
+  }
+}
+
+export function reopenMonth(
+  authFetch: AuthFetch,
+  teacherId: string,
+  month: string,
+  reason: string,
+): Promise<ApiResult<{ state: string }>> {
+  return sendJson(
+    authFetch,
+    "POST",
+    `${BASE}/teachers/${teacherId}/months/${month}/reopen`,
+    { reason },
+  );
+}
+
+export function relockMonth(
+  authFetch: AuthFetch,
+  teacherId: string,
+  month: string,
+): Promise<ApiResult<RollupView>> {
+  return sendJson(
+    authFetch,
+    "POST",
+    `${BASE}/teachers/${teacherId}/months/${month}/relock`,
+  );
+}
+
+export function getMonthEvents(
+  authFetch: AuthFetch,
+  teacherId: string,
+  month: string,
+): Promise<ApiResult<MonthEvent[]>> {
+  return getJson(
+    authFetch,
+    `${BASE}/teachers/${teacherId}/months/${month}/events`,
+    "Could not load the lock history.",
+  );
+}

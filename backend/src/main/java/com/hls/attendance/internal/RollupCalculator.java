@@ -76,6 +76,21 @@ public final class RollupCalculator {
         return plans;
     }
 
+    /** The scheduled working days up to {@code today} that have no mark, oldest first. */
+    public static List<LocalDate> unmarkedDates(
+            YearMonth month,
+            List<PlacementSpan> placements,
+            Set<LocalDate> markedDates,
+            WeeklyOffRules rules,
+            Set<LocalDate> nonWorkingDates,
+            LocalDate today) {
+        return plan(month, placements, rules, nonWorkingDates).stream()
+                .filter(p -> p.kind() == DayKind.WORKING)
+                .map(DayPlan::date)
+                .filter(d -> !d.isAfter(today) && !markedDates.contains(d))
+                .toList();
+    }
+
     public static Rollup compute(
             YearMonth month,
             List<PlacementSpan> placements,

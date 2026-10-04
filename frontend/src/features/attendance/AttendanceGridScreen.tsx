@@ -26,6 +26,8 @@ import { TeacherMonthPanel } from "./TeacherMonthPanel";
 
 const PAGE_SIZE = 50;
 
+type PanelTeacher = Pick<GridRow, "teacherId" | "name">;
+
 interface AttendanceGridScreenProps {
   title: string;
   loadGrid: (
@@ -41,12 +43,17 @@ interface AttendanceGridScreenProps {
   /** Filter controls rendered beside the search box. */
   filters?: ReactNode;
   /** Page-level actions rendered at the top right, given the month and a reload function. */
-  actions?: (ctx: { month: string; reload: () => void }) => ReactNode;
-  /** Extra content for the Teacher side panel (lock controls). */
-  panelExtras?: (ctx: {
-    row: GridRow;
+  actions?: (ctx: {
     month: string;
     reload: () => void;
+    openTeacher: (teacherId: string, name: string) => void;
+  }) => ReactNode;
+  /** Extra content for the Teacher side panel (lock controls). */
+  panelExtras?: (ctx: {
+    row: PanelTeacher;
+    month: string;
+    reload: () => void;
+    refreshKey: number;
   }) => ReactNode;
 }
 
@@ -77,7 +84,7 @@ export function AttendanceGridScreen({
     row: GridRow;
     day: DayView;
   } | null>(null);
-  const [panelRow, setPanelRow] = useState<GridRow | null>(null);
+  const [panelRow, setPanelRow] = useState<PanelTeacher | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,7 +142,11 @@ export function AttendanceGridScreen({
         <Typography variant="h5" component="h1">
           {title}
         </Typography>
-        {actions?.({ month, reload })}
+        {actions?.({
+          month,
+          reload,
+          openTeacher: (teacherId, name) => setPanelRow({ teacherId, name }),
+        })}
       </Stack>
 
       <Stack
@@ -243,7 +254,12 @@ export function AttendanceGridScreen({
           month={month}
           refreshKey={reloadCount}
           onClose={() => setPanelRow(null)}
-          extras={panelExtras?.({ row: panelRow, month, reload })}
+          extras={panelExtras?.({
+            row: panelRow,
+            month,
+            reload,
+            refreshKey: reloadCount,
+          })}
         />
       )}
     </Box>

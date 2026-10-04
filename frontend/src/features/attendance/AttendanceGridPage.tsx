@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { Button } from "@mui/material";
 import { AttendanceGridScreen } from "./AttendanceGridScreen";
 import { getGrid } from "./attendanceApi";
 import { GridFilters } from "./GridFilters";
 import { NO_FILTERS, type GridFilterValues } from "./gridFilterValues";
+import { LockControls } from "./LockControls";
+import { LockMonthDialog } from "./LockMonthDialog";
 import { useGrantedActions } from "../common/useGrantedActions";
 
 const ROUTE = "/operations/attendance";
@@ -11,6 +14,8 @@ const ROUTE = "/operations/attendance";
 export function AttendanceGridPage() {
   const actions = useGrantedActions(ROUTE);
   const [filters, setFilters] = useState<GridFilterValues>(NO_FILTERS);
+  const [locking, setLocking] = useState(false);
+  const canProcess = actions.has("PROCESS");
   return (
     <AttendanceGridScreen
       title="Attendance"
@@ -24,6 +29,40 @@ export function AttendanceGridPage() {
         status: filters.status || undefined,
       }}
       filters={<GridFilters value={filters} onChange={setFilters} />}
+      actions={({ month, reload, openTeacher }) =>
+        canProcess && (
+          <>
+            <Button variant="outlined" onClick={() => setLocking(true)}>
+              Lock month
+            </Button>
+            {locking && (
+              <LockMonthDialog
+                month={month}
+                onClose={() => setLocking(false)}
+                onLocked={() => {
+                  setLocking(false);
+                  reload();
+                }}
+                onOpenTeacher={(id, name) => {
+                  setLocking(false);
+                  openTeacher(id, name);
+                }}
+              />
+            )}
+          </>
+        )
+      }
+      panelExtras={({ row, month, reload, refreshKey }) =>
+        canProcess && (
+          <LockControls
+            teacherId={row.teacherId}
+            teacherName={row.name}
+            month={month}
+            refreshKey={refreshKey}
+            onChanged={reload}
+          />
+        )
+      }
     />
   );
 }
