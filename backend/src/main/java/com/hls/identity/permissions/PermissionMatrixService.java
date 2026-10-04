@@ -70,6 +70,7 @@ public class PermissionMatrixService {
         seedMasterData();
         seedAttendance();
         seedLeave();
+        seedNotifications();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -144,6 +145,14 @@ public class PermissionMatrixService {
         for (PermissionAction action :
                 List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.DELETE)) {
             seed(Role.TEACHER, PermissionModule.MY_LEAVE, action, true);
+        }
+    }
+
+    /** Notification defaults (spec 010): every business role reads and deletes its own; never System. */
+    private void seedNotifications() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
+            seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.DELETE, true);
         }
     }
 

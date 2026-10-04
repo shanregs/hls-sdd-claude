@@ -22,7 +22,7 @@ Migration `V18__create_notification_table.sql`. Plain ids, no cross-module forei
 Constraints and indexes:
 
 - `CHECK (link IS NULL OR link LIKE '/%')`.
-- Index `(recipient_user_id, created_at DESC)` for the list.
+- Index `(recipient_user_id, updated_at DESC)` for the list (newest activity first; `updated_at` equals `created_at` unless merged).
 - Partial index `(recipient_user_id) WHERE read_at IS NULL` for the unread count.
 - Partial index `(recipient_user_id, group_key) WHERE read_at IS NULL AND group_key IS NOT NULL` for the merge lookup.
 - Index `(created_at)` for retention.

@@ -252,7 +252,15 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     92,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM)));
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM)),
+            new NavItem(
+                    "Notifications",
+                    "/account/notifications",
+                    PermissionModule.NOTIFICATIONS,
+                    PermissionAction.VIEW,
+                    "ACCOUNT",
+                    93,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)));
 
     private NavigationCatalog() {}
 

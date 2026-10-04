@@ -88,6 +88,24 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     }
 
     @Test
+    void notificationsAreInTheAccountSectionForTheFourBusinessRolesAndNotForSystem() {
+        for (Role role : Role.values()) {
+            var navigation = client.get()
+                    .uri("/api/v1/me/access-model")
+                    .header("Authorization", "Bearer " + signInAs(role).token())
+                    .exchange()
+                    .expectBody(AccessModelDtos.AccessModelResponse.class)
+                    .returnResult()
+                    .getResponseBody()
+                    .navigation();
+            var account = navigation.stream().filter(s -> s.section().equals("ACCOUNT")).findFirst().orElseThrow();
+            boolean has = account.items().stream()
+                    .anyMatch(i -> i.label().equals("Notifications") && i.route().equals("/account/notifications"));
+            assertThat(has).as(role.name()).isEqualTo(role != Role.SYSTEM);
+        }
+    }
+
+    @Test
     void leaveItemsAppearOnlyForTheRolesThatHoldThem() {
         record Expect(Role role, boolean applyLeave, boolean leaveManagement) {}
         for (Expect e : new Expect[] {

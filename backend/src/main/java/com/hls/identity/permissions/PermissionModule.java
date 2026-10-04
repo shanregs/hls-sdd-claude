@@ -43,7 +43,8 @@ public enum PermissionModule {
     ATTENDANCE_SETUP(VIEW, EDIT),
     HOLIDAY_CALENDAR(VIEW, EDIT),
     LEAVE_MANAGEMENT(VIEW, APPROVE),
-    MY_LEAVE(VIEW, CREATE, DELETE);
+    MY_LEAVE(VIEW, CREATE, DELETE),
+    NOTIFICATIONS(VIEW, DELETE);
 
     private final Set<PermissionAction> actions;
 
