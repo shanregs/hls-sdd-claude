@@ -78,13 +78,27 @@ public class AuditLogsController {
         CsvStreamingExporter.stream(
                 response,
                 "audit-logs.csv",
-                List.of("occurredAt", "type", "actorUserId", "summary"),
+                List.of(
+                        "occurredAt", "type", "actorUserId", "summary",
+                        "source", "appVersion", "locationStatus", "latitude", "longitude", "accuracyMeters"),
                 pageable -> auditLogQueryService.query(types, userId, from, to, hidden, pageable),
                 entry -> List.of(
                         String.valueOf(entry.occurredAt()),
                         entry.type(),
                         entry.actorUserId() == null ? "" : entry.actorUserId().toString(),
-                        entry.summary()));
+                        entry.summary(),
+                        entry.source() == null ? "" : entry.source(),
+                        entry.appVersion() == null ? "" : entry.appVersion(),
+                        entry.location() == null ? "" : entry.location().status(),
+                        entry.location() == null || entry.location().latitude() == null
+                                ? ""
+                                : entry.location().latitude().toPlainString(),
+                        entry.location() == null || entry.location().longitude() == null
+                                ? ""
+                                : entry.location().longitude().toPlainString(),
+                        entry.location() == null || entry.location().accuracyMeters() == null
+                                ? ""
+                                : entry.location().accuracyMeters().toString()));
     }
 
     private static Set<Role> rolesOf(Jwt jwt) {

@@ -160,3 +160,20 @@ the JSON field names above.
   library's implicit `VARCHAR(255)` — real event payloads overflowed it, breaking unrelated spec
   001 tests (`LockoutIntegrationTest`, `SessionManagementIntegrationTest`) that publish through the
   same registry. Both fixed; full suite green after.
+
+## Added by spec 018 (Android app foundation)
+
+Spec 018 extends this contract; the full shapes are in
+`specs/018-android-app-foundation/contracts/mobile-api.md`. Summary:
+
+- Login History, User Activity and the combined Audit Logs rows gain `source` (`WEB` or `ANDROID`),
+  `appVersion`, and a `location` object (`status`, `latitude`, `longitude`, `accuracyMeters`,
+  `capturedAt`). Login History rows also gain `deviceRooted`. Authorization is unchanged: the same
+  `AUDIT_*` view and export permissions (Admin and System by default), so Teacher, Manager and
+  Director never receive these fields.
+- Login History and User Activity accept an optional `source=WEB|ANDROID` filter (400 for any other
+  value). All four CSV exports of this spec gain the columns `source`, `appVersion`,
+  `locationStatus`, `latitude`, `longitude`, `accuracyMeters` (and `deviceRooted` for Login History).
+- New permission module `AUDIT_API_ACCESS` (View and Export, Admin and System by default) and a new
+  endpoint `GET /api/v1/audit/api-access` (+ `/export`), with the AUDIT → API Access menu item.
+  API Access entries are not part of the combined Audit Logs list.

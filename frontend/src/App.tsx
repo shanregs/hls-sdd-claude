@@ -138,6 +138,14 @@ export function App() {
           }
         />
         <Route
+          path="/audit/api-access"
+          element={
+            <RouteGuard>
+              <ApiAccessPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/audit/user-activity"
           element={
             <RouteGuard>

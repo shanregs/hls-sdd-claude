@@ -2,6 +2,8 @@ package com.hls.audit;
 
 import com.hls.audit.support.AuditPageResponse;
 import com.hls.audit.support.CsvStreamingExporter;
+import com.hls.audit.support.LocationView;
+import com.hls.audit.support.SourceFilter;
 import com.hls.audit.useractivity.UserActivityEntry;
 import com.hls.audit.useractivity.UserActivityEntryRepository;
 import com.hls.identity.permissions.PermissionAction;
@@ -54,13 +56,14 @@ public class AuditUserActivityController {
             @RequestParam(required = false) String action,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to,
+            @RequestParam(required = false) String source,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_USER_ACTIVITY, PermissionAction.VIEW);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "occurredAt"));
         Page<UserActivityEntry> result =
-                repository.findAll(spec(actorUserId, affectedUserId, action, from, to), pageable);
+                repository.findAll(spec(actorUserId, affectedUserId, action, from, to, SourceFilter.parse(source)), pageable);
         return ResponseEntity.ok(AuditPageResponse.from(result.map(UserActivityView::from)));
     }
 
@@ -71,25 +74,35 @@ public class AuditUserActivityController {
             @RequestParam(required = false) String action,
             @RequestParam Instant from,
             @RequestParam Instant to,
+            @RequestParam(required = false) String source,
             @AuthenticationPrincipal Jwt jwt,
             HttpServletResponse response)
             throws IOException {
         permissionGuard.require(rolesOf(jwt), PermissionModule.AUDIT_USER_ACTIVITY, PermissionAction.EXPORT);
+        String sourceFilter = SourceFilter.parse(source);
         CsvStreamingExporter.stream(
                 response,
                 "user-activity.csv",
-                List.of("occurredAt", "actorUserId", "affectedUserId", "action", "detail"),
-                pageable -> repository.findAll(spec(actorUserId, affectedUserId, action, from, to), pageable),
+                List.of(
+                        "occurredAt", "actorUserId", "affectedUserId", "action", "detail",
+                        "source", "appVersion", "locationStatus", "latitude", "longitude", "accuracyMeters"),
+                pageable -> repository.findAll(spec(actorUserId, affectedUserId, action, from, to, sourceFilter), pageable),
                 entry -> List.of(
                         String.valueOf(entry.getOccurredAt()),
                         entry.getActorUserId() == null ? "" : entry.getActorUserId().toString(),
                         entry.getAffectedUserId().toString(),
                         entry.getAction(),
-                        entry.getDetail() == null ? "" : entry.getDetail()));
+                        entry.getDetail() == null ? "" : entry.getDetail(),
+                        entry.getOrigin().getSource(),
+                        entry.getOrigin().getAppVersion() == null ? "" : entry.getOrigin().getAppVersion(),
+                        entry.getOrigin().getLocationStatus(),
+                        entry.getOrigin().getLatitude() == null ? "" : entry.getOrigin().getLatitude().toPlainString(),
+                        entry.getOrigin().getLongitude() == null ? "" : entry.getOrigin().getLongitude().toPlainString(),
+                        entry.getOrigin().getAccuracyMeters() == null ? "" : entry.getOrigin().getAccuracyMeters().toString()));
     }
 
     private static Specification<UserActivityEntry> spec(
-            UUID actorUserId, UUID affectedUserId, String action, Instant from, Instant to) {
+            UUID actorUserId, UUID affectedUserId, String action, Instant from, Instant to, String source) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (actorUserId != null) {
@@ -107,6 +120,9 @@ public class AuditUserActivityController {
             if (to != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("occurredAt"), to));
             }
+            if (source != null) {
+                predicates.add(cb.equal(root.get("origin").get("source"), source));
+            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -120,7 +136,15 @@ public class AuditUserActivityController {
     }
 
     public record UserActivityView(
-            UUID id, Instant occurredAt, UUID actorUserId, UUID affectedUserId, String action, String detail) {
+            UUID id,
+            Instant occurredAt,
+            UUID actorUserId,
+            UUID affectedUserId,
+            String action,
+            String detail,
+            String source,
+            String appVersion,
+            LocationView location) {
         static UserActivityView from(UserActivityEntry entry) {
             return new UserActivityView(
                     entry.getId(),
@@ -128,7 +152,10 @@ public class AuditUserActivityController {
                     entry.getActorUserId(),
                     entry.getAffectedUserId(),
                     entry.getAction(),
-                    entry.getDetail());
+                    entry.getDetail(),
+                    entry.getOrigin().getSource(),
+                    entry.getOrigin().getAppVersion(),
+                    entry.getOrigin().location());
         }
     }
 }

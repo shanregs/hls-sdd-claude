@@ -1,5 +1,6 @@
 package com.hls.audit.useractivity;
 
+import com.hls.audit.support.ClientOrigin;
 import com.hls.identity.activity.AccountActivationChanged;
 import com.hls.identity.activity.AccountLockChanged;
 import com.hls.identity.activity.PasswordChanged;
@@ -10,6 +11,7 @@ import com.hls.identity.activity.ProfileUpdated;
 import com.hls.identity.activity.SessionEnded;
 import com.hls.identity.activity.UserCreated;
 import com.hls.identity.activity.UserRoleChanged;
+import com.hls.identity.clientcontext.ClientContext;
 import com.hls.identity.user.Role;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,12 +34,27 @@ public class UserActivityEventConsumer {
 
     @ApplicationModuleListener
     void on(PasswordResetRequested event) {
-        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_RESET_REQUESTED", null);
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_RESET_REQUESTED", null, event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(PasswordResetCompleted event) {
-        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_RESET_COMPLETED", null);
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_RESET_COMPLETED", null, event.clientContext());
+    }
+
+    @ApplicationModuleListener
+    void on(PasswordChanged event) {
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_CHANGED", null, event.clientContext());
+    }
+
+    @ApplicationModuleListener
+    void on(ProfileUpdated event) {
+        save(event.eventId(),
+                event.occurredAt(),
+                event.actorUserId(),
+                event.affectedUserId(),
+                "PROFILE_UPDATED",
+                event.changedFields(), event.clientContext());
     }
 
     @ApplicationModuleListener
@@ -58,69 +75,72 @@ public class UserActivityEventConsumer {
 
     @ApplicationModuleListener
     void on(SessionEnded event) {
-        save(
-                event.eventId(),
+        save(event.eventId(),
                 event.occurredAt(),
                 event.actorUserId(),
                 event.affectedUserId(),
                 "SESSION_ENDED",
-                "session " + event.sessionId());
+                "session " + event.sessionId(), event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(AccountLockChanged event) {
-        save(
-                event.eventId(),
+        save(event.eventId(),
                 event.occurredAt(),
                 event.actorUserId(),
                 event.affectedUserId(),
                 event.locked() ? "ACCOUNT_LOCKED" : "ACCOUNT_UNLOCKED",
-                null);
+                null, event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(AccountActivationChanged event) {
-        save(
-                event.eventId(),
+        save(event.eventId(),
                 event.occurredAt(),
                 event.actorUserId(),
                 event.affectedUserId(),
                 event.active() ? "ACCOUNT_REACTIVATED" : "ACCOUNT_DEACTIVATED",
-                null);
+                null, event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(UserCreated event) {
         String roles = event.roles().stream().sorted().map(Role::name).collect(Collectors.joining(", "));
-        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.newUserId(), "USER_CREATED", roles);
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.newUserId(), "USER_CREATED", roles, event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(UserRoleChanged event) {
-        save(
-                event.eventId(),
+        save(event.eventId(),
                 event.occurredAt(),
                 event.actorUserId(),
                 event.affectedUserId(),
                 event.added() ? "ROLE_ASSIGNED" : "ROLE_REMOVED",
-                event.role().name());
+                event.role().name(), event.clientContext());
     }
 
     @ApplicationModuleListener
     void on(PasswordResetByAdmin event) {
-        save(
-                event.eventId(),
+        save(event.eventId(),
                 event.occurredAt(),
                 event.actorUserId(),
                 event.affectedUserId(),
                 "PASSWORD_RESET_BY_ADMIN",
-                null);
+                null, event.clientContext());
     }
 
-    private void save(UUID eventId, Instant occurredAt, UUID actorUserId, UUID affectedUserId, String action, String detail) {
+    private void save(
+            UUID eventId,
+            Instant occurredAt,
+            UUID actorUserId,
+            UUID affectedUserId,
+            String action,
+            String detail,
+            ClientContext clientContext) {
         if (repository.findBySourceEventId(eventId).isPresent()) {
             return;
         }
-        repository.save(new UserActivityEntry(occurredAt, eventId, actorUserId, affectedUserId, action, detail));
+        repository.save(new UserActivityEntry(
+                occurredAt, eventId, actorUserId, affectedUserId, action, detail, ClientOrigin.from(clientContext)));
     }
 }

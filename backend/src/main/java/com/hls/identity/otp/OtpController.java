@@ -3,9 +3,11 @@ package com.hls.identity.otp;
 import com.hls.identity.auth.AuthDtos;
 import com.hls.identity.auth.JwtTokenProvider;
 import com.hls.identity.auth.PasswordResetService;
+import com.hls.identity.clientcontext.ClientContextHolder;
 import com.hls.identity.loginhistory.LoginEventType;
 import com.hls.identity.loginhistory.LoginHistoryPublisher;
 import com.hls.identity.loginhistory.LoginMethod;
+import com.hls.identity.mobile.MobileRoleEligibility;
 import com.hls.identity.session.SessionService;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.Role;
@@ -130,6 +132,18 @@ public class OtpController {
 
         List<Role> roles =
                 roleAssignmentRepository.findByUserId(user.getId()).stream().map(ra -> ra.getRole()).toList();
+        if (ClientContextHolder.current().isAndroid() && !MobileRoleEligibility.isEligible(roles)) {
+            loginHistoryPublisher.record(
+                    user.getId(),
+                    request.destination(),
+                    LoginMethod.OTP,
+                    LoginEventType.SIGN_IN_FAILURE,
+                    MobileRoleEligibility.REFUSED_OUTCOME,
+                    httpRequest.getRemoteAddr(),
+                    userAgent(httpRequest));
+            return MobileRoleEligibility.refusal();
+        }
+
         SessionService.CreatedSession created = sessionService.createSession(user.getId(), userAgent(httpRequest));
         String accessToken = jwtTokenProvider.issueAccessToken(user.getId(), created.session().getId(), roles);
 
@@ -142,16 +156,14 @@ public class OtpController {
                 httpRequest.getRemoteAddr(),
                 userAgent(httpRequest));
 
-        return ResponseEntity.ok()
-                .header(
-                        "Set-Cookie",
-                        com.hls.identity.auth.RenewalCookies.issue(created.plainRenewalCredential(), cookieSecure, renewalTtlDays)
-                                .toString())
-                .body(new AuthDtos.AuthResponse(
-                        accessToken,
-                        jwtTokenProvider.getAccessTokenTtlSeconds(),
-                        new AuthDtos.SignedInUser(
-                                user.getId(), user.getDisplayName(), roles.stream().map(Role::name).toList())));
+        return com.hls.identity.auth.SignInResponses.ok(
+                accessToken,
+                jwtTokenProvider.getAccessTokenTtlSeconds(),
+                new AuthDtos.SignedInUser(
+                        user.getId(), user.getDisplayName(), roles.stream().map(Role::name).toList()),
+                created.plainRenewalCredential(),
+                cookieSecure,
+                renewalTtlDays);
     }
 
     private static String userAgent(HttpServletRequest request) {
