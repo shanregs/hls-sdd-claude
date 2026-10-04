@@ -35,6 +35,9 @@ class ApplicationModuleBoundaryTest {
             "com.hls.identity.activity.UserCreated",
             "com.hls.identity.activity.UserRoleChanged",
             "com.hls.identity.activity.PasswordResetByAdmin",
+            // Settings page: a user changing their own password or editing their own profile.
+            "com.hls.identity.activity.PasswordChanged",
+            "com.hls.identity.activity.ProfileUpdated",
             "com.hls.audit.api.EntityChanged");
 
     // Main production classes only (target/classes) — not target/test-classes, which legitimately
