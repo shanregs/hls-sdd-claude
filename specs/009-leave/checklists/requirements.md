@@ -32,5 +32,5 @@
 ## Notes
 
 - Defaults chosen instead of clarification markers (see Assumptions): single approval level, fixed
-  leave types, no balances, leave may mark future days, approval replaces existing marks.
-- Worth confirming in `/speckit-clarify`: the replace-on-approve rule and the 90-day cap.
+  leave types, no balances, leave may mark future days, approval refuses supervisor-set days.
+- Worth confirming in `/speckit-clarify`: the 90-day cap.

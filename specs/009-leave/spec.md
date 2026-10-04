@@ -8,6 +8,24 @@
 
 **Input**: User description: "009-leave: Leave management. Teacher: LEAVE menu with Apply Leave and My Leave History (own requests only; cancel a pending request). Manager (assigned teachers), Admin and Director: OPERATIONS → Leave Management to list, approve or reject requests in scope, with a reason on rejection. Leave types and half-day support, date-range validation (no overlap with an existing request, not in a locked attendance month, working days only per the Holiday Calendar and Sundays), and approved leave feeds spec 008 attendance by marking the covered working days with the Leave (L) status code (attributed to the approver, respecting month lock). Role & Permission Impact, audit events, per-role authorization and scope-boundary tests, and Tamil Nadu-friendly demo seed data. Follows docs/spec-roadmap.md row 009; depends on 008."
 
+## Clarifications
+
+### Session 2026-10-04
+
+- Q: When approved leave covers a day a supervisor has already marked, should approval overwrite it?
+  → A: Only days that are unmarked or were marked by the Teacher themself are overwritten (the earlier
+  value stays in the day's history). If any covered day was set by a Manager, Admin or Director with
+  a status other than L, the whole approval is refused and lists those days; the approver corrects
+  them on purpose and approves again.
+
+- Q: How far back may a Teacher apply for leave? → A: Up to 30 days before today (a start date older
+  than that is refused). Approval still follows the locked-month and supervisor-set-day rules, so
+  older days that were already marked or locked are refused at approval, not at application.
+
+- Q: May a Teacher cancel their own Approved leave? → A: Yes, but only while its first day is still in
+  the future; this removes the marks the request created, is audited as a Teacher cancellation, and
+  needs no reason. Once the first day has arrived only a supervisor can revoke it.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Teacher Applies for Leave (Priority: P1) 🎯 MVP
@@ -30,8 +48,8 @@ holiday, and see a Pending request counting only the working days.
    the reason.
 3. **Given** an existing Pending or Approved request overlapping any of the dates, **When** they
    submit, **Then** it is refused naming the clashing request.
-4. **Given** a first date in a locked attendance month, or earlier than the earliest day the Teacher
-   could mark themself, **When** they submit, **Then** it is refused with the reason.
+4. **Given** a first date in a locked attendance month, or more than 30 days before today,
+   **When** they submit, **Then** it is refused with the reason.
 5. **Given** a Teacher with no current placement, **When** they open Apply Leave, **Then** they are
    told they cannot apply until they are placed.
 
@@ -41,7 +59,8 @@ holiday, and see a Pending request counting only the working days.
 
 LEAVE → My Leave History lists the Teacher's own requests, newest first, with type, dates, working
 days, status (Pending, Approved, Rejected, Cancelled), who decided and when, and the rejection
-reason. A Teacher can cancel a Pending request.
+reason. A Teacher can cancel a Pending request, or an Approved one whose first day is still in the
+future.
 
 **Why this priority**: The Teacher must see the outcome, and must be able to withdraw a mistake.
 
@@ -52,8 +71,11 @@ it gone from the pending list.
 
 1. **Given** a Pending request, **When** the Teacher cancels it, **Then** its status is Cancelled and
    it can no longer be approved.
-2. **Given** an Approved or Rejected request, **When** the Teacher looks at it, **Then** there is no
-   cancel action; to withdraw an approved leave they ask a supervisor (User Story 4).
+2. **Given** an Approved request whose first day is still in the future, **When** the Teacher cancels
+   it, **Then** it becomes Cancelled and the L marks it created are removed.
+   2a. **Given** an Approved request that has started, or a Rejected one, **When** the Teacher looks
+   at it, **Then** there is no cancel action; to withdraw started leave they ask a supervisor
+   (User Story 4).
 3. **Given** two Teachers, **When** one opens History, **Then** they see only their own requests.
 
 ---
@@ -106,8 +128,10 @@ approval.
 
 1. **Given** an approved request, **When** the Manager opens the attendance grid, **Then** the
    covered working days show L, set by the approver and tagged as from leave.
-2. **Given** a covered day already marked Present, **When** the request is approved, **Then** the day
-   becomes L and its history shows the earlier Present.
+2. **Given** a covered day the Teacher marked themself as Present, **When** the request is approved,
+   **Then** the day becomes L and its history shows the earlier Present.
+   2a. **Given** a covered day a supervisor set to anything other than L, **When** the request is
+   approved, **Then** the approval is refused as a whole, listing those days, and nothing changes.
 3. **Given** a covered day in a locked month, **When** the approver approves, **Then** the approval is
    refused as a whole with the locked months named and nothing changes.
 4. **Given** future days in the range, **When** approved, **Then** they are marked L too (leave is
@@ -169,8 +193,8 @@ two-Manager boundary tests.
   the organization non-working calendar (Holiday Calendar) as spec 008 defines them, per date and per
   the School of placement on that date. A request with no working days MUST be refused.
 - **FR-004**: A request MUST be refused when any of its dates overlaps another Pending or Approved
-  request of the same Teacher; falls in a locked attendance month; is earlier than the earliest day
-  the Teacher could mark themself; or when the range is longer than 90 calendar days, or the last
+  request of the same Teacher; falls in a locked attendance month; starts more than 30 days before
+  today; or when the range is longer than 90 calendar days, or the last
   date precedes the first. The overlap rule MUST be re-checked at approval.
 - **FR-005**: A Teacher MUST be able to list only their own requests (My Leave History) and cancel a
   Pending one. Nobody can edit a submitted request; a Teacher cancels and re-applies instead.
@@ -183,13 +207,15 @@ two-Manager boundary tests.
   one winner.
 - **FR-008**: Approving a request MUST, in one atomic step, mark every covered working day Leave (L)
   with a day value of 1 (0.5 for a half-day start or end), attributed to the approver, tagged with
-  the request, for the School of placement on that date, replacing any existing mark (whose earlier
-  value stays in that day's history). If any covered day is in a locked month, the whole approval
+  the request, for the School of placement on that date, replacing a mark that is absent or was made by the Teacher themself (the earlier value stays in that
+  day's history). If any covered day was set by a supervisor to a status other than L, or is in a
+  locked month, the whole approval
   MUST be refused with nothing changed. Future days within the request MUST be marked too.
 - **FR-009**: A supervisor in scope (and Admin and Director) MUST be able to revoke an Approved
   request with a mandatory reason. Revoking removes the marks that the request created and that no
   one has changed since, sets the request to Cancelled, and is refused when any such mark lies in a
-  locked month. A Teacher MUST NOT be able to revoke.
+  locked month. A Teacher MAY cancel their own Approved request only while its first day is in the future (same
+  effect, no reason needed, audited as a Teacher cancellation); after that only a supervisor can revoke.
 - **FR-010**: Leave marks MUST appear in the Teacher's attendance calendar, the supervisors' grids,
   the monthly rollup and the CSV export exactly like other L marks, and MUST be shown as set from
   leave with a link to the request wherever the mark's history is shown.
@@ -224,7 +250,7 @@ two-Manager boundary tests.
 | Admin    | OPERATIONS → Leave Management | View, Approve (approve, reject, revoke) | Org-wide |
 | Director | OPERATIONS → Leave Management | View, Approve | Org-wide |
 | Manager  | OPERATIONS → Leave Management | View, Approve for Teachers in scope | Assigned (Zones → Schools → Teachers) |
-| Teacher  | LEAVE → Apply Leave, My Leave History | View, Create, Delete (cancel own Pending) | Own |
+| Teacher  | LEAVE → Apply Leave, My Leave History | View, Create, Delete (cancel own Pending, or Approved not yet started) | Own |
 | System   | none | none (System MUST NOT see teacher or school business data) | None |
 
 **New permission keys**: modules `LEAVE_MANAGEMENT` (actions `VIEW`, `APPROVE`; Admin, Director and
