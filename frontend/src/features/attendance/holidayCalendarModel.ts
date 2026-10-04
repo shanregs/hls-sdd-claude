@@ -52,7 +52,7 @@ export function holidaysIn(prefix: string, facts: CalendarFacts) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/** A month as Monday-first weeks of "YYYY-MM-DD" dates, with null padding before the 1st and after the last. */
+/** A month as Sunday-first weeks of "YYYY-MM-DD" dates, with null padding before the 1st and after the last. */
 export function monthWeeks(month: string): (string | null)[][] {
   const count = daysInMonth(month);
   const lead = weekdayIndex(dateKey(month, 1));
