@@ -4,6 +4,7 @@ import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
+import java.time.LocalDate;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dev-only demo data (inert unless {@code hls.seed.demo-data=true}, idempotent): the demo Teacher
- * (Tara, linked to her account) placed in the first demo School, plus one unplaced Teacher.
+ * (Tara, linked to her account) placed in the first demo School, three more placed Teachers and one
+ * unplaced Teacher.
  */
 @Component
 @Order(40)
@@ -23,6 +25,8 @@ import org.springframework.stereotype.Component;
 public class TeacherDevSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(TeacherDevSeeder.class);
+
+    private static final int DEMO_HISTORY_DAYS = 75;
 
     private final TeacherService teacherService;
     private final TeacherPlacementService placementService;
@@ -48,20 +52,42 @@ public class TeacherDevSeeder implements ApplicationRunner {
         AppUser admin = appUserRepository.findByPhone("9800000001").orElse(null);
         AppUser tara = appUserRepository.findByPhone("9800000004").orElse(null);
         var zone = schoolDirectory.zoneByName("Demo Zone");
-        if (admin == null || tara == null || zone.isEmpty() || teacherRepository.findByUserId(tara.getId()).isPresent()) {
+        if (admin == null || tara == null || zone.isEmpty()) {
             return;
         }
-        var teacher = teacherService.create(
-                admin.getId(),
-                new TeacherService.NewTeacher(
-                        "Tara Teacher", "9800000004", "tara@example.com", "Demo address", TeacherStatus.ACTIVE, tara.getId()));
-        teacherService.create(
-                admin.getId(),
-                new TeacherService.NewTeacher("Unplaced Teacher", "9800000010", null, null, TeacherStatus.IN_TRAINING, null));
         List<SchoolInfo> schools = schoolDirectory.schoolsInZone(zone.get().id());
-        if (!schools.isEmpty()) {
-            placementService.place(admin.getId(), teacher.id(), schools.get(0).id(), null);
+        // Placed well in the past so the attendance demo has months of history to show.
+        LocalDate placedFrom = LocalDate.now().minusDays(DEMO_HISTORY_DAYS);
+
+        if (teacherRepository.findByUserId(tara.getId()).isEmpty()) {
+            var teacher = teacherService.create(
+                    admin.getId(),
+                    new TeacherService.NewTeacher(
+                            "Tara Teacher", "9800000004", "tara@example.com", "Demo address", TeacherStatus.ACTIVE, tara.getId()));
+            teacherService.create(
+                    admin.getId(),
+                    new TeacherService.NewTeacher("Unplaced Teacher", "9800000010", null, null, TeacherStatus.IN_TRAINING, null));
+            if (!schools.isEmpty()) {
+                placementService.place(admin.getId(), teacher.id(), schools.get(0).id(), placedFrom);
+            }
+            log.info("[DEV SEED] Teacher demo data ready: Tara (linked) placed in the first demo School.");
         }
-        log.info("[DEV SEED] Teacher demo data ready: Tara (linked) placed in the first demo School.");
+
+        // More Teachers so the attendance grids have something to show (School index: 0 = One, 1 = Two).
+        String[][] extras = {
+            {"Meena Selvi", "9800000011", "0"},
+            {"Karthik Raja", "9800000012", "0"},
+            {"Lakshmi Priya", "9800000013", "1"},
+        };
+        for (String[] extra : extras) {
+            int schoolIndex = Integer.parseInt(extra[2]);
+            if (teacherRepository.findFirstByPhone(extra[1]).isPresent() || schools.size() <= schoolIndex) {
+                continue;
+            }
+            var created = teacherService.create(
+                    admin.getId(),
+                    new TeacherService.NewTeacher(extra[0], extra[1], null, null, TeacherStatus.ACTIVE, null));
+            placementService.place(admin.getId(), created.id(), schools.get(schoolIndex).id(), placedFrom);
+        }
     }
 }
