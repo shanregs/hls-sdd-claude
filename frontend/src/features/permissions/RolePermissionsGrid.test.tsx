@@ -32,7 +32,7 @@ vi.mock("../../access-model/useAccessModel", () => ({
   }),
 }));
 
-const ALL_ROLES = ["ADMIN", "DIRECTOR", "MANAGER", "TEACHER", "SYSTEM"];
+const ALL_ROLES = ["SYSTEM", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER"];
 
 function eligible(by: Record<string, string[]>) {
   return Object.fromEntries(ALL_ROLES.map((r) => [r, by[r] ?? []]));
@@ -95,19 +95,30 @@ function json(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
-function cell(module: string, role: string) {
+/** The data cells of a module's row, in column order: one per action under each role. */
+function rowCells(module: string) {
   const row = screen.getByRole("rowheader", { name: module }).closest("tr")!;
-  const column = ALL_ROLES.indexOf(role) + 1;
-  return within(row).getAllByRole("cell")[column - 1];
+  return within(row).getAllByRole("cell");
 }
 
-describe("RolePermissionsGrid (User Story 3, FR-002/FR-005)", () => {
+// The fixture's modules use View, Create and Edit, so each role has three sub-columns.
+const ACTION_COLUMNS = ["VIEW", "CREATE", "EDIT"];
+
+/** The cell for one role and action of a module. */
+function cellFor(module: string, role: string, action: string) {
+  const column =
+    ALL_ROLES.indexOf(role) * ACTION_COLUMNS.length +
+    ACTION_COLUMNS.indexOf(action);
+  return rowCells(module)[column];
+}
+
+describe("RolePermissionsGrid (User Story 3, FR-002/FR-004a)", () => {
   beforeEach(() => {
     authFetch.mockReset();
     grantedActions = ["VIEW", "EDIT"];
   });
 
-  it("shows one row per module and one column per role", async () => {
+  it("puts System first, then Admin, Director, Manager and Teacher", async () => {
     authFetch.mockResolvedValue(json(MATRIX));
 
     render(<RolePermissionsGrid />);
@@ -115,16 +126,47 @@ describe("RolePermissionsGrid (User Story 3, FR-002/FR-005)", () => {
     const table = await screen.findByRole("table", {
       name: "Role and permission matrix",
     });
-    for (const role of ALL_ROLES) {
-      expect(
-        within(table).getByRole("columnheader", { name: role }),
-      ).toBeInTheDocument();
-    }
-    expect(screen.getByRole("rowheader", { name: "DASHBOARD" })).toBeVisible();
+    const groups = within(table)
+      .getAllByRole("columnheader")
+      .filter((h) => h.getAttribute("scope") === "colgroup")
+      .map((h) => h.textContent);
+    expect(groups).toEqual([
+      "SYSTEM",
+      "ADMIN",
+      "DIRECTOR",
+      "MANAGER",
+      "TEACHER",
+    ]);
+    expect(ALL_ROLES).toEqual(groups);
+  });
+
+  it("gives every action its own small cell under each role", async () => {
+    authFetch.mockResolvedValue(json(MATRIX));
+
+    render(<RolePermissionsGrid />);
+
+    const table = await screen.findByRole("table", {
+      name: "Role and permission matrix",
+    });
+    // One header per action under each role: 5 roles x 3 actions, each named for its role.
+    const subHeaders = within(table)
+      .getAllByRole("columnheader")
+      .filter(
+        (h) =>
+          h.getAttribute("scope") === "col" && h.hasAttribute("aria-label"),
+      );
+    expect(subHeaders).toHaveLength(ALL_ROLES.length * ACTION_COLUMNS.length);
     expect(
-      screen.getByRole("rowheader", { name: "USER_MANAGEMENT" }),
-    ).toBeVisible();
-    expect(screen.getAllByRole("row")).toHaveLength(1 + MATRIX.modules.length);
+      within(table).getByRole("columnheader", { name: "SYSTEM View" }),
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole("columnheader", { name: "TEACHER Edit" }),
+    ).toBeInTheDocument();
+    // A module row has a cell for each of them, and one row per module.
+    expect(rowCells("USER_MANAGEMENT")).toHaveLength(
+      ALL_ROLES.length * ACTION_COLUMNS.length,
+    );
+    expect(screen.getAllByRole("row")).toHaveLength(2 + MATRIX.modules.length);
   });
 
   it("shows a coloured icon for each granted action and a grey one when not granted", async () => {
@@ -132,48 +174,68 @@ describe("RolePermissionsGrid (User Story 3, FR-002/FR-005)", () => {
     render(<RolePermissionsGrid />);
     await screen.findByRole("table");
 
-    // ADMIN on USER_MANAGEMENT: View and Edit granted, Create eligible but not granted.
-    const admin = cell("USER_MANAGEMENT", "ADMIN");
+    // ADMIN on USER_MANAGEMENT: View and Edit granted, Create eligible but not granted, each in its own cell.
     expect(
-      within(admin).getByRole("button", {
+      within(cellFor("USER_MANAGEMENT", "ADMIN", "VIEW")).getByRole("button", {
         name: "ADMIN View USER_MANAGEMENT: granted",
       }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(
-      within(admin).getByRole("button", {
+      within(cellFor("USER_MANAGEMENT", "ADMIN", "EDIT")).getByRole("button", {
         name: "ADMIN Edit USER_MANAGEMENT: granted",
       }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(
-      within(admin).getByRole("button", {
-        name: "ADMIN Create USER_MANAGEMENT: not granted",
-      }),
+      within(cellFor("USER_MANAGEMENT", "ADMIN", "CREATE")).getByRole(
+        "button",
+        { name: "ADMIN Create USER_MANAGEMENT: not granted" },
+      ),
     ).toHaveAttribute("aria-pressed", "false");
     // A switched-off grant reads as not granted too; an action with no row at all as well.
-    const manager = cell("USER_MANAGEMENT", "MANAGER");
     expect(
-      within(manager).getByRole("button", {
-        name: "MANAGER View USER_MANAGEMENT: not granted",
-      }),
+      within(cellFor("USER_MANAGEMENT", "MANAGER", "VIEW")).getByRole(
+        "button",
+        {
+          name: "MANAGER View USER_MANAGEMENT: not granted",
+        },
+      ),
     ).toBeInTheDocument();
     expect(
-      within(manager).getByRole("button", {
-        name: "MANAGER Edit USER_MANAGEMENT: not granted",
-      }),
+      within(cellFor("USER_MANAGEMENT", "MANAGER", "EDIT")).getByRole(
+        "button",
+        {
+          name: "MANAGER Edit USER_MANAGEMENT: not granted",
+        },
+      ),
     ).toBeInTheDocument();
   });
 
-  it("shows a dash where nothing applies to the role", async () => {
+  it("leaves a cell empty where an action does not apply", async () => {
     authFetch.mockResolvedValue(json(MATRIX));
     render(<RolePermissionsGrid />);
     await screen.findByRole("table");
 
-    const teacher = cell("IDENTITY_PERMISSIONS", "TEACHER");
-    expect(within(teacher).getByText("—")).toBeInTheDocument();
-    expect(within(teacher).queryByRole("button")).toBeNull();
+    // Teacher cannot hold Role & Permissions at all; nobody can Create there.
+    for (const action of ACTION_COLUMNS) {
+      expect(
+        within(cellFor("IDENTITY_PERMISSIONS", "TEACHER", action)).queryByRole(
+          "button",
+        ),
+      ).toBeNull();
+    }
     expect(
-      within(cell("IDENTITY_PERMISSIONS", "ADMIN")).getAllByRole("button"),
-    ).toHaveLength(2);
+      within(cellFor("IDENTITY_PERMISSIONS", "ADMIN", "CREATE")).queryByRole(
+        "button",
+      ),
+    ).toBeNull();
+    const adminCells = ACTION_COLUMNS.map((a) =>
+      within(cellFor("IDENTITY_PERMISSIONS", "ADMIN", a)).queryByRole("button"),
+    );
+    expect(adminCells.filter(Boolean)).toHaveLength(2);
+    // DASHBOARD offers View only, so its Create and Edit cells are empty for everyone.
+    expect(
+      within(cellFor("DASHBOARD", "SYSTEM", "EDIT")).queryByRole("button"),
+    ).toBeNull();
   });
 
   it("opens the confirmation for the clicked icon and saves the change", async () => {

@@ -4,7 +4,6 @@ import {
   Box,
   IconButton,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -28,9 +27,10 @@ import type { MatrixResponse, MatrixRow } from "./types";
 
 const ROUTE = "/identity/permissions";
 
-/** The five fixed roles, in the order the columns appear (Constitution Principle II). */
-const ROLES = ["ADMIN", "DIRECTOR", "MANAGER", "TEACHER", "SYSTEM"];
+/** The five fixed roles in column order: System first (Constitution Principle II). */
+export const ROLES = ["SYSTEM", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER"];
 
+/** Every action, in the order its sub-column appears under each role. */
 const ACTIONS: Record<string, { label: string; Icon: ElementType }> = {
   VIEW: { label: "View", Icon: VisibilityOutlined },
   CREATE: { label: "Create", Icon: AddCircleOutline },
@@ -41,8 +41,13 @@ const ACTIONS: Record<string, { label: string; Icon: ElementType }> = {
   EXPORT: { label: "Export", Icon: FileDownloadOutlined },
 };
 
+/** A sub-column is narrow: one icon wide. */
+const CELL_WIDTH = 28;
+
+const ROLE_DIVIDER = { borderLeft: 2, borderLeftColor: "text.disabled" };
+
 /**
- * One icon for one action of one role on one module (spec 002 FR-005): coloured when granted, grey when
+ * One icon for one action of one role on one module (spec 002 FR-004a): coloured when granted, grey when
  * the action could be granted but is not. For someone who may edit the matrix it is a toggle button
  * that opens the confirmation dialog; otherwise it is a plain labelled icon.
  */
@@ -74,7 +79,7 @@ function GrantIcon({
   );
   const name = `${role} ${label} ${module}: ${state}`;
   return (
-    <Tooltip title={`${label} - ${state}`}>
+    <Tooltip title={`${role} - ${label}: ${state}`}>
       {canEdit ? (
         <IconButton
           size="small"
@@ -100,11 +105,11 @@ function GrantIcon({
 }
 
 /**
- * Role &amp; Permissions as one compact Module x Role grid (spec 002 FR-002, FR-005): each cell shows an icon
- * per action that applies to that module and role, coloured when granted and grey when not, with a dash
- * where nothing applies. Admin, Director and System (the server gates the route) toggle a grant by
- * clicking its icon; the change is confirmed in {@link EditGrantDialog}, which also surfaces the
- * server's refusals.
+ * Role &amp; Permissions as one compact grid (spec 002 FR-002, FR-004a): a row per module, and under each
+ * role a small cell per action. A cell holds a coloured icon when the action is granted, a grey icon
+ * when it could be granted but is not, and is shaded and empty when it does not apply to that module
+ * and role. Admin, Director and System (the server gates the route) toggle a grant by clicking its
+ * icon; the change is confirmed in {@link EditGrantDialog}, which also surfaces the server's refusals.
  */
 export function RolePermissionsGrid() {
   const { authFetch } = useAuth();
@@ -146,12 +151,13 @@ export function RolePermissionsGrid() {
     return set;
   }, [matrix]);
 
-  // The legend only lists actions some module actually offers (Approve has none yet).
-  const usedActions = useMemo(
-    () =>
-      new Set(matrix?.modules.flatMap((m) => Object.values(m.eligible).flat())),
-    [matrix],
-  );
+  // Only actions some module actually offers get a sub-column (Approve has none yet).
+  const actions = useMemo(() => {
+    const used = new Set(
+      matrix?.modules.flatMap((m) => Object.values(m.eligible).flat()),
+    );
+    return Object.keys(ACTIONS).filter((a) => used.has(a));
+  }, [matrix]);
 
   return (
     <Box>
@@ -168,110 +174,139 @@ export function RolePermissionsGrid() {
       )}
       {matrix && (
         <>
-          <Stack
-            direction="row"
-            spacing={3}
-            sx={{ mb: 1, alignItems: "center", flexWrap: "wrap", gap: 1 }}
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            component="p"
+            sx={{ mb: 1 }}
           >
-            {Object.entries(ACTIONS)
-              .filter(([key]) => usedActions.has(key))
-              .map(([key, { label, Icon }]) => (
-                <Stack
-                  key={key}
-                  direction="row"
-                  spacing={0.5}
-                  sx={{ alignItems: "center" }}
-                >
-                  <Icon fontSize="small" sx={{ color: "primary.main" }} />
-                  <Typography variant="caption">{label}</Typography>
-                </Stack>
-              ))}
-            <Typography variant="caption" color="text.secondary">
-              Coloured icon = granted · grey icon = not granted · — = does not
-              apply
-              {canEdit ? " · click an icon to change it" : ""}
-            </Typography>
-          </Stack>
+            Coloured icon = granted · grey icon = not granted · shaded cell =
+            does not apply
+            {canEdit ? " · click an icon to change it" : ""}
+          </Typography>
           <Paper variant="outlined">
-            <TableContainer sx={{ maxHeight: "72vh" }}>
+            <TableContainer sx={{ maxHeight: "74vh" }}>
               <Table
                 size="small"
                 stickyHeader
                 aria-label="Role and permission matrix"
+                sx={{ width: "auto", minWidth: "100%" }}
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700, minWidth: 190 }}>
+                    <TableCell
+                      rowSpan={2}
+                      sx={{
+                        fontWeight: 700,
+                        minWidth: 190,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 3,
+                        verticalAlign: "bottom",
+                      }}
+                    >
                       Module
                     </TableCell>
                     {ROLES.map((role) => (
                       <TableCell
                         key={role}
+                        colSpan={actions.length}
+                        scope="colgroup"
                         align="center"
-                        sx={{ fontWeight: 700 }}
+                        sx={{ fontWeight: 700, ...ROLE_DIVIDER }}
                       >
                         {role}
                       </TableCell>
                     ))}
                   </TableRow>
+                  <TableRow>
+                    {ROLES.flatMap((role) =>
+                      actions.map((action, i) => {
+                        const { label, Icon } = ACTIONS[action];
+                        return (
+                          <TableCell
+                            key={`${role}|${action}`}
+                            scope="col"
+                            align="center"
+                            aria-label={`${role} ${label}`}
+                            sx={{
+                              top: 37,
+                              p: 0.25,
+                              width: CELL_WIDTH,
+                              minWidth: CELL_WIDTH,
+                              ...(i === 0 && ROLE_DIVIDER),
+                            }}
+                          >
+                            <Tooltip title={label}>
+                              <Icon
+                                fontSize="small"
+                                sx={{ color: "text.secondary" }}
+                              />
+                            </Tooltip>
+                          </TableCell>
+                        );
+                      }),
+                    )}
+                  </TableRow>
                 </TableHead>
                 <TableBody>
                   {matrix.modules.map((m) => (
                     <TableRow key={m.module} hover>
-                      <TableCell component="th" scope="row" sx={{ py: 0.25 }}>
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        sx={{
+                          py: 0.25,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          bgcolor: "background.paper",
+                        }}
+                      >
                         {m.module}
                       </TableCell>
-                      {ROLES.map((role) => {
-                        const actions = m.eligible[role] ?? [];
-                        return (
-                          <TableCell
-                            key={role}
-                            align="center"
-                            sx={{ py: 0.25, px: 0.5 }}
-                          >
-                            {actions.length === 0 ? (
-                              <Typography
-                                component="span"
-                                color="text.secondary"
-                                aria-label={`${role} ${m.module}: does not apply`}
-                              >
-                                —
-                              </Typography>
-                            ) : (
-                              <Stack
-                                direction="row"
-                                spacing={0.25}
-                                sx={{ justifyContent: "center" }}
-                              >
-                                {actions.map((action) => {
-                                  const isGranted = granted.has(
-                                    `${role}|${m.module}|${action}`,
-                                  );
-                                  return (
-                                    <GrantIcon
-                                      key={action}
-                                      role={role}
-                                      module={m.module}
-                                      action={action}
-                                      granted={isGranted}
-                                      canEdit={canEdit}
-                                      onToggle={() =>
-                                        setEditing({
-                                          id: `${role}|${m.module}|${action}`,
-                                          role,
-                                          module: m.module,
-                                          action,
-                                          granted: isGranted,
-                                        })
-                                      }
-                                    />
-                                  );
-                                })}
-                              </Stack>
-                            )}
-                          </TableCell>
-                        );
-                      })}
+                      {ROLES.flatMap((role) =>
+                        actions.map((action, i) => {
+                          const eligible = (m.eligible[role] ?? []).includes(
+                            action,
+                          );
+                          const isGranted = granted.has(
+                            `${role}|${m.module}|${action}`,
+                          );
+                          return (
+                            <TableCell
+                              key={`${role}|${action}`}
+                              align="center"
+                              sx={{
+                                p: 0.25,
+                                width: CELL_WIDTH,
+                                minWidth: CELL_WIDTH,
+                                ...(i === 0 && ROLE_DIVIDER),
+                                ...(!eligible && { bgcolor: "action.hover" }),
+                              }}
+                            >
+                              {eligible && (
+                                <GrantIcon
+                                  role={role}
+                                  module={m.module}
+                                  action={action}
+                                  granted={isGranted}
+                                  canEdit={canEdit}
+                                  onToggle={() =>
+                                    setEditing({
+                                      id: `${role}|${m.module}|${action}`,
+                                      role,
+                                      module: m.module,
+                                      action,
+                                      granted: isGranted,
+                                    })
+                                  }
+                                />
+                              )}
+                            </TableCell>
+                          );
+                        }),
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
