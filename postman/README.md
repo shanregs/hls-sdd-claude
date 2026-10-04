@@ -21,13 +21,14 @@ other requests.
 `001 Identity & Access`, `002 Access Model & Permission Matrix`, `003 Audit`, `004 User & Role
 Management`, `005 Master Data` (Zones & Places, Schools, Managers & assignments, Teachers, Teacher
 salary), `008 Attendance` (Status codes & Holiday Calendar, Teacher self-service, Supervisors, Admin
-and Director: grid, export, month lock).
+and Director: grid, export, month lock), `009 Leave` (Teacher self-service: types, preview, submit, history,
+cancel; Supervisors: list, get, approve, reject, revoke).
 
 The 005 requests save `zoneId`, `placeId`, `schoolId`, `managerId`, `teacherId` and their versions
 from create responses so the next request works in sequence. The 008 requests use the collection
 variables `month` (`YYYY-MM`), `markDate` (`YYYY-MM-DD`) and `teacherId`; set them before running a
 request, and use a Teacher or Manager sign-in for the self-service and Manager requests (change
-`loginIdentifier` and run Password Login again; a Teacher signs in with a one-time code).
+`loginIdentifier` and run Password Login again; a Teacher signs in with a password or a one-time code).
 
 ## Local environment
 

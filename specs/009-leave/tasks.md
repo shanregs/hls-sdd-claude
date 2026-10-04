@@ -111,11 +111,11 @@ Backend `backend/src/main/java/com/hls/{leave,attendance,identity,audit}/...`, t
 
 **Independent Test**: approve a five-day request including a holiday: four L days in the grid and rollup; revoke: they disappear (a hand-changed day stays); a locked month blocks revoke.
 
-- [ ] T028 [US4] (implemented in `LeaveDecisionService.revoke`, tests pending in T031) `LeaveDecisionService.revoke(actor, id, reason, version)`: APPROVED only, reason required, `LeaveAttendance.remove`, set CANCELLED with `cancelled_by_kind = SUPERVISOR` and the reason as `decision_note`, audit; refused (409) when a mark to be removed lies in a locked month; endpoint `POST /api/v1/leave/{id}/revoke` in `LeaveManagementController`
-- [ ] T029 [US4] (implemented in `LeaveRequestService.cancelOwn`, tests pending in T031) `LeaveRequestService.cancelOwn`: extend T018 so an APPROVED request whose `first_date` is after `businessToday()` can be cancelled by its Teacher (no reason), removing its marks through `LeaveAttendance.remove`, audited as a Teacher cancellation; once the first day has arrived the call is 409 and the view's `allowedActions` omits CANCEL
-- [ ] T030 [P] [US4] Surface the source of a leave mark: in attendance `TeacherMonthPanel.tsx`/mark history (`frontend/src/features/attendance/`) show "From leave request" with the dates when `leaveRequestId` is present; keep the `dayStyle.ts` L colour and label unchanged
-- [ ] T031 [P] [US4] Tests `LeaveFeedTest.java` (extends `AttendanceTestBase`): approve a five-day request including a holiday and a Sunday: marks only on working days, half values, attributed to the approver, `SUPERVISOR` kind (the Teacher cannot change them), visible in the Teacher calendar API, the Manager grid, the rollup leave total and the CSV export; replace a Teacher-set Present (history keeps it); refuse a supervisor-set Present; future days marked; placement change mid-range follows the School per date; revoke removes marks but keeps a hand-changed day; revoke refused for a locked month; Teacher cancel of a future approved request removes marks, after the first day it is refused; re-apply after revoke works (the exclusion constraint no longer blocks)
-- [ ] T032 [P] [US4] Frontend: revoke action with reason dialog in `LeaveManagementPage.tsx` (icon shown when `allowedActions` has REVOKE); `MyLeaveHistoryPage.tsx` shows the cancel icon for an Approved not-yet-started request; tests for both
+- [x] T028 [US4] `LeaveDecisionService.revoke(actor, id, reason, version)`: APPROVED only, reason required, `LeaveAttendance.remove`, set CANCELLED with `cancelled_by_kind = SUPERVISOR` and the reason as `decision_note`, audit; refused (409) when a mark to be removed lies in a locked month; endpoint `POST /api/v1/leave/{id}/revoke` in `LeaveManagementController`
+- [x] T029 [US4] `LeaveRequestService.cancelOwn`: extend T018 so an APPROVED request whose `first_date` is after `businessToday()` can be cancelled by its Teacher (no reason), removing its marks through `LeaveAttendance.remove`, audited as a Teacher cancellation; once the first day has arrived the call is 409 and the view's `allowedActions` omits CANCEL
+- [x] T030 [P] [US4] Surface the source of a leave mark: in attendance `TeacherMonthPanel.tsx`/mark history (`frontend/src/features/attendance/`) show "From leave request" with the dates when `leaveRequestId` is present; keep the `dayStyle.ts` L colour and label unchanged
+- [x] T031 [P] [US4] Tests `LeaveFeedTest.java` (extends `AttendanceTestBase`): approve a five-day request including a holiday and a Sunday: marks only on working days, half values, attributed to the approver, `SUPERVISOR` kind (the Teacher cannot change them), visible in the Teacher calendar API, the Manager grid, the rollup leave total and the CSV export; replace a Teacher-set Present (history keeps it); refuse a supervisor-set Present; future days marked; placement change mid-range follows the School per date; revoke removes marks but keeps a hand-changed day; revoke refused for a locked month; Teacher cancel of a future approved request removes marks, after the first day it is refused; re-apply after revoke works (the exclusion constraint no longer blocks)
+- [x] T032 [P] [US4] Frontend: revoke action with reason dialog in `LeaveManagementPage.tsx` (icon shown when `allowedActions` has REVOKE); `MyLeaveHistoryPage.tsx` shows the cancel icon for an Approved not-yet-started request; tests for both
 
 **Checkpoint**: leave and attendance agree in every view.
 
@@ -127,18 +127,29 @@ Backend `backend/src/main/java/com/hls/{leave,attendance,identity,audit}/...`, t
 
 **Independent Test**: perform each action and find its Change History entry; run the per-role matrix.
 
-- [ ] T033 [US5] Audit completeness: ensure every transition (submit, cancel by Teacher, cancel by supervisor, approve, reject, revoke) records actor, time, Teacher, request, old and new status and reason/note via `LeaveAudit`; leave-made mark changes carry the request id in the `ATTENDANCE_MARK` detail; Manager sees `LEAVE_REQUEST` entries only for Teachers in scope in Change History (extend the audit scope filter if it needs the Teacher id)
-- [ ] T034 [P] [US5] Tests `LeaveAuditTest.java`: each transition appears in `GET /api/v1/audit/change-history` within 5 seconds for Admin/Director with the right fields, a Manager sees only in-scope entries, Teacher and System see none; and a full per-role/per-endpoint authorization table test `LeaveAuthorizationTest.java` covering every endpoint in contracts/leave-api.md
-- [ ] T035 [P] [US5] `LeaveDevSeeder` in `leave/internal/` (demo flag only, idempotent by a fixed reason-prefix marker, runs after `AttendanceDevSeeder`): for Tara and the three attendance demo Teachers create one Pending future request (Pongal travel), one Approved past request of two working days with its L marks written through `LeaveAttendance.apply` (family function), and one Rejected request with a reason (medical appointment during exams); test `LeaveDevSeederTest.java` for idempotency and expected counts
+- [x] T033 [US5] Audit completeness: ensure every transition (submit, cancel by Teacher, cancel by supervisor, approve, reject, revoke) records actor, time, Teacher, request, old and new status and reason/note via `LeaveAudit`; leave-made mark changes carry the request id in the `ATTENDANCE_MARK` detail; Manager sees `LEAVE_REQUEST` entries only for Teachers in scope in Change History (extend the audit scope filter if it needs the Teacher id)
+- [x] T034 [P] [US5] Tests `LeaveAuditTest.java`: each transition appears in `GET /api/v1/audit/change-history` within 5 seconds for Admin/Director with the right fields, a Manager sees only in-scope entries, Teacher and System see none; and a full per-role/per-endpoint authorization table test `LeaveAuthorizationTest.java` covering every endpoint in contracts/leave-api.md
+- [x] T035 [P] [US5] `LeaveDevSeeder` in `leave/internal/` (demo flag only, idempotent by a fixed reason-prefix marker, runs after `AttendanceDevSeeder`): for Tara and the three attendance demo Teachers create one Pending future request (Pongal travel), one Approved past request of two working days with its L marks written through `LeaveAttendance.apply` (family function), and one Rejected request with a reason (medical appointment during exams); test `LeaveDevSeederTest.java` for idempotency and expected counts
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T036 [P] Update `docs/running-locally.md` (a Leave section: Teacher apply and history, supervisor decisions, demo data) and add Postman requests under `postman/HLS API/` for the `/me/leave` and `/leave` endpoints (file-based collection, same style as spec 008)
+- [x] T036 [P] Update `docs/running-locally.md` (a Leave section: Teacher apply and history, supervisor decisions, demo data) and add Postman requests under `postman/HLS API/` for the `/me/leave` and `/leave` endpoints (file-based collection, same style as spec 008)
 - [ ] T037 [P] Update `docs/spec-roadmap.md` row 009 to Implemented with the test counts, and `specs/002-access-model-app-shell/{spec,data-model,tasks}.md` with the two new permission modules and navigation items (same way spec 008 did)
 - [ ] T038 Run the full backend test suite and the frontend Vitest suite including `src/a11y`, then execute `quickstart.md` scenarios 1-8 against the running local app (Playwright-core script allowed for the UI checks) and record the results in `specs/009-leave/quickstart-results.md`
 - [ ] T039 Re-read spec.md FR-001..FR-014 and SC-001..SC-008 against what was built and note any gap in `quickstart-results.md`; open the PR with `gh pr create`
+
+---
+
+## Added during delivery
+
+- [x] T040 Pending leave approvals widget (`frontend/src/dashboards/PendingLeaveWidget.tsx`) on the
+      Manager, Admin and Director dashboards, with a link to Leave Management; it counts only the caller's
+      scope (the Manager dashboard test covers it)
+- [x] T041 Sign-in: the password form links to a one-time code ("Use a one-time code instead") for anyone
+      who forgot the password, every role can use both methods, and the demo Teacher Tara now has a
+      password (`DevDataSeeder`, also for an existing database); docs and Postman updated
 
 ---
 

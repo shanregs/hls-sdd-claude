@@ -23,9 +23,32 @@ public abstract class LeaveTestBase extends AttendanceTestBase {
         return jdbc.queryForObject("select id from leave_type where code = 'CASUAL'", UUID.class);
     }
 
-    /** A Monday 20 to 26 days ago: inside the 30-day lookback and the 60-day placement of the test Teachers. */
+    /**
+     * A recent Monday inside the 30-day lookback and the 60-day placement of the test Teachers whose
+     * week, and the days the tests use after it (+7, +8, +14, +15), are not holidays. The shared test
+     * database may hold the seeded Tamil Nadu holidays, which would change the working-day counts.
+     */
     protected LocalDate monday() {
-        return today().minusDays(20).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate first = today().minusDays(26).with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
+        LocalDate weekOnly = null;
+        for (LocalDate candidate = first; !candidate.isAfter(today().minusDays(6)); candidate = candidate.plusDays(7)) {
+            boolean weekClean = !hasHoliday(candidate, candidate.plusDays(6));
+            if (weekClean && weekOnly == null) {
+                weekOnly = candidate;
+            }
+            if (weekClean
+                    && !hasHoliday(candidate.plusDays(7), candidate.plusDays(8))
+                    && !hasHoliday(candidate.plusDays(14), candidate.plusDays(15))) {
+                return candidate;
+            }
+        }
+        return weekOnly != null ? weekOnly : first;
+    }
+
+    private boolean hasHoliday(LocalDate from, LocalDate to) {
+        Integer count = jdbc.queryForObject(
+                "select count(*) from attendance_non_working_date where on_date between ? and ?", Integer.class, from, to);
+        return count != null && count > 0;
     }
 
     protected Map<String, Object> draft(LocalDate first, LocalDate last) {

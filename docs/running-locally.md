@@ -115,6 +115,24 @@ original placement date, so she has history only from then on.
 - Admin/Director: MASTER DATA -> **Attendance Setup** lists the status codes. P, L, T and N are
   built in; S (Substitution), H (Holiday) and A (Absent, like Leave) are ordinary codes you can edit.
 
+### Leave
+
+The demo data also adds sample leave requests (Tara: one Pending, one Approved with its Leave marks, one
+Rejected; Meena and Karthik: one Pending each in Demo School One; Lakshmi: one Pending in Demo School Two,
+which has no Manager, so only Admin and Director see it).
+
+- As **Teacher** (Tara): LEAVE -> **Apply Leave** (pick a type and dates; the page shows how many working days
+  it covers, not counting Sundays and holidays; a half day can be taken on the first or last working day),
+  then **My Leave History** to follow it, see the reason if it is rejected, and cancel while it is Pending or
+  Approved but not yet started.
+- As **Manager** (Manoj), **Admin** or **Director**: the dashboard shows how many leave requests await a
+  decision; OPERATIONS -> **Leave Management** lists them (Pending first). Approve (optional note) or reject
+  (reason required). Approving writes **L** marks for the covered working days into the attendance grid
+  (a day another supervisor already set is refused and listed; a locked month blocks it). Approved leave can
+  be revoked with a reason. A Manager sees only the Teachers assigned to them.
+- Signing in: every user can use a password or, for example after forgetting it, a one-time code (the link
+  under the password form). Tara has the password `Password123!` too.
+
 ## Postman
 
 Import `postman/HLS.postman_collection.json` and `postman/HLS-Local.postman_environment.json`

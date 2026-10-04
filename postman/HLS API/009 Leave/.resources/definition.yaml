@@ -1,0 +1,3 @@
+$kind: collection
+description: "Leave (spec 009). A Teacher applies and follows own requests; Manager (assigned Teachers), Admin and Director decide. Collection variables: leaveRequestId and leaveVersion are saved by Submit and the supervisor list; leaveTypeId by List Leave Types. Sign in as a Teacher for Teacher self-service and as a Manager, Admin or Director for Supervisors."
+order: 9000

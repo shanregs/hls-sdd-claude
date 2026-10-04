@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Own requests, newest first; add &status=PENDING|APPROVED|REJECTED|CANCELLED. Needs MY_LEAVE.VIEW."
+url: "{{baseUrl}}/api/v1/me/leave?page=0&size=25"
+method: GET
+order: 4000

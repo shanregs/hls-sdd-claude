@@ -1,0 +1,9 @@
+$kind: http-request
+description: "Requests in the caller's scope (Manager: assigned Teachers; Admin and Director: all). Optional teacherId, schoolId, month=YYYY-MM. The response carries pendingCount. Saves the first request as leaveRequestId and leaveVersion. Needs LEAVE_MANAGEMENT.VIEW."
+url: "{{baseUrl}}/api/v1/leave?status=PENDING&page=0&size=25"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (b.content && b.content.length) { pm.collectionVariables.set("leaveRequestId", b.content[0].id); pm.collectionVariables.set("leaveVersion", b.content[0].version); }
+    language: text/javascript
+order: 1000

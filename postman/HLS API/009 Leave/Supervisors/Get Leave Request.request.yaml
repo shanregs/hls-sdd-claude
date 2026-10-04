@@ -1,0 +1,5 @@
+$kind: http-request
+description: "One request with the days it would mark and anything that would stop an approval. Out of scope answers 404."
+url: "{{baseUrl}}/api/v1/leave/{{leaveRequestId}}"
+method: GET
+order: 2000
