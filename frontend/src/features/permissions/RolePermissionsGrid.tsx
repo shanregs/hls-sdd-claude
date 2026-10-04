@@ -159,6 +159,15 @@ export function RolePermissionsGrid() {
     return Object.keys(ACTIONS).filter((a) => used.has(a));
   }, [matrix]);
 
+  // The Module column is as wide as the longest module name plus 5 characters, no wider.
+  const moduleWidth = useMemo(() => {
+    const longest = Math.max(
+      0,
+      ...(matrix?.modules.map((m) => m.module.length) ?? []),
+    );
+    return `${longest + 5}ch`;
+  }, [matrix]);
+
   return (
     <Box>
       <Typography variant="h5" component="h1" gutterBottom>
@@ -198,7 +207,9 @@ export function RolePermissionsGrid() {
                       rowSpan={2}
                       sx={{
                         fontWeight: 700,
-                        minWidth: 190,
+                        width: moduleWidth,
+                        minWidth: moduleWidth,
+                        maxWidth: moduleWidth,
                         position: "sticky",
                         left: 0,
                         zIndex: 3,
@@ -257,6 +268,10 @@ export function RolePermissionsGrid() {
                         scope="row"
                         sx={{
                           py: 0.25,
+                          width: moduleWidth,
+                          minWidth: moduleWidth,
+                          maxWidth: moduleWidth,
+                          whiteSpace: "nowrap",
                           position: "sticky",
                           left: 0,
                           zIndex: 1,

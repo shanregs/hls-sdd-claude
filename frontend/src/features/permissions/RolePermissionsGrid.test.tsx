@@ -140,6 +140,25 @@ describe("RolePermissionsGrid (User Story 3, FR-002/FR-004a)", () => {
     expect(ALL_ROLES).toEqual(groups);
   });
 
+  it("sizes the Module column to the longest module name plus 5 characters", async () => {
+    authFetch.mockResolvedValue(json(MATRIX));
+
+    render(<RolePermissionsGrid />);
+
+    const table = await screen.findByRole("table", {
+      name: "Role and permission matrix",
+    });
+    // The longest fixture module is IDENTITY_PERMISSIONS (20 characters), so 25 characters wide.
+    const longest = Math.max(...MATRIX.modules.map((m) => m.module.length));
+    expect(longest).toBe(20);
+    expect(
+      within(table).getByRole("columnheader", { name: "Module" }),
+    ).toHaveStyle({ width: "25ch" });
+    expect(screen.getByRole("rowheader", { name: "DASHBOARD" })).toHaveStyle({
+      width: "25ch",
+    });
+  });
+
   it("gives every action its own small cell under each role", async () => {
     authFetch.mockResolvedValue(json(MATRIX));
 
