@@ -1,8 +1,9 @@
 /** Month and date helpers for attendance. Months are "YYYY-MM", dates are "YYYY-MM-DD" (spec 008). */
 
-export const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Weeks start on Sunday in every calendar (Sun = 0 ... Sat = 6). */
+export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export const WEEKDAY_CODES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+export const WEEKDAY_CODES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -30,11 +31,10 @@ export function dateKey(month: string, day: number): string {
   return `${month}-${pad(day)}`;
 }
 
-/** Monday-first weekday index (Mon = 0 ... Sun = 6) of a "YYYY-MM-DD" date. */
+/** Sunday-first weekday index (Sun = 0 ... Sat = 6) of a "YYYY-MM-DD" date. */
 export function weekdayIndex(date: string): number {
   const [y, m, d] = date.split("-").map(Number);
-  const js = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return (js + 6) % 7;
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
 
 /** "2026-10-04" -> "04/10/2026" (FR-024). */

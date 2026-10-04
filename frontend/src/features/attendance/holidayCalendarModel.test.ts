@@ -36,10 +36,17 @@ describe("holidayCalendarModel", () => {
     expect(holidaysIn("2027", FACTS)).toEqual([]);
   });
 
-  it("lays a month out in Monday-first weeks padded with blanks", () => {
+  it("lays a month out in Sunday-first weeks padded with blanks", () => {
     const weeks = monthWeeks("2026-10"); // 01/10/2026 is a Thursday
     expect(weeks.every((w) => w.length === 7)).toBe(true);
-    expect(weeks[0].slice(0, 4)).toEqual([null, null, null, "2026-10-01"]);
+    expect(weeks[0].slice(0, 5)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      "2026-10-01",
+    ]);
+    expect(weeks[1][0]).toBe("2026-10-04"); // a Sunday starts the second week
     expect(weeks.flat().filter(Boolean)).toHaveLength(31);
   });
 

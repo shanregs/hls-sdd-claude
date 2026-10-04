@@ -7,6 +7,8 @@ import {
   monthLabel,
   shiftMonth,
   todayKey,
+  WEEKDAY_CODES,
+  WEEKDAY_LABELS,
   weekdayIndex,
 } from "./monthUtils";
 
@@ -24,10 +26,20 @@ describe("monthUtils", () => {
     expect(shiftMonth("2026-10", -3)).toBe("2026-07");
   });
 
-  it("returns Monday-first weekday indexes", () => {
-    expect(weekdayIndex("2026-10-01")).toBe(3); // Thursday
-    expect(weekdayIndex("2026-10-04")).toBe(6); // Sunday
-    expect(weekdayIndex("2026-10-05")).toBe(0); // Monday
+  it("returns Sunday-first weekday indexes", () => {
+    expect(weekdayIndex("2026-10-01")).toBe(4); // Thursday
+    expect(weekdayIndex("2026-10-04")).toBe(0); // Sunday
+    expect(weekdayIndex("2026-10-05")).toBe(1); // Monday
+    expect(weekdayIndex("2026-10-10")).toBe(6); // Saturday
+  });
+
+  it("lists the weekday labels and codes starting with Sunday", () => {
+    expect(WEEKDAY_LABELS[0]).toBe("Sun");
+    expect(WEEKDAY_LABELS[6]).toBe("Sat");
+    expect(WEEKDAY_CODES[0]).toBe("SUN");
+    expect(
+      WEEKDAY_CODES.map((c) => c.slice(0, 1) + c.slice(1).toLowerCase()),
+    ).toEqual(WEEKDAY_LABELS);
   });
 
   it("formats dates as DD/MM/YYYY and months as names", () => {

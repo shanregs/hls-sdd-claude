@@ -23,7 +23,7 @@ interface MonthCalendarProps {
   editor?: "SELF" | "SUPERVISOR";
 }
 
-/** A Monday-first month calendar (spec 008 FR-014). Editable days are buttons with full names. */
+/** A Sunday-first month calendar (spec 008 FR-014). Editable days are buttons with full names. */
 export function MonthCalendar({
   days,
   locked,

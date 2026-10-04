@@ -33,6 +33,9 @@
 
 ### Session 2026-10-04
 
+- Q: Which day does a week start on in the calendars? → A: Sunday. Every month view (My Attendance,
+  Attendance History, the Holiday Calendar year and month views and its PDF) lays weeks out Sunday to
+  Saturday, and the weekly-off choices list Sunday first.
 - Q: Where do the holiday calendar and the status codes live in the menu, and who may see them? →
   A: Both are master data. MASTER DATA → **Holiday Calendar** is visible to every role (a read-only
   calendar for Manager, Teacher and System) and editable by Admin and Director only, under its own
