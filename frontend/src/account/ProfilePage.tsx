@@ -107,10 +107,13 @@ export function ProfilePage() {
             </Box>
           </Stack>
           <Typography variant="body2" sx={{ mt: 2 }}>
-            To change your details or password, or to manage your signed-in
-            devices, go to{" "}
+            To change your details or password, go to{" "}
             <Link component={RouterLink} to="/account/settings">
               Settings
+            </Link>
+            ; to manage your signed-in devices, go to{" "}
+            <Link component={RouterLink} to="/account/sessions">
+              Sessions
             </Link>
             .
           </Typography>

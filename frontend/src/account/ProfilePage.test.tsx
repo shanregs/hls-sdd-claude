@@ -74,6 +74,10 @@ describe("ProfilePage: the caller's own account details", () => {
       "href",
       "/account/settings",
     );
+    expect(screen.getByRole("link", { name: "Sessions" })).toHaveAttribute(
+      "href",
+      "/account/sessions",
+    );
   });
 
   it("shows an error when the profile cannot be loaded", async () => {

@@ -17,7 +17,7 @@ import type { SessionSummary } from "../auth/authApi";
  * Self-service session management (FR-015, User Story 5): shows only the caller's own active
  * sessions, marks the current one, and lets them end any other one. Uses {@link useAuth}'s
  * `authFetch` so an expired access token renews silently instead of surfacing an error here
- * (User Story 3). Lives on the Settings page with the other account security controls.
+ * (User Story 3). Shown on the Sessions page (ACCOUNT -> Sessions).
  */
 export function SessionsCard() {
   const { authFetch } = useAuth();
@@ -76,7 +76,7 @@ export function SessionsCard() {
         id="sessions-heading"
         gutterBottom
       >
-        My sessions
+        Signed-in devices
       </Typography>
 
       {error && (

@@ -41,6 +41,7 @@ import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
 import { ReopenDialog } from "../features/attendance/ReopenDialog";
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
+import { SessionsPage } from "../account/SessionsPage";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -648,10 +649,12 @@ const pages: PageCase[] = [
   {
     name: "SettingsPage",
     render: () => <SettingsPage />,
-    settle: async () => {
-      await screen.findByText("Change password", { selector: "h2" });
-      await screen.findByText(/no active sessions/i);
-    },
+    settle: () => screen.findByText("Change password", { selector: "h2" }),
+  },
+  {
+    name: "SessionsPage",
+    render: () => <SessionsPage />,
+    settle: () => screen.findByText(/no active sessions/i),
   },
   {
     name: "MarkDialog",
