@@ -381,6 +381,9 @@ compact module × role table of action icons, define which grants are eligible, 
 - [x] T053 [US3] Role & Permissions layout follow-up: each action in its own small cell under each
       role, roles ordered System, Admin, Director, Manager, Teacher, and a Module column sized to the
       longest module name plus 5 characters (`RolePermissionsGrid.tsx`, tests)
+- [x] T055 [US3] Per-action icon colours in Role & Permissions: a granted icon wears its action's
+      colour (light and dark theme pairs), not-granted icons are grey, header icons match
+      (`RolePermissionsGrid.tsx`, colour test, axe cases in both themes)
 
 ---
 

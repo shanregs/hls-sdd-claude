@@ -229,6 +229,30 @@ describe("RolePermissionsGrid (User Story 3, FR-002/FR-004a)", () => {
     ).toBeInTheDocument();
   });
 
+  it("colours each granted action differently and keeps not-granted ones grey", async () => {
+    authFetch.mockResolvedValue(json(MATRIX));
+    render(<RolePermissionsGrid />);
+    await screen.findByRole("table");
+
+    const iconColour = (name: string) =>
+      getComputedStyle(
+        screen.getByRole("button", { name }).querySelector("svg")!,
+      ).color;
+    const view = iconColour("ADMIN View USER_MANAGEMENT: granted");
+    const edit = iconColour("ADMIN Edit USER_MANAGEMENT: granted");
+    const create = iconColour("ADMIN Create USER_MANAGEMENT: not granted");
+
+    // View is blue and Edit is orange: two granted actions, two colours.
+    expect(view).toBe("rgb(30, 90, 168)");
+    expect(edit).toBe("rgb(230, 81, 0)");
+    expect(view).not.toBe(edit);
+    // A not-granted action is grey whichever action it is, never its own colour.
+    expect(create).not.toBe("rgb(46, 125, 50)");
+    expect(iconColour("MANAGER View USER_MANAGEMENT: not granted")).toBe(
+      create,
+    );
+  });
+
   it("leaves a cell empty where an action does not apply", async () => {
     authFetch.mockResolvedValue(json(MATRIX));
     render(<RolePermissionsGrid />);
