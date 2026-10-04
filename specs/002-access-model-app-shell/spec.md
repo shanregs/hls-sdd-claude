@@ -29,6 +29,14 @@
   offers that action and the Constitution does not rule the combination out: only Admin, Director
   and System can hold Role & Permissions, and System holds no teacher or school business module.
   The server refuses a grant that is not eligible, so the screen and the API agree.
+- Q: In what order do the navigation sections appear? → A: Dashboard, MASTER DATA, OPERATIONS,
+  SYSTEM, AUDIT, ACCOUNT (previously Dashboard, SYSTEM, AUDIT, MASTER DATA, OPERATIONS, ACCOUNT),
+  so the everyday business screens come first and the administrative ones after them. A Teacher's
+  MY ATTENDANCE sits in the OPERATIONS position; System's SYSTEM CONFIGURATION in the SYSTEM one.
+- Q: How are the permission icons laid out? → A: Each action has its own small cell under each
+  role, and the roles run System, Admin, Director, Manager, Teacher (this refines the first bullet
+  above, which put all of a role's icons in one cell). The Module column is as wide as the longest
+  module name plus 5 characters.
 - Q: How is a grant changed? → A: Clicking an icon (for a user who may edit the matrix) opens the
   existing confirmation to switch it on or off; the audit record and the last-manager safeguard are
   unchanged. A user who can only view the matrix sees the same icons without any click action.
@@ -244,6 +252,11 @@ phone width, with no horizontal page scroll at any width.
   returned access model or the rendered UI. Unauthorized items are absent, never shown disabled.
 - **FR-008**: A navigation section with no authorized item for the current user MUST be omitted
   entirely.
+- **FR-008a**: The navigation sections MUST always appear in this order: **Dashboard, MASTER DATA,
+  OPERATIONS, SYSTEM, AUDIT, ACCOUNT**. A Teacher's MY ATTENDANCE section takes the OPERATIONS
+  position, and for the System role SYSTEM DASHBOARD takes the Dashboard position and SYSTEM
+  CONFIGURATION the SYSTEM position. The order is decided by the server in the access model (the
+  frontend renders the sections as given), and the items inside a section keep their own order.
 - **FR-009**: The application MUST provide one persistent left navigation panel on desktop and
   tablet widths (roughly 25-30% of the width, user-collapsible) and a collapsible overlay drawer at
   phone widths, with no horizontal page scrolling at 360px width.

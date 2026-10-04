@@ -17,6 +17,9 @@ JWT exists for each of the five roles. PostgreSQL running (or Testcontainers for
 1. Sign in as a Teacher-only user, timing from credential submission to the landing dashboard's
    first render. **Expect**: under 3 seconds (SC-002); landing dashboard shows Teacher's
    self-service placeholder widgets; left nav shows only Dashboard and ACCOUNT → My Profile.
+1a. Look at the section order for each role (FR-008a). **Expect**: always Dashboard, MASTER DATA,
+   OPERATIONS, SYSTEM, AUDIT, ACCOUNT, leaving out any section the role does not have (a Teacher's
+   MY ATTENDANCE sits where OPERATIONS would be; System's SYSTEM CONFIGURATION where SYSTEM would be).
 2. Sign in as a user holding both Admin and Director. **Expect**: one combined dashboard/nav, no
    duplicate menu items, no role picker at any point.
 3. Repeat for Manager and System. **Expect**: Manager sees "assigned"-scoped placeholder wording;

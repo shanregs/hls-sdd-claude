@@ -56,7 +56,7 @@ the access-model resolver filters against `Permission Matrix Entry`.
 | `label` | string | e.g. "Role & Permissions", "Profile" |
 | `route` | string | frontend route path this item links to |
 | `requiredModule` / `requiredAction` | reference into the matrix's enums | the grant that makes this item visible |
-| `order` | integer | position within its section |
+| `order` | integer | position within its section **and** the section's position in the menu: the catalogue is sorted by `order` and a section appears where its first item sits. Fixed bands (FR-008a): Dashboard 10, MASTER DATA 20-29, OPERATIONS 30-34, MY ATTENDANCE 35-39, SYSTEM / SYSTEM CONFIGURATION 40-49, AUDIT 50-59, ACCOUNT 90-99 |
 
 At this spec's scope the catalog holds exactly: Dashboard, under section "Dashboard" (Admin,
 Director, Manager, Teacher only — System does not use this section); Dashboard, under section

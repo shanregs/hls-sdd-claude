@@ -371,6 +371,14 @@ compact module × role table of action icons, define which grants are eligible, 
       quickstart.md (Scenario 3 step 0) and verify the screen against the running app (toggle one
       grant on and off)
 
+- [x] T052 [US1] Menu section order (spec.md FR-008a, data-model.md `order` bands): renumber
+      `NavigationCatalog` so the sections run Dashboard, MASTER DATA, OPERATIONS (MY ATTENDANCE for
+      Teachers), SYSTEM (SYSTEM CONFIGURATION for System), AUDIT, ACCOUNT; test per role in
+      `NavigationSectionOrderTest`; the frontend renders the server's order unchanged
+- [x] T053 [US3] Role & Permissions layout follow-up: each action in its own small cell under each
+      role, roles ordered System, Admin, Director, Manager, Teacher, and a Module column sized to the
+      longest module name plus 5 characters (`RolePermissionsGrid.tsx`, tests)
+
 ---
 
 ## Dependencies & Execution Order
