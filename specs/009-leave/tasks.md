@@ -136,9 +136,9 @@ Backend `backend/src/main/java/com/hls/{leave,attendance,identity,audit}/...`, t
 ## Phase 8: Polish & Cross-Cutting
 
 - [x] T036 [P] Update `docs/running-locally.md` (a Leave section: Teacher apply and history, supervisor decisions, demo data) and add Postman requests under `postman/HLS API/` for the `/me/leave` and `/leave` endpoints (file-based collection, same style as spec 008)
-- [ ] T037 [P] Update `docs/spec-roadmap.md` row 009 to Implemented with the test counts, and `specs/002-access-model-app-shell/{spec,data-model,tasks}.md` with the two new permission modules and navigation items (same way spec 008 did)
-- [ ] T038 Run the full backend test suite and the frontend Vitest suite including `src/a11y`, then execute `quickstart.md` scenarios 1-8 against the running local app (Playwright-core script allowed for the UI checks) and record the results in `specs/009-leave/quickstart-results.md`
-- [ ] T039 Re-read spec.md FR-001..FR-014 and SC-001..SC-008 against what was built and note any gap in `quickstart-results.md`; open the PR with `gh pr create`
+- [x] T037 [P] Update `docs/spec-roadmap.md` row 009 to Implemented with the test counts, and `specs/002-access-model-app-shell/{spec,data-model,tasks}.md` with the two new permission modules and navigation items (same way spec 008 did)
+- [x] T038 Run the full backend test suite and the frontend Vitest suite including `src/a11y`, then execute `quickstart.md` scenarios 1-8 against the running local app (Playwright-core script allowed for the UI checks) and record the results in `specs/009-leave/quickstart-results.md`
+- [x] T039 Re-read spec.md FR-001..FR-014 and SC-001..SC-008 against what was built and note any gap in `quickstart-results.md`; open the PR with `gh pr create`
 
 ---
 
