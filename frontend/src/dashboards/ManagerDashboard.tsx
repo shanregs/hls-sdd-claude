@@ -3,6 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Alert, Box, Link, Paper, Typography } from "@mui/material";
 import { useAuth } from "../auth/useAuth";
 import { PlaceholderWidget } from "./PlaceholderWidget";
+import { PendingLeaveWidget } from "./PendingLeaveWidget";
 
 interface ScopeSummary {
   orgWide: boolean;
@@ -139,7 +140,7 @@ export function ManagerDashboard() {
             Loading…
           </Typography>
         )}
-        <PlaceholderWidget title="Pending leave approvals" />
+        <PendingLeaveWidget />
         <PlaceholderWidget title="This month's attendance" />
       </Box>
     </Box>

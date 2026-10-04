@@ -1,9 +1,9 @@
 # Quickstart: Leave Management
 
 Runnable checks that prove the feature end to end. Setup is in `docs/running-locally.md` (database,
-backend with demo data, frontend). Demo logins: Tara Teacher `9800000004` (one-time code), Manoj
+backend with demo data, frontend). Demo logins: Tara Teacher `9800000004` (password, or a one-time code), Manoj
 Manager `9800000003`, Asha Admin `9800000001`, Divya Director `9800000002`, Sunil System
-`9800000005` (all `Password123!` except Tara).
+`9800000005` (all `Password123!`).
 
 ## Prerequisites
 

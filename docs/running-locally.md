@@ -47,9 +47,11 @@ Opens http://localhost:5173 (it proxies `/api` to the backend on 8080).
 | Asha Admin | `asha.admin` or `9800000001` / `Password123!` | Admin |
 | Divya Director | `9800000002` / `Password123!` | Director |
 | Manoj Manager | `manoj.manager` or `9800000003` / `Password123!` | Manager |
-| Tara Teacher | `9800000004`, **one-time code only** (no password) | Teacher |
+| Tara Teacher | `9800000004` / `Password123!` (or a one-time code) | Teacher |
 | Sunil System | `sunil.system` or `9800000005` / `Password123!` | System |
 
+Every user can sign in with a password or, as the other option (for example after forgetting the
+password), with a one-time code: choose the One-time code tab, or the link under the password form.
 The one-time code is not sent anywhere in dev: the backend console prints
 `[DEV SMS STUB] To 9800000004: your HLS sign-in/reset code is NNNNNN`. Request a code on the sign-in screen, then read it from the
 backend terminal.

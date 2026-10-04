@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { PlaceholderWidget } from "./PlaceholderWidget";
+import { PendingLeaveWidget } from "./PendingLeaveWidget";
 
 /** Admin's org-wide landing dashboard (FR-012) — placeholders until specs 005+ ship real widgets. */
 export function AdminDashboard() {
@@ -17,7 +18,7 @@ export function AdminDashboard() {
       >
         <PlaceholderWidget title="Organization headcount" />
         <PlaceholderWidget title="Attendance today" />
-        <PlaceholderWidget title="Pending approvals" />
+        <PendingLeaveWidget title="Pending leave approvals" />
         <PlaceholderWidget title="Recent audit activity" />
       </Box>
     </Box>

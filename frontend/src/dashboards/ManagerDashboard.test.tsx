@@ -66,6 +66,42 @@ describe("ManagerDashboard (User Story 6)", () => {
     );
   });
 
+  it("shows the pending leave approvals in scope with a link to Leave Management", async () => {
+    authFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith("/api/v1/leave")) {
+        return jsonResponse({
+          content: [],
+          page: 0,
+          size: 1,
+          totalElements: 3,
+          pendingCount: 3,
+        });
+      }
+      if (url.startsWith("/api/v1/me/scope")) {
+        return jsonResponse({
+          orgWide: false,
+          zoneCount: 1,
+          schoolCount: 1,
+          zones: [],
+        });
+      }
+      return jsonResponse({ content: [], page: 0, size: 1, totalElements: 4 });
+    });
+
+    renderDashboard();
+
+    expect(
+      await screen.findByText("Pending leave approvals"),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("3")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Review requests" }),
+    ).toHaveAttribute("href", "/operations/leave");
+    expect(authFetch.mock.calls.map((c) => String(c[0]))).toContain(
+      "/api/v1/leave?status=PENDING&size=1",
+    );
+  });
+
   it("shows an empty state, not zeros or an error, when nothing is assigned", async () => {
     mockCounts(0, 0, 0);
 
