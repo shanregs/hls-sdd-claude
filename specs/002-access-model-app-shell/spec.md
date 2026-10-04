@@ -271,8 +271,11 @@ phone width, with no horizontal page scroll at any width.
   (self-service placeholder widgets: my attendance, my leave, my notifications), System (system
   health, users, and audit activity placeholders). Since no business module exists yet, widgets MUST
   show a clear empty/"coming soon" state rather than fabricated data.
-- **FR-013**: Every role MUST have an ACCOUNT section with Profile (Teacher: "My Profile") and
-  Logout, reusing spec 001's session-management screen rather than building a second one.
+- **FR-013**: Every role MUST have an ACCOUNT section with Profile (Teacher: "My Profile"), Settings
+  and Sessions, and Logout. Profile shows the user's own details; Settings edits them and changes the
+  password; Sessions is spec 001's session-management grid (FR-015). The Sessions item needs
+  `MY_SESSIONS.VIEW`, which every role holds by default. System additionally has SYSTEM
+  CONFIGURATION → All Sessions (`SESSION_MANAGEMENT.VIEW`, spec 001 FR-015a).
 - **FR-014**: The application MUST offer a light/dark theme toggle applying consistent design tokens
   (color, spacing, type) across the shell, navigation, and dashboards; MUST meet WCAG 2.2 AA in both
   themes; and MUST persist the chosen theme on the same device across sign-out/sign-in, defaulting

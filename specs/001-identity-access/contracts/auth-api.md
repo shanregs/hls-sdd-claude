@@ -141,13 +141,31 @@ Ends the current session immediately (FR-014). **Response 204**.
 
 ### GET /api/v1/me/sessions
 
-Lists the caller's own active sessions only (FR-015): device description, sign-in time, last
-activity, and which one is "this device."
+Lists the caller's own active sessions only (FR-015), oldest first: `id`, `deviceDescription` (the
+user agent), `signedInAt`, `lastActivityAt`, `current` ("this device"), `clientType`, `appVersion`.
+Needs `MY_SESSIONS.VIEW` (403 otherwise).
 
 ### DELETE /api/v1/me/sessions/{sessionId}
 
-Ends one of the caller's own sessions (FR-015). **Response 403** if `sessionId` does not belong to
-the caller — a user can never end another user's session.
+Ends one of the caller's own sessions (FR-015), the current one included. **Response 204**;
+**403** if `sessionId` does not belong to the caller — a user can never end another user's session —
+or the caller lacks `MY_SESSIONS.DELETE`. An ended session's access token stops working at once.
+
+### DELETE /api/v1/me/sessions
+
+Ends every active session of the caller, including the current one (FR-015). **Response 200**
+`{ "ended": n }`; the web app signs the user out straight after. Needs `MY_SESSIONS.DELETE`.
+
+### System: /api/v1/admin/sessions (FR-015a; `SESSION_MANAGEMENT`)
+
+| Method | Path | Permission | Notes |
+| --- | --- | --- | --- |
+| GET | `/api/v1/admin/sessions?userId=&page=&size=` | View | every active session, newest first, paged (size at most 100); each item also has `userId`, `userName`, `userPhone`; `userId` filters to one user |
+| DELETE | `/api/v1/admin/sessions/{sessionId}` | Delete | `{ "ended": 1, "includesCurrent": bool }`; 404 if not an active session |
+| DELETE | `/api/v1/admin/sessions?userId=` | Delete | ends all of one user's sessions, or everyone's when `userId` is omitted; `{ "ended": n, "includesCurrent": bool }` |
+
+`includesCurrent` tells the caller their own session was among those ended, so the web app signs
+them out. Any role without the permission gets 403.
 
 ---
 

@@ -375,6 +375,9 @@ compact module × role table of action icons, define which grants are eligible, 
       `NavigationCatalog` so the sections run Dashboard, MASTER DATA, OPERATIONS (MY ATTENDANCE for
       Teachers), SYSTEM (SYSTEM CONFIGURATION for System), AUDIT, ACCOUNT; test per role in
       `NavigationSectionOrderTest`; the frontend renders the server's order unchanged
+- [x] T054 [US1] Sessions permissions (spec 001 T063-T068): `MY_SESSIONS` (every role) and
+      `SESSION_MANAGEMENT` (System, matrix managers only) in the matrix, eligibility, seeds and the
+      navigation (ACCOUNT → Sessions; SYSTEM CONFIGURATION → All Sessions)
 - [x] T053 [US3] Role & Permissions layout follow-up: each action in its own small cell under each
       role, roles ordered System, Admin, Director, Manager, Teacher, and a Module column sized to the
       longest module name plus 5 characters (`RolePermissionsGrid.tsx`, tests)

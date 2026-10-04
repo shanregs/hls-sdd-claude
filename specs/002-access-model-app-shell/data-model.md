@@ -23,6 +23,9 @@ The only new persisted entity in this feature. One row per (role, module, action
   and `(role, ACCOUNT_PROFILE, VIEW, true)` / `(role, ACCOUNT_PROFILE, EDIT, true)` for all five
   roles (own-record only, enforced at the resolver, not a matrix column). Seeding MUST NOT
   overwrite existing rows on restart (idempotent).
+- `(role, MY_SESSIONS, VIEW, true)` and `(role, MY_SESSIONS, DELETE, true)` for all five roles
+  (added 2026-10-04: a user's own sessions, spec 001 FR-015), and `(SYSTEM, SESSION_MANAGEMENT, VIEW |
+  DELETE, true)` (everyone's sessions, spec 001 FR-015a).
 - `(role, IDENTITY_PERMISSIONS, VIEW, true)` and `(role, IDENTITY_PERMISSIONS, EDIT, true)` are
   seeded `true` only for `ADMIN`, `DIRECTOR`, `SYSTEM`; `false`/absent for `MANAGER`, `TEACHER`.
 - **Invariant enforced on every write** (FR-004): after applying a proposed edit, at least one of
@@ -36,7 +39,7 @@ defined in code, not in the table. Each module declares the actions that apply t
 (`PermissionModule.actions()`, e.g. `DASHBOARD` → View; `USER_MANAGEMENT` → View, Create, Edit;
 `ATTENDANCE` → View, Create, Edit, Delete, Process, Export), and `PermissionEligibility` removes the
 combinations the Constitution rules out: `IDENTITY_PERMISSIONS` for any role other than `ADMIN`,
-`DIRECTOR`, `SYSTEM`, and every teacher/school business module (`ZONES`, `SCHOOLS`, `MANAGERS`,
+`DIRECTOR`, `SYSTEM` (and likewise `SESSION_MANAGEMENT`), and every teacher/school business module (`ZONES`, `SCHOOLS`, `MANAGERS`,
 `TEACHERS`, `TEACHER_SALARY`, `ATTENDANCE`, `TEACHER_ATTENDANCE`, `MY_ATTENDANCE`,
 `ATTENDANCE_SETUP`) for `SYSTEM`. A missing row for an eligible combination means "not granted".
 `updateGrant` refuses an ineligible combination before anything else. No schema change; every row

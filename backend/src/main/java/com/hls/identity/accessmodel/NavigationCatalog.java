@@ -224,7 +224,7 @@ public final class NavigationCatalog {
             new NavItem(
                     "Sessions",
                     "/account/sessions",
-                    PermissionModule.ACCOUNT_PROFILE,
+                    PermissionModule.MY_SESSIONS,
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     92,

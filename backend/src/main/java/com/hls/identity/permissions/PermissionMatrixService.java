@@ -53,6 +53,9 @@ public class PermissionMatrixService {
             seed(role, PermissionModule.DASHBOARD, PermissionAction.VIEW, true);
             seed(role, PermissionModule.ACCOUNT_PROFILE, PermissionAction.VIEW, true);
             seed(role, PermissionModule.ACCOUNT_PROFILE, PermissionAction.EDIT, true);
+            // Every role may see and end its own sessions (spec 001 FR-015); Admin can switch it off per role.
+            seed(role, PermissionModule.MY_SESSIONS, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.MY_SESSIONS, PermissionAction.DELETE, true);
         }
         for (Role role : MATRIX_MANAGER_ROLES) {
             seed(role, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.VIEW, true);
