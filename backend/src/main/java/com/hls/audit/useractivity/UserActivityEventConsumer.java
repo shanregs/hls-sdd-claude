@@ -58,22 +58,6 @@ public class UserActivityEventConsumer {
     }
 
     @ApplicationModuleListener
-    void on(PasswordChanged event) {
-        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_CHANGED", null);
-    }
-
-    @ApplicationModuleListener
-    void on(ProfileUpdated event) {
-        save(
-                event.eventId(),
-                event.occurredAt(),
-                event.actorUserId(),
-                event.affectedUserId(),
-                "PROFILE_UPDATED",
-                event.changedFields());
-    }
-
-    @ApplicationModuleListener
     void on(SessionEnded event) {
         save(event.eventId(),
                 event.occurredAt(),
