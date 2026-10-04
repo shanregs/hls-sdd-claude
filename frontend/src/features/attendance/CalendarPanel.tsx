@@ -113,6 +113,8 @@ export function CalendarPanel({
     return () => {
       cancelled = true;
     };
+    // Load once per session and edit mode; apply only reports to the parent and local state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authFetch, canEdit]);
 
   if (calendar === null) {
