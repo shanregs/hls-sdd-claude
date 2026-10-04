@@ -58,6 +58,23 @@ Master data seeded for you: **Demo Zone** with two Places (Madurantakam 603306, 
 603209), **Demo School One** (Manager: Manoj, Teacher: Tara) and **Demo School Two** (no Manager,
 no Teachers), and an unplaced **Unplaced Teacher**.
 
+### Attendance demo data
+
+With the demo flag on, the backend also seeds (idempotently):
+
+- the **2026 Tamil Nadu public holidays** (Pongal, Republic Day, Tamil New Year, Independence Day,
+  Gandhi Jayanthi, Deepavali, Christmas and the rest, 23 dates) as non-working dates, visible to every
+  user under MASTER DATA -> **Holiday Calendar** and editable by Admin and Director. Festival dates
+  that follow the lunar calendar should be checked against the official Government order before real use;
+- three more placed Teachers (Meena Selvi and Karthik Raja in Demo School One, Lakshmi Priya in Demo
+  School Two), placed 75 days back, with about three months of marks: mostly Present, plus some
+  Leave, half days and Training. Sundays and holidays carry no marks. Today and yesterday are left
+  unmarked so "Mark today" and the unmarked count have something to show, and every earlier month is
+  complete, so you can try **Lock month** on a past month (Admin or Director, Attendance screen).
+
+Demo Teachers are placed 75 days back only on a fresh database. On an existing database Tara keeps her
+original placement date, so she has history only from then on.
+
 ## What to try
 
 - As **Admin**: MASTER DATA -> Zones (add Places, import places by pasting `name,pinCode` lines),

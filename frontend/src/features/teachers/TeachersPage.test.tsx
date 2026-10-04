@@ -73,6 +73,11 @@ function mockApi(
 ) {
   authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
     if (init?.method) return writeResponse;
+    if (url.startsWith("/api/v1/teachers/candidates")) {
+      return jsonResponse([
+        { userId: "u9", displayName: "Nina Newteacher", phone: "9800000099" },
+      ]);
+    }
     if (url.startsWith("/api/v1/schools")) {
       return page([
         {
@@ -241,6 +246,60 @@ describe("TeachersPage (User Story 4)", () => {
     expect(String(del[0])).toBe("/api/v1/teachers/t1/placements/pending");
   });
 
+  it("links a teacher record to a free Teacher-role account and shows the refusal inline", async () => {
+    mockApi(
+      [{ ...TARA, userId: null }],
+      jsonResponse(
+        { reason: "This user is already linked to another Teacher." },
+        409,
+      ),
+    );
+    const user = userEvent.setup();
+
+    render(<TeachersPage />);
+    await screen.findAllByText("Tara Teacher");
+    await user.click(
+      screen.getAllByRole("button", { name: "Link account" })[0],
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByLabelText(/user account/i));
+    await user.click(
+      await screen.findByRole("option", { name: /nina newteacher/i }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /^link account$/i }),
+    );
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      /already linked/i,
+    );
+    const put = authFetch.mock.calls.find(
+      (c) => (c[1] as RequestInit | undefined)?.method === "PUT",
+    )!;
+    expect(String(put[0])).toBe("/api/v1/teachers/t1/user");
+    expect(JSON.parse((put[1] as RequestInit).body as string)).toEqual({
+      userId: "u9",
+    });
+  });
+
+  it("tells you to create a Teacher-role user first when no account is free", async () => {
+    authFetch.mockImplementation(async (url: string) =>
+      url.startsWith("/api/v1/teachers/candidates")
+        ? jsonResponse([])
+        : page([{ ...TARA, userId: "u1" }]),
+    );
+    const user = userEvent.setup();
+
+    render(<TeachersPage />);
+    await screen.findAllByText("Tara Teacher");
+    await user.click(screen.getAllByRole("button", { name: "Account" })[0]);
+
+    expect(
+      await screen.findByText(/first create a user with the teacher role/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /unlink/i })).toBeInTheDocument();
+  });
+
   it("gives a Manager contact editing only: no create, status or placement controls and a read-only name", async () => {
     grantedActions = ["VIEW", "EDIT"];
     mockApi([TARA]);
@@ -258,7 +317,7 @@ describe("TeachersPage (User Story 4)", () => {
     expect(
       screen.queryByRole("button", { name: "Placement" }),
     ).not.toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Edit / })[0]);
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByLabelText(/teacher name/i)).toBeDisabled();
     expect(within(dialog).getByLabelText(/phone/i)).toBeEnabled();
@@ -272,7 +331,7 @@ describe("TeachersPage (User Story 4)", () => {
     await screen.findAllByText("Tara Teacher");
 
     expect(
-      screen.queryByRole("button", { name: "Edit" }),
+      screen.queryByRole("button", { name: /^Edit / }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /create teacher/i }),

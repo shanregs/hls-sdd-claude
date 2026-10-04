@@ -272,7 +272,8 @@ their session ends and they cannot sign in again.
 - **FR-001**: The system MUST require authentication for every capability except these public
   ones: password sign-in, OTP request, OTP verification, session renewal, password-reset request
   and completion, and the system status check. Anything not on this list MUST be refused to an
-  unauthenticated caller (fail closed).
+  unauthenticated caller (fail closed). Spec 018 adds one more: the Android app's non-sensitive
+  app-configuration response.
 - **FR-002**: The system MUST support exactly five fixed roles: Admin, Director, Manager, Teacher,
   System. Roles MUST NOT be creatable, renamable, or deletable by any user.
 - **FR-003**: A user MUST hold at least one role and MAY hold several. After sign-in the system

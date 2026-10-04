@@ -72,7 +72,8 @@ export function ManagerDialog({ onClose, onSaved }: ManagerDialogProps) {
         )}
         {candidates !== null && candidates.length === 0 && !error && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            No user with the Manager role is waiting for a manager record.
+            No user is waiting for a manager record. First create a user with
+            the Manager role in SYSTEM → User Management, then come back here.
           </Alert>
         )}
         <TextField

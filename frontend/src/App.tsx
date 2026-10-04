@@ -3,6 +3,9 @@ import { useAuth } from "./auth/useAuth";
 import { SignInPage } from "./auth/SignInPage";
 import { ForgotPasswordPage } from "./auth/ForgotPasswordPage";
 import { ProfilePage } from "./account/ProfilePage";
+import { AttendanceHistoryPage } from "./features/attendance/AttendanceHistoryPage";
+import { HolidayCalendarPage } from "./features/attendance/HolidayCalendarPage";
+import { SettingsPage } from "./account/SettingsPage";
 import { AppShell } from "./app/AppShell";
 import { RouteGuard } from "./app/RouteGuard";
 import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
@@ -17,6 +20,11 @@ import { LoginHistoryPage } from "./features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "./features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "./features/audit/UserActivityPage";
 import { AuditLogsPage } from "./features/audit/AuditLogsPage";
+import { ApiAccessPage } from "./features/audit/ApiAccessPage";
+import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
+import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
+import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
+import { AttendanceGridPage } from "./features/attendance/AttendanceGridPage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -130,10 +138,74 @@ export function App() {
           }
         />
         <Route
+          path="/audit/api-access"
+          element={
+            <RouteGuard>
+              <ApiAccessPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/audit/user-activity"
           element={
             <RouteGuard>
               <UserActivityPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/attendance-setup"
+          element={
+            <RouteGuard>
+              <AttendanceSetupPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/holiday-calendar"
+          element={
+            <RouteGuard>
+              <HolidayCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance"
+          element={
+            <RouteGuard>
+              <MyAttendancePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/history"
+          element={
+            <RouteGuard>
+              <AttendanceHistoryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-attendance"
+          element={
+            <RouteGuard>
+              <TeacherAttendancePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/attendance"
+          element={
+            <RouteGuard>
+              <AttendanceGridPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/account/settings"
+          element={
+            <RouteGuard>
+              <SettingsPage />
             </RouteGuard>
           }
         />

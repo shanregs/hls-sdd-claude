@@ -14,6 +14,7 @@ import { useGrantedActions } from "../common/useGrantedActions";
 import { AssignZonesDialog } from "./AssignZonesDialog";
 import { ManagerDialog } from "./ManagerDialog";
 import { listManagers, type ManagerSummary } from "./managersApi";
+import { RowActionButton } from "../common/RowActionButton";
 
 const ROUTE = "/master-data/managers";
 
@@ -106,9 +107,11 @@ export function ManagersPage() {
       flex: 1,
       sortable: false,
       renderCell: (params) => (
-        <Button size="small" onClick={() => setZonesFor(params.row)}>
-          Zones
-        </Button>
+        <RowActionButton
+          action="Edit"
+          subject={`zones of ${params.row.displayName}`}
+          onClick={() => setZonesFor(params.row)}
+        />
       ),
     });
   }

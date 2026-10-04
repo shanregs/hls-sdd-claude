@@ -1,24 +1,53 @@
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useState } from "react";
 import {
   Box,
+  Collapse,
   Drawer,
   List,
   ListItemButton,
   ListItemText,
-  ListSubheader,
   Toolbar,
 } from "@mui/material";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAccessModel } from "../access-model/useAccessModel";
 
 export const DRAWER_WIDTH = 260;
 export const DRAWER_WIDTH_COLLAPSED = 64;
 
+const COLLAPSED_SECTIONS_KEY = "hls.nav.collapsedSections";
+
+function loadCollapsedSections(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsedSections(sections: Set<string>) {
+  try {
+    window.localStorage.setItem(
+      COLLAPSED_SECTIONS_KEY,
+      JSON.stringify([...sections]),
+    );
+  } catch {
+    // Storage can be unavailable (private windows); the choice then lasts for this visit only.
+  }
+}
+
 interface NavigationDrawerProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
   collapsed: boolean;
+}
+
+function sectionId(section: string): string {
+  return section.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
 /**
@@ -36,6 +65,17 @@ export function NavigationDrawer({
   const location = useLocation();
   const theme = useTheme();
   const isPhone = useMediaQuery(theme.breakpoints.down("sm"));
+  const [hiddenSections, setHiddenSections] = useState(loadCollapsedSections);
+
+  const toggleSection = (section: string) => {
+    setHiddenSections((current) => {
+      const next = new Set(current);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      saveCollapsedSections(next);
+      return next;
+    });
+  };
 
   const handleSelect = (route: string) => {
     navigate(route);
@@ -56,30 +96,62 @@ export function NavigationDrawer({
               sx={{ listStyle: "none" }}
             >
               {!collapsed && (
-                <ListSubheader
-                  component="div"
+                <ListItemButton
+                  onClick={() => toggleSection(section.section)}
+                  aria-expanded={!hiddenSections.has(section.section)}
+                  aria-controls={`nav-section-${sectionId(section.section)}`}
                   sx={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    lineHeight: "32px",
+                    mt: 1,
+                    py: 0.5,
+                    color: "primary.main",
+                    bgcolor: "action.hover",
+                    borderLeft: 4,
+                    borderColor: "primary.main",
                   }}
                 >
-                  {section.section}
-                </ListSubheader>
-              )}
-              {section.items.map((item) => (
-                <ListItemButton
-                  key={item.route}
-                  selected={location.pathname === item.route}
-                  onClick={() => handleSelect(item.route)}
-                >
                   <ListItemText
-                    primary={item.label}
-                    sx={{ opacity: collapsed ? 0 : 1 }}
+                    primary={section.section}
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontSize: 12,
+                          fontWeight: 800,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          lineHeight: "30px",
+                        },
+                      },
+                    }}
                   />
+                  {hiddenSections.has(section.section) ? (
+                    <ExpandMore fontSize="small" />
+                  ) : (
+                    <ExpandLess fontSize="small" />
+                  )}
                 </ListItemButton>
-              ))}
+              )}
+              <Collapse
+                in={collapsed || !hiddenSections.has(section.section)}
+                unmountOnExit
+                id={`nav-section-${sectionId(section.section)}`}
+              >
+                {section.items.map((item) => (
+                  <ListItemButton
+                    key={item.route}
+                    selected={location.pathname === item.route}
+                    onClick={() => handleSelect(item.route)}
+                    sx={{ pl: collapsed ? 2 : 4 }}
+                  >
+                    <ListItemText
+                      primary={item.label}
+                      slotProps={{
+                        primary: { sx: { fontSize: 14, fontWeight: 400 } },
+                      }}
+                      sx={{ opacity: collapsed ? 0 : 1 }}
+                    />
+                  </ListItemButton>
+                ))}
+              </Collapse>
             </Box>
           ))}
         </List>

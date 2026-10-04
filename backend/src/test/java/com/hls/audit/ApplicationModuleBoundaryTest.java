@@ -35,6 +35,11 @@ class ApplicationModuleBoundaryTest {
             "com.hls.identity.activity.UserCreated",
             "com.hls.identity.activity.UserRoleChanged",
             "com.hls.identity.activity.PasswordResetByAdmin",
+            // PasswordChanged and ProfileUpdated were added by spec 004's self-service account screens
+            // without updating this list; ApiAccessRecorded is spec 018's API Access trail.
+            "com.hls.identity.activity.PasswordChanged",
+            "com.hls.identity.activity.ProfileUpdated",
+            "com.hls.identity.clientcontext.ApiAccessRecorded",
             "com.hls.audit.api.EntityChanged");
 
     // Main production classes only (target/classes) — not target/test-classes, which legitimately

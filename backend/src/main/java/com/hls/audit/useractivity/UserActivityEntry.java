@@ -1,6 +1,8 @@
 package com.hls.audit.useractivity;
 
+import com.hls.audit.support.ClientOrigin;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,6 +41,10 @@ public class UserActivityEntry {
     @Column(name = "detail")
     private String detail;
 
+    /** Where the action came from: client, app version and device location (spec 018). */
+    @Embedded
+    private ClientOrigin origin = ClientOrigin.from(null);
+
     protected UserActivityEntry() {
         // JPA
     }
@@ -56,6 +62,22 @@ public class UserActivityEntry {
         this.affectedUserId = affectedUserId;
         this.action = action;
         this.detail = detail;
+    }
+
+    public UserActivityEntry(
+            Instant occurredAt,
+            UUID sourceEventId,
+            UUID actorUserId,
+            UUID affectedUserId,
+            String action,
+            String detail,
+            ClientOrigin origin) {
+        this(occurredAt, sourceEventId, actorUserId, affectedUserId, action, detail);
+        this.origin = origin;
+    }
+
+    public ClientOrigin getOrigin() {
+        return origin;
     }
 
     public UUID getId() {

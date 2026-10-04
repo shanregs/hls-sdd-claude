@@ -1,6 +1,7 @@
 package com.hls.identity.security;
 
 import com.hls.identity.auth.JwtTokenProvider;
+import com.hls.identity.clientcontext.ApiAccessPrincipalFilter;
 import com.hls.identity.session.Session;
 import com.hls.identity.session.SessionRepository;
 import com.hls.identity.user.AppUser;
@@ -23,6 +24,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -44,7 +46,9 @@ public class SecurityConfig {
         "/api/v1/auth/otp/verify",
         "/api/v1/auth/renew",
         "/api/v1/auth/password-reset/channels",
-        "/api/v1/auth/password-reset/complete"
+        "/api/v1/auth/password-reset/complete",
+        // Spec 018 FR-030: non-sensitive app configuration the Android app needs before sign-in.
+        "/api/v1/mobile/app-config"
     };
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -122,7 +126,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                         .decoder(jwtDecoder())
-                        .jwtAuthenticationConverter(authenticationConverter)));
+                        .jwtAuthenticationConverter(authenticationConverter)))
+                // Spec 018: hand the validated user and session ids to the outer API Access filter.
+                .addFilterAfter(new ApiAccessPrincipalFilter(), BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

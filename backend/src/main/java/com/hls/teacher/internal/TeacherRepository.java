@@ -13,6 +13,8 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
 
     Optional<Teacher> findByUserId(UUID userId);
 
+    Optional<Teacher> findFirstByPhone(String phone);
+
     /**
      * Text/status search restricted to an optional id set (scope). {@code filterIds = false} means
      * unrestricted (the {@code ids} placeholder is then unused).

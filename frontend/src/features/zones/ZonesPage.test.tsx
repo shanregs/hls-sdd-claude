@@ -134,7 +134,7 @@ describe("ZonesPage (User Story 1)", () => {
 
     render(<ZonesPage />);
     await screen.findAllByText("North Zone");
-    await user.click(screen.getAllByRole("button", { name: "Rename" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Edit / })[0]);
     const input = screen.getByLabelText(/zone name/i);
     await user.clear(input);
     await user.type(input, "North 2");
@@ -165,7 +165,7 @@ describe("ZonesPage (User Story 1)", () => {
 
     render(<ZonesPage />);
     await screen.findAllByText("North Zone");
-    await user.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^Delete / })[0]);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "still has 2 Place(s)",
@@ -186,7 +186,7 @@ describe("ZonesPage (User Story 1)", () => {
 
     render(<ZonesPage />);
     await screen.findAllByText("North Zone");
-    await user.click(screen.getAllByRole("button", { name: "Places" })[0]);
+    await user.click(screen.getAllByRole("button", { name: /^View / })[0]);
     expect((await screen.findAllByText("Madurantakam")).length).toBeGreaterThan(
       0,
     );
@@ -257,13 +257,13 @@ describe("ZonesPage (User Story 1)", () => {
       screen.queryByRole("button", { name: /create zone/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Rename" }),
+      screen.queryByRole("button", { name: /^Edit / }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Delete" }),
+      screen.queryByRole("button", { name: /^Delete / }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getAllByRole("button", { name: "Places" }).length,
+      screen.getAllByRole("button", { name: /^View / }).length,
     ).toBeGreaterThan(0);
   });
 
@@ -275,10 +275,10 @@ describe("ZonesPage (User Story 1)", () => {
     await screen.findAllByText("North Zone");
 
     expect(
-      screen.getAllByRole("button", { name: "Rename" }).length,
+      screen.getAllByRole("button", { name: /^Edit / }).length,
     ).toBeGreaterThan(0);
     expect(
-      screen.queryByRole("button", { name: "Delete" }),
+      screen.queryByRole("button", { name: /^Delete / }),
     ).not.toBeInTheDocument();
   });
 });

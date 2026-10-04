@@ -66,4 +66,27 @@ public interface TeacherPlacementRepository extends JpaRepository<TeacherPlaceme
               and (p.endsOn is null or p.endsOn >= :date)
             """)
     boolean existsCurrentOrFuture(@Param("schoolId") UUID schoolId, @Param("date") LocalDate date);
+
+    /** ACTIVE placements of the Teachers that overlap {@code from..to} inclusive. */
+    @Query("""
+            select p from TeacherPlacement p
+            where p.teacherId in :teacherIds
+              and p.status = com.hls.teacher.internal.PlacementStatus.ACTIVE
+              and p.startsOn <= :to
+              and (p.endsOn is null or p.endsOn >= :from)
+            order by p.startsOn
+            """)
+    List<TeacherPlacement> overlapping(
+            @Param("teacherIds") Collection<UUID> teacherIds,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
+    /** Ids of Teachers with an ACTIVE placement overlapping {@code from..to} inclusive. */
+    @Query("""
+            select distinct p.teacherId from TeacherPlacement p
+            where p.status = com.hls.teacher.internal.PlacementStatus.ACTIVE
+              and p.startsOn <= :to
+              and (p.endsOn is null or p.endsOn >= :from)
+            """)
+    List<UUID> teacherIdsPlacedBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 }

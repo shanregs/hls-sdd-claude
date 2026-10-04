@@ -78,12 +78,12 @@ class AccessModelResolutionTest {
     }
 
     @Test
-    void teacherSeesOnlyDashboardAndMyProfile() {
+    void teacherSeesOnlyDashboardMyProfileAndSettings() {
         var response = accessModelFor("9876550001", Set.of(Role.TEACHER));
 
         assertThat(response.roles()).containsExactly("TEACHER");
         assertThat(itemLabelsIn(response, "Dashboard")).containsExactly("Dashboard");
-        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("My Profile");
+        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("My Profile", "Settings");
         assertThat(response.navigation().stream().map(AccessModelDtos.NavSection::section))
                 .doesNotContain("SYSTEM", "SYSTEM CONFIGURATION", "SYSTEM DASHBOARD");
         assertThat(response.dataScope()).containsEntry("DASHBOARD", "OWN");
@@ -94,7 +94,7 @@ class AccessModelResolutionTest {
         var response = accessModelFor("9876550002", Set.of(Role.MANAGER));
 
         assertThat(itemLabelsIn(response, "Dashboard")).containsExactly("Dashboard");
-        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("Profile");
+        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("Profile", "Settings");
         assertThat(response.dataScope()).containsEntry("DASHBOARD", "ASSIGNED");
         boolean hasRolePermissions = response.navigation().stream()
                 .flatMap(s -> s.items().stream())
@@ -137,6 +137,6 @@ class AccessModelResolutionTest {
         assertThat(response.roles()).containsExactly("ADMIN", "DIRECTOR");
         assertThat(itemLabelsIn(response, "Dashboard")).containsExactly("Dashboard");
         assertThat(itemLabelsIn(response, "SYSTEM")).containsExactly("User Management", "Role & Permissions");
-        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("Profile");
+        assertThat(itemLabelsIn(response, "ACCOUNT")).containsExactly("Profile", "Settings");
     }
 }

@@ -91,8 +91,29 @@ public class AccessModelService {
             }
         }
 
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.ATTENDANCE, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.ATTENDANCE_SETUP, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TEACHER_ATTENDANCE, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MY_ATTENDANCE, DataScope.OWN, Role.TEACHER);
+
         List<String> roleNames = callerRoles.stream().map(Enum::name).sorted().toList();
         return new AccessModelResponse(roleNames, navigation, dataScope);
+    }
+
+    /** Attendance modules (spec 008): a fixed scope for the roles that normally hold each module. */
+    private void addAttendanceScope(
+            Map<String, String> dataScope,
+            Set<Role> callerRoles,
+            PermissionModule module,
+            DataScope scope,
+            Role... applicable) {
+        for (Role role : applicable) {
+            if (callerRoles.contains(role)
+                    && permissionMatrixService.isGranted(role, module, PermissionAction.VIEW)) {
+                dataScope.put(module.name(), scope.name());
+                return;
+            }
+        }
     }
 
     private List<String> grantedActions(Set<Role> roles, PermissionModule module) {

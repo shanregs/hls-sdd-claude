@@ -35,6 +35,7 @@ class MasterDataAccessModelTest extends IntegrationTestBase {
                 .filter(s -> s.section().equals("MASTER DATA"))
                 .flatMap(s -> s.items().stream())
                 .map(AccessModelDtos.NavItemView::label)
+                .filter(label -> !label.equals("Holiday Calendar") && !label.equals("Attendance Setup"))
                 .toList();
     }
 
@@ -93,6 +94,17 @@ class MasterDataAccessModelTest extends IntegrationTestBase {
 
         assertThat(masterDataLabels(response)).containsExactly("Zones", "Schools", "Managers", "Teachers");
         assertThat(response.dataScope()).containsEntry("SCHOOLS", "ORG_WIDE");
+    }
+
+    @Test
+    void everyoneSeesTheHolidayCalendarButOnlyAdminAndDirectorEditIt() {
+        for (Role role : Role.values()) {
+            var response = accessModelFor(role);
+            boolean canEdit = role == Role.ADMIN || role == Role.DIRECTOR;
+            assertThat(actionsOf(response, "Holiday Calendar"))
+                    .as("%s actions", role)
+                    .containsExactlyElementsOf(canEdit ? List.of("VIEW", "EDIT") : List.of("VIEW"));
+        }
     }
 
     @Test

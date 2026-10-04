@@ -1,6 +1,12 @@
 spring:
   application:
     name: hls-backend
+  modulith:
+    events:
+      # Spec 018: every Android request now publishes an event for the API Access trail. Delete a
+      # publication once its listener completes (the audit tables are the durable record), so the
+      # registry holds only undelivered events and does not grow with every request.
+      completion-mode: delete
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/hls}
     username: ${DB_USERNAME:hls}
@@ -22,6 +28,8 @@ server:
   port: ${SERVER_PORT:8080}
 
 hls:
+  # Business dates (attendance) follow this zone, not the UTC application clock.
+  business-timezone: ${HLS_BUSINESS_TIMEZONE:Asia/Kolkata}
   app:
     version: "@project.version@"
   security:
@@ -32,6 +40,12 @@ hls:
       access-token-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
     cookie:
       secure: ${COOKIE_SECURE:true}
+  mobile:
+    # Spec 018: oldest Android app version the server accepts; older apps get 426 and must update.
+    # These three values move into the settings module with spec 011.
+    min-app-version: ${HLS_MOBILE_MIN_APP_VERSION:0.0.0}
+    location-wait-seconds: ${HLS_MOBILE_LOCATION_WAIT_SECONDS:4}
+    location-reuse-seconds: ${HLS_MOBILE_LOCATION_REUSE_SECONDS:10}
   session:
     renewal-ttl-days: ${SESSION_RENEWAL_TTL_DAYS:14}
   sms:

@@ -14,8 +14,9 @@ import { useAuth } from "../../auth/useAuth";
 import { AuditFilterBar, type AuditFilters } from "./AuditFilterBar";
 import { useAuditExport } from "./useAuditExport";
 import { dateRangeToInstants } from "./dateRangeToInstants";
+import { formatLocation, sourceLabel, type OriginFields } from "./origin";
 
-interface AuditLogRow {
+interface AuditLogRow extends OriginFields {
   id: string;
   occurredAt: string;
   type: "LOGIN" | "CHANGE" | "ACTIVITY";
@@ -41,6 +42,19 @@ const columns: GridColDef<AuditLogRow>[] = [
   },
   { field: "actorUserId", headerName: "Actor", flex: 1 },
   { field: "summary", headerName: "Summary", flex: 2 },
+  {
+    field: "source",
+    headerName: "Source",
+    flex: 0.7,
+    valueGetter: (_value, row) => sourceLabel(row.source),
+  },
+  { field: "appVersion", headerName: "App version", flex: 0.6 },
+  {
+    field: "location",
+    headerName: "Location",
+    flex: 1.5,
+    valueGetter: (_value, row) => formatLocation(row.location),
+  },
 ];
 
 function buildQuery(filters: AuditFilters, types: string[]): URLSearchParams {

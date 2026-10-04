@@ -156,3 +156,17 @@ the caller — a user can never end another user's session.
 `UserAdminService.createUser(...)` / `.deactivateUser(...)` — used by the bootstrap initializer
 (research.md §8) and by automated tests. Spec 004 is what exposes this as a screen/endpoint pair;
 this spec deliberately does not.
+
+## Added by spec 018 (Android app foundation)
+
+- **New public endpoint** `GET /api/v1/mobile/app-config`: non-sensitive configuration the Android
+  app needs before sign-in (minimum app version, location wait and reuse seconds). It is an addition
+  to the public list above and to spec.md FR-001's list of public capabilities; everything else still
+  requires authentication.
+- When a request carries `X-HLS-Client: android/<version>`, `login` and `otp/verify` (SIGN_IN)
+  return the renewal credential in the JSON body as `renewalCredential` and set no cookie, and
+  `renew` reads it from the body (`{ "renewalCredential": "..." }`). Requests without the header
+  behave exactly as described above. See specs/018-android-app-foundation/contracts/mobile-api.md.
+- For the Android client, `login` and `otp/verify` answer `403 { "code": "WEB_ONLY_ROLE" }` after
+  valid credentials when the user holds none of Teacher, Manager or Director. `GET /api/v1/me/sessions`
+  items gain `clientType` and `appVersion`.

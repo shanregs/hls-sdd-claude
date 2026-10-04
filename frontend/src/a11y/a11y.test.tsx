@@ -19,6 +19,7 @@ import { LoginHistoryPage } from "../features/audit/LoginHistoryPage";
 import { ChangeHistoryPage } from "../features/audit/ChangeHistoryPage";
 import { UserActivityPage } from "../features/audit/UserActivityPage";
 import { AuditLogsPage } from "../features/audit/AuditLogsPage";
+import { ApiAccessPage } from "../features/audit/ApiAccessPage";
 import { UserManagementPage } from "../features/users/UserManagementPage";
 import { CreateUserDialog } from "../features/users/CreateUserDialog";
 import { EditRolesDialog } from "../features/users/EditRolesDialog";
@@ -34,11 +35,41 @@ import { TeachersPage } from "../features/teachers/TeachersPage";
 import { TeacherDialog } from "../features/teachers/TeacherDialog";
 import { SalaryDialog } from "../features/teachers/SalaryDialog";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
+import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
+import { AttendanceHistoryPage } from "../features/attendance/AttendanceHistoryPage";
+import { HolidayCalendarPage } from "../features/attendance/HolidayCalendarPage";
+import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
+import { ReopenDialog } from "../features/attendance/ReopenDialog";
+import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
+import { MarkDialog } from "../features/attendance/MarkDialog";
+import { SettingsPage } from "../account/SettingsPage";
+import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
+import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
   roles: ["ADMIN"],
   navigation: [
+    {
+      section: "OPERATIONS",
+      items: [
+        {
+          label: "Attendance Setup",
+          route: "/master-data/attendance-setup",
+          actions: ["VIEW", "EDIT"],
+        },
+        {
+          label: "Attendance",
+          route: "/operations/attendance",
+          actions: ["VIEW", "CREATE", "EDIT", "DELETE"],
+        },
+        {
+          label: "Teacher Attendance",
+          route: "/operations/teacher-attendance",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+      ],
+    },
     {
       section: "Dashboard",
       items: [{ label: "Dashboard", route: "/dashboard", actions: ["VIEW"] }],
@@ -230,6 +261,161 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       }),
     } as Response;
   }
+  if (url === "/api/v1/me/profile") {
+    return {
+      ok: true,
+      json: async () => ({
+        id: "u1",
+        displayName: "Priya Manager",
+        phone: "9800000003",
+        username: null,
+        email: null,
+        roles: ["MANAGER"],
+      }),
+    } as Response;
+  }
+  if (
+    url.startsWith("/api/v1/attendance/teacher-grid") ||
+    url.startsWith("/api/v1/attendance/grid")
+  ) {
+    const cells = Array.from({ length: 31 }, (_, i) => ({
+      date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+      code: i === 0 ? "P" : null,
+      dayValue: i === 0 ? 1 : null,
+      setByKind: i === 0 ? "SUPERVISOR" : null,
+      state: i === 0 ? "MARKED" : i % 7 === 3 ? "WEEKLY_OFF" : "UNMARKED",
+    }));
+    return {
+      ok: true,
+      json: async () => ({
+        month: "2026-10",
+        days: 31,
+        page: 0,
+        size: 50,
+        totalElements: 1,
+        content: [
+          {
+            teacherId: "t1",
+            name: "Tara Teacher",
+            status: "ACTIVE",
+            school: { id: "s1", name: "St Mary's" },
+            manager: null,
+            locked: false,
+            rollup: {
+              workingDays: 27,
+              daysWorked: 1,
+              daysLeave: 0,
+              trainingAvailable: 0,
+              trainingAttended: 0,
+              unmarked: 26,
+              weightedTotal: 1,
+              locked: false,
+              frozen: false,
+            },
+            cells,
+          },
+        ],
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/attendance/me")) {
+    const days = Array.from({ length: 31 }, (_, i) => {
+      const date = `2026-10-${String(i + 1).padStart(2, "0")}`;
+      return {
+        date,
+        state: i === 0 ? "MARKED" : "UNMARKED",
+        mark:
+          i === 0
+            ? {
+                date,
+                code: "P",
+                codeName: "Present",
+                category: "WORKED",
+                dayValue: 1,
+                schoolId: "s1",
+                schoolName: "St Mary's",
+                setByKind: "SUPERVISOR",
+                setByUserId: "u2",
+                setByName: "Manoj",
+                setAt: "2026-10-01T05:00:00Z",
+                note: null,
+                version: 0,
+              }
+            : null,
+        editableBy: "NONE",
+      };
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        teacherId: "t1",
+        name: "Tara",
+        month: "2026-10",
+        locked: false,
+        state: "OPEN",
+        rollup: {
+          workingDays: 27,
+          daysWorked: 1,
+          daysLeave: 0,
+          trainingAvailable: 0,
+          trainingAttended: 0,
+          unmarked: 26,
+          weightedTotal: 1,
+          locked: false,
+          frozen: false,
+        },
+        days,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/attendance/status-codes")) {
+    return {
+      ok: true,
+      json: async () => [
+        {
+          id: "c1",
+          shortCode: "P",
+          name: "Present",
+          category: "WORKED",
+          weight: 1,
+          active: true,
+          system: true,
+          inUse: true,
+          version: 0,
+        },
+        {
+          id: "c2",
+          shortCode: "SICK",
+          name: "Sick leave",
+          category: "LEAVE",
+          weight: 0,
+          active: true,
+          system: false,
+          inUse: false,
+          version: 0,
+        },
+      ],
+    } as Response;
+  }
+  if (url === "/api/v1/attendance/calendar") {
+    return {
+      ok: true,
+      json: async () => ({
+        defaultWeeklyOff: ["SUN"],
+        defaultVersion: 0,
+        schoolOverrides: [
+          {
+            schoolId: "s1",
+            schoolName: "St Mary's",
+            weeklyOff: ["SAT", "SUN"],
+          },
+        ],
+        nonWorkingDates: [
+          { date: "2026-10-02", description: "Gandhi Jayanti" },
+        ],
+      }),
+    } as Response;
+  }
   if (url.includes("/places")) {
     return { ok: true, json: async () => emptyPage } as Response;
   }
@@ -347,6 +533,11 @@ const pages: PageCase[] = [
     settle: () => screen.findByText(/no rows/i),
   },
   {
+    name: "ApiAccessPage",
+    render: () => <ApiAccessPage />,
+    settle: () => screen.findByText(/no rows/i),
+  },
+  {
     name: "UserManagementPage",
     render: () => <UserManagementPage />,
     settle: () => screen.findAllByText("Alice Manager"),
@@ -431,6 +622,77 @@ const pages: PageCase[] = [
     settle: () => screen.findByText("Tara Teacher"),
   },
   {
+    name: "AttendanceSetupPage",
+    render: () => <AttendanceSetupPage />,
+    settle: () => screen.findByText("Present"),
+  },
+  {
+    name: "HolidayCalendarPage",
+    render: () => <HolidayCalendarPage />,
+    settle: () => screen.findByText("Gandhi Jayanti"),
+  },
+  {
+    name: "MyAttendancePage",
+    render: () => <MyAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
+  },
+  {
+    name: "AttendanceHistoryPage",
+    render: () => <AttendanceHistoryPage />,
+    settle: () => screen.findByRole("table", { name: "Attendance calendar" }),
+  },
+  {
+    name: "TeacherAttendancePage",
+    render: () => <TeacherAttendancePage />,
+    settle: () => screen.findByRole("table", { name: "Attendance grid" }),
+  },
+  {
+    name: "AttendanceGridPage",
+    render: () => <AttendanceGridPage />,
+    settle: () => screen.findByRole("table", { name: "Attendance grid" }),
+  },
+  {
+    name: "SettingsPage",
+    render: () => <SettingsPage />,
+    settle: () => screen.findByText("Change password", { selector: "h2" }),
+  },
+  {
+    name: "MarkDialog",
+    render: () => (
+      <MarkDialog
+        date="2026-10-04"
+        existing={null}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "LockMonthDialog",
+    render: () => (
+      <LockMonthDialog month="2026-09" onClose={vi.fn()} onLocked={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ReopenDialog",
+    render: () => (
+      <ReopenDialog
+        teacherId="t1"
+        teacherName="Tara Teacher"
+        month="2026-09"
+        onClose={vi.fn()}
+        onReopened={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
     name: "Manager dashboard with assigned counts",
     render: () => <MasterDataManagerDashboard />,
     settle: () => screen.findByText("My assigned zones"),
@@ -476,6 +738,8 @@ describe.each(["light", "dark"] as const)(
         );
         expect(summary).toEqual([]);
       },
+      // axe on the larger bordered tables is slow in jsdom; the default 5s is too tight under load.
+      30_000,
     );
   },
 );

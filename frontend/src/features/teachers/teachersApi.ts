@@ -138,6 +138,32 @@ export function placeTeacher(
   );
 }
 
+export interface AccountCandidate {
+  userId: string;
+  displayName: string;
+  phone: string;
+}
+
+export function listAccountCandidates(
+  authFetch: AuthFetch,
+): Promise<ApiResult<AccountCandidate[]>> {
+  return getJson(
+    authFetch,
+    "/api/v1/teachers/candidates",
+    "Could not load the available accounts.",
+  );
+}
+
+export function linkTeacherAccount(
+  authFetch: AuthFetch,
+  teacherId: string,
+  userId: string | null,
+): Promise<ApiResult<TeacherSummary>> {
+  return sendJson(authFetch, "PUT", `/api/v1/teachers/${teacherId}/user`, {
+    userId,
+  });
+}
+
 export function cancelScheduledPlacement(
   authFetch: AuthFetch,
   teacherId: string,

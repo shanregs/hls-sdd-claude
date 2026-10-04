@@ -287,7 +287,7 @@ describe("UserManagementPage", () => {
       screen.queryByRole("button", { name: /create user/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Roles" }),
+      screen.queryByRole("button", { name: /^Edit roles of / }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Deactivate" }),

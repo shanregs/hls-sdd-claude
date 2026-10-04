@@ -1,5 +1,7 @@
 package com.hls.identity.loginhistory;
 
+import com.hls.identity.clientcontext.ClientContext;
+import com.hls.identity.clientcontext.ClientContextHolder;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -9,10 +11,19 @@ import java.util.UUID;
  * as of spec 003, keeps no login-history copy of its own (Constitution Principle VII).
  */
 public record LoginHistoryRecorded(
-        UUID eventId,
-        Instant occurredAt,
-        UUID userId,
-        String phoneMasked,
-        LoginMethod method,
-        LoginEventType eventType,
-        String outcome) {}
+        UUID eventId, Instant occurredAt, UUID userId, String phoneMasked, LoginMethod method, LoginEventType eventType, String outcome, ClientContext clientContext) {
+
+    /** A missing context means the web (spec 018): there is nothing client-specific to record. */
+    public LoginHistoryRecorded {
+        clientContext = clientContext == null ? ClientContext.web() : clientContext;
+    }
+
+    /**
+     * Captures the current request's client context (source, app version, location) at publish
+     * time, because the audit consumers run after the request on another thread (spec 018
+     * research.md section 7).
+     */
+    public LoginHistoryRecorded(UUID eventId, Instant occurredAt, UUID userId, String phoneMasked, LoginMethod method, LoginEventType eventType, String outcome) {
+        this(eventId, occurredAt, userId, phoneMasked, method, eventType, outcome, ClientContextHolder.current());
+    }
+}
