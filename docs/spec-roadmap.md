@@ -27,6 +27,7 @@ audit. Business modules then plug their menus, actions, and scope into that foun
 | 015 | `015-expenses`                  | expense                     | Manager expense claims, categories, approval threshold.                                                                                                                                                                                                                                                             | 005           | Not started |
 | 016 | `016-hr-calendars`              | training, recruitment (+marketing) | One HR calendars spec: onboarding + monthly training calendar with training attendance/history, and campus drives → candidates → offers → onboarding, with a marketing calendar tracked to outcome.                                                                                                        | 005, 008      | Not started |
 | 017 | `017-substitution`              | substitution                | Substitute placement and payout reconciliation.                                                                                                                                                                                                                                                                     | 008, 013      | Not started |
+| 018 | `018-android-app-foundation`    | mobile (React Native Android client), identity (location capture on API calls) | Android-first React Native app for Teacher, Manager and Director. Initial scope: login and logout (reusing 001 password/OTP, rotating refresh, secure token storage), role-based main menus from the server-provided navigation model (002), and location captured **only at the moment of an API call** (send or receive) and attached to that request, and recorded for every request in a new AUDIT → API Access trail (Admin and System). No background or continuous tracking. Business screens (attendance, holiday calendar, leave, payslips) follow as small specs on this foundation. | 001, 002, 003, 008 | Not started (input: `docs/spec-inputs/018-android-app-foundation.md`) |
 
 Notes:
 
@@ -36,5 +37,11 @@ Notes:
 - Every role dashboard starts as a skeleton in 002. Later specs add widgets.
 - 005 consolidates what were separate zones/schools, manager-scoping, and teacher specs into a
   single Master Data module (one spec, multiple user stories) per product decision on 2026-09-24.
+- 018 is the first mobile spec. It adds no new business rules: the app is another client of the same
+  APIs, scope rules and permission matrix as the web app. Follow-on mobile specs (suggested
+  `019-mobile-attendance`: monthly view, mark present/absent on a date, Holiday Calendar view
+  defaulting to the current month with any month of the current year selectable) are added once 018
+  is implemented. A later web spec adds a heat map of where audited actions were performed (from the
+  locations 018 stores), admin area, System role only. Spec 008 deferred the native app, offline capture and geo/photo evidence to these.
 - 016 consolidates training and recruitment/marketing into a single HR Calendars module for the
   same reason.
