@@ -2,9 +2,11 @@ package com.hls.audit.useractivity;
 
 import com.hls.identity.activity.AccountActivationChanged;
 import com.hls.identity.activity.AccountLockChanged;
+import com.hls.identity.activity.PasswordChanged;
 import com.hls.identity.activity.PasswordResetByAdmin;
 import com.hls.identity.activity.PasswordResetCompleted;
 import com.hls.identity.activity.PasswordResetRequested;
+import com.hls.identity.activity.ProfileUpdated;
 import com.hls.identity.activity.SessionEnded;
 import com.hls.identity.activity.UserCreated;
 import com.hls.identity.activity.UserRoleChanged;
@@ -36,6 +38,22 @@ public class UserActivityEventConsumer {
     @ApplicationModuleListener
     void on(PasswordResetCompleted event) {
         save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_RESET_COMPLETED", null);
+    }
+
+    @ApplicationModuleListener
+    void on(PasswordChanged event) {
+        save(event.eventId(), event.occurredAt(), event.actorUserId(), event.affectedUserId(), "PASSWORD_CHANGED", null);
+    }
+
+    @ApplicationModuleListener
+    void on(ProfileUpdated event) {
+        save(
+                event.eventId(),
+                event.occurredAt(),
+                event.actorUserId(),
+                event.affectedUserId(),
+                "PROFILE_UPDATED",
+                event.changedFields());
     }
 
     @ApplicationModuleListener

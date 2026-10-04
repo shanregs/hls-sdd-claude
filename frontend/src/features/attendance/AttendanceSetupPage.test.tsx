@@ -83,14 +83,12 @@ describe("AttendanceSetupPage (User Story 5)", () => {
     grantedActions = ["VIEW", "EDIT"];
   });
 
-  it("lists the codes and the calendar with dates as DD/MM/YYYY", async () => {
+  it("lists the status codes", async () => {
     mockApi();
     render(<AttendanceSetupPage />);
 
     expect(await screen.findByText("Sick leave")).toBeInTheDocument();
     expect(screen.getByText("Built-in")).toBeInTheDocument();
-    expect(await screen.findByText("02/10/2026")).toBeInTheDocument();
-    expect(screen.getByText("Gandhi Jayanti")).toBeInTheDocument();
   });
 
   it("shows edit controls when EDIT is granted", async () => {
@@ -100,10 +98,6 @@ describe("AttendanceSetupPage (User Story 5)", () => {
     expect(
       await screen.findByRole("button", { name: "Add status code" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Save default" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add date" })).toBeDisabled();
   });
 
   it("hides every edit control for a view-only grant", async () => {
@@ -115,7 +109,6 @@ describe("AttendanceSetupPage (User Story 5)", () => {
     expect(
       screen.queryByRole("button", { name: "Add status code" }),
     ).toBeNull();
-    expect(screen.queryByRole("button", { name: "Save default" })).toBeNull();
     expect(screen.queryByRole("button", { name: /edit/i })).toBeNull();
   });
 

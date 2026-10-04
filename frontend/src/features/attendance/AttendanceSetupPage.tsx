@@ -1,11 +1,10 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useGrantedActions } from "../common/useGrantedActions";
-import { CalendarPanel } from "./CalendarPanel";
 import { StatusCodesPanel } from "./StatusCodesPanel";
 
 const ROUTE = "/operations/attendance-setup";
 
-/** Attendance setup (spec 008 US5): status codes and the non-working calendar. */
+/** Attendance setup (spec 008 US5): status codes (the calendar lives under Master Data > Holiday Calendar). */
 export function AttendanceSetupPage() {
   const canEdit = useGrantedActions(ROUTE).has("EDIT");
   return (
@@ -13,10 +12,7 @@ export function AttendanceSetupPage() {
       <Typography variant="h5" component="h1" sx={{ mb: 2 }}>
         Attendance Setup
       </Typography>
-      <Stack spacing={4}>
-        <StatusCodesPanel canEdit={canEdit} />
-        <CalendarPanel canEdit={canEdit} />
-      </Stack>
+      <StatusCodesPanel canEdit={canEdit} />
     </Box>
   );
 }

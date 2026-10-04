@@ -102,6 +102,14 @@ public final class NavigationCatalog {
                     43,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
+                    "Holiday Calendar",
+                    "/master-data/holiday-calendar",
+                    PermissionModule.ATTENDANCE_SETUP,
+                    PermissionAction.VIEW,
+                    "MASTER DATA",
+                    44,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
                     "Attendance",
                     "/operations/attendance",
                     PermissionModule.ATTENDANCE,
@@ -188,7 +196,15 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     90,
-                    EnumSet.of(Role.TEACHER)));
+                    EnumSet.of(Role.TEACHER)),
+            new NavItem(
+                    "Settings",
+                    "/account/settings",
+                    PermissionModule.ACCOUNT_PROFILE,
+                    PermissionAction.VIEW,
+                    "ACCOUNT",
+                    91,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM)));
 
     private NavigationCatalog() {}
 

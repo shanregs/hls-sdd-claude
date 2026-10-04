@@ -35,8 +35,12 @@ import { TeacherDialog } from "../features/teachers/TeacherDialog";
 import { SalaryDialog } from "../features/teachers/SalaryDialog";
 import { MyTeacherProfile } from "../features/teachers/MyTeacherProfile";
 import { AttendanceSetupPage } from "../features/attendance/AttendanceSetupPage";
+import { HolidayCalendarPage } from "../features/attendance/HolidayCalendarPage";
+import { LockMonthDialog } from "../features/attendance/LockMonthDialog";
+import { ReopenDialog } from "../features/attendance/ReopenDialog";
 import { MyAttendancePage } from "../features/attendance/MyAttendancePage";
 import { MarkDialog } from "../features/attendance/MarkDialog";
+import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
@@ -252,6 +256,19 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       json: async () => ({
         current: { id: "e1", amount: 22000, effectiveOn: "2026-10-01" },
         history: [{ id: "e1", amount: 22000, effectiveOn: "2026-10-01" }],
+      }),
+    } as Response;
+  }
+  if (url === "/api/v1/me/profile") {
+    return {
+      ok: true,
+      json: async () => ({
+        id: "u1",
+        displayName: "Priya Manager",
+        phone: "9800000003",
+        username: null,
+        email: null,
+        roles: ["MANAGER"],
       }),
     } as Response;
   }
@@ -600,6 +617,11 @@ const pages: PageCase[] = [
   {
     name: "AttendanceSetupPage",
     render: () => <AttendanceSetupPage />,
+    settle: () => screen.findByText("Present"),
+  },
+  {
+    name: "HolidayCalendarPage",
+    render: () => <HolidayCalendarPage />,
     settle: () => screen.findByText("Gandhi Jayanti"),
   },
   {
@@ -618,6 +640,11 @@ const pages: PageCase[] = [
     settle: () => screen.findByRole("table", { name: "Attendance grid" }),
   },
   {
+    name: "SettingsPage",
+    render: () => <SettingsPage />,
+    settle: () => screen.findByText("Change password", { selector: "h2" }),
+  },
+  {
     name: "MarkDialog",
     render: () => (
       <MarkDialog
@@ -626,6 +653,28 @@ const pages: PageCase[] = [
         onSave={vi.fn()}
         onClose={vi.fn()}
         onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "LockMonthDialog",
+    render: () => (
+      <LockMonthDialog month="2026-09" onClose={vi.fn()} onLocked={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ReopenDialog",
+    render: () => (
+      <ReopenDialog
+        teacherId="t1"
+        teacherName="Tara Teacher"
+        month="2026-09"
+        onClose={vi.fn()}
+        onReopened={vi.fn()}
       />
     ),
     settle: () => screen.findByRole("dialog"),

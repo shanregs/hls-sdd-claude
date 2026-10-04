@@ -18,6 +18,8 @@ interface UserActivityRow {
 const ACTION_LABELS: Record<string, string> = {
   PASSWORD_RESET_REQUESTED: "Password reset requested",
   PASSWORD_RESET_COMPLETED: "Password reset completed",
+  PASSWORD_CHANGED: "Password changed",
+  PROFILE_UPDATED: "Profile updated",
   SESSION_ENDED: "Session ended",
   ACCOUNT_LOCKED: "Account locked",
   ACCOUNT_UNLOCKED: "Account unlocked",

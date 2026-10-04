@@ -3,6 +3,8 @@ import { useAuth } from "./auth/useAuth";
 import { SignInPage } from "./auth/SignInPage";
 import { ForgotPasswordPage } from "./auth/ForgotPasswordPage";
 import { ProfilePage } from "./account/ProfilePage";
+import { HolidayCalendarPage } from "./features/attendance/HolidayCalendarPage";
+import { SettingsPage } from "./account/SettingsPage";
 import { AppShell } from "./app/AppShell";
 import { RouteGuard } from "./app/RouteGuard";
 import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
@@ -150,6 +152,14 @@ export function App() {
           }
         />
         <Route
+          path="/master-data/holiday-calendar"
+          element={
+            <RouteGuard>
+              <HolidayCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/my-attendance"
           element={
             <RouteGuard>
@@ -170,6 +180,14 @@ export function App() {
           element={
             <RouteGuard>
               <AttendanceGridPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/account/settings"
+          element={
+            <RouteGuard>
+              <SettingsPage />
             </RouteGuard>
           }
         />
