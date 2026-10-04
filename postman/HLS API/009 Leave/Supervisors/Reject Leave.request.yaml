@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Rejects a Pending request; reason is required (up to 500 characters)."
+url: "{{baseUrl}}/api/v1/leave/{{leaveRequestId}}/reject"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Exams that week",
+      "version": {{leaveVersion}}
+    }
+order: 4000

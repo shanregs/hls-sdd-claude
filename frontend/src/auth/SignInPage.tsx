@@ -137,6 +137,16 @@ export function SignInPage() {
                 Forgot password?
               </MuiLink>
             </Box>
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <MuiLink
+                component="button"
+                type="button"
+                underline="hover"
+                onClick={() => setMode("otp")}
+              >
+                Use a one-time code instead
+              </MuiLink>
+            </Box>
           </Box>
         )}
 

@@ -371,6 +371,10 @@ compact module × role table of action icons, define which grants are eligible, 
       quickstart.md (Scenario 3 step 0) and verify the screen against the running app (toggle one
       grant on and off)
 
+- [x] T056 [US1] Leave modules (spec 009): `LEAVE_MANAGEMENT` (Admin, Director, Manager: View, Approve) and
+      `MY_LEAVE` (Teacher: View, Create, Delete) in the matrix, eligibility (System excluded from both;
+      each only for the roles that use it) and seeds; navigation: LEAVE section for Teacher (Apply Leave,
+      My Leave History) and OPERATIONS → Leave Management for Admin, Director and Manager
 - [x] T052 [US1] Menu section order (spec.md FR-008a, data-model.md `order` bands): renumber
       `NavigationCatalog` so the sections run Dashboard, MASTER DATA, OPERATIONS (MY ATTENDANCE for
       Teachers), SYSTEM (SYSTEM CONFIGURATION for System), AUDIT, ACCOUNT; test per role in

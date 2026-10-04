@@ -1,0 +1,11 @@
+$kind: http-request
+description: "Cancels own Pending request, or an Approved one whose first day is still ahead (its Leave marks are removed). Needs MY_LEAVE.DELETE."
+url: "{{baseUrl}}/api/v1/me/leave/{{leaveRequestId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 5000

@@ -54,6 +54,9 @@ public class MarkHistoryEntry {
     @Column(name = "set_at", nullable = false, updatable = false)
     private Instant setAt;
 
+    @Column(name = "leave_request_id", updatable = false)
+    private UUID leaveRequestId;
+
     protected MarkHistoryEntry() {
         // JPA
     }
@@ -79,6 +82,26 @@ public class MarkHistoryEntry {
         this.setByUserId = setByUserId;
         this.setByKind = setByKind;
         this.setAt = setAt;
+    }
+
+    public MarkHistoryEntry(
+            UUID teacherId,
+            LocalDate markDate,
+            MarkAction action,
+            UUID statusCodeId,
+            BigDecimal dayValue,
+            UUID schoolId,
+            String note,
+            UUID setByUserId,
+            SetByKind setByKind,
+            Instant setAt,
+            UUID leaveRequestId) {
+        this(teacherId, markDate, action, statusCodeId, dayValue, schoolId, note, setByUserId, setByKind, setAt);
+        this.leaveRequestId = leaveRequestId;
+    }
+
+    public UUID getLeaveRequestId() {
+        return leaveRequestId;
     }
 
     public UUID getId() {

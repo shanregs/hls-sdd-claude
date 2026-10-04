@@ -1,5 +1,6 @@
 package com.hls.identity.permissions;
 
+import static com.hls.identity.permissions.PermissionAction.APPROVE;
 import static com.hls.identity.permissions.PermissionAction.CREATE;
 import static com.hls.identity.permissions.PermissionAction.DELETE;
 import static com.hls.identity.permissions.PermissionAction.EDIT;
@@ -40,7 +41,9 @@ public enum PermissionModule {
     TEACHER_ATTENDANCE(VIEW, CREATE, EDIT),
     MY_ATTENDANCE(VIEW, CREATE, EDIT),
     ATTENDANCE_SETUP(VIEW, EDIT),
-    HOLIDAY_CALENDAR(VIEW, EDIT);
+    HOLIDAY_CALENDAR(VIEW, EDIT),
+    LEAVE_MANAGEMENT(VIEW, APPROVE),
+    MY_LEAVE(VIEW, CREATE, DELETE);
 
     private final Set<PermissionAction> actions;
 

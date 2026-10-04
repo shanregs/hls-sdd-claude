@@ -48,6 +48,9 @@ import { AllSessionsPage } from "../features/sessions/AllSessionsPage";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
+import { ApplyLeavePage } from "../features/leave/ApplyLeavePage";
+import { MyLeaveHistoryPage } from "../features/leave/MyLeaveHistoryPage";
+import { LeaveManagementPage } from "../features/leave/LeaveManagementPage";
 import { ManagerDashboard as MasterDataManagerDashboard } from "../dashboards/ManagerDashboard";
 
 const ACCESS_MODEL = {
@@ -186,6 +189,91 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
     clientType: "WEB",
     appVersion: null,
   };
+  if (url === "/api/v1/me/leave/types") {
+    return {
+      ok: true,
+      json: async () => [
+        { id: "t1", code: "CASUAL", name: "Casual" },
+        { id: "t2", code: "SICK", name: "Sick" },
+      ],
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/leave?")) {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            id: "r1",
+            teacherId: "t1",
+            teacherName: "Tara Teacher",
+            schoolId: "s1",
+            schoolName: "Demo School One",
+            leaveType: "Casual",
+            firstDate: "2026-01-14",
+            lastDate: "2026-01-16",
+            halfDayStart: false,
+            halfDayEnd: true,
+            workingDays: 2.5,
+            reason: "Pongal travel",
+            status: "PENDING",
+            decidedByName: null,
+            decidedAt: null,
+            decisionNote: null,
+            cancelledBy: null,
+            createdAt: "2026-01-02T10:00:00Z",
+            version: 0,
+            allowedActions: ["APPROVE", "REJECT"],
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+        pendingCount: 1,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/me/leave?")) {
+    const leave = (id: string, status: string, extra = {}) => ({
+      id,
+      teacherId: "t1",
+      teacherName: "Tara Teacher",
+      schoolId: "s1",
+      schoolName: "Demo School One",
+      leaveType: "Casual",
+      firstDate: "2026-01-14",
+      lastDate: "2026-01-16",
+      halfDayStart: false,
+      halfDayEnd: false,
+      workingDays: 3,
+      reason: "Pongal travel",
+      status,
+      decidedByName: null,
+      decidedAt: null,
+      decisionNote: null,
+      cancelledBy: null,
+      createdAt: "2026-01-02T10:00:00Z",
+      version: 0,
+      allowedActions: [],
+      ...extra,
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          leave("r1", "PENDING", { allowedActions: ["CANCEL"] }),
+          leave("r2", "REJECTED", {
+            decidedByName: "Manoj Manager",
+            decidedAt: "2026-01-03T10:00:00Z",
+            decisionNote: "Exams that week",
+          }),
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 2,
+      }),
+    } as Response;
+  }
   if (url.includes("/me/sessions")) {
     return { ok: true, json: async () => [aSession] } as Response;
   }
@@ -747,6 +835,21 @@ const pages: PageCase[] = [
     name: "AttendanceGridPage",
     render: () => <AttendanceGridPage />,
     settle: () => screen.findByRole("table", { name: "Attendance grid" }),
+  },
+  {
+    name: "LeaveManagementPage",
+    render: () => <LeaveManagementPage />,
+    settle: () => screen.findByRole("table", { name: "Leave requests" }),
+  },
+  {
+    name: "MyLeaveHistoryPage",
+    render: () => <MyLeaveHistoryPage />,
+    settle: () => screen.findByRole("table", { name: "My leave requests" }),
+  },
+  {
+    name: "ApplyLeavePage",
+    render: () => <ApplyLeavePage />,
+    settle: () => screen.findByLabelText(/Leave type/),
   },
   {
     name: "SettingsPage",

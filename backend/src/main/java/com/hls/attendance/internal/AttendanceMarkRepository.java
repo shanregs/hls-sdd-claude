@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AttendanceMarkRepository extends JpaRepository<AttendanceMark, UUID> {
 
+    List<AttendanceMark> findByLeaveRequestId(UUID leaveRequestId);
+
     Optional<AttendanceMark> findByTeacherIdAndMarkDate(UUID teacherId, LocalDate markDate);
 
     List<AttendanceMark> findByTeacherIdAndMarkDateBetween(UUID teacherId, LocalDate from, LocalDate to);

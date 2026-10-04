@@ -43,19 +43,24 @@ public class DevDataSeeder implements ApplicationRunner {
                 "Password123!",
                 "manoj.manager",
                 "manoj.manager@example.com");
-        seed("Tara Teacher", "9800000004", Set.of(Role.TEACHER), null, null, null);
+        seed("Tara Teacher", "9800000004", Set.of(Role.TEACHER), "Password123!", null, null);
         seed("Sunil System", "9800000005", Set.of(Role.SYSTEM), "Password123!", "sunil.system", null);
 
         log.info(
                 "[DEV SEED] Demo users ready. Try: 9800000001/Password123! (Admin, phone+password), "
                         + "asha.admin/Password123! (Admin, username+password, has email for reset-by-email), "
                         + "9800000002/Password123! (Director), 9800000003 or manoj.manager/Password123! (Manager, "
-                        + "has email), 9800000004 (Teacher, OTP-only sign-in, no password), 9800000005 or "
+                        + "has email), 9800000004/Password123! (Teacher; a one-time code also works for every user), 9800000005 or "
                         + "sunil.system/Password123! (System).");
     }
 
     private void seed(String name, String phone, Set<Role> roles, String password, String username, String email) {
-        if (appUserRepository.findByPhone(phone).isPresent()) {
+        var existing = appUserRepository.findByPhone(phone);
+        if (existing.isPresent()) {
+            // A demo user created before it had a password (Tara used to be OTP-only) gets one now.
+            if (password != null && existing.get().getPasswordHash() == null) {
+                userAdminService.adminResetPassword(existing.get().getId(), existing.get().getId(), password);
+            }
             return;
         }
         userAdminService.createUser(name, phone, roles, null, password, username, email);

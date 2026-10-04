@@ -93,7 +93,7 @@ From the demo data (see running-locally.md for the full list):
 
 | Account | Sign in with | Roles | Use it to check |
 | ------- | ------------ | ----- | --------------- |
-| Tara Teacher | phone `9800000004`, **one-time code only** | Teacher | Teacher menu, code login |
+| Tara Teacher | phone `9800000004` / `Password123!`, or a one-time code | Teacher | Teacher menu, password or code login |
 | Manoj Manager | `manoj.manager` / `Password123!` | Manager | Manager menu, password login |
 | Divya Director | `9800000002` / `Password123!` | Director | Director menu |
 | Asha Admin | `asha.admin` / `Password123!` | Admin | Refused on the app (web-only role) |

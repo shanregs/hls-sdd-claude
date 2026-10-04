@@ -7,5 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MarkHistoryRepository extends JpaRepository<MarkHistoryEntry, UUID> {
 
+    List<MarkHistoryEntry> findByLeaveRequestId(UUID leaveRequestId);
+
     List<MarkHistoryEntry> findByTeacherIdAndMarkDateOrderBySetAtDesc(UUID teacherId, LocalDate markDate);
 }

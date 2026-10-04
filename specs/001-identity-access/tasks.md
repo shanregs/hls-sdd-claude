@@ -559,6 +559,8 @@ complete, and spec 002 can now build on a real authenticated principal.
       shared `ConfirmDialog`; the sessions list no longer sits on Profile or Settings
 - [x] T068 [US5] Frontend tests (`SessionsPage`, `AllSessionsPage`, `sessionOrigin`) and both pages in
       the axe suite in both themes
+- [x] T070 [US1] Sign-in page: a link under the password form switches to the one-time code tab (every role may
+      use either method); the demo Teacher has a password too (spec 009 T041)
 
 ---
 
