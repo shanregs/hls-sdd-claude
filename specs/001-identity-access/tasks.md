@@ -615,3 +615,6 @@ Task: "Frontend test for SignInPage Staff tab in frontend/src/auth/SignInPage.te
 6. US5 → validate (self-service).
 7. US6 → validate (bootstrap + deactivation) → spec complete.
 8. Final Phase → quickstart run, roadmap update, full suite green.
+- [x] T069 [US5] Settings layout: two sections in the body, **Profile** (read-only details, form only
+      after Edit, with Save/Cancel) and **Change password** (form shown only when that section is
+      chosen); `SettingsPage.tsx`, tests and the axe case updated
