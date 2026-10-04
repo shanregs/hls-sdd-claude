@@ -29,46 +29,42 @@ jest.mock("expo-device", () => ({ modelName: "Test Phone", osVersion: "14" }), {
   virtual: true,
 });
 
-// Controllable fake of expo-location: tests change `mockLocationState` through the module's
-// `__state` property.
-const mockLocationState = {
-  permission: "granted" as "granted" | "denied" | "undetermined",
-  canAskAgain: true,
-  servicesEnabled: true,
-  position: { latitude: 12.971599, longitude: 77.594566, accuracy: 18.5 },
-  delayMs: 0,
-  neverResolves: false,
-  failWith: null as Error | null,
-  onRequestPermission: "granted" as "granted" | "denied",
-};
-jest.mock("expo-location", () => ({
-  Accuracy: { Balanced: 3 },
-  __state: mockLocationState,
-  getForegroundPermissionsAsync: jest.fn(async () => ({
-    status: mockLocationState.permission,
-    granted: mockLocationState.permission === "granted",
-    canAskAgain: mockLocationState.canAskAgain,
-  })),
-  requestForegroundPermissionsAsync: jest.fn(async () => {
-    if (mockLocationState.permission === "undetermined") {
-      mockLocationState.permission = mockLocationState.onRequestPermission;
-    }
-    return {
-      status: mockLocationState.permission,
-      granted: mockLocationState.permission === "granted",
-      canAskAgain: mockLocationState.canAskAgain,
-    };
-  }),
-  hasServicesEnabledAsync: jest.fn(async () => mockLocationState.servicesEnabled),
-  getCurrentPositionAsync: jest.fn(async () => {
-    if (mockLocationState.neverResolves) return new Promise(() => undefined);
-    if (mockLocationState.delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, mockLocationState.delayMs));
-    }
-    if (mockLocationState.failWith) throw mockLocationState.failWith;
-    return { coords: { ...mockLocationState.position }, timestamp: Date.now() };
-  }),
-}));
+// Controllable fake of expo-location. The state lives inside the factory (not in a top-level const)
+// because imports below load the module before top-level consts are initialised; tests reach it
+// through `jest.requireMock("expo-location").__state`.
+jest.mock("expo-location", () => {
+  const state = {
+    permission: "granted" as "granted" | "denied" | "undetermined",
+    canAskAgain: true,
+    servicesEnabled: true,
+    position: { latitude: 12.971599, longitude: 77.594566, accuracy: 18.5 },
+    delayMs: 0,
+    neverResolves: false,
+    failWith: null as Error | null,
+    onRequestPermission: "granted" as "granted" | "denied",
+  };
+  const permission = () => ({
+    status: state.permission,
+    granted: state.permission === "granted",
+    canAskAgain: state.canAskAgain,
+  });
+  return {
+    Accuracy: { Balanced: 3 },
+    __state: state,
+    getForegroundPermissionsAsync: jest.fn(async () => permission()),
+    requestForegroundPermissionsAsync: jest.fn(async () => {
+      if (state.permission === "undetermined") state.permission = state.onRequestPermission;
+      return permission();
+    }),
+    hasServicesEnabledAsync: jest.fn(async () => state.servicesEnabled),
+    getCurrentPositionAsync: jest.fn(async () => {
+      if (state.neverResolves) return new Promise(() => undefined);
+      if (state.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, state.delayMs));
+      if (state.failWith) throw state.failWith;
+      return { coords: { ...state.position }, timestamp: Date.now() };
+    }),
+  };
+});
 
 jest.mock("expo-screen-capture", () => ({
   preventScreenCaptureAsync: jest.fn(async () => undefined),
@@ -93,7 +89,7 @@ import { setAccessToken } from "./src/security/memoryToken";
 
 beforeEach(async () => {
   await AsyncStorage.clear();
-  Object.assign(mockLocationState, {
+  Object.assign(jest.requireMock("expo-location").__state, {
     permission: "granted",
     canAskAgain: true,
     servicesEnabled: true,

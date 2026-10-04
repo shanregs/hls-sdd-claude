@@ -1,0 +1,30 @@
+# Maestro smoke flow (spec 018 T084): sign in -> menu -> Profile -> Log out.
+# Run on an Android 10+ emulator with a dev build and a backend that has a seeded Teacher:
+#   maestro test mobile/e2e/smoke.yaml -e PHONE=9876543210 -e PASSWORD=<password>
+appId: com.hls.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Sign in to HLS"
+- tapOn: "Phone number or username"
+- inputText: ${PHONE}
+- tapOn: "Password"
+- inputText: ${PASSWORD}
+# First run only: the location explanation, then the system prompt.
+- runFlow:
+    when:
+      visible: "Location and privacy"
+    commands:
+      - tapOn: "Continue"
+      - tapOn:
+          text: "While using the app"
+          optional: true
+- tapOn: "Sign in"
+- assertVisible: "Welcome.*"
+- tapOn: "Open menu"
+- assertVisible: "Dashboard"
+- tapOn: "My Profile"
+- assertVisible: "Appearance"
+- tapOn: "Open menu"
+- tapOn: "Log out"
+- assertVisible: "Sign in to HLS"
