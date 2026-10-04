@@ -91,6 +91,8 @@ export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
       const result = await getCalendar(authFetch);
       if (cancelled) return;
       apply(result);
+      // Only editors pick Schools for overrides; viewers (Manager, Teacher) may not read Schools.
+      if (!canEdit) return;
       const schoolList = await listSchools(authFetch, {
         query: "",
         zoneId: "",
@@ -103,7 +105,7 @@ export function CalendarPanel({ canEdit }: { canEdit: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [authFetch]);
+  }, [authFetch, canEdit]);
 
   if (calendar === null) {
     return (

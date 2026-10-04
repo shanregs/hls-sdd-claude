@@ -104,11 +104,11 @@ public final class NavigationCatalog {
             new NavItem(
                     "Holiday Calendar",
                     "/master-data/holiday-calendar",
-                    PermissionModule.ATTENDANCE_SETUP,
+                    PermissionModule.HOLIDAY_CALENDAR,
                     PermissionAction.VIEW,
                     "MASTER DATA",
                     44,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+                    EnumSet.allOf(Role.class)),
             new NavItem(
                     "Attendance",
                     "/operations/attendance",

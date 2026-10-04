@@ -56,7 +56,7 @@ class SetupControllerTest extends AttendanceTestBase {
 
             assertThat(get(CODES, token).status()).as("%s list", role).isEqualTo(200);
             assertThat(createCode(token, randomCode()).status()).as("%s create", role).isEqualTo(403);
-            assertThat(get(CALENDAR, token).status()).as("%s calendar", role).isEqualTo(403);
+            assertThat(get(CALENDAR, token).status()).as("%s calendar", role).isEqualTo(200);
             assertThat(post(CALENDAR + "/non-working-dates", token, Map.of("onDate", "2030-01-01", "description", "x")).status())
                     .as("%s date", role)
                     .isEqualTo(403);
@@ -72,7 +72,10 @@ class SetupControllerTest extends AttendanceTestBase {
 
         assertThat(get(CODES, token).status()).isEqualTo(403);
         assertThat(createCode(token, randomCode()).status()).isEqualTo(403);
-        assertThat(get(CALENDAR, token).status()).isEqualTo(403);
+        // The holiday calendar is readable by everyone but only editable by Admin and Director.
+        assertThat(get(CALENDAR, token).status()).isEqualTo(200);
+        assertThat(post(CALENDAR + "/non-working-dates", token, Map.of("onDate", "2030-01-01", "description", "x")).status())
+                .isEqualTo(403);
     }
 
     @Test

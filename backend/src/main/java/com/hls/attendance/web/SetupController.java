@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Status codes and the non-working calendar (spec 008 US5). Setup changes need ATTENDANCE_SETUP.EDIT. */
+/** Status codes and the non-working calendar (spec 008 US5). Code changes need ATTENDANCE_SETUP.EDIT; the calendar is readable by everyone and editable with HOLIDAY_CALENDAR.EDIT. */
 @RestController
 @RequestMapping("/api/v1/attendance")
 public class SetupController {
@@ -81,42 +81,46 @@ public class SetupController {
 
     @GetMapping("/calendar")
     public CalendarService.CalendarView getCalendar(@AuthenticationPrincipal Jwt jwt) {
-        guard.require(CallerContext.roles(jwt), PermissionModule.ATTENDANCE_SETUP, PermissionAction.VIEW);
+        guard.require(CallerContext.roles(jwt), PermissionModule.HOLIDAY_CALENDAR, PermissionAction.VIEW);
         return calendar.calendar();
     }
 
     @PutMapping("/calendar/default")
     public CalendarService.CalendarView updateDefault(
             @RequestBody DefaultWeeklyOffRequest request, @AuthenticationPrincipal Jwt jwt) {
-        requireEdit(jwt);
+        requireCalendarEdit(jwt);
         return calendar.updateDefault(CallerContext.userId(jwt), request.weeklyOff(), request.version());
     }
 
     @PutMapping("/calendar/schools/{schoolId}")
     public CalendarService.CalendarView putOverride(
             @PathVariable UUID schoolId, @RequestBody WeeklyOffRequest request, @AuthenticationPrincipal Jwt jwt) {
-        requireEdit(jwt);
+        requireCalendarEdit(jwt);
         return calendar.putSchoolOverride(CallerContext.userId(jwt), schoolId, request.weeklyOff());
     }
 
     @DeleteMapping("/calendar/schools/{schoolId}")
     public CalendarService.CalendarView removeOverride(@PathVariable UUID schoolId, @AuthenticationPrincipal Jwt jwt) {
-        requireEdit(jwt);
+        requireCalendarEdit(jwt);
         return calendar.removeSchoolOverride(CallerContext.userId(jwt), schoolId);
     }
 
     @PostMapping("/calendar/non-working-dates")
     public ResponseEntity<CalendarService.CalendarView> addDate(
             @RequestBody NonWorkingDateRequest request, @AuthenticationPrincipal Jwt jwt) {
-        requireEdit(jwt);
+        requireCalendarEdit(jwt);
         return ResponseEntity.status(201)
                 .body(calendar.addNonWorkingDate(CallerContext.userId(jwt), request.onDate(), request.description()));
     }
 
     @DeleteMapping("/calendar/non-working-dates/{onDate}")
     public CalendarService.CalendarView removeDate(@PathVariable LocalDate onDate, @AuthenticationPrincipal Jwt jwt) {
-        requireEdit(jwt);
+        requireCalendarEdit(jwt);
         return calendar.removeNonWorkingDate(CallerContext.userId(jwt), onDate);
+    }
+
+    private void requireCalendarEdit(Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.HOLIDAY_CALENDAR, PermissionAction.EDIT);
     }
 
     private void requireEdit(Jwt jwt) {

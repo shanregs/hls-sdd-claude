@@ -114,6 +114,12 @@ public class PermissionMatrixService {
             seed(role, PermissionModule.ATTENDANCE_SETUP, PermissionAction.VIEW, true);
             seed(role, PermissionModule.ATTENDANCE_SETUP, PermissionAction.EDIT, true);
         }
+        for (Role role : Role.values()) {
+            seed(role, PermissionModule.HOLIDAY_CALENDAR, PermissionAction.VIEW, true);
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.HOLIDAY_CALENDAR, PermissionAction.EDIT, true);
+        }
         for (PermissionAction action :
                 List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
             seed(Role.MANAGER, PermissionModule.TEACHER_ATTENDANCE, action, true);
