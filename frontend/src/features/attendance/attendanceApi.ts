@@ -440,3 +440,46 @@ export function getMonthEvents(
     "Could not load the lock history.",
   );
 }
+
+export interface CsvFile {
+  blob: Blob;
+  filename: string;
+}
+
+/** Downloads the filtered month as CSV; the same filters as the grid, and the whole result, not a page. */
+export async function exportCsv(
+  authFetch: AuthFetch,
+  params: Omit<GridParams, "page" | "size">,
+): Promise<ApiResult<CsvFile>> {
+  const failure = "Could not export the attendance.";
+  try {
+    const url = `${BASE}/export?${queryString({
+      month: params.month,
+      query: params.query.trim(),
+      zoneId: params.zoneId,
+      schoolId: params.schoolId,
+      managerId: params.managerId,
+      status: params.status,
+    })}`;
+    const response = await authFetch(url);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        reason?: string;
+      };
+      return {
+        ok: false,
+        reason: body.reason ?? failure,
+        status: response.status,
+      };
+    }
+    return {
+      ok: true,
+      data: {
+        blob: await response.blob(),
+        filename: `attendance-${params.month}.csv`,
+      },
+    };
+  } catch {
+    return { ok: false, reason: failure };
+  }
+}

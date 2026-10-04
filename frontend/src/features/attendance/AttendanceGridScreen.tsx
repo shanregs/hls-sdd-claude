@@ -45,6 +45,8 @@ interface AttendanceGridScreenProps {
   /** Page-level actions rendered at the top right, given the month and a reload function. */
   actions?: (ctx: {
     month: string;
+    /** The name search in the grid, so an export can use the same filter. */
+    query: string;
     reload: () => void;
     openTeacher: (teacherId: string, name: string) => void;
   }) => ReactNode;
@@ -144,6 +146,7 @@ export function AttendanceGridScreen({
         </Typography>
         {actions?.({
           month,
+          query,
           reload,
           openTeacher: (teacherId, name) => setPanelRow({ teacherId, name }),
         })}
