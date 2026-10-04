@@ -17,8 +17,13 @@ work**. You need a development build (`npx expo run:android`) on an emulator or 
 3. **Set environment variables** (PowerShell), then open a new terminal:
    ```powershell
    setx ANDROID_HOME "$env:LOCALAPPDATA\Android\Sdk"
-   setx JAVA_HOME "C:\Program Files\Android\Android Studio\jbr"
+   setx JAVA_HOME "C:\Program Files\Java\jdk-17"
    ```
+   **Use JDK 17, not Android Studio's bundled Java (`jbr`).** Recent Android Studio versions bundle
+   Java 25. One of the Android build tools prints a harmless Java 25 warning, and the Android Gradle
+   plugin treats that as an error, so the build fails at `configureCMakeDebug` with "WARNING: A
+   restricted method in java.lang.System has been called". Install JDK 17 (for example Temurin 17)
+   if you do not have it, and check that `java -version` says 17 in the terminal you build from.
    Add `%ANDROID_HOME%\platform-tools` and `%ANDROID_HOME%\emulator` to your `PATH`.
    Check with `adb version` and `emulator -version`.
 4. **Create an emulator.** Android Studio → Device Manager → Create Device → **Pixel 7**, system image
@@ -43,6 +48,10 @@ on private networks. Keep it running while you use the app. Start the web app to
 1. Start the emulator from Device Manager and wait for the home screen.
 2. In a terminal:
    ```powershell
+   $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+   $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
+   java -version          # must say 17.0.x
    cd mobile
    copy .env.example .env
    npm install
@@ -142,7 +151,10 @@ That signs in as the Manager, opens the menu and Profile, and logs out.
 | ------- | --- |
 | `adb` or `emulator` not found | Check the PATH entries from step 1 and open a new terminal. |
 | Emulator is very slow or will not start | Virtualization is off, or Windows Hypervisor Platform is not enabled. Redo step 1. |
-| Build fails with a Java or Gradle error | Use JDK 17 (`JAVA_HOME` pointing at Android Studio's `jbr`). Run `cd mobile\android && .\gradlew clean`, then retry. |
+| Build fails with "A restricted method in java.lang.System has been called" | Java 25 is being used (Android Studio's `jbr` is Java 25). Set `JAVA_HOME` to JDK 17, check that `java -version` says 17, then rebuild. |
+| Build fails with another Java or Gradle error | Use JDK 17. Run `cd mobile\android && .\gradlew clean`, then retry. |
+| Gradle download times out | Raise `networkTimeout` (for example to 300000) in `mobile\android\gradle\wrapper\gradle-wrapper.properties`, or check VPN or proxy settings. |
+| `No Android connected device found` | The emulator is not online yet. Run `adb devices` until it shows `device`, then run the build again. |
 | App cannot reach the backend | Backend running? `.env` uses `10.0.2.2`, not `localhost`? Rebuild after changing `.env`. See the cleartext note in step 3. |
 | Code login shows nothing | Read the code from the backend console (the dev SMS stub). Codes expire; there is a 30 second resend wait. |
 | Location is always "unavailable" | Emulator: send a location from `...` → Location. Check the app's permission under Settings → Apps → HLS → Permissions. |
