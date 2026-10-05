@@ -56,7 +56,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T068 [P] School contacts (amendment A8 to spec 005): `school/internal/{SchoolContact,SchoolContactRepository,SchoolContactService}.java`, `GET/PUT /api/v1/schools/{id}/contacts` in `school/web/SchoolContactController.java` (roles `SCHOOLS` VIEW/EDIT, Manager only in Zone, audited through `ChangeRecorder`, role in PRINCIPAL/ACCOUNTANT, phone max 20, email max 200); a `school/api/SchoolContacts` read interface; tests `school/SchoolContactApiTest.java` per role and scope
 - [X] T069 [P] [US1] College contacts: `college_contact` entity inside `recruitment/internal`, the `placementOfficer` and `principal` fields in the college create/update requests and views, shown on the College screen; tests in `CollegeApiTest.java`
 - [ ] T070 Frontend: principal and accountant section in `frontend/src/features/schools/SchoolDialog.tsx` with `schoolsApi.ts` calls and a Vitest case; placement officer and principal fields in the College form under `frontend/src/features/recruitment/`
-- [ ] T013 Entities, enums and repositories in `recruitment/internal` (`College`, `CampusDrive`, `Candidate`, `CandidateOutcomeHistory`, `AssessmentScore`, `JobOffer`, `OfferStatus`, `Outcome`) and `training/internal` (`InductionBatch`, `InductionEnrolment`, `InductionAbsence`); insert-only entities have no setters; Hibernate only validates the schema
+- [X] T013 Entities, enums and repositories in `recruitment/internal` (`College`, `CampusDrive`, `Candidate`, `CandidateOutcomeHistory`, `AssessmentScore`, `JobOffer`, `OfferStatus`, `Outcome`) and `training/internal` (`InductionBatch`, `InductionEnrolment`, `InductionAbsence`); insert-only entities have no setters; Hibernate only validates the schema
 
 **Checkpoint**: migration applies; permissions and navigation seeded; the three public interfaces and the two amendments pass their tests; existing attendance and 012 suites unchanged.
 
@@ -145,22 +145,22 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 ### Tests for User Story 4
 
-- [ ] T041 [P] [US4] `backend/src/test/java/com/hls/training/BatchRulesTest.java` (rules first): enrolment past the seat limit is refused (under a row lock, two simultaneous requests for the last seat let one through); a Teacher cannot be in two batches on overlapping dates (database exclusion); a cancelled batch leaves its recruits "to be enrolled"
-- [ ] T042 [P] [US4] `backend/src/test/java/com/hls/training/InductionAttendanceTest.java`: a present or half day writes a training-day mark in 008 with no School; an absence writes none and keeps the reason; a correction keeps the history; a locked month refuses with the lock reason; the recruit's rollup shows the same training days (SC-007)
-- [ ] T043 [P] [US4] `backend/src/test/java/com/hls/training/SignOffTest.java`: completed makes the Teacher ACTIVE; not completed allows next batch (a new enrolment, the earlier sign-off kept, earlier induction days kept) or release (the Teacher exits with the reason)
-- [ ] T044 [P] [US4] `backend/src/test/java/com/hls/training/ReadyToDeployTest.java`: an ACTIVE Teacher with a completed enrolment and no School is listed, and drops off once mapped in spec 012; a Teacher still in training cannot be mapped (the 012 rule)
-- [ ] T045 [P] [US4] `backend/src/test/java/com/hls/training/InductionApiTest.java`: the induction rows of the role matrix (Admin and Director act; Zone Manager, Teacher and System 403)
+- [X] T041 [P] [US4] `backend/src/test/java/com/hls/training/BatchRulesTest.java` (rules first): enrolment past the seat limit is refused (under a row lock, two simultaneous requests for the last seat let one through); a Teacher cannot be in two batches on overlapping dates (database exclusion); a cancelled batch leaves its recruits "to be enrolled"
+- [X] T042 [P] [US4] `backend/src/test/java/com/hls/training/InductionAttendanceTest.java`: a present or half day writes a training-day mark in 008 with no School; an absence writes none and keeps the reason; a correction keeps the history; a locked month refuses with the lock reason; the recruit's rollup shows the same training days (SC-007)
+- [X] T043 [P] [US4] `backend/src/test/java/com/hls/training/SignOffTest.java`: completed makes the Teacher ACTIVE; not completed allows next batch (a new enrolment, the earlier sign-off kept, earlier induction days kept) or release (the Teacher exits with the reason)
+- [X] T044 [P] [US4] `backend/src/test/java/com/hls/training/ReadyToDeployTest.java`: an ACTIVE Teacher with a completed enrolment and no School is listed, and drops off once mapped in spec 012; a Teacher still in training cannot be mapped (the 012 rule)
+- [X] T045 [P] [US4] `backend/src/test/java/com/hls/training/InductionApiTest.java`: the induction rows of the role matrix (Admin and Director act; Zone Manager, Teacher and System 403)
 - [ ] T046 [P] [US4] `frontend/src/features/recruitment/InductionPage.test.tsx`: batches, roster, attendance entry, sign-off, ready-to-deploy list, no Induction menu for a Zone Manager, axe in both themes
 
-- [ ] T066 [P] [US4] `backend/src/test/java/com/hls/training/OfferAcceptedEnrolmentTest.java`: acceptance enrols the Teacher in the next batch with room; with no batch with room the Teacher stays in "to be enrolled"; two simultaneous acceptances for the last seat enrol one and leave the other waiting; `training` receives the event and `recruitment` has no dependency on `training` (ArchUnit)
+- [X] T066 [P] [US4] `backend/src/test/java/com/hls/training/OfferAcceptedEnrolmentTest.java`: acceptance enrols the Teacher in the next batch with room; with no batch with room the Teacher stays in "to be enrolled"; two simultaneous acceptances for the last seat enrol one and leave the other waiting; `training` receives the event and `recruitment` has no dependency on `training` (ArchUnit)
 
 ### Implementation for User Story 4
 
-- [ ] T067 [US4] `training/internal/OfferAcceptedListener.java` (synchronous `@EventListener` on `recruitment.api.OfferAccepted`): enrol the Teacher in the next batch with room under the batch row lock, or leave them to be enrolled
-- [ ] T047 [US4] `training/internal/{BatchService,EnrolmentService}.java`: batches, enrolment with the seat-limit lock and the dates copied for the exclusion constraint, "to be enrolled" list
-- [ ] T048 [US4] `training/internal/InductionAttendanceService.java`: present and half days through `TrainingAttendance`, absences into `induction_absence`, corrections, the lock error passed through
-- [ ] T049 [US4] `training/internal/SignOffService.java`: sign-off, `TeacherRegistry.activate`, next batch, release through `TeacherRegistry.exit`; `training/api/InductionBatchView.java` for spec 015
-- [ ] T050 [US4] `training/web/BatchController.java` per the contract with `PermissionGuard` on `INDUCTION`; `GET /ready-to-deploy` from `TeacherRegistry.activeTeacherIds` and `TeacherPlacementSource`
+- [X] T067 [US4] `training/internal/OfferAcceptedListener.java` (synchronous `@EventListener` on `recruitment.api.OfferAccepted`): enrol the Teacher in the next batch with room under the batch row lock, or leave them to be enrolled
+- [X] T047 [US4] `training/internal/{BatchService,EnrolmentService}.java`: batches, enrolment with the seat-limit lock and the dates copied for the exclusion constraint, "to be enrolled" list
+- [X] T048 [US4] `training/internal/InductionAttendanceService.java`: present and half days through `TrainingAttendance`, absences into `induction_absence`, corrections, the lock error passed through
+- [X] T049 [US4] `training/internal/SignOffService.java`: sign-off, `TeacherRegistry.activate`, next batch, release through `TeacherRegistry.exit`; `training/api/InductionBatchView.java` for spec 015
+- [X] T050 [US4] `training/web/BatchController.java` per the contract with `PermissionGuard` on `INDUCTION`; `GET /ready-to-deploy` from `TeacherRegistry.activeTeacherIds` and `TeacherPlacementSource`
 - [ ] T051 [P] [US4] `frontend/src/features/recruitment/InductionPage.tsx` and route `/recruitment/induction`
 
 **Checkpoint**: recruits become active and ready to deploy.
@@ -175,12 +175,12 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 ### Tests for User Story 5
 
-- [ ] T052 [P] [US5] `backend/src/test/java/com/hls/recruitment/DashboardTest.java`: counts per college and season (label or date range) equal the underlying lists; the joining ratio is joined over selected and null with no one selected; placed and active read spec 012 and the Teacher status; the "my drives" filter; an empty state returns zeros
+- [X] T052 [P] [US5] `backend/src/test/java/com/hls/recruitment/DashboardTest.java`: counts per college and season (label or date range) equal the underlying lists; the joining ratio is joined over selected and null with no one selected; placed and active read spec 012 and the Teacher status; the "my drives" filter; an empty state returns zeros
 - [ ] T053 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.test.tsx`: role fixtures, filters, empty state, axe in both themes
 
 ### Implementation for User Story 5
 
-- [ ] T054 [US5] `recruitment/internal/RecruitmentDashboardService.java` (grouped SQL, no per-row queries) and `recruitment/web/DashboardController.java`
+- [X] T054 [US5] `recruitment/internal/RecruitmentDashboardService.java` (grouped SQL, no per-row queries) and `recruitment/web/DashboardController.java`
 - [ ] T055 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.tsx` and route `/recruitment/dashboard`
 
 **Checkpoint**: the full spec is functional.

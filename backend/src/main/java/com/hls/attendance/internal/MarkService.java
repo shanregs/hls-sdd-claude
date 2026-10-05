@@ -309,7 +309,7 @@ public class MarkService {
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", before, code.getShortCode() + " " + value.toPlainString());
     }
 
-    /** Removes an induction day; a conflict if the day holds a different kind of mark. */
+    /** Removes an induction day; nothing happens if the day has no mark, a conflict if it holds a different kind. */
     @Transactional
     public void clearTrainingMark(UUID actorUserId, UUID teacherId, LocalDate date) {
         if (date == null) {
@@ -320,8 +320,10 @@ public class MarkService {
         if (monthLock.isLocked(teacherId, month)) {
             throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
         }
-        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date)
-                .orElseThrow(() -> new NotFoundException("There is no mark on that date."));
+        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date).orElse(null);
+        if (existing == null) {
+            return;
+        }
         if (!codes.require(existing.getStatusCodeId()).getShortCode().equals(TRAINING_CODE)) {
             throw new ConflictException("This day holds an attendance mark that is not a training day.");
         }

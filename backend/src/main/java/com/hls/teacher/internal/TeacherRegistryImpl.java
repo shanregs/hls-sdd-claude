@@ -113,4 +113,10 @@ class TeacherRegistryImpl implements TeacherRegistry {
     public Set<UUID> activeTeacherIds() {
         return Set.copyOf(teachers.findIdsByStatus(TeacherStatus.ACTIVE));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<UUID> inTrainingTeacherIds() {
+        return Set.copyOf(teachers.findIdsByStatus(TeacherStatus.IN_TRAINING));
+    }
 }

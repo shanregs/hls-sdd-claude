@@ -36,4 +36,7 @@ public interface TeacherRegistry {
     void recordFirstSalary(UUID actor, UUID teacherId, BigDecimal amount, LocalDate effectiveOn);
 
     Set<UUID> activeTeacherIds();
+
+    /** Teachers whose status is IN_TRAINING (recruits who have accepted an offer and are not yet signed off). */
+    Set<UUID> inTrainingTeacherIds();
 }

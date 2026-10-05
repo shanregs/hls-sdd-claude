@@ -262,7 +262,7 @@ public class OfferService {
         offers.saveAndFlush(offer);
         changes.record(actor, "JOB_OFFER", id, "status", OfferStatus.ISSUED, OfferStatus.ACCEPTED);
         changes.recordLifecycle(actor, "TEACHER_FROM_OFFER", id, "created", teacherId);
-        events.publishEvent(new OfferAccepted(id, candidate.getId(), teacherId));
+        events.publishEvent(new OfferAccepted(id, candidate.getId(), teacherId, actor));
         return views(List.of(offer)).get(0);
     }
 

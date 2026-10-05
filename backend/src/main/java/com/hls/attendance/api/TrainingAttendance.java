@@ -14,6 +14,6 @@ public interface TrainingAttendance {
     /** Writes or corrects the Teacher's training-day mark; {@code value} is 1.00 or 0.50. */
     void markTrainingDay(UUID actor, UUID teacherId, LocalDate date, BigDecimal value);
 
-    /** Removes a training-day mark; a conflict if the day holds a different kind of mark, none if no mark. */
+    /** Removes a training-day mark; does nothing if the day has no mark, and is a conflict if the day holds a different kind of mark. */
     void clearTrainingDay(UUID actor, UUID teacherId, LocalDate date);
 }
