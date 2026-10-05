@@ -223,7 +223,7 @@ supply 5 and a shortfall of 4.
 
 **Pipeline**
 
-- **FR-004**: Each prospect MUST have a stage (Prospect, Contacted, Visit, Follow-up, Interested, Negotiation, Final Stage, MoU, Active, On Hold, Lost). Every change MUST record who and when; Lost MUST require a reason; a lost or on-hold prospect MAY be reopened to its last active stage, with the history kept. Final Stage MUST be reviewed and approved by a Director or the Zone Manager of its Zone before the prospect is won; the stage MUST become MoU when the MoU is recorded in spec 012 and Active when the first Teacher is placed.
+- **FR-004**: Each prospect MUST have a stage (Prospect, Contacted, Visit, Follow-up, Interested, Negotiation, Final Stage, MoU, Active, On Hold, Lost). Every change MUST record who and when; Lost MUST require a reason; a lost or on-hold prospect MAY be reopened to its last active stage, with the history kept. Final Stage MUST need at least one proposal revision and MUST be reviewed and approved by a Director or the Zone Manager of its Zone before the prospect is won; the stage MUST become MoU when the MoU is recorded in spec 012 and Active when the first Teacher is placed.
 - **FR-005**: The system MUST show prospects as a board and a list by stage, with filters by Zone, owner and stage, and the next-action date.
 
 **Proposal**
@@ -275,7 +275,9 @@ supply 5 and a shortfall of 4.
 | System   | none (System MUST NOT see business data) | none | None |
 
 **New permission keys**: module `MARKETING` with actions `VIEW`, `CREATE`, `EDIT` (prospects, activities, proposals,
-stages, and the Marketing Settings screen, which only Admin and Director are seeded to edit). Seeded as in the table; not eligible for Teacher or System. Creating a School on a win reuses the existing
+stages, and the Marketing Settings screen, which only Admin and Director are seeded to edit) and `APPROVE` (the Final
+Stage review, decision D5), seeded to the Director and the Zone Manager and not to the Admin; the Zone Manager's
+approval is limited to prospects in their own Zones. Seeded as in the table; not eligible for Teacher or System. Creating a School on a win reuses the existing
 `SCHOOLS` `CREATE` permission, and recording the MoU reuses `SCHOOL_CONTRACTS` `CREATE` (spec 012); neither is changed
 here. Runtime-editable in Role & Permissions; only Admin, Director and System edit the matrix. The constitution's
 Default role access matrix gets a Marketing row when this spec merges.
