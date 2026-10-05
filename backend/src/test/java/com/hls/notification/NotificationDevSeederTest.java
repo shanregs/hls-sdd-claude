@@ -54,7 +54,11 @@ class NotificationDevSeederTest extends LeaveTestBase {
                                 + " and type = 'ATTENDANCE_CHANGED' and read_at is null",
                         Integer.class,
                         id))
-                .isPositive();
+                .isEqualTo(1);
+        // The attendance seeder is quiet, so these three are all Tara starts with.
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from notification where recipient_user_id = ?", Integer.class, id))
+                .isEqualTo(3);
     }
 
     @Test

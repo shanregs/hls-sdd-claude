@@ -71,8 +71,8 @@ real endpoints and the real UI and all checks passed.
 
 - Retention was not run against the live app (scenario 6), and SC-006 was not checked by hand with a keyboard or a
   screen reader.
-- Demo data: the attendance seeder marks days as a supervisor, so every demo Teacher gets "your attendance was
-  updated" notices from the real event path when the demo data is first created. `NotificationDevSeeder` adds its own
-  attendance notice only when the Teacher has none.
+- Demo data: the attendance seeder used to write its marks through the normal path, which gave every linked demo
+  Teacher several "updated N days" notices on first start (Tara began with 5 unread). It now uses
+  `MarkService.setMarkWithoutNotifying`, so Tara starts with exactly the three notices `NotificationDevSeeder` adds.
 - The open question about the OTP "mark sibling codes used" lookup (it is not scoped by user) came up during the
   V19 review and is outside this spec.

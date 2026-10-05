@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
  * Meena and Karthik; Asha has the one from Lakshmi, whose School has no Manager.
  *
  * <p>Idempotent per user and per notification type: a type the user already has is not added again. The
- * attendance seeder marks days as a supervisor, so Tara usually already has an attendance notice made by the
- * real event path and none is added here.
+ * attendance seeder writes its marks without notifying anyone, so these are the only notifications the demo
+ * data creates.
  */
 @Component
 @Order(70)
