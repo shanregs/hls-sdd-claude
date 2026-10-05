@@ -33,6 +33,12 @@ import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
 import { NotificationsPage } from "./features/notifications/NotificationsPage";
 import { ContractsListPage } from "./features/schoolbilling/ContractsListPage";
 import { SchoolContractPage } from "./features/schoolbilling/SchoolContractPage";
+import { CandidatesPage } from "./features/recruitment/CandidatesPage";
+import { DriveDetailPage } from "./features/recruitment/DriveDetailPage";
+import { DrivesPage } from "./features/recruitment/DrivesPage";
+import { InductionPage } from "./features/recruitment/InductionPage";
+import { OffersPage } from "./features/recruitment/OffersPage";
+import { RecruitmentDashboard } from "./features/recruitment/RecruitmentDashboard";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -238,6 +244,54 @@ export function App() {
           element={
             <RouteGuard>
               <SchoolContractPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/drives"
+          element={
+            <RouteGuard>
+              <DrivesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/drives/:id"
+          element={
+            <RouteGuard>
+              <DriveDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/candidates"
+          element={
+            <RouteGuard>
+              <CandidatesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/offers"
+          element={
+            <RouteGuard>
+              <OffersPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/induction"
+          element={
+            <RouteGuard>
+              <InductionPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/recruitment/dashboard"
+          element={
+            <RouteGuard>
+              <RecruitmentDashboard />
             </RouteGuard>
           }
         />

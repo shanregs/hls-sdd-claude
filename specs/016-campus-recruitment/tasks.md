@@ -36,7 +36,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 ## Phase 1: Setup
 
 - [X] T001 Create the module skeletons `backend/src/main/java/com/hls/recruitment/{api,internal,web}/` and `backend/src/main/java/com/hls/training/{api,internal,web}/` with `package-info.java` (each `api` package a `@NamedInterface`) and `backend/src/test/java/com/hls/recruitment/RecruitmentModuleRulesTest.java` (ArchUnit: nothing outside a module uses its `internal` or `web`; `schoolbilling` and `teacher` do not depend on `recruitment` or `training`; `recruitment` and `training` reach other modules only through their `api` packages; **`recruitment` does not depend on `training` at all**); add both packages to the base packages of `backend/src/main/java/com/hls/MasterDataExceptionAdvice.java`
-- [ ] T002 Create `frontend/src/features/recruitment/` with `recruitmentApi.ts` (types and calls for every endpoint in contracts/recruitment-api.md; money as strings)
+- [X] T002 Create `frontend/src/features/recruitment/` with `recruitmentApi.ts` (types and calls for every endpoint in contracts/recruitment-api.md; money as strings)
 
 ---
 
@@ -55,7 +55,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T012 Spec 012 amendment A4: add `schoolbilling/api/TeacherFirstAssigned.java` (`record(UUID teacherId, UUID schoolId, LocalDate startsOn)`) and publish it from `schoolbilling/internal/AssignmentService.java` when the Teacher has no earlier assignment row; the existing 012 tests must still pass
 - [X] T068 [P] School contacts (amendment A8 to spec 005): `school/internal/{SchoolContact,SchoolContactRepository,SchoolContactService}.java`, `GET/PUT /api/v1/schools/{id}/contacts` in `school/web/SchoolContactController.java` (roles `SCHOOLS` VIEW/EDIT, Manager only in Zone, audited through `ChangeRecorder`, role in PRINCIPAL/ACCOUNTANT, phone max 20, email max 200); a `school/api/SchoolContacts` read interface; tests `school/SchoolContactApiTest.java` per role and scope
 - [X] T069 [P] [US1] College contacts: `college_contact` entity inside `recruitment/internal`, the `placementOfficer` and `principal` fields in the college create/update requests and views, shown on the College screen; tests in `CollegeApiTest.java`
-- [ ] T070 Frontend: principal and accountant section in `frontend/src/features/schools/SchoolDialog.tsx` with `schoolsApi.ts` calls and a Vitest case; placement officer and principal fields in the College form under `frontend/src/features/recruitment/`
+- [X] T070 Frontend: principal and accountant section in `frontend/src/features/schools/SchoolDialog.tsx` with `schoolsApi.ts` calls and a Vitest case; placement officer and principal fields in the College form under `frontend/src/features/recruitment/`
 - [X] T013 Entities, enums and repositories in `recruitment/internal` (`College`, `CampusDrive`, `Candidate`, `CandidateOutcomeHistory`, `AssessmentScore`, `JobOffer`, `OfferStatus`, `Outcome`) and `training/internal` (`InductionBatch`, `InductionEnrolment`, `InductionAbsence`); insert-only entities have no setters; Hibernate only validates the schema
 
 **Checkpoint**: migration applies; permissions and navigation seeded; the three public interfaces and the two amendments pass their tests; existing attendance and 012 suites unchanged.
@@ -75,7 +75,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T016 [P] [US1] `backend/src/test/java/com/hls/recruitment/OutcomeAssessmentTest.java`: an outcome change keeps the earlier one in the history with who and when; waitlisted can become selected; a re-assessment adds rows and the latest is current; scores outside 1 to 5 or an unknown criterion are 400
 - [X] T017 [P] [US1] `backend/src/test/java/com/hls/recruitment/DriveApiTest.java`: the per-role and per-scope matrix of contracts/recruitment-api.md for colleges, drives, candidates, outcomes and assessment (Zone Manager reads all and writes only own; Teacher and System 403; 401 without a token); phone and e-mail are absent from the response for a role without `RECRUITMENT` VIEW
 - [X] T018 [P] [US1] `backend/src/test/java/com/hls/recruitment/RecruitmentAuditTest.java`: each college, drive, candidate, outcome, assessment and import has an audit entry with actor and prior and new values; candidate phone numbers do not appear in any log line (capture the log appender)
-- [ ] T019 [P] [US1] `frontend/src/features/recruitment/DrivesPage.test.tsx` and `DriveDetailPage.test.tsx`: calendar and list, schedule dialog, import result with invalid rows, outcome and score forms, write controls hidden for a Zone Manager on another's drive, axe in both themes
+- [X] T019 [P] [US1] `frontend/src/features/recruitment/DrivesPage.test.tsx` and `DriveDetailPage.test.tsx`: calendar and list, schedule dialog, import result with invalid rows, outcome and score forms, write controls hidden for a Zone Manager on another's drive, axe in both themes
 
 ### Implementation for User Story 1
 
@@ -83,7 +83,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T021 [US1] `recruitment/internal/{CandidateService,CsvImporter}.java`: single entry, chunked CSV import (a transaction per 100 rows), phone normalization, duplicate rule, outcome and history, contact details withheld by role
 - [X] T022 [US1] `recruitment/internal/AssessmentService.java`: scores per criterion with remarks, assessor and time, latest set current
 - [X] T023 [US1] `recruitment/web/{DriveController,CandidateController}.java` per the contract with `PermissionGuard` on `RECRUITMENT`; `recruitment/api/DriveActivities.java` and its implementation (contract C1)
-- [ ] T024 [P] [US1] `frontend/src/features/recruitment/{DrivesPage,DriveDetailPage}.tsx` and routes `/recruitment/drives`, `/recruitment/drives/:id`, `/recruitment/candidates` in `frontend/src/App.tsx`
+- [X] T024 [P] [US1] `frontend/src/features/recruitment/{DrivesPage,DriveDetailPage}.tsx` and routes `/recruitment/drives`, `/recruitment/drives/:id`, `/recruitment/candidates` in `frontend/src/App.tsx`
 
 **Checkpoint**: drives and candidates work end to end for each role.
 
@@ -101,14 +101,14 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T026 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferExpiryTest.java`: an issued offer past its deadline becomes EXPIRED by the job and the candidate can be offered again; acceptance after the deadline is refused even before the job runs; the job is off in `IntegrationTestBase`
 - [X] T027 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferApiTest.java`: the offer rows of the role matrix (Director issues, supersedes, accepts, declines; Admin reads but is 403 on those; Zone Manager reads all; Teacher and System 403)
 - [X] T028 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferLetterTest.java`: the letter shows name, designation, package, terms, training information and status; user text is HTML-escaped; a draft's letter is regenerated after a change
-- [ ] T029 [P] [US2] `frontend/src/features/recruitment/OffersPage.test.tsx`: offers by status, send and supersede dialogs, letter view, actions hidden for Admin and Zone Manager, axe in both themes
+- [X] T029 [P] [US2] `frontend/src/features/recruitment/OffersPage.test.tsx`: offers by status, send and supersede dialogs, letter view, actions hidden for Admin and Zone Manager, axe in both themes
 
 ### Implementation for User Story 2
 
 - [X] T030 [US2] `recruitment/internal/{OfferService,OfferLetterRenderer}.java`: draft, issue (who and when), supersede, decline, letter rendering with a print stylesheet; audit entity `JOB_OFFER`
 - [X] T031 [US2] `recruitment/internal/OfferExpiryJob.java` (daily, `hls.recruitment.offer-expiry.enabled`, off in `IntegrationTestBase`)
 - [X] T032 [US2] `recruitment/web/OfferController.java` per the contract with `PermissionGuard` on `OFFERS`, including `GET /offers/{id}/letter`
-- [ ] T033 [P] [US2] `frontend/src/features/recruitment/{OffersPage,OfferLetterView}.tsx` and route `/recruitment/offers`
+- [X] T033 [P] [US2] `frontend/src/features/recruitment/{OffersPage,OfferLetterView}.tsx` and route `/recruitment/offers`
 
 **Checkpoint**: offers work end to end; nothing is accepted yet.
 
@@ -125,13 +125,13 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T034 [P] [US3] `backend/src/test/java/com/hls/recruitment/AcceptanceTest.java` (rules first): acceptance creates one Teacher IN_TRAINING with the candidate's details and no salary entry, stores the Teacher id on the offer and candidate and shows the candidate as joined; a second acceptance and two simultaneous acceptances leave exactly one Teacher; an expired or non-issued offer is refused; no induction batch with room leaves the Teacher in "to be enrolled"
 - [X] T035 [P] [US3] `backend/src/test/java/com/hls/recruitment/DuplicateTeacherTest.java`: a phone or e-mail match with a Teacher who is working, on leave, in training or assigned refuses the acceptance and names the Teacher, creating, linking and mapping nothing; a match with an exited Teacher needs `confirmNewRecord` and leaves the exited record unchanged
 - [X] T036 [P] [US3] `backend/src/test/java/com/hls/recruitment/FirstSalaryListenerTest.java`: mapping a Teacher created from an accepted offer to a School position writes one salary entry equal to the offer's monthly salary effective on the assignment start; a later move writes none; a Teacher not created from an offer is untouched; a trained but unplaced Teacher has no salary entry
-- [ ] T037 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.test.tsx`: the accept flow, the "existing Teacher" refusal naming the Teacher, the confirm-new-record step for an exited match
+- [X] T037 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.test.tsx`: the accept flow, the "existing Teacher" refusal naming the Teacher, the confirm-new-record step for an exited match
 
 ### Implementation for User Story 3
 
 - [X] T038 [US3] `recruitment/internal/AcceptanceService.java`: one transaction with a `PESSIMISTIC_WRITE` lock on the offer, duplicate match through `TeacherRegistry.findMatches`, create through `TeacherRegistry.createTrainee`, store the Teacher id, audit entity `TEACHER_FROM_OFFER`, publish `OfferAccepted` (no call to `training`); idempotent
 - [X] T039 [US3] `recruitment/internal/FirstSalaryListener.java` (synchronous `@EventListener` on `TeacherFirstAssigned`): for a Teacher created from an accepted offer with no salary entry, call `TeacherRegistry.recordFirstSalary`; audit entity `TEACHER_FIRST_SALARY`
-- [ ] T040 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.tsx` and the accept action on `OffersPage.tsx`
+- [X] T040 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.tsx` and the accept action on `OffersPage.tsx`
 
 **Checkpoint**: the recruit-to-Teacher link and the salary rule hold.
 
@@ -150,7 +150,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T043 [P] [US4] `backend/src/test/java/com/hls/training/SignOffTest.java`: completed makes the Teacher ACTIVE; not completed allows next batch (a new enrolment, the earlier sign-off kept, earlier induction days kept) or release (the Teacher exits with the reason)
 - [X] T044 [P] [US4] `backend/src/test/java/com/hls/training/ReadyToDeployTest.java`: an ACTIVE Teacher with a completed enrolment and no School is listed, and drops off once mapped in spec 012; a Teacher still in training cannot be mapped (the 012 rule)
 - [X] T045 [P] [US4] `backend/src/test/java/com/hls/training/InductionApiTest.java`: the induction rows of the role matrix (Admin and Director act; Zone Manager, Teacher and System 403)
-- [ ] T046 [P] [US4] `frontend/src/features/recruitment/InductionPage.test.tsx`: batches, roster, attendance entry, sign-off, ready-to-deploy list, no Induction menu for a Zone Manager, axe in both themes
+- [X] T046 [P] [US4] `frontend/src/features/recruitment/InductionPage.test.tsx`: batches, roster, attendance entry, sign-off, ready-to-deploy list, no Induction menu for a Zone Manager, axe in both themes
 
 - [X] T066 [P] [US4] `backend/src/test/java/com/hls/training/OfferAcceptedEnrolmentTest.java`: acceptance enrols the Teacher in the next batch with room; with no batch with room the Teacher stays in "to be enrolled"; two simultaneous acceptances for the last seat enrol one and leave the other waiting; `training` receives the event and `recruitment` has no dependency on `training` (ArchUnit)
 
@@ -161,7 +161,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T048 [US4] `training/internal/InductionAttendanceService.java`: present and half days through `TrainingAttendance`, absences into `induction_absence`, corrections, the lock error passed through
 - [X] T049 [US4] `training/internal/SignOffService.java`: sign-off, `TeacherRegistry.activate`, next batch, release through `TeacherRegistry.exit`; `training/api/InductionBatchView.java` for spec 015
 - [X] T050 [US4] `training/web/BatchController.java` per the contract with `PermissionGuard` on `INDUCTION`; `GET /ready-to-deploy` from `TeacherRegistry.activeTeacherIds` and `TeacherPlacementSource`
-- [ ] T051 [P] [US4] `frontend/src/features/recruitment/InductionPage.tsx` and route `/recruitment/induction`
+- [X] T051 [P] [US4] `frontend/src/features/recruitment/InductionPage.tsx` and route `/recruitment/induction`
 
 **Checkpoint**: recruits become active and ready to deploy.
 
@@ -176,12 +176,12 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 ### Tests for User Story 5
 
 - [X] T052 [P] [US5] `backend/src/test/java/com/hls/recruitment/DashboardTest.java`: counts per college and season (label or date range) equal the underlying lists; the joining ratio is joined over selected and null with no one selected; placed and active read spec 012 and the Teacher status; the "my drives" filter; an empty state returns zeros
-- [ ] T053 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.test.tsx`: role fixtures, filters, empty state, axe in both themes
+- [X] T053 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.test.tsx`: role fixtures, filters, empty state, axe in both themes
 
 ### Implementation for User Story 5
 
 - [X] T054 [US5] `recruitment/internal/RecruitmentDashboardService.java` (grouped SQL, no per-row queries) and `recruitment/web/DashboardController.java`
-- [ ] T055 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.tsx` and route `/recruitment/dashboard`
+- [X] T055 [P] [US5] `frontend/src/features/recruitment/RecruitmentDashboard.tsx` and route `/recruitment/dashboard`
 
 **Checkpoint**: the full spec is functional.
 
@@ -190,8 +190,8 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 ## Phase 8: Polish and Cross-Cutting Concerns
 
 - [X] T056 [P] `recruitment/internal/RecruitmentDevSeeder.java` (only with the demo flag, idempotent): one college, a held drive with six candidates, offers in several statuses, a batch and "Ready Rani" who completed it
-- [ ] T057 [P] Role-by-role UI test of the RECRUITMENT menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/recruitment/` and the navigation tests
-- [ ] T058 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/016-campus-recruitment/quickstart-results.md`
+- [X] T057 [P] Role-by-role UI test of the RECRUITMENT menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/recruitment/` and the navigation tests
+- [X] T058 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/016-campus-recruitment/quickstart-results.md`
 - [ ] T059 [P] Add a "016 Campus Recruitment" folder to the Postman collection in `postman/HLS API/` and refresh the schema dump `docs/db/schema-v22.sql`
 - [ ] T060 [P] Constitution amendment 2.4.0 in `.specify/memory/constitution.md`: add the RECRUITMENT navigation section to Principle IV (MARKETING follows with spec 023) and the Recruitment, Offers and Induction rows to the Default role access matrix, with a Sync Impact Report note
 - [ ] T061 [P] Update `docs/spec-roadmap.md` (016 status; A4 and A5 done) and `docs/running-locally.md` (the recruitment flow and demo data)

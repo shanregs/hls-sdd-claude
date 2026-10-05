@@ -109,4 +109,18 @@ class DriveApiTest extends RecruitmentTestBase {
         assertThat(outcome(director, candidate, "SELECTED").status()).isEqualTo(200);
         assertThat(post(BASE + "/drives/" + drive + "/status", admin, Map.of("status", "HELD")).status()).isEqualTo(200);
     }
+
+    @Test
+    void theInterviewerChoicesListStaffUsersAndNobodyElse() {
+        String admin = admin();
+        Signed manager = signInAs(Role.MANAGER);
+        Signed teacher = signInAs(Role.TEACHER);
+
+        Resp resp = get(BASE + "/interviewers", manager.token());
+
+        assertThat(resp.status()).isEqualTo(200);
+        assertThat(resp.body()).contains(manager.userId().toString()).doesNotContain(teacher.userId().toString());
+        assertThat(get(BASE + "/interviewers", signInAs(Role.TEACHER).token()).status()).isEqualTo(403);
+        assertThat(admin).isNotBlank();
+    }
 }

@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { RouteGuard } from "./RouteGuard";
+import { isAuthorizedPath } from "../access-model/useAccessModel";
 
 const mockAccessModel = vi.fn();
 const fetchSpy = vi.fn();
@@ -110,5 +111,27 @@ describe("RouteGuard (User Story 2, FR-010)", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/not authorized/i)).not.toBeInTheDocument();
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("isAuthorizedPath", () => {
+  const routes = new Set([
+    "/operations/school-contracts",
+    "/recruitment/drives",
+    "/dashboard",
+  ]);
+
+  it("authorizes an exact route and a detail page below it", () => {
+    expect(isAuthorizedPath("/recruitment/drives", routes)).toBe(true);
+    expect(isAuthorizedPath("/recruitment/drives/abc", routes)).toBe(true);
+    expect(
+      isAuthorizedPath("/operations/school-contracts/schools/s1", routes),
+    ).toBe(true);
+  });
+
+  it("does not authorize a sibling that only shares a prefix, or another menu", () => {
+    expect(isAuthorizedPath("/recruitment/drivesX", routes)).toBe(false);
+    expect(isAuthorizedPath("/recruitment/offers", routes)).toBe(false);
+    expect(isAuthorizedPath("/identity/users", routes)).toBe(false);
   });
 });

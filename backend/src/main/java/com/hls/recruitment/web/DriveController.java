@@ -65,6 +65,12 @@ public class DriveController {
         return colleges.update(CallerContext.userId(jwt), id, request);
     }
 
+    @GetMapping("/interviewers")
+    public List<DriveService.PersonRef> interviewers(@AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.VIEW);
+        return drives.interviewerChoices();
+    }
+
     @GetMapping("/drives")
     public List<DriveDto> drives(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

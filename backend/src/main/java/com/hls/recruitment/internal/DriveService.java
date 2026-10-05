@@ -64,6 +64,7 @@ public class DriveService {
     private final CollegeRepository colleges;
     private final CandidateRepository candidates;
     private final AppUserRepository users;
+    private final com.hls.identity.user.RoleAssignmentRepository roleAssignments;
     private final ChangeRecorder changes;
     private final Clock clock;
 
@@ -72,12 +73,14 @@ public class DriveService {
             CollegeRepository colleges,
             CandidateRepository candidates,
             AppUserRepository users,
+            com.hls.identity.user.RoleAssignmentRepository roleAssignments,
             ChangeRecorder changes,
             Clock clock) {
         this.drives = drives;
         this.colleges = colleges;
         this.candidates = candidates;
         this.users = users;
+        this.roleAssignments = roleAssignments;
         this.changes = changes;
         this.clock = clock;
     }
@@ -92,6 +95,20 @@ public class DriveService {
                 .sorted(Comparator.comparing((CampusDrive d) -> firstDate(d)).thenComparing(CampusDrive::getId))
                 .toList();
         return views(rows);
+    }
+
+    /** Active Admin, Director and Zone Manager users: the people who can attend a drive as interviewers. */
+    @Transactional(readOnly = true)
+    public List<PersonRef> interviewerChoices() {
+        Set<UUID> ids = new java.util.HashSet<>();
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            ids.addAll(roleAssignments.userIdsWithRole(role));
+        }
+        return users.findAllById(ids).stream()
+                .filter(AppUser::isActive)
+                .map(u -> new PersonRef(u.getId(), u.getDisplayName()))
+                .sorted(Comparator.comparing(PersonRef::name))
+                .toList();
     }
 
     @Transactional(readOnly = true)
