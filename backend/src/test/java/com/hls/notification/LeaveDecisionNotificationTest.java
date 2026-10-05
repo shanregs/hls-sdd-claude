@@ -112,7 +112,10 @@ class LeaveDecisionNotificationTest extends LeaveTestBase {
         Resp refused = post(SUP + "/" + id + "/approve", w.managerA().token(), Map.of("version", 0));
 
         assertThat(refused.status()).isEqualTo(409);
-        assertThat(notificationsOf(w.teacherA().signed().userId())).isEmpty();
+        // The supervisor's own mark does notify the Teacher about attendance; the refused decision adds nothing.
+        assertThat(notificationsOf(w.teacherA().signed().userId()))
+                .extracting(row -> row.get("type"))
+                .doesNotContain("LEAVE_DECIDED");
     }
 
     @Test

@@ -22,11 +22,15 @@ data model, contract, quickstart and tasks are done and pushed. Implementation i
   existing leave suite still passes. Added `RoleAssignmentRepository.userIdsWithRole` (no lock) because `findByRole`
   takes a pessimistic write lock that a recipient lookup must not take.
 
+- T019-T021: events `AttendanceMarkChanged`/`AttendanceMonthLocked`/`AttendanceMonthReopened` in `attendance/api`,
+  published from `MarkService` (supervisor set and clear only) and `MonthLockService` (`freeze` covers lock and
+  relock); `AttendanceEventListener`; `AttendanceNotificationTest` (9) passes, attendance suite still passes.
+  Note: `AttendanceDevSeeder` marks as SUPERVISOR, so seeding now creates attendance notifications; handle in T024.
+
 ## Next, in order (see tasks.md)
 
-1. T019-T021 attendance events (`MarkService`, `MonthLockService`), merge already built in the service.
-2. T022-T024 retention job (`@EnableScheduling`), demo seeder.
-3. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
+1. T022-T024 retention job (`@EnableScheduling`), demo seeder (and keep the attendance seeder from creating noise).
+2. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
 
 ## Environment notes
 

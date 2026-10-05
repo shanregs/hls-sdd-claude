@@ -1,5 +1,7 @@
 package com.hls.attendance.internal;
 
+import com.hls.attendance.api.AttendanceMonthLocked;
+import com.hls.attendance.api.AttendanceMonthReopened;
 import com.hls.attendance.internal.RollupCalculator.MarkFacts;
 import com.hls.attendance.internal.RollupCalculator.WeeklyOffRules;
 import com.hls.school.api.ConflictException;
@@ -21,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +66,7 @@ public class MonthLockService {
     private final BusinessCalendar business;
     private final AttendanceAudit audit;
     private final Clock clock;
+    private final ApplicationEventPublisher publisher;
 
     public MonthLockService(
             TeacherDirectory teachers,
@@ -74,7 +78,8 @@ public class MonthLockService {
             TeacherMonthLock monthLock,
             BusinessCalendar business,
             AttendanceAudit audit,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher publisher) {
         this.teachers = teachers;
         this.marks = marks;
         this.codes = codes;
@@ -85,6 +90,7 @@ public class MonthLockService {
         this.business = business;
         this.audit = audit;
         this.clock = clock;
+        this.publisher = publisher;
     }
 
     /** Locks every Teacher-month of the month; returns how many were locked. */
@@ -143,6 +149,7 @@ public class MonthLockService {
         events.save(new TeacherMonthEvent(
                 teacherId, month.toString(), MonthEventType.REOPENED, cleanReason, actorUserId, clock.instant()));
         audit.changed(actorUserId, AttendanceAudit.MONTH, teacherId + ":" + month, "state", "LOCKED", "OPEN: " + cleanReason);
+        publisher.publishEvent(new AttendanceMonthReopened(teacherId, month, actorUserId, cleanReason));
     }
 
     @Transactional
@@ -189,6 +196,7 @@ public class MonthLockService {
                 "state",
                 relock ? "OPEN" : null,
                 "LOCKED (worked " + rollup.daysWorked() + ", total " + rollup.weightedTotal() + ")");
+        publisher.publishEvent(new AttendanceMonthLocked(teacherId, month, actorUserId));
     }
 
     /** The rollup and unmarked days for many Teachers, loading everything in bulk. */
