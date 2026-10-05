@@ -26,7 +26,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * abstract base is stopped after the first subclass while Spring's cached context for later
  * subclasses still points at the stopped container's port.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "hls.notification.retention.enabled=false")
 public abstract class IntegrationTestBase {
 
     public static final String PASSWORD = "correct-horse-5";

@@ -27,10 +27,17 @@ data model, contract, quickstart and tasks are done and pushed. Implementation i
   relock); `AttendanceEventListener`; `AttendanceNotificationTest` (9) passes, attendance suite still passes.
   Note: `AttendanceDevSeeder` marks as SUPERVISOR, so seeding now creates attendance notifications; handle in T024.
 
+- T022-T024: `RetentionJob` (daily 02:30, `hls.notification.retention.enabled`, off in `IntegrationTestBase`),
+  `@EnableScheduling`, `NotificationDevSeeder` (idempotent per user and type; Tara usually already has an attendance
+  notice from the real event path because the attendance seeder marks as a supervisor), `NotificationRetentionTest` (4),
+  `NotificationDevSeederTest` (4). Wider regression: 140 tests green.
+- V19 (`V19__index_review.sql`) reviewed by the database-reviewer agent; comment corrected, OTP index dropped from it.
+  Schema dump after V19: `docs/db/schema-v19.sql`.
+
 ## Next, in order (see tasks.md)
 
-1. T022-T024 retention job (`@EnableScheduling`), demo seeder (and keep the attendance seeder from creating noise).
-2. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
+1. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
+2. Run the full backend and frontend suites once before the PR.
 
 ## Environment notes
 

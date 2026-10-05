@@ -1,5 +1,6 @@
 package com.hls.notification.internal;
 
+import com.hls.notification.api.NotificationType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,8 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     Page<Notification> findUnreadOf(@Param("user") UUID user, Pageable pageable);
 
     long countByRecipientUserIdAndReadAtIsNull(UUID recipientUserId);
+
+    boolean existsByRecipientUserIdAndType(UUID recipientUserId, NotificationType type);
 
     /** Unread notifications of the same group whose last activity is not older than {@code since}. */
     @Query("select n from Notification n where n.recipientUserId = :user and n.groupKey = :key"

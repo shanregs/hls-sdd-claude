@@ -1,4 +1,6 @@
 -- Index review (missing and mis-shaped indexes), from a static read of V1-V18 against the actual queries.
+-- Reviewed by the database-reviewer agent; its findings are folded in (no OTP code_hash index: low value, the
+-- hash has about 1e6 distinct values and is only read after the code is matched).
 -- Nothing is dropped on suspicion alone: the unused-looking indexes (name btrees on place/school/teacher,
 -- attendance_mark date indexes, school.active) are left for a check against pg_stat_user_indexes.
 
@@ -15,10 +17,6 @@ CREATE INDEX idx_change_history_entry_entity_occurred
 CREATE INDEX idx_user_activity_entry_actor_occurred
     ON user_activity_entry (actor_user_id, occurred_at DESC);
 
--- OtpService verifies a code with findByCodeHashAndPurpose, which had no usable index. Not unique: the
--- hash is a SHA-256 of a short numeric code, so two rows can legitimately share it.
-CREATE INDEX idx_one_time_code_hash_purpose ON one_time_code (code_hash, purpose);
-
 -- Leave revoke and cancel read the history rows a request wrote (findByLeaveRequestId); V17 indexed the
 -- same column on attendance_mark but not here.
 CREATE INDEX idx_attendance_mark_history_leave_request
@@ -29,7 +27,9 @@ CREATE INDEX idx_attendance_mark_history_leave_request
 -- ---------------------------------------------------------------------------------------------------
 
 -- A Teacher's own history: where teacher_id = ? and status in (...) order by created_at desc.
--- (Overlap checks are served by the ex_leave_request_no_overlap exclusion constraint, not by this index.)
+-- The overlap lookup (findLiveOverlapping) is written with first_date/last_date comparisons, not a daterange
+-- overlap, so the ex_leave_request_no_overlap exclusion index cannot serve it; the teacher_id prefix of this
+-- index does, and that is all it ever got from the old one.
 DROP INDEX idx_leave_request_teacher_first;
 CREATE INDEX idx_leave_request_teacher_created ON leave_request (teacher_id, created_at DESC);
 
