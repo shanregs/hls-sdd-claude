@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
+import { screenFor } from "../access/screenRegistry";
 import type { AccessModel } from "../api/accessModelApi";
 import type { SignedInUser } from "../api/authApi";
 import { spacingUnit } from "../theme/tokens";
@@ -18,7 +19,10 @@ const roleLabel = (role: string) => role.charAt(0) + role.slice(1).toLowerCase()
  */
 export function HomeScreen({ user, model }: { user: SignedInUser; model: AccessModel }) {
   const theme = useTheme();
-  const sections = model.navigation.map((s) => s.section).filter((name) => !NON_BUSINESS_SECTIONS.has(name));
+  // A section that already has a screen in the app is reached from the menu, so it is not previewed.
+  const sections = model.navigation
+    .filter((s) => !NON_BUSINESS_SECTIONS.has(s.section) && !s.items.some((item) => screenFor(item.route)))
+    .map((s) => s.section);
   const bar = { backgroundColor: theme.colors.surfaceVariant };
 
   return (

@@ -130,6 +130,16 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
     Profile and Signed-in devices should be announced with a name; touch targets are at least 48 dp.
 11. **Version gate**: set `HLS_MOBILE_MIN_APP_VERSION=9.0.0` in the backend's environment and restart
     it: the app shows "Please update the HLS app". Unset it afterwards.
+12. **Attendance** (spec 019, steps in `specs/019-mobile-attendance/quickstart.md`):
+    - Tara (Teacher): My Attendance opens on the current month with the week starting on Sunday. Mark
+      today Present, then change it to a half day; the cell and totals update. Try a day older than 3
+      days, a day set by Manoj and a locked month: each shows a plain message and nothing changes.
+    - Airplane mode, then Save: "No connection" and your entry is kept; turn it off and Save again.
+    - Attendance History offers this and last year, read-only. Holiday Calendar (every role) shows holidays
+      and weekly offs, with "All holidays this year".
+    - Manoj (Manager): Teacher Attendance lists only his Teachers; open one, mark, correct, clear and
+      view a day's history. Check the web AUDIT pages: changes show source "Android app".
+    - Set the phone clock a day wrong: the app still opens on the server's current month.
 
 ## 6. Automated tests
 
