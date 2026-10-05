@@ -9,7 +9,10 @@ export type ScreenKey =
   | "myAttendance"
   | "attendanceHistory"
   | "teacherAttendance"
-  | "holidayCalendar";
+  | "holidayCalendar"
+  | "applyLeave"
+  | "myLeaveHistory"
+  | "leaveManagement";
 
 const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/dashboard": "home",
@@ -18,6 +21,9 @@ const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/my-attendance/history": "attendanceHistory",
   "/operations/teacher-attendance": "teacherAttendance",
   "/master-data/holiday-calendar": "holidayCalendar",
+  "/leave/apply": "applyLeave",
+  "/leave/history": "myLeaveHistory",
+  "/operations/leave": "leaveManagement",
 };
 
 export function screenFor(route: string): ScreenKey | undefined {

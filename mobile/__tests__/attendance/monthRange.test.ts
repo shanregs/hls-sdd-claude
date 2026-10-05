@@ -50,3 +50,29 @@ describe("shiftMonth", () => {
     expect(shiftMonth("2025-12", 1, months)).toBeNull();
   });
 });
+
+describe("the leave range (spec 020)", () => {
+  const now = new Date("2026-10-05T04:00:00Z");
+
+  it("offers the previous, current and next year and nothing else", () => {
+    const months = allowedMonths("leave", now);
+    expect(months).toHaveLength(36);
+    expect(months[0]).toBe("2025-01");
+    expect(months[35]).toBe("2027-12");
+    expect(months).not.toContain("2024-12");
+    expect(months).not.toContain("2028-01");
+  });
+
+  it("uses the business time zone: 31 December 23:00 UTC is already January in India", () => {
+    const months = allowedMonths("leave", new Date("2026-12-31T23:00:00Z"));
+    expect(months[0]).toBe("2026-01");
+    expect(months[35]).toBe("2028-12");
+  });
+
+  it("clamps at both ends", () => {
+    const months = allowedMonths("leave", now);
+    expect(shiftMonth("2025-01", -1, months)).toBeNull();
+    expect(shiftMonth("2027-12", 1, months)).toBeNull();
+    expect(shiftMonth("2026-12", 1, months)).toBe("2027-01");
+  });
+});

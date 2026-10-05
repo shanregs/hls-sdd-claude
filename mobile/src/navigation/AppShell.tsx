@@ -5,10 +5,14 @@ import { AccessModelProvider, useAccessModel } from "../access/AccessModelProvid
 import { HOME_ROUTE, screenFor } from "../access/screenRegistry";
 import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
+import type { LeaveStatus } from "../api/leaveApi";
 import { useAuth } from "../auth/AuthProvider";
+import { ApplyLeaveScreen } from "../screens/ApplyLeaveScreen";
 import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
 import { DevicesScreen } from "../screens/DevicesScreen";
 import { HolidayCalendarScreen } from "../screens/HolidayCalendarScreen";
+import { LeaveManagementScreen } from "../screens/LeaveManagementScreen";
+import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
 import { MyAttendanceScreen } from "../screens/MyAttendanceScreen";
 import { TeacherAttendanceScreen } from "../screens/TeacherAttendanceScreen";
 import { LocationPrivacyScreen } from "../screens/LocationPrivacyScreen";
@@ -34,6 +38,15 @@ export function AppShell({ user }: { user: SignedInUser }) {
   );
 }
 
+/** What a screen is opened with: a notice to show (after a submit) or the status to filter by (from Home). */
+export interface RouteState {
+  notice?: string;
+  status?: LeaveStatus;
+}
+
+/** Opens a screen by its route, through the same menu check as the drawer. */
+export type OpenRoute = (route: string, state?: RouteState) => void;
+
 type Overlay = "none" | "devices" | "privacy" | "notAuthorized";
 
 function ShellContent({ user }: { user: SignedInUser }) {
@@ -58,22 +71,27 @@ function ShellContent({ user }: { user: SignedInUser }) {
 
   const menu = useMemo(() => buildMenu(model), [model]);
 
-  const goTo = useCallback(
-    (target: string) => {
+  const [routeState, setRouteState] = useState<RouteState | undefined>(undefined);
+
+  const openRoute = useCallback<OpenRoute>(
+    (target, state) => {
       setDrawerOpen(false);
       if (canOpen(target)) {
         setOverlay("none");
         setRoute(target);
+        setRouteState(state);
       } else {
         setOverlay("notAuthorized");
       }
     },
     [canOpen],
   );
+  const goTo = openRoute;
 
   const goHome = useCallback(() => {
     setOverlay("none");
     setRoute(HOME_ROUTE);
+    setRouteState(undefined);
   }, []);
 
   // Android back: close the drawer, then a sub-screen, then go home, otherwise leave the app.
@@ -155,8 +173,17 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "holidayCalendar") {
     body = <HolidayCalendarScreen />;
     title = "Holiday Calendar";
+  } else if (current === "applyLeave") {
+    body = <ApplyLeaveScreen openRoute={openRoute} />;
+    title = "Apply Leave";
+  } else if (current === "myLeaveHistory") {
+    body = <MyLeaveHistoryScreen notice={routeState?.notice} />;
+    title = "My Leave History";
+  } else if (current === "leaveManagement") {
+    body = <LeaveManagementScreen initialStatus={routeState?.status} />;
+    title = "Leave Management";
   } else {
-    body = <HomeScreen user={user} model={model} />;
+    body = <HomeScreen user={user} model={model} openRoute={openRoute} />;
     title = "Home";
   }
 

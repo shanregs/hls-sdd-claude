@@ -13,6 +13,10 @@ export const TEACHER_MODEL: AccessModel = {
     },
     { section: "MASTER DATA", items: [item("Holiday Calendar", "/master-data/holiday-calendar")] },
     {
+      section: "LEAVE",
+      items: [item("Apply Leave", "/leave/apply", ["VIEW", "CREATE"]), item("My Leave History", "/leave/history", ["VIEW", "DELETE"])],
+    },
+    {
       section: "ACCOUNT",
       items: [item("My Profile", "/account/profile", ["VIEW", "EDIT"]), item("Settings", "/account/settings")],
     },
@@ -32,7 +36,13 @@ export const MANAGER_MODEL: AccessModel = {
         item("Holiday Calendar", "/master-data/holiday-calendar"),
       ],
     },
-    { section: "OPERATIONS", items: [item("Teacher Attendance", "/operations/teacher-attendance")] },
+    {
+      section: "OPERATIONS",
+      items: [
+        item("Teacher Attendance", "/operations/teacher-attendance"),
+        item("Leave Management", "/operations/leave", ["VIEW", "APPROVE"]),
+      ],
+    },
     {
       section: "ACCOUNT",
       items: [item("Profile", "/account/profile", ["VIEW", "EDIT"]), item("Settings", "/account/settings")],
@@ -55,7 +65,10 @@ export const DIRECTOR_MODEL: AccessModel = {
         item("Holiday Calendar", "/master-data/holiday-calendar"),
       ],
     },
-    { section: "OPERATIONS", items: [item("Attendance", "/operations/attendance")] },
+    {
+      section: "OPERATIONS",
+      items: [item("Attendance", "/operations/attendance"), item("Leave Management", "/operations/leave", ["VIEW", "APPROVE"])],
+    },
     { section: "SYSTEM", items: [item("Role & Permissions", "/identity/permissions")] },
     {
       section: "ACCOUNT",
@@ -78,6 +91,10 @@ export const ADMIN_TEACHER_MODEL: AccessModel = {
     { section: "AUDIT", items: [item("Audit Logs", "/audit/logs")] },
     { section: "MY ATTENDANCE", items: [item("My Attendance", "/my-attendance")] },
     { section: "MASTER DATA", items: [item("Holiday Calendar", "/master-data/holiday-calendar")] },
+    {
+      section: "LEAVE",
+      items: [item("Apply Leave", "/leave/apply", ["VIEW", "CREATE"]), item("My Leave History", "/leave/history", ["VIEW", "DELETE"])],
+    },
     {
       section: "ACCOUNT",
       items: [item("Profile", "/account/profile"), item("My Profile", "/account/profile"), item("Settings", "/account/settings")],
