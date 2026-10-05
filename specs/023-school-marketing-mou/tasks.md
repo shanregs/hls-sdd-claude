@@ -124,7 +124,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 ### Implementation for User Story 3
 
 - [X] T034 [US3] `recruitment/marketing/internal/ProposalService.java` and `recruitment/marketing/web/ProposalController.java`
-- [ ] T035 [P] [US3] `frontend/src/features/marketing/{ProposalForm,ProspectDetailPage}.tsx` and route `/marketing/prospects/:id` (overview, activities, proposal, history)
+- [X] T035 [P] [US3] `frontend/src/features/marketing/{ProposalForm,ProspectDetailPage}.tsx` and route `/marketing/prospects/:id` (overview, activities, proposal, history)
 
 **Checkpoint**: proposals work and unlock Final Stage.
 
@@ -138,18 +138,18 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 
 ### Tests for User Story 4
 
-- [ ] T036 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/WinServiceTest.java`: only Admin and Director create the School (a Zone Manager gets 403); a Place of the prospect's Zone and a confirmed billing contact are required (the School's other fields come from the prospect); an existing School of the same name and Place is offered for linking, never duplicated; the School is created only on a win; without 012 the prospect is saved "won, MoU to be recorded" and no hand-off is offered
-- [ ] T037 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/ContractStatusTest.java`: the effective stage is MoU when the School has a live contract and Active when a position is filled; the prospect shows dates, positions, filled and vacant from 012; the signed MoU may differ from the proposal and the difference is returned side by side; no contract data is stored here
-- [ ] T038 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/OverdueJobTest.java`: a won prospect without a contract past the limit is flagged and publishes `WonProspectOverdue` once; a second run publishes nothing; changing the limit (audited) and passing it again publishes again; recording the MoU clears the flag; the job is off in `IntegrationTestBase`
-- [ ] T039 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/SettingsApiTest.java`: holders of `MARKETING_SETTINGS` (Admin and Director by default) read and change `mouOverdueDays` (1 to 90, version required, audited); Zone Manager 403; Teacher and System 403
+- [X] T036 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/WinServiceTest.java`: only Admin and Director create the School (a Zone Manager gets 403); a Place of the prospect's Zone and a confirmed billing contact are required (the School's other fields come from the prospect); an existing School of the same name and Place is offered for linking, never duplicated; the School is created only on a win; without 012 the prospect is saved "won, MoU to be recorded" and no hand-off is offered
+- [X] T037 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/ContractStatusTest.java`: the effective stage is MoU when the School has a live contract and Active when a position is filled; the prospect shows dates, positions, filled and vacant from 012; the signed MoU may differ from the proposal and the difference is returned side by side; no contract data is stored here
+- [X] T038 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/OverdueJobTest.java`: a won prospect without a contract past the limit is flagged and publishes `WonProspectOverdue` once; a second run publishes nothing; changing the limit (audited) and passing it again publishes again; recording the MoU clears the flag; the job is off in `IntegrationTestBase`
+- [X] T039 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/SettingsApiTest.java`: holders of `MARKETING_SETTINGS` (Admin and Director by default) read and change `mouOverdueDays` (1 to 90, version required, audited); Zone Manager 403; Teacher and System 403
 - [ ] T040 [P] [US4] `frontend/src/features/marketing/WinDialog.test.tsx`: pick a Place, create or link a School, the hand-off navigates to the 012 contract page with the proposal in the router state; a Zone Manager sees no create or record action
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] `recruitment/marketing/internal/{WinService,ContractStatusReader}.java`: the win and School creation through `SchoolRegistry`, the link, the derived MoU and Active stage through `SchoolContracts` (`ObjectProvider` so the module starts without 012), the side-by-side difference
-- [ ] T042 [US4] `recruitment/marketing/internal/{OverdueJob,SettingsService}.java` and `recruitment/marketing/web/SettingsController.java`; `ProspectOwners` and `ProspectWon`
+- [X] T041 [US4] `recruitment/marketing/internal/{WinService,ContractStatusReader}.java`: the win and School creation through `SchoolRegistry`, the link, the derived MoU and Active stage through `SchoolContracts` (`ObjectProvider` so the module starts without 012), the side-by-side difference
+- [X] T042 [US4] `recruitment/marketing/internal/{OverdueJob,SettingsService}.java` and `recruitment/marketing/web/SettingsController.java`; `ProspectOwners` and `ProspectWon`
 - [ ] T043 [US4] Spec 012 amendment A7 (frontend): `frontend/src/features/schoolbilling/SchoolContractPage.tsx` and `MouFormDialog.tsx` accept initial values from the router state (Teacher count, salary mode and amounts, start month) and open the MoU form pre-filled; extend `SchoolContractPage.test.tsx` for it
-- [ ] T060 [US4] Win with contacts: `WinService` saves the optional principal and accountant contacts of the new School through the school module's contacts service (016 amendment A8; rebase after 016 merges), and `WinDialog.tsx` shows the two optional contact blocks; extend `WinServiceTest` and `WinDialog.test.tsx`
+- [X] T060 [US4] Win with contacts: `WinService` saves the optional principal and accountant contacts of the new School through the school module's contacts service (016 amendment A8; rebase after 016 merges), and `WinDialog.tsx` shows the two optional contact blocks; extend `WinServiceTest` and `WinDialog.test.tsx`
 - [ ] T044 [P] [US4] `frontend/src/features/marketing/{WinDialog,MarketingSettingsPage}.tsx`, the MoU status panel and the "MoU not yet recorded" flag in `ProspectDetailPage.tsx` and `PipelineBoard.tsx`; route `/marketing/settings`
 
 **Checkpoint**: the hand-off, the status and the alerts work.
@@ -164,12 +164,12 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 
 ### Tests for User Story 5
 
-- [ ] T045 [P] [US5] `backend/src/test/java/com/hls/recruitment/marketing/DashboardTest.java`: visits this month, prospects by stage, win rate (won divided by won plus lost), Schools won per Zone and owner match the lists; demand is the sum of vacant positions of won Schools with a live contract, and the counts by derived stage come from one batch call to 012 (a test with 50 won prospects asserts a fixed number of queries); supply comes from `SupplySource` and is `null` ("not available") when none is provided; a Zone Manager's numbers cover only their Zones; an empty state returns zeros
+- [X] T045 [P] [US5] `backend/src/test/java/com/hls/recruitment/marketing/DashboardTest.java`: visits this month, prospects by stage, win rate (won divided by won plus lost), Schools won per Zone and owner match the lists; demand is the sum of vacant positions of won Schools with a live contract, and the counts by derived stage come from one batch call to 012 (a test with 50 won prospects asserts a fixed number of queries); supply comes from `SupplySource` and is `null` ("not available") when none is provided; a Zone Manager's numbers cover only their Zones; an empty state returns zeros
 - [ ] T046 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.test.tsx`: role fixtures, "not available" supply, empty state, axe in both themes
 
 ### Implementation for User Story 5
 
-- [ ] T047 [US5] `recruitment/marketing/internal/DashboardService.java` (grouped SQL) and `recruitment/marketing/web/DashboardController.java`
+- [X] T047 [US5] `recruitment/marketing/internal/DashboardService.java` (grouped SQL) and `recruitment/marketing/web/DashboardController.java`
 - [ ] T048 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.tsx` and route `/marketing/dashboard`
 
 **Checkpoint**: the full spec is functional.
@@ -178,7 +178,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 
 ## Phase 8: Polish and Cross-Cutting Concerns
 
-- [ ] T049 [P] `recruitment/marketing/internal/MarketingDevSeeder.java` (only with the demo flag, idempotent): the prospects described in quickstart.md, with one proposal, one visit with an attachment-free outcome and a won prospect whose School has an MoU
+- [X] T049 [P] `recruitment/marketing/internal/MarketingDevSeeder.java` (only with the demo flag, idempotent): the prospects described in quickstart.md, with one proposal, one visit with an attachment-free outcome and a won prospect whose School has an MoU
 - [ ] T050 [P] Role-by-role UI test of the MARKETING menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/marketing/` and the navigation tests
 - [ ] T051 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/023-school-marketing-mou/quickstart-results.md`
 - [ ] T052 [P] Add a "023 School Marketing" folder to the Postman collection in `postman/HLS API/` and refresh `docs/db/schema-v23.sql`

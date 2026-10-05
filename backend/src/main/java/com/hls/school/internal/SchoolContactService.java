@@ -45,6 +45,12 @@ public class SchoolContactService implements SchoolContacts {
         return contactsOf(schoolId);
     }
 
+    @Override
+    @Transactional
+    public SchoolContactsView replace(UUID actor, UUID schoolId, ContactDetails principal, ContactDetails accountant) {
+        return replace(actor, java.util.Set.of(Role.ADMIN), schoolId, principal, accountant);
+    }
+
     /** Replaces both contacts; a null contact clears that role. */
     @Transactional
     public SchoolContactsView replace(

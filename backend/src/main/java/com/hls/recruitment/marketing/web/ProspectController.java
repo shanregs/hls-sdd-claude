@@ -3,6 +3,7 @@ package com.hls.recruitment.marketing.web;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
+import com.hls.recruitment.marketing.internal.ProspectDetailService;
 import com.hls.recruitment.marketing.internal.ProspectService;
 import com.hls.recruitment.marketing.internal.ProspectService.OwnerRequest;
 import com.hls.recruitment.marketing.internal.ProspectService.ProspectDto;
@@ -29,10 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProspectController {
 
     private final ProspectService prospects;
+    private final ProspectDetailService details;
     private final PermissionGuard guard;
 
-    public ProspectController(ProspectService prospects, PermissionGuard guard) {
+    public ProspectController(ProspectService prospects, ProspectDetailService details, PermissionGuard guard) {
         this.prospects = prospects;
+        this.details = details;
         this.guard = guard;
     }
 
@@ -68,9 +71,9 @@ public class ProspectController {
     }
 
     @GetMapping("/{id}")
-    public ProspectDto get(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+    public ProspectDetailService.ProspectDetail get(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.VIEW);
-        return prospects.get(CallerContext.userId(jwt), CallerContext.roles(jwt), id);
+        return details.get(CallerContext.userId(jwt), CallerContext.roles(jwt), id);
     }
 
     @PutMapping("/{id}")

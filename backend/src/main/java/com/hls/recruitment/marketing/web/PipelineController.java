@@ -11,6 +11,7 @@ import com.hls.recruitment.marketing.internal.ProposalService;
 import com.hls.recruitment.marketing.internal.ProposalService.ProposalDto;
 import com.hls.recruitment.marketing.internal.ProposalService.ProposalRequest;
 import com.hls.recruitment.marketing.internal.ProspectService.ProspectDto;
+import com.hls.recruitment.marketing.internal.WinService;
 import com.hls.school.api.CallerContext;
 import java.util.List;
 import java.util.UUID;
@@ -32,11 +33,13 @@ public class PipelineController {
 
     private final PipelineService pipeline;
     private final ProposalService proposals;
+    private final WinService wins;
     private final PermissionGuard guard;
 
-    public PipelineController(PipelineService pipeline, ProposalService proposals, PermissionGuard guard) {
+    public PipelineController(PipelineService pipeline, ProposalService proposals, WinService wins, PermissionGuard guard) {
         this.pipeline = pipeline;
         this.proposals = proposals;
+        this.wins = wins;
         this.guard = guard;
     }
 
@@ -61,6 +64,12 @@ public class PipelineController {
     public ProspectDto review(@PathVariable UUID id, @RequestBody ReviewRequest request, @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.APPROVE);
         return pipeline.review(CallerContext.userId(jwt), CallerContext.roles(jwt), id, request);
+    }
+
+    @PostMapping("/prospects/{id}/win")
+    public WinService.WinResult win(@PathVariable UUID id, @RequestBody WinService.WinRequest request, @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.EDIT);
+        return wins.win(CallerContext.userId(jwt), CallerContext.roles(jwt), id, request);
     }
 
     @GetMapping("/prospects/{id}/proposals")

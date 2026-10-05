@@ -6,4 +6,7 @@ import java.util.UUID;
 public interface SchoolContacts {
 
     SchoolContactsView contactsOf(UUID schoolId);
+
+    /** Saves both contacts of a School on behalf of another module; a null contact clears that role. */
+    SchoolContactsView replace(UUID actor, UUID schoolId, ContactDetails principal, ContactDetails accountant);
 }

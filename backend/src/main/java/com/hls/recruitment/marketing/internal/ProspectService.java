@@ -63,6 +63,7 @@ public class ProspectService {
             Integer expectedTeachers,
             boolean won,
             boolean followUpOverdue,
+            boolean mouOverdue,
             UUID schoolId,
             String contactPerson,
             Long version) {}
@@ -91,6 +92,7 @@ public class ProspectService {
     private final MarketingScope scope;
     private final EffectiveStageResolver stages;
     private final FollowUps followUps;
+    private final SettingsService settings;
     private final ChangeRecorder changes;
     private final Clock clock;
 
@@ -103,6 +105,7 @@ public class ProspectService {
             MarketingScope scope,
             EffectiveStageResolver stages,
             FollowUps followUps,
+            SettingsService settings,
             ChangeRecorder changes,
             Clock clock) {
         this.prospects = prospects;
@@ -113,6 +116,7 @@ public class ProspectService {
         this.scope = scope;
         this.stages = stages;
         this.followUps = followUps;
+        this.settings = settings;
         this.changes = changes;
         this.clock = clock;
     }
@@ -273,6 +277,7 @@ public class ProspectService {
     List<ProspectRow> rowsOf(Collection<Prospect> rows, Map<UUID, String> effective) {
         Set<UUID> userIds = rows.stream().map(Prospect::getOwnerUserId).collect(Collectors.toSet());
         Set<UUID> overdue = followUps.overdueProspects(rows.stream().map(Prospect::getId).toList());
+        Instant mouLimit = clock.instant().minus(settings.overdueDays(), java.time.temporal.ChronoUnit.DAYS);
         Map<UUID, String> userNames = namesOf(userIds);
         Map<UUID, String> zoneNames = schools.zones(rows.stream().map(Prospect::getZoneId).distinct().toList()).stream()
                 .collect(Collectors.toMap(SchoolDirectory.ZoneInfo::id, SchoolDirectory.ZoneInfo::name));
@@ -289,6 +294,7 @@ public class ProspectService {
                         p.getExpectedTeachers(),
                         p.isWon(),
                         overdue.contains(p.getId()),
+                        p.isWon() && EffectiveStageResolver.WON.equals(effective.get(p.getId())) && !p.getWonAt().isAfter(mouLimit),
                         p.getSchoolId(),
                         p.getContactPerson(),
                         p.getVersion()))
