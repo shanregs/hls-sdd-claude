@@ -1,0 +1,14 @@
+$kind: http-request
+name: Review Final Stage
+description: "APPROVE or REJECT (a reason is required to reject; it goes back to Negotiation). Needs MARKETING.APPROVE: Director and the Zone Manager of the Zone, not Admin."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/review"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "decision": "APPROVE"
+    }
+order: 7000

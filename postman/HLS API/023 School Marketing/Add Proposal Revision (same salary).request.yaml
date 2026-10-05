@@ -1,0 +1,18 @@
+$kind: http-request
+name: Add Proposal Revision (same salary)
+description: "Labelled \"Proposal (not a contract)\". A revision is new; an old one never changes."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/proposals"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherCount": 4,
+      "startMonth": "2026-12",
+      "salaryMode": "SAME_FOR_ALL",
+      "rate": "15000.00",
+      "notes": "First offer"
+    }
+order: 10000

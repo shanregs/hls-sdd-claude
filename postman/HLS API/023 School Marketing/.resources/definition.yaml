@@ -1,0 +1,3 @@
+$kind: collection
+description: "School marketing and the MoU pipeline (spec 023). Admin, Director and Zone Manager add prospects, plan and complete visits, and keep proposals (a Zone Manager only in the Zones they manage; other Zones are a 404). The Director and the Zone Manager of the prospect's Zone review a Final Stage prospect (Admin cannot by default). Only Admin and Director change the owner, create the School of a won prospect and remove an attachment; settings are for Admin and Director. Teacher and System get 403. Collection variables: prospectId, activityId, fileId and zoneId/placeId (from the 005 folder). A won prospect hands over to the MoU form of spec 012; the signed MoU is recorded only there."
+order: 13000

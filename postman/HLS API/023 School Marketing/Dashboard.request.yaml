@@ -1,0 +1,6 @@
+$kind: http-request
+name: Dashboard
+description: "Visits, prospects by stage, win rate, Schools won per Zone and owner, demand against supply (supply is null when not available)."
+url: "{{baseUrl}}/api/v1/marketing/dashboard?period=2026-10"
+method: GET
+order: 18000

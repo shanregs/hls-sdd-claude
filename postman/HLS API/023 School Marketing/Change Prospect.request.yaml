@@ -1,0 +1,19 @@
+$kind: http-request
+name: Change Prospect
+description: "The current version is required (409 if stale)."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Green Valley Public School",
+      "board": "CBSE",
+      "address": "5 Lake Road",
+      "zoneId": "{{zoneId}}",
+      "expectedTeachers": 5,
+      "version": 0
+    }
+order: 4000

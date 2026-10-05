@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V22) and the demo data seeded itself.
+(V1-V23) and the demo data seeded itself.
 
 ## Prerequisites
 
@@ -203,6 +203,40 @@ has Campus Drives, Candidates, Offers, Induction and Dashboard.
 
 The demo data adds **Demo College of Arts** with a held drive, six candidates, offers in several statuses, and
 **Ready Rani**, whose offer was accepted and who completed the **Demo Induction** batch, so she is ready to deploy.
+
+### School marketing and the MoU pipeline
+
+The marketing flow is: **prospect, visits, proposal, Final Stage review, win (create the School), record the MoU in School
+Contracts**. The MARKETING menu has Prospects, Calendar, Pipeline, Dashboard and Settings.
+
+- **Prospects** (Admin, Director, Zone Manager): add a School you are approaching (name, board, Zone, contact, expected
+  Teachers). A Zone Manager sees and changes only the prospects of the Zones they manage. A School already on the list
+  (same name, board and Zone) is refused with a pointer to the existing one. Open a prospect to plan a visit, call or
+  meeting, complete it (an **outcome** is required, with an optional follow-up date), reschedule it (the earlier date
+  stays) or cancel it (a reason). A planned visit past its date shows as **missed**. Attach photos or documents to a
+  visit (jpg, png, pdf, docx, xlsx, txt up to 10 MB, ten per visit); only Admin and Director remove one, with a reason.
+- **Calendar** shows the month's visits and your recruitment drives side by side; a clash is shown, not blocked.
+- **Pipeline** is the board: Prospect, Contacted, Visit, Follow-up, Interested, Negotiation, Final Stage, then Won, MoU and
+  Active, with On Hold and Lost. **MoU and Active follow the contract** in School Contracts (a live contract, then a
+  Teacher placed), they are not dragged. Moving to Final Stage needs a **proposal** (Teacher count, start month, the
+  same salary for all or one per position; each revision is kept and labelled "Proposal (not a contract)").
+- **Final Stage review**: the Director, or the Zone Manager of the prospect's Zone, approves or rejects (a rejection needs
+  a reason and returns it to Negotiation); Admin cannot by default. An approved prospect is **won**.
+- **Win**: Admin or Director opens **Create the School**, picks a Place of the prospect's Zone, confirms the billing
+  contact (and may add the principal and accountant), and is taken to the MoU form in School Contracts with the proposal
+  filled in. If a School of that name already exists in the Place, link it instead. A Zone Manager cannot create the School.
+- A won prospect with no MoU after **14 days** (Settings, Admin and Director, 1 to 90) is flagged and its owner, the Zone
+  Manager, the Admin and the Director get one in-app notification.
+- **Dashboard**: visits, prospects by stage, win rate, Schools won per Zone and owner, and **demand** (vacant positions of
+  won Schools) against **supply** (shown "not available" until the recruitment module provides ready-to-deploy recruits).
+
+Uploaded files are stored under `hls.files.directory` (default `./data/files` next to the backend; in Docker mount it as a
+volume so it survives a restart).
+
+The demo data adds five prospects in **Demo Zone**: Green Valley Public School (Contacted), Sunrise Matriculation School
+(Visit, with a completed visit whose follow-up is overdue), Lakeview International School (Negotiation, with a proposal and
+a planned meeting), Hilltop Public School (Final Stage, waiting for review) and **Demo School One** (won, linked to the
+School that already has its MoU, so it shows Active).
 
 ## Postman
 

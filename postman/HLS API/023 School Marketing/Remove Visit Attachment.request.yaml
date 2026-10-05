@@ -1,0 +1,14 @@
+$kind: http-request
+name: Remove Visit Attachment
+description: "Admin and Director only, with a reason; the bytes are kept."
+url: "{{baseUrl}}/api/v1/marketing/activities/{{activityId}}/attachments/{{fileId}}"
+method: DELETE
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Wrong visit"
+    }
+order: 32000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Prospect
+description: "The prospect with its latest proposal, the MoU status read from spec 012, and the stage and owner history."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}"
+method: GET
+order: 3000

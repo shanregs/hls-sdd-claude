@@ -1,0 +1,22 @@
+$kind: http-request
+name: Win Prospect (create School)
+description: "Admin and Director, after approval. A Place of the prospect's Zone and a confirmed billing contact; or send linkSchoolId to link an existing School. Returns the hand-off path to the MoU form of spec 012."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/win"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "placeId": "{{placeId}}",
+      "billingContact": "accounts@school.example",
+      "principal": {
+        "name": "Mrs Rao",
+        "phone": "9111111111"
+      },
+      "accountant": {
+        "name": "Mr Iyer"
+      }
+    }
+order: 8000

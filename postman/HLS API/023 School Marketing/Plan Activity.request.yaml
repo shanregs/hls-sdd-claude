@@ -1,0 +1,21 @@
+$kind: http-request
+name: Plan Activity
+description: "prospectId or schoolId (an account visit). Attendees default to the caller. Saves activityId."
+url: "{{baseUrl}}/api/v1/marketing/activities"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "prospectId": "{{prospectId}}",
+      "type": "VISIT",
+      "date": "2026-10-20",
+      "notes": "Meet the principal"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("activityId", v); } }
+    language: text/javascript
+order: 13000

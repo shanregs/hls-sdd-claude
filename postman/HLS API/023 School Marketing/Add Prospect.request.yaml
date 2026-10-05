@@ -1,0 +1,26 @@
+$kind: http-request
+name: Add Prospect
+description: "A School already on the list (same name, board and Zone) is 409 naming the existing prospect. Needs MARKETING.CREATE. Saves prospectId."
+url: "{{baseUrl}}/api/v1/marketing/prospects"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Green Valley Public School",
+      "board": "CBSE",
+      "address": "5 Lake Road",
+      "zoneId": "{{zoneId}}",
+      "contactPerson": "Mrs Rao",
+      "designation": "Principal",
+      "phone": "9111111111",
+      "email": "rao@school.example",
+      "expectedTeachers": 4
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.row.id; if (v) { pm.collectionVariables.set("prospectId", v); } }
+    language: text/javascript
+order: 1000

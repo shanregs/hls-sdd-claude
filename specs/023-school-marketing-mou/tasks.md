@@ -181,9 +181,9 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T049 [P] `recruitment/marketing/internal/MarketingDevSeeder.java` (only with the demo flag, idempotent): the prospects described in quickstart.md, with one proposal, one visit with an attachment-free outcome and a won prospect whose School has an MoU
 - [X] T050 [P] Role-by-role UI test of the MARKETING menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/marketing/` and the navigation tests
 - [X] T051 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/023-school-marketing-mou/quickstart-results.md`
-- [ ] T052 [P] Add a "023 School Marketing" folder to the Postman collection in `postman/HLS API/` and refresh `docs/db/schema-v23.sql`
-- [ ] T053 [P] Constitution amendment in `.specify/memory/constitution.md`: the MARKETING navigation section (Principle IV), the `files` module (Principle VII) and a Marketing row in the Default role access matrix, with a Sync Impact Report note (the version is taken at merge, after spec 016's 2.4.0)
-- [ ] T054 [P] Update `docs/spec-roadmap.md` (023 status; the shared file storage contract C7 is now built here) and `docs/running-locally.md` (the marketing flow, the files directory and demo data)
+- [X] T052 [P] Add a "023 School Marketing" folder to the Postman collection in `postman/HLS API/` and refresh `docs/db/schema-v23.sql`
+- [X] T053 [P] Constitution amendment in `.specify/memory/constitution.md`: the MARKETING navigation section (Principle IV), the `files` module (Principle VII) and a Marketing row in the Default role access matrix, with a Sync Impact Report note (the version is taken at merge, after spec 016's 2.4.0)
+- [X] T054 [P] Update `docs/spec-roadmap.md` (023 status; the shared file storage contract C7 is now built here) and `docs/running-locally.md` (the marketing flow, the files directory and demo data)
 - [ ] T055 Review before the PR: run the `java-reviewer` agent on `recruitment/marketing`, `files` and the `school`, `organization`, `schoolbilling` and `notification` changes, and the `database-reviewer` agent on `V23`; address findings
 - [ ] T056 Walk through every scenario in `quickstart.md` on the local app (database on Docker port 5433) and write the outcomes to `specs/023-school-marketing-mou/quickstart-results.md`
 - [ ] T057 Run the full backend and frontend suites once, then open the PR

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Settings
+description: "Needs MARKETING_SETTINGS.VIEW (Admin, Director)."
+url: "{{baseUrl}}/api/v1/marketing/settings"
+method: GET
+order: 19000

@@ -1,0 +1,16 @@
+$kind: http-request
+name: Upload Visit Attachment
+description: "multipart form field \"file\": jpg, png, pdf, docx, xlsx or txt up to 10 MB, at most 10 per visit. Saves fileId."
+url: "{{baseUrl}}/api/v1/marketing/activities/{{activityId}}/attachments"
+method: POST
+body:
+  type: form-data
+  content:
+    - key: file
+      type: file
+      value: ""
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); if (x.fileId) { pm.collectionVariables.set("fileId", x.fileId); } }
+    language: text/javascript
+order: 30000
