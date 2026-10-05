@@ -1,4 +1,4 @@
-package com.hls.teacher.internal;
+package com.hls.schoolbilling.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,12 +13,13 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * An interim, dated link from a Teacher to a School (to be replaced by the future Teacher-School
- * contract). In effect on a date when ACTIVE and the date falls between starts_on and ends_on.
+ * A dated link from a Teacher to a School and, once mapped, to a position of its contract. It replaces the
+ * interim {@code TeacherPlacement} of spec 005 and keeps its rules: in effect on a date when ACTIVE and the
+ * date falls between starts_on and ends_on; rows are never overwritten.
  */
 @Entity
-@Table(name = "teacher_placement")
-public class TeacherPlacement {
+@Table(name = "contract_assignment")
+public class ContractAssignment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,6 +31,9 @@ public class TeacherPlacement {
     @Column(name = "school_id", nullable = false)
     private UUID schoolId;
 
+    @Column(name = "position_id")
+    private UUID positionId;
+
     @Column(name = "starts_on", nullable = false)
     private LocalDate startsOn;
 
@@ -38,19 +42,25 @@ public class TeacherPlacement {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private PlacementStatus status = PlacementStatus.ACTIVE;
+    private AssignmentStatus status = AssignmentStatus.ACTIVE;
+
+    @Column(name = "created_by")
+    private UUID createdBy;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    protected TeacherPlacement() {
+    protected ContractAssignment() {
         // JPA
     }
 
-    public TeacherPlacement(UUID teacherId, UUID schoolId, LocalDate startsOn, Instant now) {
+    public ContractAssignment(
+            UUID teacherId, UUID schoolId, UUID positionId, LocalDate startsOn, UUID createdBy, Instant now) {
         this.teacherId = teacherId;
         this.schoolId = schoolId;
+        this.positionId = positionId;
         this.startsOn = startsOn;
+        this.createdBy = createdBy;
         this.createdAt = now;
     }
 
@@ -66,6 +76,10 @@ public class TeacherPlacement {
         return schoolId;
     }
 
+    public UUID getPositionId() {
+        return positionId;
+    }
+
     public LocalDate getStartsOn() {
         return startsOn;
     }
@@ -74,7 +88,7 @@ public class TeacherPlacement {
         return endsOn;
     }
 
-    public PlacementStatus getStatus() {
+    public AssignmentStatus getStatus() {
         return status;
     }
 
@@ -82,12 +96,16 @@ public class TeacherPlacement {
         this.endsOn = endsOn;
     }
 
-    public void setStatus(PlacementStatus status) {
+    public void setStatus(AssignmentStatus status) {
         this.status = status;
     }
 
+    public void setPositionId(UUID positionId) {
+        this.positionId = positionId;
+    }
+
     public boolean isInEffectOn(LocalDate date) {
-        return status == PlacementStatus.ACTIVE
+        return status == AssignmentStatus.ACTIVE
                 && !startsOn.isAfter(date)
                 && (endsOn == null || !endsOn.isBefore(date));
     }

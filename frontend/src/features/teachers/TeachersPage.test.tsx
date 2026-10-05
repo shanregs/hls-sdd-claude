@@ -99,7 +99,7 @@ describe("TeachersPage (User Story 4)", () => {
     grantedActions = ["VIEW", "CREATE", "EDIT"];
   });
 
-  it("lists teachers with status, interim placement, scheduled move and manager", async () => {
+  it("lists teachers with status, school, scheduled move and manager", async () => {
     mockApi([TARA]);
 
     render(<TeachersPage />);
@@ -113,7 +113,7 @@ describe("TeachersPage (User Story 4)", () => {
       screen.getAllByText(/scheduled: holy cross from 15\/11\/2026/i).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("Manoj Manager").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/interim placement/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/interim/i)).toBeNull();
   });
 
   it("shows an empty state and an error alert", async () => {

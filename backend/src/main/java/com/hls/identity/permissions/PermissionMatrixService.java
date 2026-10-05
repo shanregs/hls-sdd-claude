@@ -92,6 +92,7 @@ public class PermissionMatrixService {
         seedAttendance();
         seedLeave();
         seedNotifications();
+        seedSchoolContracts();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -175,6 +176,18 @@ public class PermissionMatrixService {
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.VIEW, true);
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.DELETE, true);
         }
+        grants.invalidateAround();
+    }
+
+    /** School contract defaults (spec 012): Admin and Director keep the MoU; the Zone Manager reads it. */
+    private void seedSchoolContracts() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action :
+                    List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                seed(role, PermissionModule.SCHOOL_CONTRACTS, action, true);
+            }
+        }
+        seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.VIEW, true);
         grants.invalidateAround();
     }
 

@@ -1,0 +1,12 @@
+$kind: http-request
+name: End Contract
+description: "Sets the end date; Teacher assignments are not shortened. Needs SCHOOL_CONTRACTS.EDIT."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/end"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "endsOn": "2026-12-31" }
+order: 7000

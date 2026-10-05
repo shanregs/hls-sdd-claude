@@ -2,11 +2,11 @@ package com.hls.teacher.internal;
 
 import com.hls.organization.api.ManagerQueries;
 import com.hls.organization.api.ManagerViewEnricher;
+import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,13 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ManagerTeacherCountEnricher implements ManagerViewEnricher {
 
     private final ManagerQueries managerQueries;
-    private final TeacherPlacementRepository placementRepository;
+    private final TeacherPlacementSource placementSource;
     private final Clock clock;
 
     public ManagerTeacherCountEnricher(
-            @Lazy ManagerQueries managerQueries, TeacherPlacementRepository placementRepository, Clock clock) {
+            @Lazy ManagerQueries managerQueries, TeacherPlacementSource placementSource, Clock clock) {
         this.managerQueries = managerQueries;
-        this.placementRepository = placementRepository;
+        this.placementSource = placementSource;
         this.clock = clock;
     }
 
@@ -39,7 +39,7 @@ public class ManagerTeacherCountEnricher implements ManagerViewEnricher {
             Set<UUID> schools = schoolsByManager.getOrDefault(managerId, Set.of());
             long count = schools.isEmpty()
                     ? 0
-                    : new HashSet<>(placementRepository.teacherIdsAtSchoolsOn(schools, today)).size();
+                    : placementSource.teacherIdsAtSchoolsOn(schools, today).size();
             result.put(managerId, Map.of("teacherCount", count));
         }
         return result;

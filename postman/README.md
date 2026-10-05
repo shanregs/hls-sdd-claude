@@ -23,7 +23,7 @@ Management`, `005 Master Data` (Zones & Places, Schools, Managers & assignments,
 salary), `008 Attendance` (Status codes & Holiday Calendar, Teacher self-service, Supervisors, Admin
 and Director: grid, export, month lock), `009 Leave` (Teacher self-service: types, preview, submit, history,
 cancel; Supervisors: list, get, approve, reject, revoke), `010 Notifications` (own notifications:
-list, unread only, unread count, mark read, mark all read, delete, clear read).
+list, unread only, unread count, mark read, mark all read, delete, clear read), `012 School Contracts` (the MoU: list, a School's contracts, signatory candidates, record a new MoU, record on a pending contract, end, cancel, map Teachers to positions).
 
 The 005 requests save `zoneId`, `placeId`, `schoolId`, `managerId`, `teacherId` and their versions
 from create responses so the next request works in sequence. The 008 requests use the collection

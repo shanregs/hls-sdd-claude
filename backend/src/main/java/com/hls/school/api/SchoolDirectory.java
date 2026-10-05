@@ -31,4 +31,7 @@ public interface SchoolDirectory {
     List<SchoolInfo> schools(Collection<UUID> schoolIds);
 
     List<SchoolInfo> schoolsInZone(UUID zoneId);
+
+    /** Every School, active or not (spec 012: the School Contracts list covers all Schools in scope). */
+    List<SchoolInfo> allSchools();
 }

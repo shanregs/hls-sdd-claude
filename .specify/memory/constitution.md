@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.3.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0)
+Version change: 1.7.0 → 2.3.1 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,10 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.3.1 (PATCH, spec 012): the Default role access matrix gains a School Contracts row (the MoU
+    between HLS and a School). Admin and Director create and edit contracts; the Zone Manager (Manager)
+    views the contracts of their Schools and maps Teachers to them; Teacher and System have no access.
+    No principle changes.
   - 2.3.0: Principle X's login model is generalized — OTP sign-in is no longer Teacher-only; every
     user may sign in by phone+OTP or by password (identified by phone number or username).
     Password reset can deliver its code to phone or to a registered email, user's choice.
@@ -271,6 +275,7 @@ kept intentionally lightweight for v1.
   | Zone Management                 | ✓     | ✓        | —        | —       | —      |
   | School Management               | ✓     | ✓        | Assigned | —       | —      |
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
+  | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Attendance                      | ✓     | ✓        | Assigned | Own     | —      |
   | Leave Management                | ✓     | ✓        | Assigned | Own     | —      |
   | Payroll                         | ✓     | ✓        | —        | —       | —      |
@@ -321,4 +326,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.3.0 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-09-23
+**Version**: 2.3.1 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-05

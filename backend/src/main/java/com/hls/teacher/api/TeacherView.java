@@ -32,7 +32,15 @@ public record TeacherView(
 
     public record PendingPlacement(UUID schoolId, String schoolName, LocalDate startsOn) {}
 
-    /** One placement row; the label stays "interim" until the school-billing contract replaces it. */
+    /**
+     * One assignment row of the Teacher; {@code positionNumber} is the position of the School's contract the
+     * Teacher fills, or null while the assignment is not mapped to one (spec 012).
+     */
     public record PlacementRow(
-            UUID schoolId, String schoolName, LocalDate startsOn, LocalDate endsOn, String status, boolean interim) {}
+            UUID schoolId,
+            String schoolName,
+            LocalDate startsOn,
+            LocalDate endsOn,
+            String status,
+            Integer positionNumber) {}
 }

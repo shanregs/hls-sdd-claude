@@ -1,0 +1,19 @@
+$kind: http-request
+name: Record MoU on Pending Contract
+description: "Records the MoU once on a "MoU pending" contract (a School whose Teachers were placed before an MoU existed). Same body as a new MoU, without startsOn."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/mou"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherCount": 4,
+      "salaryMode": "SAME_FOR_ALL",
+      "rate": "15000.00",
+      "signedOn": "2026-09-20",
+      "schoolSignatories": [ { "name": "R. Kumar", "designation": "Principal" } ],
+      "hlsSignatories": [ { "userId": "{{managerUserId}}", "designation": "Zone Manager" } ]
+    }
+order: 6000

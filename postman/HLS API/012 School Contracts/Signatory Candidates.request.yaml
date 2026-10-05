@@ -1,0 +1,6 @@
+$kind: http-request
+name: Signatory Candidates
+description: "The HLS signatories on offer for a School: its Zone Manager and the active Directors. Use their userId in hlsSignatories."
+url: "{{baseUrl}}/api/v1/school-contracts/signatory-candidates?schoolId={{schoolId}}"
+method: GET
+order: 3000

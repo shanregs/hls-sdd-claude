@@ -69,6 +69,13 @@ public class SchoolDirectoryImpl implements SchoolDirectory {
                 .toList();
     }
 
+    @Override
+    public List<SchoolInfo> allSchools() {
+        List<School> schools = schoolRepository.findAll();
+        Map<UUID, UUID> zoneByPlace = zoneByPlace(schools);
+        return schools.stream().map(s -> info(s, zoneByPlace.get(s.getPlaceId()))).toList();
+    }
+
     private SchoolInfo info(School school) {
         UUID zoneId = placeRepository
                 .findById(school.getPlaceId())

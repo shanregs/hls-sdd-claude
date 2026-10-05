@@ -3,6 +3,7 @@ package com.hls.teacher.internal;
 import com.hls.school.api.ConflictException;
 import com.hls.school.api.SchoolDeactivationGuard;
 import com.hls.school.api.SchoolViewEnricher;
+import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -16,18 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class TeacherSchoolHooks implements SchoolDeactivationGuard, SchoolViewEnricher {
 
-    private final TeacherPlacementRepository placementRepository;
+    private final TeacherPlacementSource placementSource;
     private final Clock clock;
 
-    public TeacherSchoolHooks(TeacherPlacementRepository placementRepository, Clock clock) {
-        this.placementRepository = placementRepository;
+    public TeacherSchoolHooks(TeacherPlacementSource placementSource, Clock clock) {
+        this.placementSource = placementSource;
         this.clock = clock;
     }
 
     @Override
     @Transactional(readOnly = true)
     public void checkDeactivate(UUID schoolId) {
-        if (placementRepository.existsCurrentOrFuture(schoolId, LocalDate.now(clock))) {
+        if (placementSource.hasCurrentOrFutureAssignment(schoolId, LocalDate.now(clock))) {
             throw new ConflictException(
                     "This School still has Teachers placed in it or scheduled to arrive. Move them first.");
         }
@@ -39,10 +40,7 @@ public class TeacherSchoolHooks implements SchoolDeactivationGuard, SchoolViewEn
         if (schoolIds.isEmpty()) {
             return Map.of();
         }
-        Map<UUID, Long> counts = new HashMap<>();
-        for (Object[] row : placementRepository.countBySchoolOn(schoolIds, LocalDate.now(clock))) {
-            counts.put((UUID) row[0], ((Number) row[1]).longValue());
-        }
+        Map<UUID, Long> counts = placementSource.teacherCountsBySchool(schoolIds, LocalDate.now(clock));
         Map<UUID, Map<String, Object>> result = new HashMap<>();
         for (UUID id : schoolIds) {
             result.put(id, Map.of("teacherCount", counts.getOrDefault(id, 0L)));

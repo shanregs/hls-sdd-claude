@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cancel Contract
+description: "Cancels a contract that no Teacher is mapped to. Needs SCHOOL_CONTRACTS.EDIT."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/cancel"
+method: POST
+order: 8000

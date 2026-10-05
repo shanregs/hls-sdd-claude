@@ -1,6 +1,7 @@
 package com.hls.teacher.internal;
 
 import com.hls.teacher.api.TeacherDirectory;
+import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,9 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 class TeacherDirectoryImpl implements TeacherDirectory {
 
     private final TeacherRepository teachers;
-    private final TeacherPlacementRepository placements;
+    private final TeacherPlacementSource placements;
 
-    TeacherDirectoryImpl(TeacherRepository teachers, TeacherPlacementRepository placements) {
+    TeacherDirectoryImpl(TeacherRepository teachers, TeacherPlacementSource placements) {
         this.teachers = teachers;
         this.placements = placements;
     }
@@ -45,14 +46,12 @@ class TeacherDirectoryImpl implements TeacherDirectory {
         if (teacherIds.isEmpty()) {
             return List.of();
         }
-        return placements.overlapping(teacherIds, from, to).stream()
-                .map(p -> new PlacementSpan(p.getTeacherId(), p.getSchoolId(), p.getStartsOn(), p.getEndsOn()))
-                .toList();
+        return placements.spansOverlapping(teacherIds, from, to);
     }
 
     @Override
     public Set<UUID> teachersPlacedDuring(LocalDate from, LocalDate to) {
-        return new HashSet<>(placements.teacherIdsPlacedBetween(from, to));
+        return new HashSet<>(placements.teachersAssignedDuring(from, to));
     }
 
     private static TeacherInfo toInfo(Teacher t) {

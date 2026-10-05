@@ -168,12 +168,17 @@ class TeacherControllerTest extends MasterDataTestBase {
         assertThat(post("/api/v1/teachers/" + inMine + "/status", manager.token(), Map.of("status", "ON_LEAVE"))
                         .status())
                 .isEqualTo(403);
-        assertThat(placeTeacherRaw(manager.token(), inMine, mine[2], null).status()).isEqualTo(403);
+        // spec 012: a Zone Manager maps Teachers within their scope (own School; a Teacher not placed yet or placed
+        // at their School), but never moves a Teacher out of, or into, another Manager's School
+        assertThat(placeTeacherRaw(manager.token(), inMine, mine[2], null).status()).isEqualTo(409);
+        assertThat(placeTeacherRaw(manager.token(), inMine, theirs[2], null).status()).isEqualTo(404);
+        assertThat(placeTeacherRaw(manager.token(), elsewhere, mine[2], null).status()).isEqualTo(404);
         assertThat(put("/api/v1/teachers/" + inMine + "/user", manager.token(), Map.of("userId", UUID.randomUUID()))
                         .status())
                 .isEqualTo(403);
         assertThat(delete("/api/v1/teachers/" + inMine + "/placements/pending", manager.token()).status())
-                .isEqualTo(403);
+                .isEqualTo(404);
+        assertThat(placeTeacherRaw(manager.token(), unplaced, mine[2], null).status()).isEqualTo(200);
     }
 
     @Test

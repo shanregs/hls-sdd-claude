@@ -7,7 +7,6 @@ import com.hls.school.api.CallerContext;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.PageResponse;
 import com.hls.teacher.api.TeacherView;
-import com.hls.teacher.internal.TeacherPlacementService;
 import com.hls.teacher.internal.TeacherService;
 import com.hls.teacher.internal.TeacherStatus;
 import java.time.LocalDate;
@@ -36,13 +35,11 @@ public class TeacherController {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final TeacherService teacherService;
-    private final TeacherPlacementService placementService;
     private final PermissionGuard permissionGuard;
 
     public TeacherController(
-            TeacherService teacherService, TeacherPlacementService placementService, PermissionGuard permissionGuard) {
+            TeacherService teacherService, PermissionGuard permissionGuard) {
         this.teacherService = teacherService;
-        this.placementService = placementService;
         this.permissionGuard = permissionGuard;
     }
 
@@ -55,7 +52,7 @@ public class TeacherController {
 
     public record UserLinkRequest(UUID userId) {}
 
-    public record PlacementRequest(UUID schoolId, LocalDate effectiveOn) {}
+    public record PlacementRequest(UUID schoolId, UUID positionId, LocalDate effectiveOn) {}
 
     @GetMapping
     public PageResponse<TeacherView> list(
@@ -138,16 +135,19 @@ public class TeacherController {
     public TeacherView place(
             @PathVariable UUID id, @RequestBody PlacementRequest request, @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.EDIT);
-        requireOrgWide(jwt);
-        placementService.place(CallerContext.userId(jwt), id, request.schoolId(), request.effectiveOn());
-        return teacherService.get(CallerContext.userId(jwt), CallerContext.roles(jwt), id);
+        return teacherService.assign(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                id,
+                request.schoolId(),
+                request.positionId(),
+                request.effectiveOn());
     }
 
     @DeleteMapping("/{id}/placements/pending")
     public ResponseEntity<Void> cancelPending(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.EDIT);
-        requireOrgWide(jwt);
-        placementService.cancelPending(CallerContext.userId(jwt), id);
+        teacherService.cancelScheduledMove(CallerContext.userId(jwt), CallerContext.roles(jwt), id);
         return ResponseEntity.noContent().build();
     }
 

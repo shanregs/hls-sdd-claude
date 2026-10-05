@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V15) and the demo data seeded itself.
+(V1-V21) and the demo data seeded itself.
 
 ## Prerequisites
 
@@ -156,6 +156,29 @@ Notifications older than 90 days are deleted every night at 02:30 (`hls.notifica
 on). The demo data adds: Tara a read "leave approved", an unread "leave rejected" and an attendance notice;
 Manoj the leave requests of Meena and Karthik; Asha the one from Lakshmi (her School has no Manager).
 To see it live: sign in as Manoj and reject Tara's pending request, then sign in as Tara and watch the bell.
+
+### School contracts (MoU)
+
+The business process is: **MoU contract, then Teacher mapping, then attendance capture, then month-end billing and
+salary** (billing and salary come in later specs). OPERATIONS -> **School Contracts** (Admin, Director and the Zone
+Manager) lists every School in scope with its status (Active, Ends soon, MoU pending, No MoU yet, Ended), the
+filled and vacant positions, and the Teachers not mapped yet. Open a School to see its contract history.
+
+- **Record a new MoU** (Admin, Director): the number of Teachers, the salary (the same for all Teachers, or a
+  different one for each position), the dates, and the signing details: the date signed, who signed for the School
+  (name and designation), and who signed for HLS (the School's Zone Manager and/or a Director). A new MoU ends
+  the current contract the day before it starts. A contract is never edited: a change is a new MoU.
+- **Map Teachers**: from Teachers -> a Teacher's School assignment (Admin, Director) choose the School and, for a
+  different-salary contract, the position. The Zone Manager maps through the same endpoint for their own
+  Schools (`POST /api/v1/teachers/{id}/placements`). After a new MoU, **Map Teachers to this MoU** on the School page
+  moves the School's current Teachers to its positions in one step with no gap in their placement.
+- A School whose Teachers were placed before an MoU existed shows **MoU pending**; **Record the MoU** on its page
+  fills it in. Teachers on a contract that has ended stay placed (attendance keeps working) and are listed as not
+  mapped to the MoU in effect.
+
+The demo data adds a 4-Teacher MoU (one salary, INR 15,000) for **Demo School One**, signed by Manoj (Zone Manager)
+and Divya (Director), with Tara, Meena and Karthik mapped to positions 1 to 3 and position 4 vacant. Demo School
+Two has no Zone Manager, so it stays **MoU pending**.
 
 ## Postman
 

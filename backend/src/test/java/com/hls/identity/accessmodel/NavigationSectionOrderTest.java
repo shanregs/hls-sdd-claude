@@ -106,6 +106,30 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     }
 
     @Test
+    void schoolContractsIsAnOperationsItemForAdminDirectorAndManagerOnly() {
+        for (Role role : Role.values()) {
+            var navigation = client.get()
+                    .uri("/api/v1/me/access-model")
+                    .header("Authorization", "Bearer " + signInAs(role).token())
+                    .exchange()
+                    .expectBody(AccessModelDtos.AccessModelResponse.class)
+                    .returnResult()
+                    .getResponseBody();
+            boolean has = navigation.navigation().stream()
+                    .filter(s -> s.section().equals("OPERATIONS"))
+                    .flatMap(s -> s.items().stream())
+                    .anyMatch(i -> i.label().equals("School Contracts")
+                            && i.route().equals("/operations/school-contracts"));
+            boolean expected = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
+            assertThat(has).as(role.name()).isEqualTo(expected);
+            String scope = navigation.dataScope().get("SCHOOL_CONTRACTS");
+            assertThat(scope)
+                    .as(role.name() + " scope")
+                    .isEqualTo(role == Role.MANAGER ? "ASSIGNED" : expected ? "ORG_WIDE" : null);
+        }
+    }
+
+    @Test
     void leaveItemsAppearOnlyForTheRolesThatHoldThem() {
         record Expect(Role role, boolean applyLeave, boolean leaveManagement) {}
         for (Expect e : new Expect[] {

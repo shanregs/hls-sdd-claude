@@ -112,7 +112,7 @@ export function TeachersPage() {
     },
     {
       field: "school",
-      headerName: "School (interim placement)",
+      headerName: "School",
       flex: 1.6,
       sortable: false,
       renderCell: (params) => (

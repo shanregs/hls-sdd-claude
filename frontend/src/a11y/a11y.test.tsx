@@ -46,6 +46,10 @@ import { RolePermissionsGrid } from "../features/permissions/RolePermissionsGrid
 import { SessionsPage } from "../account/SessionsPage";
 import { AllSessionsPage } from "../features/sessions/AllSessionsPage";
 import { NotificationsPage } from "../features/notifications/NotificationsPage";
+import { ContractsListPage } from "../features/schoolbilling/ContractsListPage";
+import { SchoolContractPage } from "../features/schoolbilling/SchoolContractPage";
+import { MouFormDialog } from "../features/schoolbilling/MouFormDialog";
+import { MapTeachersDialog } from "../features/schoolbilling/MapTeachersDialog";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -178,6 +182,54 @@ const ZONE = {
   version: 0,
   placeCount: 1,
   schoolCount: 1,
+};
+
+const CONTRACT_SAMPLE = {
+  id: "c1",
+  schoolId: "s1",
+  state: "ACTIVE",
+  status: "ACTIVE",
+  salaryMode: "PER_TEACHER",
+  teacherCount: 2,
+  rate: null,
+  signedOn: "2026-09-20",
+  startsOn: "2026-10-01",
+  endsOn: null,
+  version: 0,
+  positions: [
+    {
+      id: "p1",
+      number: 1,
+      title: "Maths PGT",
+      salary: "20000.00",
+      teacherId: "t1",
+      teacherName: "Tara Teacher",
+    },
+    {
+      id: "p2",
+      number: 2,
+      title: null,
+      salary: "18000.00",
+      teacherId: null,
+      teacherName: null,
+    },
+  ],
+  signatories: [
+    {
+      id: "g1",
+      party: "SCHOOL",
+      name: "R. Kumar",
+      designation: "Principal",
+      userId: null,
+    },
+    {
+      id: "g2",
+      party: "HLS",
+      name: "Manoj Manager",
+      designation: "Zone Manager",
+      userId: "u1",
+    },
+  ],
 };
 
 const authFetch = vi.fn(async (input: RequestInfo) => {
@@ -658,6 +710,54 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       }),
     } as Response;
   }
+  if (url.includes("/api/v1/school-contracts/signatory-candidates")) {
+    return {
+      ok: true,
+      json: async () => [
+        { userId: "u1", name: "Manoj Manager", designation: "Zone Manager" },
+        { userId: "u2", name: "Divya Director", designation: "Director" },
+      ],
+    } as Response;
+  }
+  if (url.includes("/api/v1/school-contracts/schools/")) {
+    return {
+      ok: true,
+      json: async () => ({
+        schoolId: "s1",
+        schoolName: "Demo School One",
+        zoneManagerName: "Manoj Manager",
+        contracts: [CONTRACT_SAMPLE],
+        unmappedTeachers: [{ teacherId: "t9", teacherName: "Meena Selvi" }],
+      }),
+    } as Response;
+  }
+  if (url.includes("/api/v1/school-contracts")) {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            schoolId: "s1",
+            schoolName: "Demo School One",
+            zoneManagerName: "Manoj Manager",
+            status: "ACTIVE",
+            contractId: "c1",
+            startsOn: "2026-10-01",
+            endsOn: null,
+            teacherCount: 4,
+            filled: 3,
+            vacant: 1,
+            unmapped: 1,
+            salaryMode: "SAME_FOR_ALL",
+            signedOn: "2026-09-20",
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+      }),
+    } as Response;
+  }
   if (url.includes("/api/v1/audit/")) {
     return {
       ok: true,
@@ -712,6 +812,44 @@ const SAMPLE_USER = {
 };
 
 const pages: PageCase[] = [
+  {
+    name: "ContractsListPage",
+    render: () => <ContractsListPage />,
+    settle: () => screen.findByText("Demo School One"),
+  },
+  {
+    name: "SchoolContractPage",
+    render: () => <SchoolContractPage />,
+    settle: () => screen.findByRole("region", { name: "Contract in effect" }),
+  },
+  {
+    name: "MouFormDialog",
+    render: () => (
+      <MouFormDialog
+        schoolId="s1"
+        schoolName="Demo School One"
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "MapTeachersDialog",
+    render: () => (
+      <MapTeachersDialog
+        contract={CONTRACT_SAMPLE as never}
+        teachers={[
+          { teacherId: "t9", teacherName: "Meena Selvi", from: "not mapped" },
+        ]}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
   { name: "SignInPage", render: () => <SignInPage /> },
   { name: "OtpEntryPage", render: () => <OtpEntryPage /> },
   { name: "ForgotPasswordPage", render: () => <ForgotPasswordPage /> },

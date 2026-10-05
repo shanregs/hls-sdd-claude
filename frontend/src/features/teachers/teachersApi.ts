@@ -22,7 +22,8 @@ export interface PlacementRow {
   startsOn: string;
   endsOn: string | null;
   status: "ACTIVE" | "CANCELLED" | "CORRECTED";
-  interim: boolean;
+  /** The position of the School's contract the Teacher fills; null while not mapped to one. */
+  positionNumber: number | null;
 }
 
 export interface TeacherSummary {
@@ -126,6 +127,7 @@ export function placeTeacher(
   teacherId: string,
   schoolId: string,
   effectiveOn: string,
+  positionId?: string | null,
 ): Promise<ApiResult<TeacherSummary>> {
   return sendJson(
     authFetch,
@@ -133,6 +135,7 @@ export function placeTeacher(
     `/api/v1/teachers/${teacherId}/placements`,
     {
       schoolId,
+      positionId: positionId ?? null,
       effectiveOn: effectiveOn || null,
     },
   );

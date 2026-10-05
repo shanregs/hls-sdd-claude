@@ -36,7 +36,7 @@ class MonthLockTest extends AttendanceTestBase {
         TeacherCtx teacher = newTeacher(admin, null, 0);
         YearMonth month = freshMonth();
         jdbc.update(
-                "insert into teacher_placement (id, teacher_id, school_id, starts_on, ends_on, status, created_at)"
+                "insert into contract_assignment (id, teacher_id, school_id, starts_on, ends_on, status, created_at)"
                         + " values (?, ?, ?, ?, ?, 'ACTIVE', now())",
                 UUID.randomUUID(),
                 teacher.teacherId(),
@@ -203,7 +203,7 @@ class MonthLockTest extends AttendanceTestBase {
         // Placed until the 14th: days 1..14 (minus Sundays) must be marked, the rest are not required.
         Fixture f = fixture(null);
         jdbc.update(
-                "update teacher_placement set ends_on = ? where teacher_id = ?",
+                "update contract_assignment set ends_on = ? where teacher_id = ?",
                 f.month().atDay(14),
                 f.teacherId());
         markWorkingDays(f, 14);

@@ -80,8 +80,7 @@ export function MyTeacherProfile() {
             Address: {state.teacher.address ?? "Not recorded"}
           </Typography>
           <Typography variant="body2">
-            Current school (interim placement):{" "}
-            {state.teacher.school?.name ?? "Not placed yet"}
+            Current school: {state.teacher.school?.name ?? "Not placed yet"}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Status since {formatDate(state.teacher.statusEffectiveOn)}
