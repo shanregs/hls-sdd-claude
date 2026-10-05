@@ -25,6 +25,10 @@ class MasterDataScopeBoundaryTest extends MasterDataTestBase {
             UUID teacherA,
             UUID teacherB) {}
 
+    private String nameOf(String table, UUID id) {
+        return jdbc.queryForObject("select name from " + table + " where id = ?", String.class, id);
+    }
+
     private World world() {
         String admin = signInAs(Role.ADMIN).token();
         UUID[] schoolA = schoolInNewZone(admin);
@@ -96,11 +100,21 @@ class MasterDataScopeBoundaryTest extends MasterDataTestBase {
         World w = world();
         String director = signInAs(Role.DIRECTOR).token();
         String both = signInAs(Role.MANAGER, Role.DIRECTOR).token();
+        // The shared test database holds hundreds of rows, so look each one up by name rather than hoping it is
+        // on the first page.
+        String schoolA = nameOf("school", w.zoneSchoolA()[2]);
+        String schoolB = nameOf("school", w.zoneSchoolB()[2]);
+        String teacherA = nameOf("teacher", w.teacherA());
+        String teacherB = nameOf("teacher", w.teacherB());
         for (String token : new String[] {w.admin(), director, both}) {
-            String schools = get("/api/v1/schools?size=100", token).body();
-            assertThat(schools).contains(w.zoneSchoolA()[2].toString(), w.zoneSchoolB()[2].toString());
-            String teachers = get("/api/v1/teachers?size=100", token).body();
-            assertThat(teachers).contains(w.teacherA().toString(), w.teacherB().toString());
+            assertThat(get("/api/v1/schools?size=100&query=" + schoolA, token).body())
+                    .contains(w.zoneSchoolA()[2].toString());
+            assertThat(get("/api/v1/schools?size=100&query=" + schoolB, token).body())
+                    .contains(w.zoneSchoolB()[2].toString());
+            assertThat(get("/api/v1/teachers?size=100&query=" + teacherA, token).body())
+                    .contains(w.teacherA().toString());
+            assertThat(get("/api/v1/teachers?size=100&query=" + teacherB, token).body())
+                    .contains(w.teacherB().toString());
         }
     }
 

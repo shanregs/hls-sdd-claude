@@ -30,17 +30,38 @@ abstract class UserManagementTestBase extends IntegrationTestBase {
         return result;
     }
 
-    /** Makes the "exactly one / exactly two active Admins" tests deterministic. */
+    /** The Admins {@link #deactivateEveryExistingAdmin()} switched off, so they can be switched back on. */
+    private final List<UUID> adminsSwitchedOff = new java.util.ArrayList<>();
+
+    /**
+     * Makes the "exactly one / exactly two active Admins" tests deterministic. The test database is shared by every
+     * test class, so {@link #restoreSwitchedOffAdmins()} puts these Admins back afterwards; without that, later
+     * classes that sign in as the demo Admin get a 401.
+     */
     void deactivateEveryExistingAdmin() {
         for (RoleAssignment assignment : roleAssignmentRepository.findAll()) {
             if (assignment.getRole() != Role.ADMIN) {
                 continue;
             }
             appUserRepository.findById(assignment.getUserId()).ifPresent(u -> {
+                if (u.isActive()) {
+                    adminsSwitchedOff.add(u.getId());
+                }
                 u.deactivate();
                 appUserRepository.save(u);
             });
         }
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void restoreSwitchedOffAdmins() {
+        for (UUID id : adminsSwitchedOff) {
+            appUserRepository.findById(id).ifPresent(u -> {
+                u.reactivate();
+                appUserRepository.save(u);
+            });
+        }
+        adminsSwitchedOff.clear();
     }
 
     /** FR-008/SC-005: the entry reaches User Activity through the real path within 5 seconds. */
