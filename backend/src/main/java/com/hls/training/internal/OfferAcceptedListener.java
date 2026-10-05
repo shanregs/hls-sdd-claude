@@ -38,6 +38,8 @@ class OfferAcceptedListener {
             return;
         }
         try {
+            // the batch row is locked and the seat and overlap rules are checked before anything is written, so a
+            // refusal here is a plain conflict (no database error that would doom the acceptance transaction)
             batchService.enrolLocked(event.acceptedBy(), batch, event.teacherId());
         } catch (RuntimeException e) {
             log.info("Recruit {} was not enrolled automatically: {}", event.teacherId(), e.getMessage());

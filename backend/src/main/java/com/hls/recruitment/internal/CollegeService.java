@@ -116,7 +116,13 @@ public class CollegeService {
             existing.change(name, phone, email);
             contacts.save(existing);
         }
-        changes.record(actor, "COLLEGE", collegeId, role.toLowerCase(), before, empty ? null : name);
+        String shownBefore = existing == null ? null : before + (existing.getPhone() == null ? "" : " (phone ending " + last2(existing.getPhone()) + ")");
+        String shownAfter = empty ? null : name + (phone == null ? "" : " (phone ending " + last2(phone) + ")");
+        changes.record(actor, "COLLEGE", collegeId, role.toLowerCase(), shownBefore, shownAfter);
+    }
+
+    private static String last2(String phone) {
+        return phone.length() < 2 ? phone : phone.substring(phone.length() - 2);
     }
 
     private static String label(String role) {

@@ -89,7 +89,8 @@ public class AssignmentService {
         LocalDate today = LocalDate.now(clock);
         LocalDate start = effectiveOn == null ? today : effectiveOn;
 
-        boolean firstAssignment = assignments.findByTeacherIdOrderByStartsOnDesc(teacherId).isEmpty();
+        boolean firstAssignment = assignments.findByTeacherIdOrderByStartsOnDesc(teacherId).stream()
+                .noneMatch(a -> a.getStatus() != AssignmentStatus.CANCELLED);
         List<ContractAssignment> active =
                 assignments.findByTeacherIdAndStatusOrderByStartsOnDesc(teacherId, AssignmentStatus.ACTIVE);
         Optional<ContractAssignment> current =

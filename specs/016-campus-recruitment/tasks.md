@@ -195,7 +195,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T059 [P] Add a "016 Campus Recruitment" folder to the Postman collection in `postman/HLS API/` and refresh the schema dump `docs/db/schema-v22.sql`
 - [X] T060 [P] Constitution amendment 2.4.0 in `.specify/memory/constitution.md`: add the RECRUITMENT navigation section to Principle IV (MARKETING follows with spec 023) and the Recruitment, Offers and Induction rows to the Default role access matrix, with a Sync Impact Report note
 - [X] T061 [P] Update `docs/spec-roadmap.md` (016 status; A4 and A5 done) and `docs/running-locally.md` (the recruitment flow and demo data)
-- [ ] T062 Review before the PR: run the `java-reviewer` agent on `recruitment`, `training`, and the `teacher`, `attendance` and `schoolbilling` changes, and the `database-reviewer` agent on `V22` (the trigger, the partial unique indexes, the gist exclusion, the attendance column change); address findings
+- [X] T062 Review before the PR: run the `java-reviewer` agent on `recruitment`, `training`, and the `teacher`, `attendance` and `schoolbilling` changes, and the `database-reviewer` agent on `V22` (the trigger, the partial unique indexes, the gist exclusion, the attendance column change); address findings
 - [ ] T063 Walk through every scenario in `quickstart.md` on the local app (database on Docker port 5433) and write the outcomes to `specs/016-campus-recruitment/quickstart-results.md`
 - [ ] T064 Run the full backend and frontend suites once, then open the PR
 

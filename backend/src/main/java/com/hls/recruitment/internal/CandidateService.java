@@ -142,19 +142,27 @@ public class CandidateService {
                     errors.add(new ImportError(row.number(), e.getMessage()));
                 }
             }
-            Integer done = chunkTx.execute(status -> {
-                int n = 0;
+            int ok;
+            try {
+                Integer done = chunkTx.execute(status -> {
+                    for (Candidate c : toSave) {
+                        candidates.saveAndFlush(c);
+                    }
+                    return toSave.size();
+                });
+                ok = done == null ? 0 : done;
+            } catch (DataIntegrityViolationException | org.springframework.transaction.UnexpectedRollbackException e) {
+                // a phone was added by someone else meanwhile: keep every other row by saving them one by one
+                ok = 0;
                 for (Candidate c : toSave) {
                     try {
-                        candidates.saveAndFlush(c);
-                        n++;
-                    } catch (DataIntegrityViolationException e) {
-                        // another request added the same phone meanwhile: treat as a skipped duplicate
+                        chunkTx.executeWithoutResult(status -> candidates.saveAndFlush(c));
+                        ok++;
+                    } catch (DataIntegrityViolationException | org.springframework.transaction.UnexpectedRollbackException duplicate) {
+                        // counted as skipped below
                     }
                 }
-                return n;
-            });
-            int ok = done == null ? 0 : done;
+            }
             saved += ok;
             skipped += toSave.size() - ok;
         }

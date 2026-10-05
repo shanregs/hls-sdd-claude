@@ -120,6 +120,10 @@ public class SchoolContactService implements SchoolContacts {
 
     /** The audit text carries the name only: phone and email are not written to the change history. */
     private static String describe(ContactDetails details) {
-        return details == null ? null : details.name();
+        if (details == null) {
+            return null;
+        }
+        String phone = details.phone();
+        return phone == null || phone.length() < 2 ? details.name() : details.name() + " (phone ending " + phone.substring(phone.length() - 2) + ")";
     }
 }

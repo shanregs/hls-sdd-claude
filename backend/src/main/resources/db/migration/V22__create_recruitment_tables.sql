@@ -58,7 +58,7 @@ CREATE TABLE candidate (
     drive_id    UUID         NOT NULL REFERENCES campus_drive (id),
     name        VARCHAR(160) NOT NULL CHECK (length(trim(name)) > 0),
     phone       VARCHAR(20)  NOT NULL,
-    phone_key   VARCHAR(10)  NOT NULL,
+    phone_key   VARCHAR(10)  NOT NULL CHECK (phone_key ~ '^[0-9]{10}$'),
     email       VARCHAR(200),
     degree      VARCHAR(120),
     study_year  VARCHAR(40),
@@ -104,7 +104,7 @@ CREATE TABLE job_offer (
     candidate_id     UUID          NOT NULL REFERENCES candidate (id),
     role             VARCHAR(60)   NOT NULL CHECK (length(trim(role)) > 0),
     -- the candidate's normalized phone, so one person never has two open offers even across two drives
-    phone_key        VARCHAR(10)   NOT NULL,
+    phone_key        VARCHAR(10)   NOT NULL CHECK (phone_key ~ '^[0-9]{10}$'),
     monthly_salary   NUMERIC(12,2) NOT NULL CHECK (monthly_salary > 0),
     allowances       VARCHAR(300),
     terms            VARCHAR(1000),
@@ -112,7 +112,7 @@ CREATE TABLE job_offer (
     offer_date       DATE          NOT NULL,
     response_deadline DATE         NOT NULL,
     status           VARCHAR(10)   NOT NULL CHECK (status IN ('DRAFT', 'ISSUED', 'ACCEPTED', 'DECLINED', 'EXPIRED', 'SUPERSEDED')),
-    supersedes_id    UUID,
+    supersedes_id    UUID REFERENCES job_offer (id),
     decline_reason   VARCHAR(300),
     issued_by        UUID,
     issued_at        TIMESTAMPTZ,
@@ -126,13 +126,16 @@ CREATE TABLE job_offer (
 );
 
 CREATE UNIQUE INDEX uq_job_offer_open ON job_offer (phone_key) WHERE status IN ('DRAFT', 'ISSUED');
-CREATE UNIQUE INDEX uq_job_offer_accepted ON job_offer (phone_key) WHERE status = 'ACCEPTED';
 CREATE INDEX idx_job_offer_status_deadline ON job_offer (status, response_deadline);
 CREATE INDEX idx_job_offer_candidate ON job_offer (candidate_id);
+CREATE INDEX idx_job_offer_teacher ON job_offer (teacher_id) WHERE teacher_id IS NOT NULL;
 
 -- An issued offer is a document the person has seen: its terms never change (a new offer supersedes it).
 CREATE FUNCTION job_offer_terms_locked() RETURNS trigger AS $$
 BEGIN
+    IF OLD.status <> 'DRAFT' AND NEW.status = 'DRAFT' THEN
+        RAISE EXCEPTION 'The terms of an issued offer cannot be changed';
+    END IF;
     IF OLD.status <> 'DRAFT' AND (
         NEW.role IS DISTINCT FROM OLD.role
         OR NEW.monthly_salary IS DISTINCT FROM OLD.monthly_salary
@@ -149,6 +152,15 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_job_offer_terms_locked BEFORE UPDATE ON job_offer
     FOR EACH ROW EXECUTE FUNCTION job_offer_terms_locked();
+
+CREATE FUNCTION job_offer_no_delete() RETURNS trigger AS $$
+BEGIN
+    RAISE EXCEPTION 'A job offer is never deleted';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_job_offer_no_delete BEFORE DELETE ON job_offer
+    FOR EACH ROW EXECUTE FUNCTION job_offer_no_delete();
 
 CREATE TABLE induction_batch (
     id          UUID PRIMARY KEY,
@@ -201,8 +213,20 @@ CREATE TABLE induction_absence (
     CONSTRAINT uq_induction_absence UNIQUE (enrolment_id, absent_on)
 );
 
+-- Amendment A8 to spec 005 (owned by the school module): a School also keeps a principal and an accountant contact.
+CREATE TABLE school_contact (
+    school_id UUID         NOT NULL REFERENCES school (id),
+    role      VARCHAR(12)  NOT NULL CHECK (role IN ('PRINCIPAL', 'ACCOUNTANT')),
+    name      VARCHAR(160) NOT NULL CHECK (length(trim(name)) > 0),
+    phone     VARCHAR(20),
+    email     VARCHAR(200),
+    PRIMARY KEY (school_id, role)
+);
+
 -- Amendment A5 to spec 008: an induction day is marked before the Teacher has a School. Only the training status
 -- code may carry no School; a CHECK cannot look at another table, so a trigger enforces it.
+-- fail fast instead of queueing behind a long attendance transaction and blocking every reader
+SET LOCAL lock_timeout = '10s';
 ALTER TABLE attendance_mark ALTER COLUMN school_id DROP NOT NULL;
 
 CREATE FUNCTION attendance_mark_school_required() RETURNS trigger AS $$
@@ -217,13 +241,3 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_attendance_mark_school_required BEFORE INSERT OR UPDATE ON attendance_mark
     FOR EACH ROW EXECUTE FUNCTION attendance_mark_school_required();
-
--- Amendment A8 to spec 005 (owned by the school module): a School also keeps a principal and an accountant contact.
-CREATE TABLE school_contact (
-    school_id UUID         NOT NULL REFERENCES school (id),
-    role      VARCHAR(12)  NOT NULL CHECK (role IN ('PRINCIPAL', 'ACCOUNTANT')),
-    name      VARCHAR(160) NOT NULL CHECK (length(trim(name)) > 0),
-    phone     VARCHAR(20),
-    email     VARCHAR(200),
-    PRIMARY KEY (school_id, role)
-);
