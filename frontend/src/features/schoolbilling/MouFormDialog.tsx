@@ -31,11 +31,24 @@ import {
   type SignatoryCandidate,
 } from "./schoolContractsApi";
 
+/** Starting values for the form, handed over from a won prospect's proposal (spec 023, amendment A7). */
+export interface MouInitial {
+  teacherCount: number;
+  salaryMode: SalaryMode;
+  /** The one salary for SAME_FOR_ALL. */
+  rate?: string | null;
+  positions?: { title?: string | null; salary: string }[];
+  /** The first day of the proposed start month, as an ISO date. */
+  startMonth?: string;
+}
+
 interface MouFormDialogProps {
   schoolId: string;
   schoolName: string;
   /** Present when the MoU is recorded on a "MoU pending" contract; absent for a new contract. */
   pending?: ContractRow;
+  /** Values to start the form with (for example the proposal of a won prospect); the user still reviews and saves. */
+  initial?: MouInitial;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -54,16 +67,29 @@ export function MouFormDialog({
   schoolId,
   schoolName,
   pending,
+  initial,
   onClose,
   onSaved,
 }: MouFormDialogProps) {
   const { authFetch } = useAuth();
-  const [teacherCount, setTeacherCount] = useState("1");
-  const [mode, setMode] = useState<SalaryMode>("SAME_FOR_ALL");
-  const [rate, setRate] = useState("");
-  const [salaries, setSalaries] = useState<string[]>([""]);
-  const [titles, setTitles] = useState<string[]>([""]);
-  const [startsOn, setStartsOn] = useState(todayIso());
+  const [teacherCount, setTeacherCount] = useState(
+    initial ? String(initial.teacherCount) : "1",
+  );
+  const [mode, setMode] = useState<SalaryMode>(
+    initial?.salaryMode ?? "SAME_FOR_ALL",
+  );
+  const [rate, setRate] = useState(initial?.rate ?? "");
+  const [salaries, setSalaries] = useState<string[]>(
+    initial?.positions && initial.positions.length > 0
+      ? initial.positions.map((p) => p.salary)
+      : [""],
+  );
+  const [titles, setTitles] = useState<string[]>(
+    initial?.positions && initial.positions.length > 0
+      ? initial.positions.map((p) => p.title ?? "")
+      : [""],
+  );
+  const [startsOn, setStartsOn] = useState(initial?.startMonth ?? todayIso());
   const [endsOn, setEndsOn] = useState("");
   const [signedOn, setSignedOn] = useState("");
   const [schoolSigners, setSchoolSigners] = useState<SchoolSigner[]>([

@@ -70,6 +70,16 @@ import {
   BatchDialog,
   SignOffDialog,
 } from "../features/recruitment/InductionDialogs";
+import { ProspectsPage } from "../features/marketing/ProspectsPage";
+import { ProspectDetailPage } from "../features/marketing/ProspectDetailPage";
+import { MarketingCalendar } from "../features/marketing/MarketingCalendar";
+import { PipelineBoard } from "../features/marketing/PipelineBoard";
+import { MarketingDashboard } from "../features/marketing/MarketingDashboard";
+import { MarketingSettingsPage } from "../features/marketing/MarketingSettingsPage";
+import { ProspectDialog } from "../features/marketing/ProspectDialog";
+import { ActivityDialog } from "../features/marketing/ActivityDialog";
+import { ProposalForm } from "../features/marketing/ProposalForm";
+import { WinDialog } from "../features/marketing/WinDialog";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -128,6 +138,36 @@ const ACCESS_MODEL = {
           label: "Recruitment Dashboard",
           route: "/recruitment/dashboard",
           actions: ["VIEW"],
+        },
+      ],
+    },
+    {
+      section: "MARKETING",
+      items: [
+        {
+          label: "Prospects",
+          route: "/marketing/prospects",
+          actions: ["VIEW", "CREATE", "EDIT", "APPROVE"],
+        },
+        {
+          label: "Marketing Calendar",
+          route: "/marketing/calendar",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Pipeline",
+          route: "/marketing/pipeline",
+          actions: ["VIEW", "CREATE", "EDIT", "APPROVE"],
+        },
+        {
+          label: "Marketing Dashboard",
+          route: "/marketing/dashboard",
+          actions: ["VIEW"],
+        },
+        {
+          label: "Marketing Settings",
+          route: "/marketing/settings",
+          actions: ["VIEW", "EDIT"],
         },
       ],
     },
@@ -440,6 +480,133 @@ function recruitmentResponse(url: string): unknown {
   return undefined;
 }
 
+const MK_ROW = {
+  id: "p1",
+  name: "Green Valley School",
+  board: "CBSE",
+  zoneId: "z1",
+  zoneName: "Demo Zone",
+  owner: { userId: "u1", name: "Priya Manager" },
+  stage: "FINAL_STAGE",
+  effectiveStage: "FINAL_STAGE",
+  expectedTeachers: 4,
+  won: false,
+  followUpOverdue: true,
+  mouOverdue: false,
+  schoolId: null,
+  contactPerson: "Mrs Rao",
+  version: 1,
+};
+
+const MK_PROPOSAL = {
+  id: "r1",
+  revision: 1,
+  label: "Proposal (not a contract)",
+  teacherCount: 4,
+  startMonth: "2026-12-01",
+  salaryMode: "SAME_FOR_ALL",
+  rate: "15000.00",
+  positions: [],
+  monthlyTotal: "60000.00",
+  notes: null,
+  createdBy: { userId: "u1", name: "Priya Manager" },
+  createdAt: "2026-10-05T10:00:00Z",
+};
+
+const MK_ACTIVITY = {
+  id: "a1",
+  type: "VISIT",
+  status: "PLANNED",
+  effectiveStatus: "MISSED",
+  rescheduled: true,
+  date: new Date().toISOString().slice(0, 8) + "05",
+  notes: "Meet the principal",
+  outcome: null,
+  followUpOn: null,
+  followUpOverdue: false,
+  cancelReason: null,
+  prospect: { id: "p1", name: "Green Valley School" },
+  school: null,
+  attendees: [{ userId: "u1", name: "Priya Manager" }],
+  attachments: [
+    {
+      fileId: "f1",
+      name: "board photo.png",
+      sizeBytes: 2048,
+      contentType: "image/png",
+    },
+  ],
+  dateHistory: [{ from: "2026-09-28", to: "2026-10-01" }],
+  version: 0,
+};
+
+const MK_DETAIL = {
+  row: MK_ROW,
+  address: "5 Lake Road",
+  designation: "Principal",
+  phone: "9111111111",
+  email: "rao@school.test",
+  lostReason: null,
+  wonAt: null,
+  placeId: null,
+  stageHistory: [],
+  ownerHistory: [],
+  proposal: MK_PROPOSAL,
+  contractStatus: {
+    available: true,
+    status: "NOT_WON",
+    contract: null,
+    proposal: MK_PROPOSAL,
+    differences: [],
+  },
+};
+
+function marketingResponse(url: string): unknown {
+  if (!url.includes("/api/v1/marketing")) return undefined;
+  if (url.includes("/marketing/pipeline")) {
+    return {
+      columns: {
+        FINAL_STAGE: [MK_ROW],
+        PROSPECT: [
+          {
+            ...MK_ROW,
+            id: "p2",
+            name: "Sunrise School",
+            stage: "PROSPECT",
+            effectiveStage: "PROSPECT",
+            followUpOverdue: false,
+          },
+        ],
+      },
+      counts: { FINAL_STAGE: 1, PROSPECT: 1 },
+    };
+  }
+  if (url.includes("/marketing/dashboard")) {
+    return {
+      period: "2026-10",
+      visits: { planned: 3, completed: 5, missed: 1, cancelled: 0 },
+      prospectsByStage: { PROSPECT: 2, FINAL_STAGE: 1, WON: 1, LOST: 0 },
+      won: 1,
+      lost: 1,
+      winRate: "0.50",
+      wonPerZone: [{ name: "Demo Zone", won: 1 }],
+      wonPerOwner: [{ name: "Priya Manager", won: 1 }],
+      demand: 9,
+      supply: null,
+      shortfall: null,
+    };
+  }
+  if (url.includes("/marketing/settings"))
+    return { mouOverdueDays: 14, version: 1 };
+  if (url.includes("/marketing/activities"))
+    return { content: [MK_ACTIVITY], drives: [] };
+  if (url.includes("/proposals")) return [MK_PROPOSAL];
+  if (/\/api\/v1\/marketing\/prospects\/[^/?]*$/.test(url)) return MK_DETAIL;
+  if (url.includes("/marketing/prospects"))
+    return { content: [MK_ROW], page: 0, size: 25, totalElements: 1 };
+  return undefined;
+}
+
 const authFetch = vi.fn(async (input: RequestInfo) => {
   const url = typeof input === "string" ? input : input.url;
   if (url.includes("/access-model")) {
@@ -448,6 +615,10 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   const recruitment = recruitmentResponse(url);
   if (recruitment !== undefined) {
     return { ok: true, json: async () => recruitment } as Response;
+  }
+  const marketing = marketingResponse(url);
+  if (marketing !== undefined) {
+    return { ok: true, json: async () => marketing } as Response;
   }
   const aSession = {
     id: "s1",
@@ -1431,6 +1602,83 @@ const pages: PageCase[] = [
         }}
         onClose={vi.fn()}
         onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ProspectsPage",
+    render: () => <ProspectsPage />,
+    settle: () => screen.findByRole("table", { name: "Prospects" }),
+  },
+  {
+    name: "ProspectDetailPage",
+    render: () => <ProspectDetailPage />,
+    settle: () => screen.findByRole("heading", { name: "Green Valley School" }),
+  },
+  {
+    name: "MarketingCalendar",
+    render: () => <MarketingCalendar />,
+    settle: () => screen.findByRole("list", { name: /Activities in/ }),
+  },
+  {
+    name: "PipelineBoard",
+    render: () => <PipelineBoard />,
+    settle: () => screen.findByRole("region", { name: "Final Stage, 1" }),
+  },
+  {
+    name: "MarketingDashboard",
+    render: () => <MarketingDashboard />,
+    settle: () => screen.findByRole("table", { name: "Prospects by stage" }),
+  },
+  {
+    name: "MarketingSettingsPage",
+    render: () => <MarketingSettingsPage />,
+    settle: () => screen.findByLabelText(/Days until a won prospect/),
+  },
+  {
+    name: "ProspectDialog",
+    render: () => <ProspectDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ActivityDialog",
+    render: () => (
+      <ActivityDialog mode="plan" onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ActivityDialog (complete)",
+    render: () => (
+      <ActivityDialog
+        mode="complete"
+        activity={MK_ACTIVITY as never}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ProposalForm",
+    render: () => (
+      <ProposalForm prospectId="p1" onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "WinDialog",
+    render: () => (
+      <WinDialog
+        prospect={MK_DETAIL as never}
+        onClose={vi.fn()}
+        onDone={vi.fn()}
       />
     ),
     settle: () => screen.findByRole("dialog"),

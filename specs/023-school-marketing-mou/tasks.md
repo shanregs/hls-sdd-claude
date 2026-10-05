@@ -35,7 +35,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 ## Phase 1: Setup
 
 - [X] T001 Create the sub-package skeleton `backend/src/main/java/com/hls/recruitment/marketing/{internal,web}/` and, if spec 016 has not created it yet, `backend/src/main/java/com/hls/recruitment/api/` with `package-info.java` (a `@NamedInterface`); create the `files` module skeleton `backend/src/main/java/com/hls/files/{api,internal}/`; add `backend/src/test/java/com/hls/recruitment/marketing/MarketingModuleRulesTest.java` (ArchUnit: nothing outside `recruitment` uses its `internal` or `web`; nothing outside `files` uses `files.internal`; `school`, `organization`, `schoolbilling` and `notification` depend on no marketing class); add `com.hls.recruitment` and `com.hls.files` to the base packages of `backend/src/main/java/com/hls/MasterDataExceptionAdvice.java` if missing
-- [ ] T002 Create `frontend/src/features/marketing/` with `marketingApi.ts` (types and calls for every endpoint in contracts/marketing-api.md; money as strings)
+- [X] T002 Create `frontend/src/features/marketing/` with `marketingApi.ts` (types and calls for every endpoint in contracts/marketing-api.md; money as strings)
 
 ---
 
@@ -70,7 +70,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T016 [P] [US1] `backend/src/test/java/com/hls/recruitment/marketing/AttachmentTest.java`: upload on a visit (type, size, ten-file limits), download as an attachment with `nosniff`, a caller who cannot see the visit gets 404, removal only by Admin or Director with a reason and the bytes kept
 - [X] T017 [P] [US1] `backend/src/test/java/com/hls/recruitment/marketing/ProspectApiTest.java`: the per-role and per-Zone matrix of contracts/marketing-api.md for prospects and activities (Zone Manager A against Zone Manager B in list, search, detail, calendar and download; Teacher and System 403; 401 without a token)
 - [X] T018 [P] [US1] `backend/src/test/java/com/hls/recruitment/marketing/MarketingAuditTest.java`: each prospect, activity, attachment add and removal and owner change has an audit entry with actor and prior and new values; prospect phone numbers do not appear in logs
-- [ ] T019 [P] [US1] `frontend/src/features/marketing/ProspectsPage.test.tsx`, `MarketingCalendar.test.tsx`, `ActivityDialog.test.tsx` and `AttachmentList.test.tsx`: list and filters, add and duplicate refusal, calendar with own entries and overdue highlighted, complete needs an outcome, missed and rescheduled badges, upload errors, axe in both themes
+- [X] T019 [P] [US1] `frontend/src/features/marketing/ProspectsPage.test.tsx`, `MarketingCalendar.test.tsx`, `ActivityDialog.test.tsx` and `AttachmentList.test.tsx`: list and filters, add and duplicate refusal, calendar with own entries and overdue highlighted, complete needs an outcome, missed and rescheduled badges, upload errors, axe in both themes
 
 - [X] T058 [P] [US1] `backend/src/test/java/com/hls/recruitment/marketing/CalendarDrivesTest.java`: the calendar and the "mine" list also show the person's recruitment drives when `DriveActivities` (spec 016) is present, a clash is visible and nothing is blocked, and with 016 absent the calendar works unchanged
 
@@ -80,7 +80,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T021 [US1] `recruitment/marketing/internal/AttachmentService.java` over `FileStore` (limits, visibility check, removal rule)
 - [X] T022 [US1] `recruitment/marketing/web/{ProspectController,ActivityController,FileController}.java` per the contract with `PermissionGuard` on `MARKETING`; `MarketingActivities` implementation (contract C1)
 - [X] T059 [US1] In `ActivityService` and `MarketingActivities`, merge the person's drives from `DriveActivities` through an `ObjectProvider` (absent when 016 is not merged) into the calendar and the "mine" list
-- [ ] T023 [P] [US1] `frontend/src/features/marketing/{ProspectsPage,MarketingCalendar,ActivityDialog,AttachmentList}.tsx` and routes `/marketing/prospects`, `/marketing/calendar` in `frontend/src/App.tsx`
+- [X] T023 [P] [US1] `frontend/src/features/marketing/{ProspectsPage,MarketingCalendar,ActivityDialog,AttachmentList}.tsx` and routes `/marketing/prospects`, `/marketing/calendar` in `frontend/src/App.tsx`
 
 **Checkpoint**: prospects, visits and files work end to end for each role.
 
@@ -97,13 +97,13 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T024 [P] [US2] `backend/src/test/java/com/hls/recruitment/marketing/PipelineServiceTest.java` (rules first): allowed moves among the seven active stages; Lost needs a reason and reopens to the last active stage; On Hold returns to the stage it left; Final Stage needs a proposal revision; every change records who and when; two simultaneous moves: the later is told the stage changed
 - [X] T025 [P] [US2] `backend/src/test/java/com/hls/recruitment/marketing/ReviewTest.java`: a Director approves any, a Zone Manager only a prospect in their Zone (another Zone is 404), Admin is 403 by default; approval makes the prospect won; a rejection needs a reason and returns it to Negotiation; the audit entry names the approver
 - [X] T026 [P] [US2] `backend/src/test/java/com/hls/recruitment/marketing/PipelineApiTest.java`: the pipeline board counts match the list; filters by Zone, owner and stage; per-role and per-Zone matrix for stage, review and owner endpoints
-- [ ] T027 [P] [US2] `frontend/src/features/marketing/PipelineBoard.test.tsx`: columns and counts, moving a card, hold and lost dialogs, review buttons only for roles that hold APPROVE, axe in both themes
+- [X] T027 [P] [US2] `frontend/src/features/marketing/PipelineBoard.test.tsx`: columns and counts, moving a card, hold and lost dialogs, review buttons only for roles that hold APPROVE, axe in both themes
 
 ### Implementation for User Story 2
 
 - [X] T028 [US2] `recruitment/marketing/internal/PipelineService.java`: stage moves, hold, lost, reopen, the Final Stage review (permission and Zone rule), stage and review history
 - [X] T029 [US2] `recruitment/marketing/web/PipelineController.java` (`/prospects/{id}/stage`, `/review`, `/owner`, `/pipeline`) with `PermissionGuard` on `MARKETING`
-- [ ] T030 [P] [US2] `frontend/src/features/marketing/PipelineBoard.tsx` and route `/marketing/pipeline`
+- [X] T030 [P] [US2] `frontend/src/features/marketing/PipelineBoard.tsx` and route `/marketing/pipeline`
 
 **Checkpoint**: the pipeline and the review work.
 
@@ -119,7 +119,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 
 - [X] T031 [P] [US3] `backend/src/test/java/com/hls/recruitment/marketing/ProposalServiceTest.java` (rules first): same-for-all needs a positive rate and no positions; per-position needs exactly N positive amounts; Teacher count 1 to 500; amounts have at most two decimals; a revision is new, the old one unchanged (service and trigger, including a direct SQL update); the monthly total is computed
 - [X] T032 [P] [US3] `backend/src/test/java/com/hls/recruitment/marketing/ProposalApiTest.java`: per-role and per-Zone matrix; the response labels it "Proposal (not a contract)"
-- [ ] T033 [P] [US3] `frontend/src/features/marketing/ProposalForm.test.tsx`: both salary modes, validation, revision list, the draft label, axe in both themes
+- [X] T033 [P] [US3] `frontend/src/features/marketing/ProposalForm.test.tsx`: both salary modes, validation, revision list, the draft label, axe in both themes
 
 ### Implementation for User Story 3
 
@@ -142,15 +142,15 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T037 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/ContractStatusTest.java`: the effective stage is MoU when the School has a live contract and Active when a position is filled; the prospect shows dates, positions, filled and vacant from 012; the signed MoU may differ from the proposal and the difference is returned side by side; no contract data is stored here
 - [X] T038 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/OverdueJobTest.java`: a won prospect without a contract past the limit is flagged and publishes `WonProspectOverdue` once; a second run publishes nothing; changing the limit (audited) and passing it again publishes again; recording the MoU clears the flag; the job is off in `IntegrationTestBase`
 - [X] T039 [P] [US4] `backend/src/test/java/com/hls/recruitment/marketing/SettingsApiTest.java`: holders of `MARKETING_SETTINGS` (Admin and Director by default) read and change `mouOverdueDays` (1 to 90, version required, audited); Zone Manager 403; Teacher and System 403
-- [ ] T040 [P] [US4] `frontend/src/features/marketing/WinDialog.test.tsx`: pick a Place, create or link a School, the hand-off navigates to the 012 contract page with the proposal in the router state; a Zone Manager sees no create or record action
+- [X] T040 [P] [US4] `frontend/src/features/marketing/WinDialog.test.tsx`: pick a Place, create or link a School, the hand-off navigates to the 012 contract page with the proposal in the router state; a Zone Manager sees no create or record action
 
 ### Implementation for User Story 4
 
 - [X] T041 [US4] `recruitment/marketing/internal/{WinService,ContractStatusReader}.java`: the win and School creation through `SchoolRegistry`, the link, the derived MoU and Active stage through `SchoolContracts` (`ObjectProvider` so the module starts without 012), the side-by-side difference
 - [X] T042 [US4] `recruitment/marketing/internal/{OverdueJob,SettingsService}.java` and `recruitment/marketing/web/SettingsController.java`; `ProspectOwners` and `ProspectWon`
-- [ ] T043 [US4] Spec 012 amendment A7 (frontend): `frontend/src/features/schoolbilling/SchoolContractPage.tsx` and `MouFormDialog.tsx` accept initial values from the router state (Teacher count, salary mode and amounts, start month) and open the MoU form pre-filled; extend `SchoolContractPage.test.tsx` for it
+- [X] T043 [US4] Spec 012 amendment A7 (frontend): `frontend/src/features/schoolbilling/SchoolContractPage.tsx` and `MouFormDialog.tsx` accept initial values from the router state (Teacher count, salary mode and amounts, start month) and open the MoU form pre-filled; extend `SchoolContractPage.test.tsx` for it
 - [X] T060 [US4] Win with contacts: `WinService` saves the optional principal and accountant contacts of the new School through the school module's contacts service (016 amendment A8; rebase after 016 merges), and `WinDialog.tsx` shows the two optional contact blocks; extend `WinServiceTest` and `WinDialog.test.tsx`
-- [ ] T044 [P] [US4] `frontend/src/features/marketing/{WinDialog,MarketingSettingsPage}.tsx`, the MoU status panel and the "MoU not yet recorded" flag in `ProspectDetailPage.tsx` and `PipelineBoard.tsx`; route `/marketing/settings`
+- [X] T044 [P] [US4] `frontend/src/features/marketing/{WinDialog,MarketingSettingsPage}.tsx`, the MoU status panel and the "MoU not yet recorded" flag in `ProspectDetailPage.tsx` and `PipelineBoard.tsx`; route `/marketing/settings`
 
 **Checkpoint**: the hand-off, the status and the alerts work.
 
@@ -165,12 +165,12 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 ### Tests for User Story 5
 
 - [X] T045 [P] [US5] `backend/src/test/java/com/hls/recruitment/marketing/DashboardTest.java`: visits this month, prospects by stage, win rate (won divided by won plus lost), Schools won per Zone and owner match the lists; demand is the sum of vacant positions of won Schools with a live contract, and the counts by derived stage come from one batch call to 012 (a test with 50 won prospects asserts a fixed number of queries); supply comes from `SupplySource` and is `null` ("not available") when none is provided; a Zone Manager's numbers cover only their Zones; an empty state returns zeros
-- [ ] T046 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.test.tsx`: role fixtures, "not available" supply, empty state, axe in both themes
+- [X] T046 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.test.tsx`: role fixtures, "not available" supply, empty state, axe in both themes
 
 ### Implementation for User Story 5
 
 - [X] T047 [US5] `recruitment/marketing/internal/DashboardService.java` (grouped SQL) and `recruitment/marketing/web/DashboardController.java`
-- [ ] T048 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.tsx` and route `/marketing/dashboard`
+- [X] T048 [P] [US5] `frontend/src/features/marketing/MarketingDashboard.tsx` and route `/marketing/dashboard`
 
 **Checkpoint**: the full spec is functional.
 
@@ -179,8 +179,8 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 ## Phase 8: Polish and Cross-Cutting Concerns
 
 - [X] T049 [P] `recruitment/marketing/internal/MarketingDevSeeder.java` (only with the demo flag, idempotent): the prospects described in quickstart.md, with one proposal, one visit with an attachment-free outcome and a won prospect whose School has an MoU
-- [ ] T050 [P] Role-by-role UI test of the MARKETING menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/marketing/` and the navigation tests
-- [ ] T051 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/023-school-marketing-mou/quickstart-results.md`
+- [X] T050 [P] Role-by-role UI test of the MARKETING menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/marketing/` and the navigation tests
+- [X] T051 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/023-school-marketing-mou/quickstart-results.md`
 - [ ] T052 [P] Add a "023 School Marketing" folder to the Postman collection in `postman/HLS API/` and refresh `docs/db/schema-v23.sql`
 - [ ] T053 [P] Constitution amendment in `.specify/memory/constitution.md`: the MARKETING navigation section (Principle IV), the `files` module (Principle VII) and a Marketing row in the Default role access matrix, with a Sync Impact Report note (the version is taken at merge, after spec 016's 2.4.0)
 - [ ] T054 [P] Update `docs/spec-roadmap.md` (023 status; the shared file storage contract C7 is now built here) and `docs/running-locally.md` (the marketing flow, the files directory and demo data)

@@ -120,9 +120,13 @@ const CANDIDATES = [
   { userId: "u2", name: "Divya Director", designation: "Director" },
 ];
 
-function renderPage() {
+function renderPage(state?: unknown) {
   return render(
-    <MemoryRouter initialEntries={["/operations/school-contracts/schools/s1"]}>
+    <MemoryRouter
+      initialEntries={[
+        { pathname: "/operations/school-contracts/schools/s1", state },
+      ]}
+    >
       <Routes>
         <Route
           path="/operations/school-contracts/schools/:schoolId"
@@ -346,5 +350,87 @@ describe("SchoolContractPage (spec 012 US1)", () => {
     expect(
       within(dialog).queryByLabelText(/Monthly salary for each Teacher/),
     ).toBeNull();
+  });
+
+  describe("hand-off from a won prospect (spec 023, amendment A7)", () => {
+    const proposal = {
+      teacherCount: 5,
+      salaryMode: "PER_TEACHER",
+      rate: null,
+      startMonth: "2026-12-01",
+      positions: [
+        { title: "Maths PGT", salary: "20000.00" },
+        { title: null, salary: "18000.00" },
+        { title: null, salary: "17000.00" },
+        { title: null, salary: "17000.00" },
+        { title: null, salary: "16000.00" },
+      ],
+    };
+
+    it("opens the MoU form pre-filled when the School has no MoU yet", async () => {
+      authFetch.mockImplementation(async (url: string) =>
+        String(url).includes("signatory-candidates")
+          ? json(CANDIDATES)
+          : school([]),
+      );
+
+      renderPage({ proposal });
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByLabelText(/Number of Teachers/)).toHaveValue(
+        5,
+      );
+      expect(within(dialog).getByLabelText(/Starts on/)).toHaveValue(
+        "2026-12-01",
+      );
+      expect(
+        within(dialog).getAllByLabelText(/monthly salary \(INR\)/),
+      ).toHaveLength(5);
+    });
+
+    it("records on the pending contract and seeds a same-salary proposal", async () => {
+      authFetch.mockImplementation(async (url: string) =>
+        String(url).includes("signatory-candidates")
+          ? json(CANDIDATES)
+          : school([PENDING]),
+      );
+
+      renderPage({
+        proposal: {
+          teacherCount: 4,
+          salaryMode: "SAME_FOR_ALL",
+          rate: "15000.00",
+          startMonth: "2026-11-01",
+          positions: [],
+        },
+      });
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByLabelText(/Number of Teachers/)).toHaveValue(
+        4,
+      );
+      expect(
+        within(dialog).getByLabelText(/Monthly salary for each Teacher/),
+      ).toHaveValue("15000.00");
+    });
+
+    it("does not open the form when the School already has an MoU in effect", async () => {
+      authFetch.mockResolvedValue(school([ACTIVE]));
+
+      renderPage({ proposal });
+
+      await screen.findByRole("region", { name: "Contract in effect" });
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+
+    it("does not open the form for a Zone Manager who cannot record an MoU", async () => {
+      grants["/operations/school-contracts"] = new Set(["VIEW"]);
+      authFetch.mockResolvedValue(school([]));
+
+      renderPage({ proposal });
+
+      await screen.findByText("Demo School One");
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
   });
 });
