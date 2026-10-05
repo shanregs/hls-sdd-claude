@@ -1,0 +1,17 @@
+$kind: http-request
+name: Supersede Offer
+description: "A new issued offer replaces the old one, which stays visible as SUPERSEDED."
+url: "{{baseUrl}}/api/v1/recruitment/offers/{{offerId}}/supersede"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "role": "Trainee / English Trainer",
+      "monthlySalary": "17000",
+      "offerDate": "2026-10-26",
+      "responseDeadline": "2026-11-06"
+    }
+order: 15000

@@ -50,6 +50,26 @@ import { ContractsListPage } from "../features/schoolbilling/ContractsListPage";
 import { SchoolContractPage } from "../features/schoolbilling/SchoolContractPage";
 import { MouFormDialog } from "../features/schoolbilling/MouFormDialog";
 import { MapTeachersDialog } from "../features/schoolbilling/MapTeachersDialog";
+import { DrivesPage } from "../features/recruitment/DrivesPage";
+import { DriveDetailPage } from "../features/recruitment/DriveDetailPage";
+import { CandidatesPage } from "../features/recruitment/CandidatesPage";
+import { OffersPage } from "../features/recruitment/OffersPage";
+import { InductionPage } from "../features/recruitment/InductionPage";
+import { RecruitmentDashboard } from "../features/recruitment/RecruitmentDashboard";
+import { DriveDialog } from "../features/recruitment/DriveDialog";
+import { CollegeDialog } from "../features/recruitment/CollegeDialog";
+import {
+  AddCandidateDialog,
+  AssessmentDialog,
+  OutcomeDialog,
+} from "../features/recruitment/CandidateDialogs";
+import { OfferDialog } from "../features/recruitment/OfferDialog";
+import { OfferAcceptDialog } from "../features/recruitment/OfferAcceptDialog";
+import { ReasonDialog } from "../features/recruitment/ReasonDialog";
+import {
+  BatchDialog,
+  SignOffDialog,
+} from "../features/recruitment/InductionDialogs";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -78,6 +98,36 @@ const ACCESS_MODEL = {
           label: "Teacher Attendance",
           route: "/operations/teacher-attendance",
           actions: ["VIEW", "CREATE", "EDIT"],
+        },
+      ],
+    },
+    {
+      section: "RECRUITMENT",
+      items: [
+        {
+          label: "Campus Drives",
+          route: "/recruitment/drives",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Candidates",
+          route: "/recruitment/candidates",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Offers",
+          route: "/recruitment/offers",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Induction",
+          route: "/recruitment/induction",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
+        {
+          label: "Recruitment Dashboard",
+          route: "/recruitment/dashboard",
+          actions: ["VIEW"],
         },
       ],
     },
@@ -232,10 +282,172 @@ const CONTRACT_SAMPLE = {
   ],
 };
 
+const RECRUIT_DRIVE = {
+  id: "d1",
+  college: { id: "c1", name: "Demo College", city: "Chennai" },
+  season: "2026-27",
+  venue: "Main hall",
+  status: "HELD",
+  cancelReason: null,
+  dates: ["2026-10-02"],
+  interviewers: [{ userId: "u1", name: "Priya Manager" }],
+  scheduledBy: "u1",
+  candidates: 2,
+  outcomes: { SELECTED: 1, PENDING: 1 },
+  heldNoCandidates: false,
+  version: 0,
+};
+
+const RECRUIT_COLLEGE = {
+  id: "c1",
+  name: "Demo College",
+  city: "Chennai",
+  placementOfficer: { name: "Ms Placement", phone: "9444400001" },
+  principal: { name: "Dr Principal" },
+  drives: 1,
+  version: 0,
+};
+
+const RECRUIT_CANDIDATES = [
+  {
+    id: "k1",
+    driveId: "d1",
+    name: "Asha Student",
+    phone: "9555500001",
+    email: null,
+    degree: "B.A.",
+    year: "Final",
+    notes: null,
+    outcome: "SELECTED",
+    outcomeAt: null,
+    teacherId: null,
+    assessment: null,
+    version: 0,
+  },
+  {
+    id: "k2",
+    driveId: "d1",
+    name: "Ravi Student",
+    phone: "9555500002",
+    email: null,
+    degree: null,
+    year: null,
+    notes: null,
+    outcome: null,
+    outcomeAt: null,
+    teacherId: null,
+    assessment: null,
+    version: 0,
+  },
+];
+
+const RECRUIT_OFFER = {
+  id: "o1",
+  candidateId: "k1",
+  candidateName: "Asha Student",
+  college: "Demo College",
+  role: "Trainee / English Trainer",
+  monthlySalary: "16000.00",
+  allowances: null,
+  terms: null,
+  expectedJoining: null,
+  offerDate: "2026-10-01",
+  responseDeadline: "2026-10-20",
+  status: "ISSUED",
+  supersedesId: null,
+  declineReason: null,
+  issuedByName: "Divya Director",
+  issuedAt: null,
+  decidedAt: null,
+  teacherId: null,
+  version: 0,
+};
+
+const RECRUIT_COUNTS = {
+  drivesScheduled: 1,
+  drivesHeld: 1,
+  interviewed: 2,
+  assessed: 1,
+  selected: 1,
+  offered: 1,
+  accepted: 0,
+  inducted: 0,
+  readyToDeploy: 0,
+  placed: 0,
+  active: 0,
+  joiningRatio: "0.00",
+};
+
+function recruitmentResponse(url: string): unknown {
+  if (url.includes("/api/v1/recruitment/candidates")) return RECRUIT_CANDIDATES;
+  if (url.includes("/api/v1/recruitment/offers")) return [RECRUIT_OFFER];
+  if (url.includes("/api/v1/recruitment/colleges")) return [RECRUIT_COLLEGE];
+  if (url.includes("/api/v1/recruitment/interviewers")) {
+    return [{ userId: "u1", name: "Priya Manager" }];
+  }
+  if (url.includes("/api/v1/recruitment/dashboard")) {
+    return {
+      colleges: [
+        {
+          collegeId: "c1",
+          name: "Demo College",
+          city: "Chennai",
+          counts: RECRUIT_COUNTS,
+        },
+      ],
+      totals: RECRUIT_COUNTS,
+      readyToDeployTotal: 0,
+    };
+  }
+  if (/\/api\/v1\/recruitment\/drives\/[^/?]*$/.test(url)) return RECRUIT_DRIVE;
+  if (url.includes("/api/v1/recruitment/drives")) return [RECRUIT_DRIVE];
+  if (url.includes("/roster")) {
+    return [
+      {
+        enrolmentId: "e1",
+        teacherId: "t1",
+        name: "Ready Rani",
+        result: null,
+        remarks: null,
+        followUp: null,
+        days: [
+          { date: "2026-10-02", status: "PRESENT", dayValue: 1, reason: null },
+        ],
+      },
+    ];
+  }
+  if (url.includes("/api/v1/induction/batches")) {
+    return [
+      {
+        id: "b1",
+        name: "October Induction",
+        startsOn: "2026-10-01",
+        endsOn: "2026-10-31",
+        trainer: "Trainer Tina",
+        venueType: "PHYSICAL",
+        venue: "Head office",
+        seatLimit: 10,
+        enrolled: 1,
+        status: "RUNNING",
+        version: 0,
+      },
+    ];
+  }
+  if (url.includes("/api/v1/induction/ready-to-deploy")) {
+    return [{ teacherId: "t2", name: "Ready Rani", status: "ACTIVE" }];
+  }
+  if (url.includes("/api/v1/induction/to-be-enrolled")) return [];
+  return undefined;
+}
+
 const authFetch = vi.fn(async (input: RequestInfo) => {
   const url = typeof input === "string" ? input : input.url;
   if (url.includes("/access-model")) {
     return { ok: true, json: async () => ACCESS_MODEL } as Response;
+  }
+  const recruitment = recruitmentResponse(url);
+  if (recruitment !== undefined) {
+    return { ok: true, json: async () => recruitment } as Response;
   }
   const aSession = {
     id: "s1",
@@ -1088,6 +1300,141 @@ const pages: PageCase[] = [
     name: "Manager dashboard with assigned counts",
     render: () => <MasterDataManagerDashboard />,
     settle: () => screen.findByText("My assigned zones"),
+  },
+  {
+    name: "DrivesPage",
+    render: () => <DrivesPage />,
+    settle: () => screen.findAllByText("Demo College, Chennai"),
+  },
+  {
+    name: "DriveDetailPage",
+    render: () => <DriveDetailPage />,
+    settle: () => screen.findByRole("table", { name: "Candidates" }),
+  },
+  {
+    name: "CandidatesPage",
+    render: () => <CandidatesPage />,
+    settle: () => screen.findByRole("table", { name: "Candidates" }),
+  },
+  {
+    name: "OffersPage",
+    render: () => <OffersPage />,
+    settle: () => screen.findByRole("table", { name: "Offers" }),
+  },
+  {
+    name: "InductionPage",
+    render: () => <InductionPage />,
+    settle: () => screen.findByRole("table", { name: "Roster" }),
+  },
+  {
+    name: "RecruitmentDashboard",
+    render: () => <RecruitmentDashboard />,
+    settle: () =>
+      screen.findByRole("table", { name: "Recruitment funnel by college" }),
+  },
+  {
+    name: "DriveDialog",
+    render: () => <DriveDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "CollegeDialog",
+    render: () => <CollegeDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "AddCandidateDialog",
+    render: () => (
+      <AddCandidateDialog driveId="d1" onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "OutcomeDialog",
+    render: () => (
+      <OutcomeDialog
+        candidate={RECRUIT_CANDIDATES[0] as never}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "AssessmentDialog",
+    render: () => (
+      <AssessmentDialog
+        candidate={RECRUIT_CANDIDATES[0] as never}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "OfferDialog",
+    render: () => (
+      <OfferDialog mode="create" onClose={vi.fn()} onSaved={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "OfferAcceptDialog",
+    render: () => (
+      <OfferAcceptDialog
+        offer={RECRUIT_OFFER as never}
+        onClose={vi.fn()}
+        onAccepted={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ReasonDialog",
+    render: () => (
+      <ReasonDialog
+        title="Decline the offer?"
+        label="Reason"
+        confirmLabel="Decline"
+        onConfirm={async () => null}
+        onCancel={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "BatchDialog",
+    render: () => <BatchDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "SignOffDialog",
+    render: () => (
+      <SignOffDialog
+        row={{
+          enrolmentId: "e1",
+          teacherId: "t1",
+          name: "Ready Rani",
+          result: null,
+          remarks: null,
+          followUp: null,
+          days: [],
+        }}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
   },
   {
     name: "ResetPasswordDialog",

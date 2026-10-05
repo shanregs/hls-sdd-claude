@@ -1,0 +1,15 @@
+$kind: http-request
+name: Sign Off Induction
+description: "COMPLETED makes the Teacher active and ready to deploy."
+url: "{{baseUrl}}/api/v1/induction/enrolments/{{enrolmentId}}/signoff"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "result": "COMPLETED",
+      "remarks": "Completed"
+    }
+order: 26000

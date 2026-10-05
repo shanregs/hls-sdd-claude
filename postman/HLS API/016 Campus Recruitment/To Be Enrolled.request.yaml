@@ -1,0 +1,6 @@
+$kind: http-request
+name: To Be Enrolled
+description: "Recruits in training who are in no batch."
+url: "{{baseUrl}}/api/v1/induction/to-be-enrolled"
+method: GET
+order: 29000

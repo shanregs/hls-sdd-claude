@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Interviewers
+description: "Active Admin, Director and Zone Manager users who can attend a drive."
+url: "{{baseUrl}}/api/v1/recruitment/interviewers"
+method: GET
+order: 3000

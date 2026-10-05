@@ -1,0 +1,25 @@
+$kind: http-request
+name: Schedule Drive
+description: "Needs RECRUITMENT.CREATE. Saves driveId."
+url: "{{baseUrl}}/api/v1/recruitment/drives"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "collegeId": "{{collegeId}}",
+      "dates": [
+        "2026-10-20",
+        "2026-10-21"
+      ],
+      "venue": "Main auditorium",
+      "season": "2026-27",
+      "interviewerUserIds": []
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("driveId", v); } }
+    language: text/javascript
+order: 4000

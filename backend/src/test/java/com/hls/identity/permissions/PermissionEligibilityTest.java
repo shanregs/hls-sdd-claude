@@ -112,6 +112,38 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void recruitmentModulesApplyToStaffRolesOnlyWithTheSeededDefaults() {
+        List<PermissionModule> modules =
+                List.of(PermissionModule.RECRUITMENT, PermissionModule.OFFERS, PermissionModule.INDUCTION);
+        for (PermissionModule module : modules) {
+            for (Role role : Role.values()) {
+                boolean staff = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
+                assertThat(PermissionEligibility.actionsFor(role, module))
+                        .as(module + " " + role)
+                        .isEqualTo(staff
+                                ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
+                                : java.util.EnumSet.noneOf(PermissionAction.class));
+            }
+        }
+        for (PermissionModule module : modules) {
+            for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                assertThat(matrix.isGranted(Role.DIRECTOR, module, action)).as("DIRECTOR " + module + action).isTrue();
+            }
+        }
+        // Admin: recruitment and induction in full, offers view only
+        for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+            assertThat(matrix.isGranted(Role.ADMIN, PermissionModule.RECRUITMENT, action)).isTrue();
+            assertThat(matrix.isGranted(Role.ADMIN, PermissionModule.INDUCTION, action)).isTrue();
+            assertThat(matrix.isGranted(Role.ADMIN, PermissionModule.OFFERS, action))
+                    .isEqualTo(action == PermissionAction.VIEW);
+            assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.RECRUITMENT, action)).isTrue();
+            assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.OFFERS, action))
+                    .isEqualTo(action == PermissionAction.VIEW);
+            assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.INDUCTION, action)).isFalse();
+        }
+    }
+
+    @Test
     void systemHasNoBusinessDataModulesButKeepsTheHolidayCalendarAndAudit() {
         for (PermissionModule business : List.of(
                 PermissionModule.ZONES,
@@ -126,7 +158,10 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.LEAVE_MANAGEMENT,
                 PermissionModule.MY_LEAVE,
                 PermissionModule.NOTIFICATIONS,
-                PermissionModule.SCHOOL_CONTRACTS)) {
+                PermissionModule.SCHOOL_CONTRACTS,
+                PermissionModule.RECRUITMENT,
+                PermissionModule.OFFERS,
+                PermissionModule.INDUCTION)) {
             assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, business)).as(business.name()).isEmpty();
         }
         assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, PermissionModule.HOLIDAY_CALENDAR))

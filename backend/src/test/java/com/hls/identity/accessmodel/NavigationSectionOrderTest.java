@@ -34,19 +34,19 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void adminSeesDashboardMasterDataOperationsSystemAuditAccount() {
         assertThat(sectionsFor(Role.ADMIN))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "SYSTEM", "AUDIT", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "SYSTEM", "AUDIT", "ACCOUNT");
     }
 
     @Test
     void directorKeepsTheSameOrderWithoutTheAuditSection() {
         assertThat(sectionsFor(Role.DIRECTOR))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "SYSTEM", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "SYSTEM", "ACCOUNT");
     }
 
     @Test
     void managerSeesDashboardMasterDataOperationsAccount() {
         assertThat(sectionsFor(Role.MANAGER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "ACCOUNT");
     }
 
     @Test
@@ -84,7 +84,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void aUserWithSeveralRolesGetsOneCombinedOrder() {
         assertThat(sectionsFor(Role.MANAGER, Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "MY ATTENDANCE", "LEAVE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MY ATTENDANCE", "LEAVE", "ACCOUNT");
     }
 
     @Test

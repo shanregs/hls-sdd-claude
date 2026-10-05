@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import {
   authorizedRoutesOf,
+  isAuthorizedPath,
   useAccessModel,
 } from "../access-model/useAccessModel";
 import { NotAuthorizedPage } from "./NotAuthorizedPage";
@@ -21,7 +22,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
   }
 
   const authorizedRoutes = authorizedRoutesOf(accessModel);
-  if (!authorizedRoutes.has(location.pathname)) {
+  if (!isAuthorizedPath(location.pathname, authorizedRoutes)) {
     return <NotAuthorizedPage />;
   }
 

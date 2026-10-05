@@ -1,0 +1,22 @@
+$kind: http-request
+name: Add Candidate
+description: "A phone number already in the drive is 409. Saves candidateId."
+url: "{{baseUrl}}/api/v1/recruitment/drives/{{driveId}}/candidates"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Asha Student",
+      "phone": "9555500001",
+      "email": "asha@demo.test",
+      "degree": "B.A. English",
+      "year": "Final"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("candidateId", v); } }
+    language: text/javascript
+order: 8000

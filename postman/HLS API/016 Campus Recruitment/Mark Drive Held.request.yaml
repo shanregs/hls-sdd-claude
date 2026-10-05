@@ -1,0 +1,14 @@
+$kind: http-request
+name: Mark Drive Held
+description: "A Zone Manager may change only a drive they scheduled or attend (403 \"Not your drive\"). Cancelling needs a reason."
+url: "{{baseUrl}}/api/v1/recruitment/drives/{{driveId}}/status"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "HELD"
+    }
+order: 7000

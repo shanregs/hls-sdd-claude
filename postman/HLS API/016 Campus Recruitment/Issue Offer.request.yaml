@@ -1,0 +1,12 @@
+$kind: http-request
+name: Issue Offer
+description: "Needs OFFERS.EDIT. An issued offer never changes."
+url: "{{baseUrl}}/api/v1/recruitment/offers/{{offerId}}/issue"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 14000

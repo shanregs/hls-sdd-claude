@@ -99,6 +99,48 @@ class RollupCalculatorTest {
     }
 
     @Test
+    void aTrainingMarkOnADayTheTeacherIsNotPlacedCountsOnlyAsTraining() {
+        Map<LocalDate, MarkFacts> marks = new HashMap<>();
+        for (int d : new int[] {5, 6, 7, 8, 9}) {
+            marks.put(oct(d), TRAINING);
+        }
+
+        Rollup r = RollupCalculator.compute(OCT, List.of(), marks, SUNDAY_OFF, Set.of(), AFTER_MONTH);
+
+        // five induction days, no placement: no working days, no weighted total, no unmarked days.
+        assertRollup(r, "0", "0", "0", "5", "5", 0, "0");
+    }
+
+    @Test
+    void aHalfTrainingDayWithoutAPlacementCountsHalfAttendedAndOneAvailable() {
+        Rollup r = RollupCalculator.compute(
+                OCT, List.of(), Map.of(oct(6), facts(StatusCategory.TRAINING, "0.50", "1.00")), SUNDAY_OFF, Set.of(), AFTER_MONTH);
+
+        assertRollup(r, "0", "0", "0", "1", "0.5", 0, "0");
+    }
+
+    @Test
+    void aNonTrainingMarkOnAnUnplacedDayStillCountsForNothing() {
+        Rollup r = RollupCalculator.compute(OCT, List.of(), Map.of(oct(6), PRESENT), SUNDAY_OFF, Set.of(), AFTER_MONTH);
+
+        assertRollup(r, "0", "0", "0", "0", "0", 0, "0");
+    }
+
+    @Test
+    void anAnUnplacedTrainingDayBeforeAPlacementDoesNotChangeTheWorkingDaysAfterIt() {
+        Map<LocalDate, MarkFacts> marks = new HashMap<>();
+        marks.put(oct(5), TRAINING);
+        marks.put(oct(6), TRAINING);
+        marks.put(oct(12), PRESENT);
+
+        Rollup r = RollupCalculator.compute(
+                OCT, List.of(placement(SCHOOL_A, oct(12), null)), marks, SUNDAY_OFF, Set.of(), AFTER_MONTH);
+
+        // placed from Oct 12: Oct 12-31 minus Sundays 18, 25 = 18 working days; two induction days sit outside them.
+        assertRollup(r, "18", "1", "0", "2", "2", 17, "1");
+    }
+
+    @Test
     void anExplicitMarkOnAWeeklyOffDayCountsAndAddsAWorkingDay() {
         Map<LocalDate, MarkFacts> marks = Map.of(oct(4), PRESENT);
 

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Record Induction Attendance
+description: "PRESENT or HALF writes a training-day mark with no School; ABSENT needs a reason. A locked month is 409."
+url: "{{baseUrl}}/api/v1/induction/enrolments/{{enrolmentId}}/attendance"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "date": "2026-11-03",
+      "status": "PRESENT"
+    }
+order: 25000

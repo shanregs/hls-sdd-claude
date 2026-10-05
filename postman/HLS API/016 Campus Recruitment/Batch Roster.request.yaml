@@ -1,0 +1,10 @@
+$kind: http-request
+name: Batch Roster
+description: "Enrolments with their attendance. Saves enrolmentId."
+url: "{{baseUrl}}/api/v1/induction/batches/{{batchId}}/roster"
+method: GET
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 200) { const x = pm.response.json(); const v = x[0] && x[0].enrolmentId; if (v) { pm.collectionVariables.set("enrolmentId", v); } }
+    language: text/javascript
+order: 24000

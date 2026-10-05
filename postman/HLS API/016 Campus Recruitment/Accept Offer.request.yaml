@@ -1,0 +1,18 @@
+$kind: http-request
+name: Accept Offer
+description: "Creates the Teacher in training with no salary entry; 409 naming an existing Teacher; confirmNewRecord for an exited match. Saves teacherId."
+url: "{{baseUrl}}/api/v1/recruitment/offers/{{offerId}}/accept"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "confirmNewRecord": false
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 200) { const x = pm.response.json(); const v = x.teacherId; if (v) { pm.collectionVariables.set("teacherId", v); } }
+    language: text/javascript
+order: 16000

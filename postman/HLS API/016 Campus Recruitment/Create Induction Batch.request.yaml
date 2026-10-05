@@ -1,0 +1,24 @@
+$kind: http-request
+name: Create Induction Batch
+description: "Needs INDUCTION.CREATE (Admin, Director). Saves batchId."
+url: "{{baseUrl}}/api/v1/induction/batches"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "November Induction",
+      "startsOn": "2026-11-02",
+      "endsOn": "2026-12-01",
+      "trainer": "Trainer Tina",
+      "venueType": "PHYSICAL",
+      "venue": "Head office",
+      "seatLimit": 20
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("batchId", v); } }
+    language: text/javascript
+order: 21000

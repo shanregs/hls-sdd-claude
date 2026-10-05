@@ -100,6 +100,11 @@ public class AccessModelService {
         addAttendanceScope(dataScope, callerRoles, PermissionModule.MY_LEAVE, DataScope.OWN, Role.TEACHER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_CONTRACTS, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_CONTRACTS, DataScope.ASSIGNED, Role.MANAGER);
+        for (PermissionModule recruitment :
+                List.of(PermissionModule.RECRUITMENT, PermissionModule.OFFERS, PermissionModule.INDUCTION)) {
+            addAttendanceScope(dataScope, callerRoles, recruitment, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+            addAttendanceScope(dataScope, callerRoles, recruitment, DataScope.ASSIGNED, Role.MANAGER);
+        }
         addAttendanceScope(
                 dataScope,
                 callerRoles,

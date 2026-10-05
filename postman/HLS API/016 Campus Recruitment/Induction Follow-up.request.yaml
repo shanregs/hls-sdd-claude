@@ -1,0 +1,14 @@
+$kind: http-request
+name: Induction Follow-up
+description: "After NOT_COMPLETED: NEXT_BATCH, or RELEASE with a reason."
+url: "{{baseUrl}}/api/v1/induction/enrolments/{{enrolmentId}}/follow-up"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "action": "NEXT_BATCH"
+    }
+order: 27000

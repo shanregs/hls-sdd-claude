@@ -1,0 +1,6 @@
+$kind: http-request
+name: Recruitment Dashboard
+description: "The funnel per college with the joining ratio. Filters: season, from, to, mine."
+url: "{{baseUrl}}/api/v1/recruitment/dashboard?season=2026-27"
+method: GET
+order: 20000

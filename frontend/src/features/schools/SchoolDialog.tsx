@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Alert,
@@ -11,6 +11,11 @@ import {
   TextField,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
+import { ContactFields, type ContactValue } from "../common/ContactFields";
+import {
+  getSchoolContacts,
+  saveSchoolContacts,
+} from "../recruitment/recruitmentApi";
 import type { PlaceSummary } from "../zones/zonesApi";
 import { PlacePicker } from "./PlacePicker";
 import {
@@ -40,6 +45,21 @@ export function SchoolDialog({
   const { authFetch } = useAuth();
   const [place, setPlace] = useState<PlaceSummary | null>(null);
   const [placeError, setPlaceError] = useState<string | undefined>();
+  const blank: ContactValue = { name: "", phone: "", email: "" };
+  const [principal, setPrincipal] = useState<ContactValue>(blank);
+  const [accountant, setAccountant] = useState<ContactValue>(blank);
+
+  useEffect(() => {
+    if (!school) return;
+    void (async () => {
+      const result = await getSchoolContacts(authFetch, school.id);
+      if (result.ok) {
+        setPrincipal(result.data.principal ?? blank);
+        setAccountant(result.data.accountant ?? blank);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once for the School being edited
+  }, [authFetch, school?.id]);
   const {
     register,
     handleSubmit,
@@ -66,6 +86,25 @@ export function SchoolDialog({
     if (!result.ok) {
       setError("root", { message: result.reason });
       return;
+    }
+    const contactsEntered = [principal, accountant].some(
+      (c) => c.name.trim() || c.phone || c.email,
+    );
+    if (school || contactsEntered) {
+      const saved = await saveSchoolContacts(
+        authFetch,
+        school ? school.id : result.data.id,
+        {
+          principal: principal.name.trim() ? principal : null,
+          accountant: accountant.name.trim() ? accountant : null,
+        },
+      );
+      if (!saved.ok) {
+        setError("root", {
+          message: `The School was saved but its contacts were not: ${saved.reason}`,
+        });
+        return;
+      }
     }
     onSaved();
   });
@@ -119,6 +158,16 @@ export function SchoolDialog({
               label="Billing contact"
               disabled={limited}
               {...register("billingContact")}
+            />
+            <ContactFields
+              label="Principal"
+              value={principal}
+              onChange={setPrincipal}
+            />
+            <ContactFields
+              label="Accountant"
+              value={accountant}
+              onChange={setAccountant}
             />
           </Stack>
         </DialogContent>

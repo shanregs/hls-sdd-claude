@@ -107,10 +107,15 @@ public final class RollupCalculator {
         int unmarked = 0;
 
         for (DayPlan plan : plan(month, placements, rules, nonWorkingDates)) {
+            MarkFacts mark = marks.get(plan.date());
             if (!plan.placed()) {
+                // An induction day marked before any placement counts as training only (amendment A5).
+                if (mark != null && mark.category() == StatusCategory.TRAINING) {
+                    trainingAvailable = trainingAvailable.add(BigDecimal.ONE);
+                    trainingAttended = trainingAttended.add(mark.dayValue());
+                }
                 continue;
             }
-            MarkFacts mark = marks.get(plan.date());
             boolean scheduled = plan.kind() == DayKind.WORKING;
             if (mark == null) {
                 if (scheduled) {

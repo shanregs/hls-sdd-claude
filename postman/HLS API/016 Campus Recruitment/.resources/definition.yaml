@@ -1,0 +1,3 @@
+$kind: collection
+description: "Campus recruitment, job offers and induction (spec 016). Admin, Director and Zone Manager use drives and candidates (a Zone Manager writes only to drives they scheduled or attend); only the Director issues, replaces, accepts and declines offers (Admin and Zone Manager read them); Admin and Director run induction; Teacher and System get 403. Collection variables: collegeId, driveId, candidateId, offerId, batchId, enrolmentId and teacherId are saved by the create requests. Accepting an offer creates the Teacher in training; the first assignment to a School (spec 012) writes the salary of the accepted offer."
+order: 12000

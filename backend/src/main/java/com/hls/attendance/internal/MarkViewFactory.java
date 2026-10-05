@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class MarkViewFactory {
 
+    /** Shown for an induction day, which is marked before the Teacher has a School (amendment A5). */
+    static final String NO_SCHOOL = "Induction (no School)";
+
     private final StatusCodeCatalog codes;
     private final SchoolDirectory schools;
     private final AppUserRepository users;
@@ -39,7 +42,7 @@ public class MarkViewFactory {
         Map<UUID, StatusCode> codeById =
                 codes.byId();
         Map<UUID, String> schoolNames = schools
-                .schools(marks.stream().map(AttendanceMark::getSchoolId).distinct().toList())
+                .schools(marks.stream().map(AttendanceMark::getSchoolId).filter(java.util.Objects::nonNull).distinct().toList())
                 .stream()
                 .collect(Collectors.toMap(SchoolDirectory.SchoolInfo::id, SchoolDirectory.SchoolInfo::name));
         Map<UUID, String> userNames = users
@@ -56,7 +59,7 @@ public class MarkViewFactory {
                             code.getCategory().name(),
                             m.getDayValue(),
                             m.getSchoolId(),
-                            schoolNames.getOrDefault(m.getSchoolId(), "-"),
+                            m.getSchoolId() == null ? NO_SCHOOL : schoolNames.getOrDefault(m.getSchoolId(), "-"),
                             m.getSetByKind().name(),
                             m.getSetByUserId(),
                             userNames.getOrDefault(m.getSetByUserId(), "Unknown user"),

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Candidate History
+description: "Outcome and assessment history."
+url: "{{baseUrl}}/api/v1/recruitment/candidates/{{candidateId}}/history"
+method: GET
+order: 11000

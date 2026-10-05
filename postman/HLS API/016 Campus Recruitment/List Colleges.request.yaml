@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Colleges
+description: "The College list with placement officer and principal contacts. Needs RECRUITMENT.VIEW."
+url: "{{baseUrl}}/api/v1/recruitment/colleges"
+method: GET
+order: 1000

@@ -75,3 +75,20 @@ export function authorizedRoutesOf(
     ),
   );
 }
+
+/**
+ * A path is authorized when it is a route of the access model or lies below one (a detail page such as
+ * `/operations/school-contracts/schools/:id` or `/recruitment/drives/:id` belongs to its list's menu item, so it
+ * needs the same grant and never has a menu item of its own).
+ */
+export function isAuthorizedPath(path: string, routes: Set<string>): boolean {
+  if (routes.has(path)) {
+    return true;
+  }
+  for (const route of routes) {
+    if (route !== "/" && path.startsWith(`${route}/`)) {
+      return true;
+    }
+  }
+  return false;
+}
