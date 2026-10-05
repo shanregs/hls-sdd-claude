@@ -35,7 +35,7 @@ public class AttendanceMark {
     @Column(name = "day_value", nullable = false)
     private BigDecimal dayValue;
 
-    @Column(name = "school_id", nullable = false)
+    @Column(name = "school_id")
     private UUID schoolId;
 
     @Column(name = "note")

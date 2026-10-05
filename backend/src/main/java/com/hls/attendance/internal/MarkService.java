@@ -31,6 +31,7 @@ public class MarkService {
     private static final BigDecimal WHOLE = new BigDecimal("1.00");
     private static final BigDecimal HALF = new BigDecimal("0.50");
     private static final int MAX_NOTE = 500;
+    private static final String TRAINING_CODE = "T";
 
     private final AttendanceMarkRepository marks;
     private final MarkHistoryRepository history;
@@ -185,6 +186,9 @@ public class MarkService {
     @Transactional
     public void setLeaveMark(
             UUID approverUserId, UUID teacherId, LocalDate date, UUID schoolId, BigDecimal dayValue, UUID leaveRequestId) {
+        if (schoolId == null) {
+            throw new InvalidInputException("A Leave mark needs a School.");
+        }
         YearMonth month = YearMonth.from(date);
         if (monthLock.isLocked(teacherId, month)) {
             throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
@@ -245,6 +249,85 @@ public class MarkService {
                 "mark",
                 describe(existing) + " (leave request " + leaveRequestId + ")",
                 null);
+        marks.delete(existing);
+        marks.flush();
+    }
+
+    /**
+     * Writes an induction day (amendment A5 to spec 008): the training status code with no School, because the
+     * Teacher is not placed yet. A Teacher who is placed that day keeps the School of the placement. Refused for a
+     * future date, a locked month, or a day that already holds a different kind of mark.
+     */
+    @Transactional
+    public void setTrainingMark(UUID actorUserId, UUID teacherId, LocalDate date, BigDecimal dayValue) {
+        if (date == null) {
+            throw new InvalidInputException("The date is required.");
+        }
+        BigDecimal value = requireDayValue(dayValue);
+        YearMonth month = YearMonth.from(date);
+        monthLock.acquire(teacherId, month);
+        if (teachers.teacherInfo(List.of(teacherId)).get(teacherId) == null) {
+            throw new NotFoundException("Teacher not found.");
+        }
+        if (date.isAfter(calendar.today())) {
+            throw new ConflictException("You cannot mark a date in the future.");
+        }
+        if (monthLock.isLocked(teacherId, month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        StatusCode code = codes.requireByShortCode(TRAINING_CODE);
+        if (!code.isActive()) {
+            throw new ConflictException("The status " + code.getShortCode() + " is no longer in use.");
+        }
+        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date).orElse(null);
+        if (existing != null && !existing.getStatusCodeId().equals(code.getId())) {
+            throw new ConflictException("This day already has an attendance mark that is not a training day.");
+        }
+        if (existing != null && existing.getDayValue().compareTo(value) == 0) {
+            return;
+        }
+        UUID schoolId = teachers.placementsOverlapping(List.of(teacherId), date, date).stream()
+                .filter(p -> p.covers(date))
+                .map(PlacementSpan::schoolId)
+                .findFirst()
+                .orElse(null);
+        String before = existing == null ? null : describe(existing);
+        AttendanceMark mark = existing != null ? existing : new AttendanceMark(teacherId, date);
+        mark.set(code.getId(), value, schoolId, null, actorUserId, SetByKind.SUPERVISOR, clock.instant());
+        AttendanceMark saved = marks.saveAndFlush(mark);
+        history.save(new MarkHistoryEntry(
+                teacherId,
+                date,
+                existing == null ? MarkAction.CREATED : MarkAction.CORRECTED,
+                code.getId(),
+                value,
+                schoolId,
+                null,
+                actorUserId,
+                SetByKind.SUPERVISOR,
+                saved.getSetAt()));
+        audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", before, code.getShortCode() + " " + value.toPlainString());
+    }
+
+    /** Removes an induction day; a conflict if the day holds a different kind of mark. */
+    @Transactional
+    public void clearTrainingMark(UUID actorUserId, UUID teacherId, LocalDate date) {
+        if (date == null) {
+            throw new InvalidInputException("The date is required.");
+        }
+        YearMonth month = YearMonth.from(date);
+        monthLock.acquire(teacherId, month);
+        if (monthLock.isLocked(teacherId, month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date)
+                .orElseThrow(() -> new NotFoundException("There is no mark on that date."));
+        if (!codes.require(existing.getStatusCodeId()).getShortCode().equals(TRAINING_CODE)) {
+            throw new ConflictException("This day holds an attendance mark that is not a training day.");
+        }
+        history.save(new MarkHistoryEntry(
+                teacherId, date, MarkAction.CLEARED, null, null, existing.getSchoolId(), null, actorUserId, SetByKind.SUPERVISOR, clock.instant()));
+        audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", describe(existing), null);
         marks.delete(existing);
         marks.flush();
     }

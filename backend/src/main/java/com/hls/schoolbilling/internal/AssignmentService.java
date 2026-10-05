@@ -6,6 +6,7 @@ import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
+import com.hls.schoolbilling.api.TeacherFirstAssigned;
 import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
 import java.time.Clock;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class AssignmentService {
     private final ContractAssignmentRepository assignments;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public AssignmentService(
             TeacherDirectory teachers,
@@ -48,7 +51,8 @@ public class AssignmentService {
             ContractPositionRepository positions,
             ContractAssignmentRepository assignments,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.teachers = teachers;
         this.schools = schools;
         this.contracts = contracts;
@@ -56,6 +60,7 @@ public class AssignmentService {
         this.assignments = assignments;
         this.changes = changes;
         this.clock = clock;
+        this.events = events;
     }
 
     /** Assigns or moves the Teacher to {@code schoolId} effective {@code effectiveOn} (default today). */
@@ -84,6 +89,7 @@ public class AssignmentService {
         LocalDate today = LocalDate.now(clock);
         LocalDate start = effectiveOn == null ? today : effectiveOn;
 
+        boolean firstAssignment = assignments.findByTeacherIdOrderByStartsOnDesc(teacherId).isEmpty();
         List<ContractAssignment> active =
                 assignments.findByTeacherIdAndStatusOrderByStartsOnDesc(teacherId, AssignmentStatus.ACTIVE);
         Optional<ContractAssignment> current =
@@ -118,6 +124,9 @@ public class AssignmentService {
             moveNow(actor, teacherId, schoolId, resolvedPosition, start, current.orElse(null), active);
         }
         flush();
+        if (firstAssignment) {
+            events.publishEvent(new TeacherFirstAssigned(teacherId, schoolId, start));
+        }
         changes.record(actor, "TEACHER_PLACEMENT", teacherId, "school", beforeSchool, schoolId);
         changes.record(actor, "TEACHER_PLACEMENT", teacherId, "effectiveOn", null, start);
         if (resolvedPosition != null || beforePosition != null) {
