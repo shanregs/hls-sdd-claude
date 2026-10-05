@@ -232,7 +232,8 @@ phone width, with no horizontal page scroll at any width.
   able to view and edit the matrix, and MUST explain why the edit was refused.
 - **FR-004a**: The Role & Permissions screen MUST present the matrix as a compact grid of modules
   (rows) by roles (columns), with an icon per applicable action in each cell — coloured when
-  granted, grey when applicable but not granted, and a dash when nothing applies to that role —
+  granted in a colour specific to its action (View blue, Create green, Edit orange, Delete red,
+  Process purple, Export teal, Approve indigo), grey when applicable but not granted, and a dash when nothing applies to that role —
   with a tooltip and an accessible name stating the role, action, module and state. A user who may
   edit the matrix MUST be able to change a grant by clicking its icon and confirming; a view-only
   user MUST see the icons without a click action.

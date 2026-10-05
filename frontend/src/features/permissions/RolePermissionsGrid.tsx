@@ -23,6 +23,7 @@ import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import { useAuth } from "../../auth/useAuth";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { EditGrantDialog } from "./EditGrantDialog";
+import type { Theme } from "@mui/material/styles";
 import type { MatrixResponse, MatrixRow } from "./types";
 
 const ROUTE = "/identity/permissions";
@@ -40,6 +41,29 @@ const ACTIONS: Record<string, { label: string; Icon: ElementType }> = {
   PROCESS: { label: "Process", Icon: PlayCircleOutline },
   EXPORT: { label: "Export", Icon: FileDownloadOutlined },
 };
+
+/**
+ * One colour per action so a column reads at a glance: View blue, Create green, Edit orange, Delete red,
+ * Process purple, Export teal, Approve indigo. A granted icon wears its action's colour; an action that
+ * is not granted is grey. Each pair is (light theme, dark theme) and keeps 3:1 against its background.
+ */
+const ACTION_COLOURS: Record<string, { light: string; dark: string }> = {
+  VIEW: { light: "#1E5AA8", dark: "#8AB4F8" },
+  CREATE: { light: "#2E7D32", dark: "#81C784" },
+  EDIT: { light: "#E65100", dark: "#FFB74D" },
+  DELETE: { light: "#C62828", dark: "#EF9A9A" },
+  APPROVE: { light: "#283593", dark: "#9FA8DA" },
+  PROCESS: { light: "#6A1B9A", dark: "#CE93D8" },
+  EXPORT: { light: "#00838F", dark: "#4DD0E1" },
+};
+
+/** The colour of an action's icon in the current theme. */
+function actionColour(action: string) {
+  return (theme: Theme): string => {
+    const pair = ACTION_COLOURS[action] ?? ACTION_COLOURS.VIEW;
+    return theme.palette.mode === "dark" ? pair.dark : pair.light;
+  };
+}
 
 /** A sub-column is narrow: one icon wide. */
 const CELL_WIDTH = 28;
@@ -74,7 +98,7 @@ function GrantIcon({
   const icon = (
     <Icon
       fontSize="small"
-      sx={{ color: granted ? "primary.main" : "action.disabled" }}
+      sx={{ color: granted ? actionColour(action) : "action.disabled" }}
     />
   );
   const name = `${role} ${label} ${module}: ${state}`;
@@ -189,8 +213,8 @@ export function RolePermissionsGrid() {
             component="p"
             sx={{ mb: 1 }}
           >
-            Coloured icon = granted · grey icon = not granted · shaded cell =
-            does not apply
+            Coloured icon = granted (each action has its own colour) · grey icon
+            = not granted · shaded cell = does not apply
             {canEdit ? " · click an icon to change it" : ""}
           </Typography>
           <Paper variant="outlined">
@@ -251,7 +275,7 @@ export function RolePermissionsGrid() {
                             <Tooltip title={label}>
                               <Icon
                                 fontSize="small"
-                                sx={{ color: "text.secondary" }}
+                                sx={{ color: actionColour(action) }}
                               />
                             </Tooltip>
                           </TableCell>
