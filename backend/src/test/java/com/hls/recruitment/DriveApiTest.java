@@ -102,7 +102,7 @@ class DriveApiTest extends RecruitmentTestBase {
     @Test
     void directorAndAdminChangeAnyDriveAndCandidate() {
         String admin = admin();
-        String director = director();
+        String director = directorToken();
         UUID drive = drive(director);
         UUID candidate = candidate(admin, drive);
 

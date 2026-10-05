@@ -3,7 +3,6 @@ package com.hls.recruitment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hls.identity.user.Role;
-import com.hls.support.MasterDataTestBase;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -14,12 +13,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.http.MediaType;
 
 /** Helpers for the spec 016 integration tests: colleges, drives, candidates, CSV upload. */
-public abstract class RecruitmentTestBase extends MasterDataTestBase {
+public abstract class RecruitmentTestBase extends com.hls.schoolbilling.SchoolContractsTestBase {
 
     protected static final String BASE = "/api/v1/recruitment";
     private static final AtomicLong SEQ = new AtomicLong(8_100_000_000L);
-
-    protected final LocalDate today = LocalDate.now();
 
     protected static String phone() {
         return Long.toString(SEQ.incrementAndGet());
@@ -98,7 +95,35 @@ public abstract class RecruitmentTestBase extends MasterDataTestBase {
         return signInAs(Role.ADMIN).token();
     }
 
-    protected String director() {
+    protected String directorToken() {
         return signInAs(Role.DIRECTOR).token();
+    }
+
+    protected Map<String, Object> offerBody(String salary) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("role", "Trainee / English Trainer");
+        body.put("monthlySalary", salary);
+        body.put("allowances", "Travel 1000");
+        body.put("terms", "Two months notice");
+        body.put("expectedJoining", today.plusDays(30).toString());
+        body.put("offerDate", today.toString());
+        body.put("responseDeadline", today.plusDays(10).toString());
+        return body;
+    }
+
+    protected UUID selected(String token, String phone) {
+        UUID drive = drive(token);
+        Resp added = addCandidate(token, drive, "Cand " + phone, phone);
+        assertThat(added.status()).as(added.body()).isEqualTo(201);
+        assertThat(outcome(token, added.id(), "SELECTED").status()).isEqualTo(200);
+        return added.id();
+    }
+
+    protected UUID issued(String director, UUID candidate, String salary) {
+        Resp draft = post(BASE + "/candidates/" + candidate + "/offers", director, offerBody(salary));
+        assertThat(draft.status()).as(draft.body()).isEqualTo(201);
+        Resp issue = post(BASE + "/offers/" + draft.id() + "/issue", director, Map.of());
+        assertThat(issue.status()).as(issue.body()).isEqualTo(200);
+        return draft.id();
     }
 }

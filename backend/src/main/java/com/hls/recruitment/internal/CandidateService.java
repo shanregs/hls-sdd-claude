@@ -68,6 +68,7 @@ public class CandidateService {
     private final ChangeRecorder changes;
     private final Clock clock;
     private final TransactionTemplate chunkTx;
+    private final JobOfferRepository offers;
 
     public CandidateService(
             CandidateRepository candidates,
@@ -77,7 +78,8 @@ public class CandidateService {
             AppUserRepository users,
             ChangeRecorder changes,
             Clock clock,
-            PlatformTransactionManager txManager) {
+            PlatformTransactionManager txManager,
+            JobOfferRepository offers) {
         this.candidates = candidates;
         this.history = history;
         this.scores = scores;
@@ -86,6 +88,7 @@ public class CandidateService {
         this.changes = changes;
         this.clock = clock;
         this.chunkTx = new TransactionTemplate(txManager);
+        this.offers = offers;
     }
 
     @Transactional(readOnly = true)
@@ -172,6 +175,9 @@ public class CandidateService {
         }
         if (before == Outcome.SELECTED && candidate.getTeacherId() != null) {
             throw new ConflictException("This candidate has accepted an offer and is already a Teacher.");
+        }
+        if (offers.existsByCandidateIdAndStatusIn(candidateId, java.util.EnumSet.of(OfferStatus.DRAFT, OfferStatus.ISSUED))) {
+            throw new ConflictException("This candidate has an open offer; close it before changing the outcome.");
         }
         Instant now = clock.instant();
         candidate.decide(next, actor, now);

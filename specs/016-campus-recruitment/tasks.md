@@ -97,17 +97,17 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferServiceTest.java` (rules first): only a SELECTED candidate can be offered; a second open offer is refused (service and unique index), including for the same person selected at two drives (same phone); an issued offer cannot be edited (service and trigger, including a direct SQL update); supersede creates a new offer and marks the old SUPERSEDED in one transaction; decline needs a reason; no stipend field exists
-- [ ] T026 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferExpiryTest.java`: an issued offer past its deadline becomes EXPIRED by the job and the candidate can be offered again; acceptance after the deadline is refused even before the job runs; the job is off in `IntegrationTestBase`
-- [ ] T027 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferApiTest.java`: the offer rows of the role matrix (Director issues, supersedes, accepts, declines; Admin reads but is 403 on those; Zone Manager reads all; Teacher and System 403)
-- [ ] T028 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferLetterTest.java`: the letter shows name, designation, package, terms, training information and status; user text is HTML-escaped; a draft's letter is regenerated after a change
+- [X] T025 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferServiceTest.java` (rules first): only a SELECTED candidate can be offered; a second open offer is refused (service and unique index), including for the same person selected at two drives (same phone); an issued offer cannot be edited (service and trigger, including a direct SQL update); supersede creates a new offer and marks the old SUPERSEDED in one transaction; decline needs a reason; no stipend field exists
+- [X] T026 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferExpiryTest.java`: an issued offer past its deadline becomes EXPIRED by the job and the candidate can be offered again; acceptance after the deadline is refused even before the job runs; the job is off in `IntegrationTestBase`
+- [X] T027 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferApiTest.java`: the offer rows of the role matrix (Director issues, supersedes, accepts, declines; Admin reads but is 403 on those; Zone Manager reads all; Teacher and System 403)
+- [X] T028 [P] [US2] `backend/src/test/java/com/hls/recruitment/OfferLetterTest.java`: the letter shows name, designation, package, terms, training information and status; user text is HTML-escaped; a draft's letter is regenerated after a change
 - [ ] T029 [P] [US2] `frontend/src/features/recruitment/OffersPage.test.tsx`: offers by status, send and supersede dialogs, letter view, actions hidden for Admin and Zone Manager, axe in both themes
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] `recruitment/internal/{OfferService,OfferLetterRenderer}.java`: draft, issue (who and when), supersede, decline, letter rendering with a print stylesheet; audit entity `JOB_OFFER`
-- [ ] T031 [US2] `recruitment/internal/OfferExpiryJob.java` (daily, `hls.recruitment.offer-expiry.enabled`, off in `IntegrationTestBase`)
-- [ ] T032 [US2] `recruitment/web/OfferController.java` per the contract with `PermissionGuard` on `OFFERS`, including `GET /offers/{id}/letter`
+- [X] T030 [US2] `recruitment/internal/{OfferService,OfferLetterRenderer}.java`: draft, issue (who and when), supersede, decline, letter rendering with a print stylesheet; audit entity `JOB_OFFER`
+- [X] T031 [US2] `recruitment/internal/OfferExpiryJob.java` (daily, `hls.recruitment.offer-expiry.enabled`, off in `IntegrationTestBase`)
+- [X] T032 [US2] `recruitment/web/OfferController.java` per the contract with `PermissionGuard` on `OFFERS`, including `GET /offers/{id}/letter`
 - [ ] T033 [P] [US2] `frontend/src/features/recruitment/{OffersPage,OfferLetterView}.tsx` and route `/recruitment/offers`
 
 **Checkpoint**: offers work end to end; nothing is accepted yet.
@@ -122,15 +122,15 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 ### Tests for User Story 3
 
-- [ ] T034 [P] [US3] `backend/src/test/java/com/hls/recruitment/AcceptanceTest.java` (rules first): acceptance creates one Teacher IN_TRAINING with the candidate's details and no salary entry, stores the Teacher id on the offer and candidate and shows the candidate as joined; a second acceptance and two simultaneous acceptances leave exactly one Teacher; an expired or non-issued offer is refused; no induction batch with room leaves the Teacher in "to be enrolled"
-- [ ] T035 [P] [US3] `backend/src/test/java/com/hls/recruitment/DuplicateTeacherTest.java`: a phone or e-mail match with a Teacher who is working, on leave, in training or assigned refuses the acceptance and names the Teacher, creating, linking and mapping nothing; a match with an exited Teacher needs `confirmNewRecord` and leaves the exited record unchanged
-- [ ] T036 [P] [US3] `backend/src/test/java/com/hls/recruitment/FirstSalaryListenerTest.java`: mapping a Teacher created from an accepted offer to a School position writes one salary entry equal to the offer's monthly salary effective on the assignment start; a later move writes none; a Teacher not created from an offer is untouched; a trained but unplaced Teacher has no salary entry
+- [X] T034 [P] [US3] `backend/src/test/java/com/hls/recruitment/AcceptanceTest.java` (rules first): acceptance creates one Teacher IN_TRAINING with the candidate's details and no salary entry, stores the Teacher id on the offer and candidate and shows the candidate as joined; a second acceptance and two simultaneous acceptances leave exactly one Teacher; an expired or non-issued offer is refused; no induction batch with room leaves the Teacher in "to be enrolled"
+- [X] T035 [P] [US3] `backend/src/test/java/com/hls/recruitment/DuplicateTeacherTest.java`: a phone or e-mail match with a Teacher who is working, on leave, in training or assigned refuses the acceptance and names the Teacher, creating, linking and mapping nothing; a match with an exited Teacher needs `confirmNewRecord` and leaves the exited record unchanged
+- [X] T036 [P] [US3] `backend/src/test/java/com/hls/recruitment/FirstSalaryListenerTest.java`: mapping a Teacher created from an accepted offer to a School position writes one salary entry equal to the offer's monthly salary effective on the assignment start; a later move writes none; a Teacher not created from an offer is untouched; a trained but unplaced Teacher has no salary entry
 - [ ] T037 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.test.tsx`: the accept flow, the "existing Teacher" refusal naming the Teacher, the confirm-new-record step for an exited match
 
 ### Implementation for User Story 3
 
-- [ ] T038 [US3] `recruitment/internal/AcceptanceService.java`: one transaction with a `PESSIMISTIC_WRITE` lock on the offer, duplicate match through `TeacherRegistry.findMatches`, create through `TeacherRegistry.createTrainee`, store the Teacher id, audit entity `TEACHER_FROM_OFFER`, publish `OfferAccepted` (no call to `training`); idempotent
-- [ ] T039 [US3] `recruitment/internal/FirstSalaryListener.java` (synchronous `@EventListener` on `TeacherFirstAssigned`): for a Teacher created from an accepted offer with no salary entry, call `TeacherRegistry.recordFirstSalary`; audit entity `TEACHER_FIRST_SALARY`
+- [X] T038 [US3] `recruitment/internal/AcceptanceService.java`: one transaction with a `PESSIMISTIC_WRITE` lock on the offer, duplicate match through `TeacherRegistry.findMatches`, create through `TeacherRegistry.createTrainee`, store the Teacher id, audit entity `TEACHER_FROM_OFFER`, publish `OfferAccepted` (no call to `training`); idempotent
+- [X] T039 [US3] `recruitment/internal/FirstSalaryListener.java` (synchronous `@EventListener` on `TeacherFirstAssigned`): for a Teacher created from an accepted offer with no salary entry, call `TeacherRegistry.recordFirstSalary`; audit entity `TEACHER_FIRST_SALARY`
 - [ ] T040 [P] [US3] `frontend/src/features/recruitment/OfferAcceptDialog.tsx` and the accept action on `OffersPage.tsx`
 
 **Checkpoint**: the recruit-to-Teacher link and the salary rule hold.
