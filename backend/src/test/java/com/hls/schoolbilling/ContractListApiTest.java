@@ -119,9 +119,11 @@ class ContractListApiTest extends SchoolContractsTestBase {
         assertThat(theirs.body()).doesNotContain(w.withVacancy().toString());
 
         // an Admin sees every School, including both Managers'
-        Resp all = get(BASE + "?size=100", w.admin());
-        assertThat(rowOf(all, w.withVacancy())).isNotNull();
-        assertThat(rowOf(all, other.schoolId())).isNotNull();
+        // (a page holds at most 100 rows and the shared test database holds many Schools, so ask for each Manager)
+        Resp first = get(BASE + "?size=100&managerId=" + w.manager().managerId(), w.admin());
+        Resp second = get(BASE + "?size=100&managerId=" + other.manager().managerId(), w.admin());
+        assertThat(rowOf(first, w.withVacancy())).isNotNull();
+        assertThat(rowOf(second, other.schoolId())).isNotNull();
     }
 
     @Test

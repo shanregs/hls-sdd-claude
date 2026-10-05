@@ -185,8 +185,16 @@ class LeaveFeedTest extends LeaveTestBase {
     void aTeacherCancelsApprovedLeaveThatHasNotStartedAndItsMarksGo() {
         World w = newWorld();
         UUID teacher = w.teacherA().teacherId();
+        // the first day must be a working day: the demo seed (run by another test class against the same
+        // database) adds the Tamil Nadu holidays, so step week by week past any that fall in the range
         LocalDate future = today().plusDays(12);
-        String id = apply(w.teacherA(), future, future.plusDays(2));
+        Resp submitted = post(ME, w.teacherA().token(), draft(future, future.plusDays(2)));
+        for (int week = 0; week < 12 && submitted.status() == 409; week++) {
+            future = future.plusDays(7);
+            submitted = post(ME, w.teacherA().token(), draft(future, future.plusDays(2)));
+        }
+        assertThat(submitted.status()).as(submitted.body()).isEqualTo(201);
+        String id = field(submitted.body(), "id");
         approve(w, id);
         assertThat(get(ME, w.teacherA().token()).body()).contains("\"allowedActions\":[\"CANCEL\"]");
         assertThat(leaveMarks(id)).isPositive();
