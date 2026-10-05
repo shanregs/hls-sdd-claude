@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { dayAppearance } from "./dayStyle";
 
 describe("dayAppearance", () => {
-  it("labels a weekly off day with its weekday", () => {
+  it("gives a weekly off day its own colour and no text", () => {
     expect(dayAppearance({ date: "2026-10-04", state: "WEEKLY_OFF" })).toEqual({
       kind: "off",
-      text: "Sun",
+      text: "",
     });
     expect(dayAppearance({ date: "2026-10-03", state: "WEEKLY_OFF" })).toEqual({
       kind: "off",
-      text: "Sat",
+      text: "",
     });
   });
 

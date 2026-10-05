@@ -18,12 +18,13 @@ const MONDAY: DayView = {
 };
 
 describe("MonthCalendar", () => {
-  it("shows a weekly off day as its weekday only, without a repeated caption", () => {
+  it("shows a weekly off day as a colour only: no 'Sun' or caption in the cell, the name stays for screen readers", () => {
     render(<MonthCalendar days={[SUNDAY, MONDAY]} locked={false} />);
 
     const cell = screen.getByRole("group", { name: /Weekly off, Sun/ });
-    expect(within(cell).getByText("Sun")).toBeInTheDocument();
-    expect(screen.queryByText("Weekly off, Sun")).not.toBeInTheDocument();
+    expect(within(cell).queryByText("Sun")).not.toBeInTheDocument();
+    expect(within(cell).queryByText(/Weekly off/)).not.toBeInTheDocument();
+    expect(within(cell).getByText("4")).toBeInTheDocument();
   });
 
   it("still describes an unmarked day in words", () => {
