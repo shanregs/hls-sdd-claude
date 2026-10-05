@@ -49,7 +49,8 @@ class OtpServiceDeliveryFailureTest {
                 identifierResolver,
                 policyRepository,
                 new OtpRequestThrottle(),
-                clock);
+                clock,
+                new com.hls.cache.SnapshotCaches(clock, false, 60));
 
         OtpService.RequestResult first = otpService.request("9876500099", OtpChannel.SMS, OtpPurpose.SIGN_IN);
         assertThat(first.outcome()).isEqualTo(OtpService.RequestOutcome.DELIVERY_FAILED);

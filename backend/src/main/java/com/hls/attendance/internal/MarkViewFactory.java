@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class MarkViewFactory {
 
-    private final StatusCodeRepository codes;
+    private final StatusCodeCatalog codes;
     private final SchoolDirectory schools;
     private final AppUserRepository users;
 
-    public MarkViewFactory(StatusCodeRepository codes, SchoolDirectory schools, AppUserRepository users) {
+    public MarkViewFactory(StatusCodeCatalog codes, SchoolDirectory schools, AppUserRepository users) {
         this.codes = codes;
         this.schools = schools;
         this.users = users;
@@ -38,7 +37,7 @@ public class MarkViewFactory {
             return List.of();
         }
         Map<UUID, StatusCode> codeById =
-                codes.findAll().stream().collect(Collectors.toMap(StatusCode::getId, Function.identity()));
+                codes.byId();
         Map<UUID, String> schoolNames = schools
                 .schools(marks.stream().map(AttendanceMark::getSchoolId).distinct().toList())
                 .stream()

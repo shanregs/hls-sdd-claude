@@ -7,10 +7,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.hls.cache.SnapshotCaches;
 import com.hls.identity.user.Role;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -36,7 +38,7 @@ class PermissionMatrixServiceUnitTest {
                         new PermissionMatrixEntry(Role.MANAGER, PermissionModule.DASHBOARD, PermissionAction.VIEW, true, CLOCK.instant())));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK);
+        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK, new SnapshotCaches(CLOCK, false, 60));
         PermissionMatrixService.UpdateResult result =
                 service.updateGrant(Role.MANAGER, PermissionModule.DASHBOARD, PermissionAction.VIEW, false, ACTOR_ID);
 
@@ -72,7 +74,10 @@ class PermissionMatrixServiceUnitTest {
                 .thenReturn(Optional.of(new PermissionMatrixEntry(
                         Role.SYSTEM, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.EDIT, false, CLOCK.instant())));
 
-        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK);
+        when(repository.findAll()).thenReturn(List.of(
+                manageGrant(Role.ADMIN, true), manageGrant(Role.DIRECTOR, false), manageGrant(Role.SYSTEM, false)));
+
+        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK, new SnapshotCaches(CLOCK, false, 60));
         PermissionMatrixService.UpdateResult result = service.updateGrant(
                 Role.ADMIN, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.EDIT, false, ACTOR_ID);
 
@@ -99,11 +104,19 @@ class PermissionMatrixServiceUnitTest {
                 .thenReturn(Optional.of(new PermissionMatrixEntry(
                         Role.SYSTEM, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.EDIT, false, CLOCK.instant())));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.findAll()).thenReturn(List.of(
+                manageGrant(Role.DIRECTOR, true), manageGrant(Role.ADMIN, true), manageGrant(Role.SYSTEM, false)));
 
-        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK);
+        PermissionMatrixService service = new PermissionMatrixService(repository, eventPublisher, CLOCK, new SnapshotCaches(CLOCK, false, 60));
         PermissionMatrixService.UpdateResult result = service.updateGrant(
                 Role.DIRECTOR, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.EDIT, false, ACTOR_ID);
 
         assertThat(result.success()).isTrue();
+    }
+
+    /** The manage-the-matrix grant of one role, as the service reads it from the whole matrix. */
+    private static PermissionMatrixEntry manageGrant(Role role, boolean granted) {
+        return new PermissionMatrixEntry(
+                role, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.EDIT, granted, CLOCK.instant());
     }
 }

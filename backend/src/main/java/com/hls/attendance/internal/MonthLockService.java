@@ -58,7 +58,7 @@ public class MonthLockService {
 
     private final TeacherDirectory teachers;
     private final AttendanceMarkRepository marks;
-    private final StatusCodeRepository codes;
+    private final StatusCodeCatalog codes;
     private final TeacherMonthRepository months;
     private final TeacherMonthEventRepository events;
     private final CalendarService calendar;
@@ -71,7 +71,7 @@ public class MonthLockService {
     public MonthLockService(
             TeacherDirectory teachers,
             AttendanceMarkRepository marks,
-            StatusCodeRepository codes,
+            StatusCodeCatalog codes,
             TeacherMonthRepository months,
             TeacherMonthEventRepository events,
             CalendarService calendar,
@@ -214,7 +214,7 @@ public class MonthLockService {
             marksByTeacher.computeIfAbsent(m.getTeacherId(), k -> new HashMap<>()).put(m.getMarkDate(), m);
         }
         Map<UUID, StatusCode> codeById =
-                codes.findAll().stream().collect(Collectors.toMap(StatusCode::getId, Function.identity()));
+                codes.byId();
         WeeklyOffRules rules = calendar.rules();
         Set<LocalDate> nonWorking = calendar.nonWorkingDates(from, to);
 

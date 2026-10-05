@@ -46,7 +46,7 @@ public class LeaveRequestService {
     public record Preview(BigDecimal workingDays, List<PreviewDay> days, List<String> problems) {}
 
     private final LeaveRequestRepository requests;
-    private final LeaveTypeRepository types;
+    private final LeaveTypeCatalog types;
     private final LeaveAttendance attendance;
     private final TeacherDirectory teachers;
     private final LeaveViewFactory views;
@@ -56,7 +56,7 @@ public class LeaveRequestService {
 
     public LeaveRequestService(
             LeaveRequestRepository requests,
-            LeaveTypeRepository types,
+            LeaveTypeCatalog types,
             LeaveAttendance attendance,
             TeacherDirectory teachers,
             LeaveViewFactory views,
@@ -75,7 +75,7 @@ public class LeaveRequestService {
 
     @Transactional(readOnly = true)
     public List<LeaveType> activeTypes() {
-        return types.findByActiveTrueOrderBySortOrder();
+        return types.active();
     }
 
     /** The Teacher record of the signed-in user, or a 404 when the profile is not set up. */
@@ -185,7 +185,7 @@ public class LeaveRequestService {
     @Transactional(readOnly = true)
     public Evaluation evaluate(UUID teacherId, Draft draft) {
         List<Problem> problems = new ArrayList<>();
-        if (draft.leaveTypeId() == null || types.findById(draft.leaveTypeId()).filter(LeaveType::isActive).isEmpty()) {
+        if (draft.leaveTypeId() == null || types.find(draft.leaveTypeId()).filter(LeaveType::isActive).isEmpty()) {
             problems.add(new Problem(true, "Choose a leave type."));
         }
         if (draft.firstDate() == null || draft.lastDate() == null) {
