@@ -47,6 +47,18 @@ public interface ContractAssignmentRepository extends JpaRepository<ContractAssi
     List<UUID> teacherIdsAtSchoolsOn(
             @Param("schoolIds") Collection<UUID> schoolIds, @Param("date") LocalDate date);
 
+    /** Ids of the contract positions filled by an ACTIVE assignment in effect on {@code date} at the Schools. */
+    @Query("""
+            select distinct a.positionId from ContractAssignment a
+            where a.schoolId in :schoolIds
+              and a.positionId is not null
+              and a.status = com.hls.schoolbilling.internal.AssignmentStatus.ACTIVE
+              and a.startsOn <= :date
+              and (a.endsOn is null or a.endsOn >= :date)
+            """)
+    List<UUID> filledPositionIdsOn(
+            @Param("schoolIds") Collection<UUID> schoolIds, @Param("date") LocalDate date);
+
     /** Teachers in effect on {@code date}, counted per School. */
     @Query("""
             select a.schoolId, count(distinct a.teacherId) from ContractAssignment a

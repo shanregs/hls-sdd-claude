@@ -44,6 +44,15 @@ public class RecipientResolver {
         return Optional.ofNullable(info).map(TeacherInfo::userId);
     }
 
+    /** Every active Admin and Director. */
+    public Set<UUID> activeAdminsAndDirectors() {
+        Set<UUID> ids = new LinkedHashSet<>();
+        ids.addAll(roles.userIdsWithRole(Role.ADMIN));
+        ids.addAll(roles.userIdsWithRole(Role.DIRECTOR));
+        ids.removeIf(id -> !users.findById(id).filter(AppUser::isActive).isPresent());
+        return ids;
+    }
+
     /**
      * Who handles leave for the School: its Manager when that Manager is active, otherwise every active
      * Admin and Director.

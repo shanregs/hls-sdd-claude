@@ -5,6 +5,7 @@ import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.Locale;
 import java.util.SortedSet;
+import java.util.UUID;
 
 /**
  * Builds the title, message and link of every notification (spec 010 contracts/notifications-api.md).
@@ -58,6 +59,13 @@ public final class MessageFactory {
                 ? actorName + " updated your attendance for " + date(days.first()) + "."
                 : actorName + " updated " + days.size() + " days of your attendance in " + monthName(month) + ".";
         return new Text("Your attendance was updated", message, attendanceLink(month));
+    }
+
+    public static Text mouNotRecorded(String prospectName, int days, UUID prospectId) {
+        return new Text(
+                shorten("MoU not recorded: " + prospectName, MAX_TITLE),
+                shorten(prospectName + " was won " + days + " days ago and its MoU is still not recorded.", MAX_MESSAGE),
+                "/marketing/prospects/" + prospectId);
     }
 
     public static Text monthLocked(YearMonth month) {

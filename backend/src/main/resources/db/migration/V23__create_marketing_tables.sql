@@ -9,7 +9,7 @@ CREATE TABLE stored_file (
     original_name  VARCHAR(255) NOT NULL,
     content_type   VARCHAR(100) NOT NULL,
     size_bytes     BIGINT       NOT NULL CHECK (size_bytes > 0),
-    sha256         CHAR(64)     NOT NULL,
+    sha256         VARCHAR(64)  NOT NULL,
     storage_path   VARCHAR(300) NOT NULL,
     added_by       UUID         NOT NULL,
     added_at       TIMESTAMPTZ  NOT NULL,

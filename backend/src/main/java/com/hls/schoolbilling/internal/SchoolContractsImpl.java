@@ -1,6 +1,7 @@
 package com.hls.schoolbilling.internal;
 
 import com.hls.schoolbilling.api.ContractView;
+import com.hls.schoolbilling.api.Occupancy;
 import com.hls.schoolbilling.api.PositionView;
 import com.hls.schoolbilling.api.SchoolContracts;
 import com.hls.schoolbilling.api.TeacherPosition;
@@ -62,6 +63,37 @@ class SchoolContractsImpl implements SchoolContracts {
     @Override
     public List<ContractView> contractsOverlapping(UUID schoolId, LocalDate from, LocalDate to) {
         return views(contracts.liveOverlapping(List.of(schoolId), from, to));
+    }
+
+    @Override
+    public Occupancy occupancyOf(UUID schoolId, LocalDate date) {
+        return occupancyOfAll(List.of(schoolId), date).getOrDefault(schoolId, Occupancy.NONE);
+    }
+
+    @Override
+    public Map<UUID, Occupancy> occupancyOfAll(java.util.Collection<UUID> schoolIds, LocalDate date) {
+        Map<UUID, Occupancy> result = new HashMap<>();
+        schoolIds.forEach(id -> result.put(id, Occupancy.NONE));
+        if (schoolIds.isEmpty()) {
+            return result;
+        }
+        List<Contract> live = contracts.liveOverlapping(schoolIds, date, date).stream()
+                .filter(c -> c.getState() == ContractState.ACTIVE)
+                .toList();
+        if (live.isEmpty()) {
+            return result;
+        }
+        Map<UUID, List<ContractPosition>> byContract = positions
+                .findByContractIdInOrderByContractIdAscNumberAsc(live.stream().map(Contract::getId).toList())
+                .stream()
+                .collect(Collectors.groupingBy(ContractPosition::getContractId));
+        Set<UUID> filledIds = new HashSet<>(assignments.filledPositionIdsOn(schoolIds, date));
+        for (Contract c : live) {
+            List<ContractPosition> own = byContract.getOrDefault(c.getId(), List.of());
+            int filled = (int) own.stream().filter(p -> filledIds.contains(p.getId())).count();
+            result.put(c.getSchoolId(), new Occupancy(own.size(), filled, Math.max(0, own.size() - filled)));
+        }
+        return result;
     }
 
     @Override

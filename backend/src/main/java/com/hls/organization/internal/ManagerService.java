@@ -139,6 +139,24 @@ public class ManagerService implements ManagerQueries {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ManagerRef> managersOfZone(UUID zoneId) {
+        List<UUID> managerIds = zoneAssignments.findByZoneIdInAndEndsOnIsNull(List.of(zoneId)).stream()
+                .map(ZoneManagerAssignment::getManagerId)
+                .distinct()
+                .toList();
+        if (managerIds.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Manager> managers = managersById(managerIds);
+        Map<UUID, UserWithRoles> users = usersOf(managers.values());
+        return managers.values().stream()
+                .filter(Manager::isActive)
+                .map(m -> refOf(m, users))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, ManagerRef> managersOfSchools(Collection<UUID> schoolIds) {
         if (schoolIds.isEmpty()) {
             return Map.of();
