@@ -112,7 +112,7 @@ function DayCell({
       <Typography variant="caption" component="div" color="text.secondary">
         {day.state === "MARKED" && day.mark!.setByKind === "SUPERVISOR"
           ? `by ${day.mark!.setByName}`
-          : day.state === "MARKED"
+          : day.state === "MARKED" || day.state === "WEEKLY_OFF"
             ? ""
             : label}
       </Typography>
