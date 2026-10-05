@@ -125,7 +125,7 @@ Backend `backend/src/main/java/com/hls/{notification,leave,attendance,identity}/
 
 - [ ] T025 [P] Update `docs/running-locally.md` (a Notifications section: the bell, the list, what triggers a notification, demo data) and add Postman requests under `postman/HLS API/` folder `010 Notifications` (list, unread count, read, read all, delete, clear read) with collection variable `notificationId`; update `postman/README.md`
 - [ ] T026 [P] Update `docs/spec-roadmap.md` row 010 to Implemented with the test counts, and `specs/002-access-model-app-shell/tasks.md` with the `NOTIFICATIONS` module and ACCOUNT item (same way specs 008 and 009 did)
-- [ ] T027 Run the backend tests for the module, the touched identity/leave/attendance tests and the frontend Vitest suite including `src/a11y`, then execute `quickstart.md` scenarios 1-6 against the running local app (Playwright-core script allowed for the UI checks) and record the results in `specs/010-notifications/quickstart-results.md`
+- [x] T027 Run the backend tests for the module, the touched identity/leave/attendance tests and the frontend Vitest suite including `src/a11y`, then execute `quickstart.md` scenarios 1-6 against the running local app (Playwright-core script allowed for the UI checks) and record the results in `specs/010-notifications/quickstart-results.md`
 - [ ] T028 Re-read spec.md FR-001..FR-012 and SC-001..SC-007 against what was built and note any gap in `quickstart-results.md`; open the PR with `gh pr create`
 
 ---
