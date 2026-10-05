@@ -215,4 +215,5 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 - **MVP**: Phases 1 to 3 (US1): drives, candidates, outcomes and assessment, with the foundation proven. It already gives the Director a recruitment calendar and results.
 - **Complete slice**: add US2 and US3 (offers and the Teacher in training), then US4 (induction and ready to deploy), then US5 (the dashboard).
+- **Spec 023 follow-up (after both are merged)**: spec 023 defines `recruitment.api.SupplySource` for its demand-versus-supply figure and ships a default that reports "not available". Once 023 is merged, add one small bean in `training/internal` implementing it from `ready-to-deploy`; it is not a task here because 016 may merge first and the interface would not exist yet.
 - Land the foundation, especially the attendance (A5) and 012 (A4) changes, with their existing suites green before any story code: if anything is going to break, it breaks there.
