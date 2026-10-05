@@ -25,6 +25,7 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 
 ## 3. Winning creates the School; hand-off to 012
 
+- **Contacts (amendment A8 of spec 016)**: a School keeps a principal and an accountant contact (`school.api.SchoolContacts`, table `school_contact`, merged with 016). The prospect's contact person is the default billing contact; the Win dialog also offers principal and accountant fields (name, phone, email, all optional) which are saved to the new School through the school module.
 - **Decision**: after approval, an Admin or Director opens the Win dialog: choose a **Place** of the prospect's Zone and confirm the **billing contact** (prefilled from the prospect's contact; name, address, contact person and phone come from the prospect)
   (a School in 005 belongs to a Place) and confirm; `WinService` calls the new `school.api.SchoolRegistry.create`
   (which wraps `SchoolService.create`) and stores `school_id` on the prospect; if a School of the same name and Place

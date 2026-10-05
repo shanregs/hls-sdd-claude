@@ -149,6 +149,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [ ] T041 [US4] `recruitment/marketing/internal/{WinService,ContractStatusReader}.java`: the win and School creation through `SchoolRegistry`, the link, the derived MoU and Active stage through `SchoolContracts` (`ObjectProvider` so the module starts without 012), the side-by-side difference
 - [ ] T042 [US4] `recruitment/marketing/internal/{OverdueJob,SettingsService}.java` and `recruitment/marketing/web/SettingsController.java`; `ProspectOwners` and `ProspectWon`
 - [ ] T043 [US4] Spec 012 amendment A7 (frontend): `frontend/src/features/schoolbilling/SchoolContractPage.tsx` and `MouFormDialog.tsx` accept initial values from the router state (Teacher count, salary mode and amounts, start month) and open the MoU form pre-filled; extend `SchoolContractPage.test.tsx` for it
+- [ ] T060 [US4] Win with contacts: `WinService` saves the optional principal and accountant contacts of the new School through the school module's contacts service (016 amendment A8; rebase after 016 merges), and `WinDialog.tsx` shows the two optional contact blocks; extend `WinServiceTest` and `WinDialog.test.tsx`
 - [ ] T044 [P] [US4] `frontend/src/features/marketing/{WinDialog,MarketingSettingsPage}.tsx`, the MoU status panel and the "MoU not yet recorded" flag in `ProspectDetailPage.tsx` and `PipelineBoard.tsx`; route `/marketing/settings`
 
 **Checkpoint**: the hand-off, the status and the alerts work.
