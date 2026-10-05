@@ -23,15 +23,23 @@ describe("buildMenu (spec FR-009 to FR-011)", () => {
       "My Attendance",
       "Attendance History",
       "Holiday Calendar",
+      "Apply Leave",
+      "My Leave History",
       "My Profile",
     ]);
-    expect(labels(MANAGER_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Teacher Attendance", "Profile"]);
-    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Profile"]);
+    expect(labels(MANAGER_MODEL)).toEqual([
+      "Dashboard",
+      "Holiday Calendar",
+      "Teacher Attendance",
+      "Leave Management",
+      "Profile",
+    ]);
+    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Leave Management", "Profile"]);
   });
 
   it("drops sections left empty by the filter", () => {
-    expect(sections(TEACHER_MODEL)).toEqual(["Dashboard", "MY ATTENDANCE", "MASTER DATA", "ACCOUNT"]);
-    expect(sections(DIRECTOR_MODEL)).toEqual(["Dashboard", "MASTER DATA", "ACCOUNT"]);
+    expect(sections(TEACHER_MODEL)).toEqual(["Dashboard", "MY ATTENDANCE", "MASTER DATA", "LEAVE", "ACCOUNT"]);
+    expect(sections(DIRECTOR_MODEL)).toEqual(["Dashboard", "MASTER DATA", "OPERATIONS", "ACCOUNT"]);
   });
 
   it("is the union of both roles with no duplicate entries", () => {
@@ -42,6 +50,8 @@ describe("buildMenu (spec FR-009 to FR-011)", () => {
       "/dashboard",
       "/my-attendance",
       "/master-data/holiday-calendar",
+      "/leave/apply",
+      "/leave/history",
       "/account/profile",
     ]);
     expect(new Set(routes).size).toBe(routes.length);
@@ -81,21 +91,34 @@ describe("the drawer shows exactly the server navigation", () => {
     [
       "Teacher",
       TEACHER_MODEL,
-      ["Dashboard", "My Attendance", "Attendance History", "Holiday Calendar", "My Profile", "Log out"],
+      [
+        "Dashboard",
+        "My Attendance",
+        "Attendance History",
+        "Holiday Calendar",
+        "Apply Leave",
+        "My Leave History",
+        "My Profile",
+        "Log out",
+      ],
     ],
-    ["Manager", MANAGER_MODEL, ["Dashboard", "Holiday Calendar", "Teacher Attendance", "Profile", "Log out"]],
-    ["Director", DIRECTOR_MODEL, ["Dashboard", "Holiday Calendar", "Profile", "Log out"]],
+    [
+      "Manager",
+      MANAGER_MODEL,
+      ["Dashboard", "Holiday Calendar", "Teacher Attendance", "Leave Management", "Profile", "Log out"],
+    ],
+    ["Director", DIRECTOR_MODEL, ["Dashboard", "Holiday Calendar", "Leave Management", "Profile", "Log out"]],
     [
       "Admin plus Teacher",
       ADMIN_TEACHER_MODEL,
-      ["Dashboard", "My Attendance", "Holiday Calendar", "Profile", "Log out"],
+      ["Dashboard", "My Attendance", "Holiday Calendar", "Apply Leave", "My Leave History", "Profile", "Log out"],
     ],
   ])("for a %s", async (_name, model, expected) => {
     await signedInAs(model as AccessModel);
 
     const items = screen
       .getAllByLabelText(
-        /^(Dashboard|Profile|My Profile|Log out|My Attendance|Attendance History|Teacher Attendance|Holiday Calendar)$/,
+        /^(Dashboard|Profile|My Profile|Log out|My Attendance|Attendance History|Teacher Attendance|Holiday Calendar|Apply Leave|My Leave History|Leave Management)$/,
       )
       .map((n) => n.props.accessibilityLabel);
     expect([...new Set(items)]).toEqual(expected);

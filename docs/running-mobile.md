@@ -140,6 +140,17 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
     - Manoj (Manager): Teacher Attendance lists only his Teachers; open one, mark, correct, clear and
       view a day's history. Check the web AUDIT pages: changes show source "Android app".
     - Set the phone clock a day wrong: the app still opens on the server's current month.
+13. **Leave** (spec 020, steps in `specs/020-mobile-leave/quickstart.md`):
+    - Tara (Teacher): LEAVE → Apply Leave. Choose a type, two dates and a reason, tap Check: the server's working
+      days appear, with weekly offs and holidays named. Submit: My Leave History opens with "Request submitted"
+      and the new request on top. Try dates that overlap it, a start more than 30 days back and a range over 90
+      days: each shows plain wording and nothing is created.
+    - Airplane mode, then Submit: "No connection" and your entries are kept; turn it off and Submit again.
+    - My Leave History: filter by status, open a Rejected request to see the reason, cancel the Pending one.
+    - Manoj (Manager) and Divya (Director): OPERATIONS → Leave Management lists Pending requests with the count
+      (Manoj only his own Teachers). Open one: the days it would mark are shown. Approve with a note, Reject with a
+      reason, Revoke an approved one. Home shows "Pending leave requests: N" and opens the list.
+    - After approving, Tara's My Attendance shows the Leave days; after revoking or cancelling they disappear.
 
 ## 6. Automated tests
 

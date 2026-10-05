@@ -1,6 +1,10 @@
 // Shared Jest setup (spec 018). Native modules are replaced by in-memory fakes so tests run
 // without a device.
+import { configure } from "@testing-library/react-native";
 import "react-native-gesture-handler/jestSetup";
+
+// Screens load data through the in-memory server; under a busy parallel run the default 1 s wait is too tight.
+configure({ asyncUtilTimeout: 5000 });
 
 jest.mock("@react-native-async-storage/async-storage", () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports

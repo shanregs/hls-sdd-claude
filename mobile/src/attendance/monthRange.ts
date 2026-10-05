@@ -6,8 +6,11 @@ import { MONTH_NAMES } from "../formats/dates";
  */
 const BUSINESS_UTC_OFFSET_MINUTES = 5 * 60 + 30;
 
-/** "current": the current year only. "history": the current and the previous year. */
-export type RangeKind = "current" | "history";
+/**
+ * "current": the current year only. "history": the current and the previous year. "leave": the previous,
+ * current and next year, so a leave request can start a few weeks back or well ahead (spec 020).
+ */
+export type RangeKind = "current" | "history" | "leave";
 
 /** Year and month (1-12) of `now` in the business time zone. */
 export function businessYearMonth(now: Date): { year: number; month: number } {
@@ -28,7 +31,7 @@ export function currentMonth(now: Date): string {
 /** Every month the picker may offer, oldest first. */
 export function allowedMonths(kind: RangeKind, now: Date): string[] {
   const { year } = businessYearMonth(now);
-  const years = kind === "history" ? [year - 1, year] : [year];
+  const years = kind === "leave" ? [year - 1, year, year + 1] : kind === "history" ? [year - 1, year] : [year];
   return years.flatMap((y) => MONTH_NAMES.map((_, index) => monthKey(y, index + 1)));
 }
 
