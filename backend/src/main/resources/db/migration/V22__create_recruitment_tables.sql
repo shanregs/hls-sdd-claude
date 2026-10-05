@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX uq_college_name_city ON college (lower(name), lower(city));
 -- A college keeps at most one contact of each role: the placement officer and the principal.
 CREATE TABLE college_contact (
     college_id UUID         NOT NULL REFERENCES college (id),
-    role       VARCHAR(16)  NOT NULL CHECK (role IN ('PLACEMENT_OFFICER', 'PRINCIPAL')),
+    role       VARCHAR(20)  NOT NULL CHECK (role IN ('PLACEMENT_OFFICER', 'PRINCIPAL')),
     name       VARCHAR(160) NOT NULL CHECK (length(trim(name)) > 0),
     phone      VARCHAR(20),
     email      VARCHAR(200),
