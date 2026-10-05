@@ -18,6 +18,7 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useAuth } from "../auth/useAuth";
 import { useThemeMode } from "../theme/ThemeModeProvider";
 import { NavigationDrawer } from "../navigation/NavigationDrawer";
+import { NotificationBell } from "../features/notifications/NotificationBell";
 
 /**
  * The shared app shell (FR-009, FR-011, FR-013): top bar, persistent/collapsible left navigation,
@@ -76,6 +77,7 @@ export function AppShell() {
               <Chip key={role} label={role} size="small" />
             ))}
           </Stack>
+          <NotificationBell />
           <IconButton
             aria-label={
               mode === "dark" ? "Switch to light theme" : "Switch to dark theme"

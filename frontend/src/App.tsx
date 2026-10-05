@@ -27,6 +27,10 @@ import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
 import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
 import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "./features/attendance/AttendanceGridPage";
+import { ApplyLeavePage } from "./features/leave/ApplyLeavePage";
+import { MyLeaveHistoryPage } from "./features/leave/MyLeaveHistoryPage";
+import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
+import { NotificationsPage } from "./features/notifications/NotificationsPage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -204,6 +208,30 @@ export function App() {
           }
         />
         <Route
+          path="/leave/apply"
+          element={
+            <RouteGuard>
+              <ApplyLeavePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/leave"
+          element={
+            <RouteGuard>
+              <LeaveManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/leave/history"
+          element={
+            <RouteGuard>
+              <MyLeaveHistoryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/account/settings"
           element={
             <RouteGuard>
@@ -224,6 +252,14 @@ export function App() {
           element={
             <RouteGuard>
               <AllSessionsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/account/notifications"
+          element={
+            <RouteGuard>
+              <NotificationsPage />
             </RouteGuard>
           }
         />

@@ -1,6 +1,9 @@
 package com.hls.attendance.internal;
 
+import com.hls.attendance.api.AttendanceMarkChanged;
 import com.hls.attendance.api.MarkView;
+import com.hls.identity.user.AppUser;
+import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.ConflictException;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
@@ -14,6 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,8 @@ public class MarkService {
     private final AttendanceAudit audit;
     private final MarkViewFactory views;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
+    private final AppUserRepository users;
 
     public MarkService(
             AttendanceMarkRepository marks,
@@ -47,7 +53,9 @@ public class MarkService {
             BusinessCalendar calendar,
             AttendanceAudit audit,
             MarkViewFactory views,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events,
+            AppUserRepository users) {
         this.marks = marks;
         this.history = history;
         this.codes = codes;
@@ -57,6 +65,8 @@ public class MarkService {
         this.audit = audit;
         this.views = views;
         this.clock = clock;
+        this.events = events;
+        this.users = users;
     }
 
     @Transactional
@@ -131,7 +141,82 @@ public class MarkService {
                 kind,
                 saved.getSetAt()));
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", before, code.getShortCode() + " " + value.toPlainString());
+        if (kind == SetByKind.SUPERVISOR) {
+            publishChanged(actorUserId, teacherId, date);
+        }
         return views.of(saved);
+    }
+
+    /**
+     * Writes a Leave mark made by approved leave (spec 009). Unlike {@link #setMark} it accepts future
+     * dates and ignores the self-mark window; the caller has already taken the Teacher-month locks and
+     * validated the days, but the lock state is re-read here as a last line of defence.
+     */
+    @Transactional
+    public void setLeaveMark(
+            UUID approverUserId, UUID teacherId, LocalDate date, UUID schoolId, BigDecimal dayValue, UUID leaveRequestId) {
+        YearMonth month = YearMonth.from(date);
+        if (monthLock.isLocked(teacherId, month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        StatusCode code = codes.requireByShortCode("L");
+        BigDecimal value = requireDayValue(dayValue);
+        AttendanceMark existing = marks.findByTeacherIdAndMarkDate(teacherId, date).orElse(null);
+        String before = existing == null ? null : describe(existing);
+        AttendanceMark mark = existing != null ? existing : new AttendanceMark(teacherId, date);
+        String note = "Leave request " + leaveRequestId;
+        mark.set(code.getId(), value, schoolId, note, approverUserId, SetByKind.SUPERVISOR, clock.instant());
+        mark.markFromLeave(leaveRequestId);
+        AttendanceMark saved = marks.saveAndFlush(mark);
+        history.save(new MarkHistoryEntry(
+                teacherId,
+                date,
+                existing == null ? MarkAction.CREATED : MarkAction.CORRECTED,
+                code.getId(),
+                value,
+                schoolId,
+                note,
+                approverUserId,
+                SetByKind.SUPERVISOR,
+                saved.getSetAt(),
+                leaveRequestId));
+        audit.changed(
+                approverUserId,
+                AttendanceAudit.MARK,
+                teacherId + ":" + date,
+                "mark",
+                before,
+                code.getShortCode() + " " + value.toPlainString() + " (leave request " + leaveRequestId + ")");
+    }
+
+    /** Removes a mark that approved leave made (spec 009 revoke or cancel); the caller holds the locks. */
+    @Transactional
+    public void clearLeaveMark(UUID actorUserId, AttendanceMark existing, UUID leaveRequestId) {
+        YearMonth month = YearMonth.from(existing.getMarkDate());
+        if (monthLock.isLocked(existing.getTeacherId(), month)) {
+            throw new ConflictException("This month is locked. Attendance can only change after it is reopened.");
+        }
+        history.save(new MarkHistoryEntry(
+                existing.getTeacherId(),
+                existing.getMarkDate(),
+                MarkAction.CLEARED,
+                null,
+                null,
+                existing.getSchoolId(),
+                null,
+                actorUserId,
+                SetByKind.SUPERVISOR,
+                clock.instant(),
+                leaveRequestId));
+        audit.changed(
+                actorUserId,
+                AttendanceAudit.MARK,
+                existing.getTeacherId() + ":" + existing.getMarkDate(),
+                "mark",
+                describe(existing) + " (leave request " + leaveRequestId + ")",
+                null);
+        marks.delete(existing);
+        marks.flush();
     }
 
     @Transactional(readOnly = true)
@@ -156,6 +241,13 @@ public class MarkService {
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", describe(existing), null);
         marks.delete(existing);
         marks.flush();
+        publishChanged(actorUserId, teacherId, date);
+    }
+
+    /** Tells the notification module inside this transaction, so a refused change leaves no notification. */
+    private void publishChanged(UUID actorUserId, UUID teacherId, LocalDate date) {
+        String actorName = users.findById(actorUserId).map(AppUser::getDisplayName).orElse("A supervisor");
+        events.publishEvent(new AttendanceMarkChanged(teacherId, date, actorUserId, actorName));
     }
 
     private PlacementSpan placementOn(UUID teacherId, LocalDate date, TeacherInfo teacher) {

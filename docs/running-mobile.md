@@ -17,8 +17,13 @@ work**. You need a development build (`npx expo run:android`) on an emulator or 
 3. **Set environment variables** (PowerShell), then open a new terminal:
    ```powershell
    setx ANDROID_HOME "$env:LOCALAPPDATA\Android\Sdk"
-   setx JAVA_HOME "C:\Program Files\Android\Android Studio\jbr"
+   setx JAVA_HOME "C:\Program Files\Java\jdk-17"
    ```
+   **Use JDK 17, not Android Studio's bundled Java (`jbr`).** Recent Android Studio versions bundle
+   Java 25. One of the Android build tools prints a harmless Java 25 warning, and the Android Gradle
+   plugin treats that as an error, so the build fails at `configureCMakeDebug` with "WARNING: A
+   restricted method in java.lang.System has been called". Install JDK 17 (for example Temurin 17)
+   if you do not have it, and check that `java -version` says 17 in the terminal you build from.
    Add `%ANDROID_HOME%\platform-tools` and `%ANDROID_HOME%\emulator` to your `PATH`.
    Check with `adb version` and `emulator -version`.
 4. **Create an emulator.** Android Studio → Device Manager → Create Device → **Pixel 7**, system image
@@ -40,18 +45,43 @@ on private networks. Keep it running while you use the app. Start the web app to
 
 ## 3. Run the app on the emulator
 
-1. Start the emulator from Device Manager and wait for the home screen.
-2. In a terminal:
+**Order matters: emulator online first, then the build.**
+
+1. **Start the emulator and wait until it is online.** Use Device Manager's play button, or from a
+   terminal (software graphics, no GPU use):
    ```powershell
-   cd mobile
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+   $env:Path = "$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:Path"
+   emulator -avd Pixel_7 -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -memory 3072 -cores 4
+   ```
+   (Add `-wipe-data` only the first time, or when the phone is stuck.) In a second window run
+   `adb devices` until it shows `emulator-5554   device`. `offline` means it is still booting; the
+   first boot can take 3 to 5 minutes.
+2. **Build and install the app.** In a new terminal, from the **`mobile`** folder (not
+   `mobile\android`):
+   ```powershell
+   $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+   $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
+   java -version          # must say 17.0.x
+   cd D:\me\work\HiCitizen\HLS-App\hls-018-android\mobile
    copy .env.example .env
    npm install
    npx expo run:android
    ```
-   The first build takes 10 to 20 minutes; later runs take about a minute. It installs the app and
-   starts Metro. Edits to files under `mobile/src` reload automatically.
+   - The first build takes 10 to 20 minutes and needs the internet: it downloads Gradle, the Android
+     platform, the NDK and CMake. Later runs take about a minute. It installs the app on the emulator
+     and starts Metro. Edits under `mobile/src` reload automatically.
+   - You will see `userInterfaceStyle: Install expo-system-ui`. That is only a warning; ignore it.
+   - **Do not pin SDK versions in `app.config.ts`** (compileSdk, targetSdk, buildTools). The libraries
+     need compile SDK 35 or 36, and Expo already chooses the right values. Pinning 34 makes the build
+     fail at `checkDebugAarMetadata`. The only build setting in `app.config.ts` is `minSdkVersion: 29`.
 3. `.env` already has `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8080`. **`10.0.2.2` is how the
    emulator reaches `localhost` on your PC.** Do not use `localhost` inside the emulator.
+
+**Next days (the app is already installed):** start the emulator, the database and backend, then run
+`npx expo start` in `mobile` and press `a` to open the app on the emulator. You only need
+`npx expo run:android` again after changing native packages or `app.config.ts`.
 
 If the app shows "No connection" over plain `http://`, allow cleartext traffic for the dev build by
 adding `usesCleartextTraffic: true` to the `expo-build-properties` android settings in
@@ -63,7 +93,7 @@ From the demo data (see running-locally.md for the full list):
 
 | Account | Sign in with | Roles | Use it to check |
 | ------- | ------------ | ----- | --------------- |
-| Tara Teacher | phone `9800000004`, **one-time code only** | Teacher | Teacher menu, code login |
+| Tara Teacher | phone `9800000004` / `Password123!`, or a one-time code | Teacher | Teacher menu, password or code login |
 | Manoj Manager | `manoj.manager` / `Password123!` | Manager | Manager menu, password login |
 | Divya Director | `9800000002` / `Password123!` | Director | Director menu |
 | Asha Admin | `asha.admin` / `Password123!` | Admin | Refused on the app (web-only role) |
@@ -100,6 +130,27 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
     Profile and Signed-in devices should be announced with a name; touch targets are at least 48 dp.
 11. **Version gate**: set `HLS_MOBILE_MIN_APP_VERSION=9.0.0` in the backend's environment and restart
     it: the app shows "Please update the HLS app". Unset it afterwards.
+12. **Attendance** (spec 019, steps in `specs/019-mobile-attendance/quickstart.md`):
+    - Tara (Teacher): My Attendance opens on the current month with the week starting on Sunday. Mark
+      today Present, then change it to a half day; the cell and totals update. Try a day older than 3
+      days, a day set by Manoj and a locked month: each shows a plain message and nothing changes.
+    - Airplane mode, then Save: "No connection" and your entry is kept; turn it off and Save again.
+    - Attendance History offers this and last year, read-only. Holiday Calendar (every role) shows holidays
+      and weekly offs, with "All holidays this year".
+    - Manoj (Manager): Teacher Attendance lists only his Teachers; open one, mark, correct, clear and
+      view a day's history. Check the web AUDIT pages: changes show source "Android app".
+    - Set the phone clock a day wrong: the app still opens on the server's current month.
+13. **Leave** (spec 020, steps in `specs/020-mobile-leave/quickstart.md`):
+    - Tara (Teacher): LEAVE → Apply Leave. Choose a type, two dates and a reason, tap Check: the server's working
+      days appear, with weekly offs and holidays named. Submit: My Leave History opens with "Request submitted"
+      and the new request on top. Try dates that overlap it, a start more than 30 days back and a range over 90
+      days: each shows plain wording and nothing is created.
+    - Airplane mode, then Submit: "No connection" and your entries are kept; turn it off and Submit again.
+    - My Leave History: filter by status, open a Rejected request to see the reason, cancel the Pending one.
+    - Manoj (Manager) and Divya (Director): OPERATIONS → Leave Management lists Pending requests with the count
+      (Manoj only his own Teachers). Open one: the days it would mark are shown. Approve with a note, Reject with a
+      reason, Revoke an approved one. Home shows "Pending leave requests: N" and opens the list.
+    - After approving, Tara's My Attendance shows the Leave days; after revoking or cancelling they disappear.
 
 ## 6. Automated tests
 
@@ -142,7 +193,14 @@ That signs in as the Manager, opens the menu and Profile, and logs out.
 | ------- | --- |
 | `adb` or `emulator` not found | Check the PATH entries from step 1 and open a new terminal. |
 | Emulator is very slow or will not start | Virtualization is off, or Windows Hypervisor Platform is not enabled. Redo step 1. |
-| Build fails with a Java or Gradle error | Use JDK 17 (`JAVA_HOME` pointing at Android Studio's `jbr`). Run `cd mobile\android && .\gradlew clean`, then retry. |
+| Build fails with "A restricted method in java.lang.System has been called" | Java 25 is being used (Android Studio's `jbr` is Java 25). Set `JAVA_HOME` to JDK 17, check that `java -version` says 17, then rebuild. |
+| Build fails with another Java or Gradle error | Use JDK 17. Run `cd mobile\android && .\gradlew clean`, then retry. |
+| Gradle download times out | Raise `networkTimeout` (for example to 300000) in `mobile\android\gradle\wrapper\gradle-wrapper.properties`, or check VPN or proxy settings. |
+| `No Android connected device found` | The emulator is not online yet. Run `adb devices` until it shows `device`, then run the build again. |
+| `adb devices` shows `offline`, or the emulator says it cannot connect | Wait a few minutes (first boot). Run `adb kill-server` then `adb start-server`. Make sure `where.exe adb` lists only the SDK's `adb.exe`. Restart the emulator with the command in step 3 (software graphics). Note that `-gpu angle_indirect` is not a valid option. |
+| `ConfigError: ... package.json does not exist` | You ran the command inside `mobile\android`. Run `npx expo run:android` from the `mobile` folder. |
+| `app:checkDebugAarMetadata` fails: "requires ... compile against version 35 or later" | `compileSdkVersion`, `targetSdkVersion` or `buildToolsVersion` is pinned to 34 in `app.config.ts` or `mobile\android\gradle.properties`. Remove the pin (keep only `minSdkVersion: 29`) and rebuild. If `android\gradle.properties` still has the old values, delete those lines or run `npx expo prebuild --platform android --clean` (this regenerates `android`, so re-apply any timeout edit). |
+| Build needs a missing Android platform, NDK or CMake | Gradle downloads them automatically on the first build (licences are accepted in `Sdk\licenses`). It needs the internet. If it fails, run the build again, or install them from Android Studio → SDK Manager. |
 | App cannot reach the backend | Backend running? `.env` uses `10.0.2.2`, not `localhost`? Rebuild after changing `.env`. See the cleartext note in step 3. |
 | Code login shows nothing | Read the code from the backend console (the dev SMS stub). Codes expire; there is a 30 second resend wait. |
 | Location is always "unavailable" | Emulator: send a location from `...` → Location. Check the app's permission under Settings → Apps → HLS → Permissions. |

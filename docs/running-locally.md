@@ -47,9 +47,11 @@ Opens http://localhost:5173 (it proxies `/api` to the backend on 8080).
 | Asha Admin | `asha.admin` or `9800000001` / `Password123!` | Admin |
 | Divya Director | `9800000002` / `Password123!` | Director |
 | Manoj Manager | `manoj.manager` or `9800000003` / `Password123!` | Manager |
-| Tara Teacher | `9800000004`, **one-time code only** (no password) | Teacher |
+| Tara Teacher | `9800000004` / `Password123!` (or a one-time code) | Teacher |
 | Sunil System | `sunil.system` or `9800000005` / `Password123!` | System |
 
+Every user can sign in with a password or, as the other option (for example after forgetting the
+password), with a one-time code: choose the One-time code tab, or the link under the password form.
 The one-time code is not sent anywhere in dev: the backend console prints
 `[DEV SMS STUB] To 9800000004: your HLS sign-in/reset code is NNNNNN`. Request a code on the sign-in screen, then read it from the
 backend terminal.
@@ -112,6 +114,48 @@ original placement date, so she has history only from then on.
   one user, delete one, delete all of one user's, or everyone's (yours included).
 - Admin/Director: MASTER DATA -> **Attendance Setup** lists the status codes. P, L, T and N are
   built in; S (Substitution), H (Holiday) and A (Absent, like Leave) are ordinary codes you can edit.
+
+### Leave
+
+The demo data also adds sample leave requests (Tara: one Pending, one Approved with its Leave marks, one
+Rejected; Meena and Karthik: one Pending each in Demo School One; Lakshmi: one Pending in Demo School Two,
+which has no Manager, so only Admin and Director see it).
+
+- As **Teacher** (Tara): LEAVE -> **Apply Leave** (pick a type and dates; the page shows how many working days
+  it covers, not counting Sundays and holidays; a half day can be taken on the first or last working day),
+  then **My Leave History** to follow it, see the reason if it is rejected, and cancel while it is Pending or
+  Approved but not yet started.
+- As **Manager** (Manoj), **Admin** or **Director**: the dashboard shows how many leave requests await a
+  decision; OPERATIONS -> **Leave Management** lists them (Pending first). Approve (optional note) or reject
+  (reason required). Approving writes **L** marks for the covered working days into the attendance grid
+  (a day another supervisor already set is refused and listed; a locked month blocks it). Approved leave can
+  be revoked with a reason. A Manager sees only the Teachers assigned to them.
+- Signing in: every user can use a password or, for example after forgetting it, a one-time code (the link
+  under the password form). Tara has the password `Password123!` too.
+
+### Notifications
+
+The bell in the top bar shows how many notifications you have not read (hidden at zero, "99+" above 99) and
+refreshes every 30 seconds while the tab is open. It opens ACCOUNT -> **Notifications**: newest first, unread
+ones marked "Unread", **Unread only** filter, **Mark all as read**, **Clear read**, a delete icon per row, and
+**Load more**. Clicking a notification marks it read and goes to the related screen. Every signed-in business
+role sees only its own; the System role has no notifications. Delete and Clear read need the Delete action.
+
+What creates a notification (inside the same transaction as the action, so a refused action leaves none):
+
+- A Manager, Admin or Director **approves, rejects or revokes** a leave request: the Teacher is told, with the
+  reason when there is one.
+- A Teacher **submits or cancels** a leave request: the Teacher's Manager is told; when the School has no active
+  Manager, every active Admin and Director is told.
+- A supervisor **sets or clears an attendance day** for a Teacher: the Teacher is told. Several changes by the
+  same person within 10 minutes become one notification ("updated 3 days of your attendance in October 2026").
+  The Teacher's own marks and the Leave marks made by an approved leave create none.
+- A supervisor **locks or reopens** a month: each Teacher is told once.
+
+Notifications older than 90 days are deleted every night at 02:30 (`hls.notification.retention.enabled`, default
+on). The demo data adds: Tara a read "leave approved", an unread "leave rejected" and an attendance notice;
+Manoj the leave requests of Meena and Karthik; Asha the one from Lakshmi (her School has no Manager).
+To see it live: sign in as Manoj and reject Tara's pending request, then sign in as Tara and watch the bell.
 
 ## Postman
 

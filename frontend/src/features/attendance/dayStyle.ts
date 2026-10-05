@@ -1,8 +1,7 @@
 import { alpha, type Theme } from "@mui/material/styles";
 import type { StatusCategory } from "./attendanceApi";
-import { WEEKDAY_LABELS, weekdayIndex } from "./monthUtils";
 
-/** The kinds of day that get their own colour (spec 008 FR-013). Colour always comes with text. */
+/** The kinds of day that get their own colour (spec 008 FR-013). A weekly off day is colour only: its accessible name and the legend carry the words. */
 export type DayKind = "off" | "holiday" | "leave" | "plain";
 
 /** What a grid or calendar day needs to be styled; satisfied by both a grid cell and a day view. */
@@ -19,13 +18,13 @@ export interface DayFacts {
 
 export interface DayAppearance {
   kind: DayKind;
-  /** The short text shown in the cell: the code, "H", or the weekday for an off day. */
+  /** The short text shown in the cell: the code or "H"; empty for a weekly off day, which is shown by its colour. */
   text: string;
 }
 
 /**
- * The kind and short text of a day: a weekly off day reads its weekday ("Sun"), a holiday reads "H",
- * and a mark shows its code, as a holiday when its status is non-working and as leave when its
+ * The kind and short text of a day: a weekly off day has no text (just its light background), a holiday
+ * reads "H", and a mark shows its code, as a holiday when its status is non-working and as leave when its
  * category is leave (so Absent and any custom leave code are covered without listing letters).
  */
 export function dayAppearance(day: DayFacts): DayAppearance {
@@ -37,20 +36,20 @@ export function dayAppearance(day: DayFacts): DayAppearance {
     return { kind: "plain", text };
   }
   if (day.state === "WEEKLY_OFF") {
-    return { kind: "off", text: WEEKDAY_LABELS[weekdayIndex(day.date)] };
+    return { kind: "off", text: "" };
   }
   if (day.state === "NON_WORKING") return { kind: "holiday", text: "H" };
   return { kind: "plain", text: "" };
 }
 
-/** Palette colour behind each kind; "off" is a neutral tint, the others use the warning and error hues. */
+/** Palette colour behind each kind; "off" is a light blue, the others use the warning and error hues. */
 const TINTS: Record<
   Exclude<DayKind, "plain">,
   (theme: Theme) => { light: string; dark: string }
 > = {
   off: (t) => ({
-    light: alpha(t.palette.text.primary, 0.08),
-    dark: alpha(t.palette.text.primary, 0.14),
+    light: alpha(t.palette.info.main, 0.16),
+    dark: alpha(t.palette.info.main, 0.26),
   }),
   holiday: (t) => ({
     light: alpha(t.palette.warning.main, 0.28),

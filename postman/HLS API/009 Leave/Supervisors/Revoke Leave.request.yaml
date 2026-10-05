@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Revokes an Approved request: removes its Leave marks (except days changed by hand) and cancels it. Reason required; refused for a locked month."
+url: "{{baseUrl}}/api/v1/leave/{{leaveRequestId}}/revoke"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Needed at school",
+      "version": {{leaveVersion}}
+    }
+order: 5000

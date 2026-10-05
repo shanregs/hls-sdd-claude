@@ -22,7 +22,7 @@ const year = Number(currentMonth().slice(0, 4));
 function aSunday(): string {
   for (let day = 1; day <= 28; day++) {
     const date = `${year}-03-${String(day).padStart(2, "0")}`;
-    if (weekdayIndex(date) === 6) return date;
+    if (weekdayIndex(date) === 0) return date;
   }
   throw new Error("no Sunday");
 }

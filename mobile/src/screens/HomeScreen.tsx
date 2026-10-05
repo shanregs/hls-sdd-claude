@@ -1,7 +1,10 @@
 import { StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
+import { screenFor } from "../access/screenRegistry";
 import type { AccessModel } from "../api/accessModelApi";
 import type { SignedInUser } from "../api/authApi";
+import { usePendingCount } from "../leave/usePendingCount";
+import type { OpenRoute } from "../navigation/AppShell";
 import { spacingUnit } from "../theme/tokens";
 import { Screen } from "./Screen";
 
@@ -16,13 +19,21 @@ const roleLabel = (role: string) => role.charAt(0) + role.slice(1).toLowerCase()
  * business section of their server-provided menu. The content is the same for every role; nothing
  * here is chosen by role name. Later mobile specs replace the skeletons with real widgets.
  */
-export function HomeScreen({ user, model }: { user: SignedInUser; model: AccessModel }) {
+/** The route the server's menu uses for Leave Management; the widget exists only when the menu offers it. */
+const LEAVE_MANAGEMENT_ROUTE = "/operations/leave";
+
+export function HomeScreen({ user, model, openRoute }: { user: SignedInUser; model: AccessModel; openRoute: OpenRoute }) {
   const theme = useTheme();
-  const sections = model.navigation.map((s) => s.section).filter((name) => !NON_BUSINESS_SECTIONS.has(name));
+  // A section that already has a screen in the app is reached from the menu, so it is not previewed.
+  const sections = model.navigation
+    .filter((s) => !NON_BUSINESS_SECTIONS.has(s.section) && !s.items.some((item) => screenFor(item.route)))
+    .map((s) => s.section);
   const bar = { backgroundColor: theme.colors.surfaceVariant };
+  const offersLeave = model.navigation.some((section) => section.items.some((item) => item.route === LEAVE_MANAGEMENT_ROUTE));
+  const pending = usePendingCount(offersLeave);
 
   return (
-    <Screen>
+    <Screen onRefresh={pending.reload}>
       <Text variant="headlineMedium" accessibilityRole="header">
         Welcome, {user.displayName}
       </Text>
@@ -33,6 +44,16 @@ export function HomeScreen({ user, model }: { user: SignedInUser; model: AccessM
           </Chip>
         ))}
       </View>
+
+      {offersLeave ? (
+        <Card
+          onPress={() => openRoute(LEAVE_MANAGEMENT_ROUTE, { status: "PENDING" })}
+          accessibilityRole="button"
+          accessibilityLabel={pendingText(pending)}
+        >
+          <Card.Title title="Leave" subtitle={pendingText(pending)} />
+        </Card>
+      ) : null}
 
       {sections.map((name) => (
         <Card key={name} accessibilityLabel={`${name}, coming to the app soon`}>
@@ -45,6 +66,14 @@ export function HomeScreen({ user, model }: { user: SignedInUser; model: AccessM
       ))}
     </Screen>
   );
+}
+
+function pendingText(pending: ReturnType<typeof usePendingCount>): string {
+  if (pending.state === "ready") {
+    return pending.count === 0 ? "No pending leave requests" : `Pending leave requests: ${pending.count}`;
+  }
+  if (pending.state === "error") return "Could not load pending leave requests";
+  return "Loading pending leave requests";
 }
 
 const styles = StyleSheet.create({

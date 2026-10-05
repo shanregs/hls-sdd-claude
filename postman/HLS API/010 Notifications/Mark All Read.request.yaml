@@ -1,0 +1,11 @@
+$kind: http-request
+description: "Marks every unread notification of yours read. Returns {\"marked\": n}."
+url: "{{baseUrl}}/api/v1/me/notifications/read-all"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 5000

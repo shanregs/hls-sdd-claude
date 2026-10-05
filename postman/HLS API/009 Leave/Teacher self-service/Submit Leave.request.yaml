@@ -1,0 +1,22 @@
+$kind: http-request
+description: "Submits a Pending request. Refused (409) for no working day, an overlap, a start more than 30 days ago, a locked month or a Teacher without a placement. Saves leaveRequestId and leaveVersion."
+url: "{{baseUrl}}/api/v1/me/leave"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "leaveTypeId": "{{leaveTypeId}}",
+      "firstDate": "{{leaveFirstDate}}",
+      "lastDate": "{{leaveLastDate}}",
+      "halfDayStart": false,
+      "halfDayEnd": false,
+      "reason": "Pongal travel"
+    }
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (b.id) { pm.collectionVariables.set("leaveRequestId", b.id); pm.collectionVariables.set("leaveVersion", b.version); }
+    language: text/javascript
+order: 3000

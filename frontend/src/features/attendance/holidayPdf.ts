@@ -23,9 +23,9 @@ export function pdfFilename(scope: PdfScope): string {
     : `holiday-calendar-${scope.month}.pdf`;
 }
 
-// RGB fills that match the on-screen tints: amber for holidays, grey for weekly off days.
+// RGB fills that match the on-screen tints: amber for holidays, light blue for weekly off days.
 const HOLIDAY_FILL: [number, number, number] = [255, 213, 128];
-const OFF_FILL: [number, number, number] = [226, 228, 232];
+const OFF_FILL: [number, number, number] = [215, 236, 248];
 
 /**
  * Draws the year or month on screen as a PDF and saves it (spec 008 FR-026): the title, the days with

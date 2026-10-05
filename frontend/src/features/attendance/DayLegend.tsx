@@ -2,12 +2,12 @@ import { Box, Stack, Typography } from "@mui/material";
 import { DAY_KIND_LABELS, dayBackground, type DayKind } from "./dayStyle";
 
 const SAMPLES: { kind: Exclude<DayKind, "plain">; text: string }[] = [
-  { kind: "off", text: "Sun" },
+  { kind: "off", text: " " },
   { kind: "holiday", text: "H" },
   { kind: "leave", text: "L / A" },
 ];
 
-/** Explains the day colours; each swatch carries its text so colour is never the only cue (SC-010). */
+/** Explains the day colours; the label beside each swatch names it, and day cells keep accessible names (SC-010). */
 export function DayLegend({
   kinds = ["off", "holiday", "leave"],
 }: {

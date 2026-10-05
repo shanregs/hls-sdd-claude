@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Approves a Pending request and writes the Leave marks, all or nothing. 409 lists days set by a supervisor or locked months. Needs LEAVE_MANAGEMENT.APPROVE."
+url: "{{baseUrl}}/api/v1/leave/{{leaveRequestId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Enjoy",
+      "version": {{leaveVersion}}
+    }
+order: 3000

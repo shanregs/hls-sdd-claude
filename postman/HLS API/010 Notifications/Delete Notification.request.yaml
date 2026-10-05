@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Deletes one of your notifications. Needs NOTIFICATIONS.DELETE; another user's id gives 404."
+url: "{{baseUrl}}/api/v1/me/notifications/{{notificationId}}"
+method: DELETE
+order: 6000

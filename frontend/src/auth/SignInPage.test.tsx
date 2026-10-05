@@ -108,4 +108,21 @@ describe("SignInPage (User Story 1)", () => {
       screen.getByRole("button", { name: /send code/i }),
     ).toBeInTheDocument();
   });
+
+  it("offers a one-time code from the password form for anyone who forgot their password", async () => {
+    const user = userEvent.setup();
+    renderSignInPage();
+
+    await user.click(
+      screen.getByRole("button", { name: /use a one-time code instead/i }),
+    );
+
+    expect(screen.getByRole("tab", { name: /one-time code/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.getByRole("button", { name: /send code/i }),
+    ).toBeInTheDocument();
+  });
 });

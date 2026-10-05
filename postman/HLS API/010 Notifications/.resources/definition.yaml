@@ -1,0 +1,3 @@
+$kind: collection
+description: "Notifications (spec 010). Every signed-in user sees only their own notifications; no request takes a user id. Sign in as a Teacher (for example Tara) after a leave decision, or as a Manager (Manoj) after a Teacher applies. Collection variable: notificationId is saved by List Notifications. Delete and Clear Read need NOTIFICATIONS.DELETE; the rest need NOTIFICATIONS.VIEW. System gets 403."
+order: 10000

@@ -46,7 +46,9 @@ class ManagerControllerTest extends MasterDataTestBase {
         assertThat(one.body()).contains(zoneA.toString(), zoneB.toString());
         Resp zone = get("/api/v1/zones?query=" + "Zone", admin);
         assertThat(zone.body()).contains("\"managerCount\":");
-        assertThat(get("/api/v1/zones?size=100", admin).body()).contains("\"managerCount\":2");
+        // Look the zone up by name: the shared test database holds hundreds of zones, so it may not be on page one.
+        String zoneName = jdbc.queryForObject("select name from zone where id = ?", String.class, zoneA);
+        assertThat(get("/api/v1/zones?query=" + zoneName, admin).body()).contains("\"managerCount\":2");
 
         // replacing the set drops zone B and ends its row (history keeps it)
         assignZones(admin, first.managerId(), zoneA);

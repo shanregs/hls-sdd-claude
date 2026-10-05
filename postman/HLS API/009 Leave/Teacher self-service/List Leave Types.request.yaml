@@ -1,0 +1,9 @@
+$kind: http-request
+description: "Active leave types (Casual, Sick, Personal, Other). Needs MY_LEAVE.VIEW. Saves the first type as leaveTypeId."
+url: "{{baseUrl}}/api/v1/me/leave/types"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (b.length) { pm.collectionVariables.set("leaveTypeId", b[0].id); }
+    language: text/javascript
+order: 1000

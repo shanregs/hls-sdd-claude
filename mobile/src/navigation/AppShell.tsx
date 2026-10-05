@@ -1,12 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
 import { Appbar, Button, Drawer, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { AccessModelProvider, useAccessModel } from "../access/AccessModelProvider";
 import { HOME_ROUTE, screenFor } from "../access/screenRegistry";
 import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
+import type { LeaveStatus } from "../api/leaveApi";
 import { useAuth } from "../auth/AuthProvider";
+import { ApplyLeaveScreen } from "../screens/ApplyLeaveScreen";
+import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
 import { DevicesScreen } from "../screens/DevicesScreen";
+import { HolidayCalendarScreen } from "../screens/HolidayCalendarScreen";
+import { LeaveManagementScreen } from "../screens/LeaveManagementScreen";
+import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
+import { MyAttendanceScreen } from "../screens/MyAttendanceScreen";
+import { TeacherAttendanceScreen } from "../screens/TeacherAttendanceScreen";
 import { LocationPrivacyScreen } from "../screens/LocationPrivacyScreen";
 import { HomeScreen } from "../screens/HomeScreen";
 import { NoConnectionScreen } from "../screens/NoConnectionScreen";
@@ -14,6 +22,7 @@ import { NotAuthorizedScreen } from "../screens/NotAuthorizedScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { Screen } from "../screens/Screen";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
+import { InnerBackContext, type InnerBackHandler, type InnerBackRegistry } from "./InnerBack";
 
 /**
  * The signed-in frame: a header with a menu drawer built only from the server-provided access
@@ -29,6 +38,15 @@ export function AppShell({ user }: { user: SignedInUser }) {
   );
 }
 
+/** What a screen is opened with: a notice to show (after a submit) or the status to filter by (from Home). */
+export interface RouteState {
+  notice?: string;
+  status?: LeaveStatus;
+}
+
+/** Opens a screen by its route, through the same menu check as the drawer. */
+export type OpenRoute = (route: string, state?: RouteState) => void;
+
 type Overlay = "none" | "devices" | "privacy" | "notAuthorized";
 
 function ShellContent({ user }: { user: SignedInUser }) {
@@ -38,25 +56,42 @@ function ShellContent({ user }: { user: SignedInUser }) {
   const [route, setRoute] = useState(HOME_ROUTE);
   const [overlay, setOverlay] = useState<Overlay>("none");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const innerBack = useRef<InnerBackHandler | null>(null);
+  const innerBackApi = useMemo<InnerBackRegistry>(
+    () => ({
+      set: (handler) => {
+        innerBack.current = handler;
+      },
+      clear: (handler) => {
+        if (innerBack.current === handler) innerBack.current = null;
+      },
+    }),
+    [],
+  );
 
   const menu = useMemo(() => buildMenu(model), [model]);
 
-  const goTo = useCallback(
-    (target: string) => {
+  const [routeState, setRouteState] = useState<RouteState | undefined>(undefined);
+
+  const openRoute = useCallback<OpenRoute>(
+    (target, state) => {
       setDrawerOpen(false);
       if (canOpen(target)) {
         setOverlay("none");
         setRoute(target);
+        setRouteState(state);
       } else {
         setOverlay("notAuthorized");
       }
     },
     [canOpen],
   );
+  const goTo = openRoute;
 
   const goHome = useCallback(() => {
     setOverlay("none");
     setRoute(HOME_ROUTE);
+    setRouteState(undefined);
   }, []);
 
   // Android back: close the drawer, then a sub-screen, then go home, otherwise leave the app.
@@ -68,6 +103,10 @@ function ShellContent({ user }: { user: SignedInUser }) {
       }
       if (overlay !== "none") {
         setOverlay("none");
+        return true;
+      }
+      // A screen with its own sub-screen (a Teacher's month, the year's holidays) closes it first.
+      if (innerBack.current?.()) {
         return true;
       }
       if (route !== HOME_ROUTE) {
@@ -122,14 +161,36 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "profile") {
     body = <ProfileScreen onOpenDevices={() => setOverlay("devices")} onOpenPrivacy={() => setOverlay("privacy")} />;
     title = "Profile";
+  } else if (current === "myAttendance") {
+    body = <MyAttendanceScreen />;
+    title = "My Attendance";
+  } else if (current === "attendanceHistory") {
+    body = <AttendanceHistoryScreen />;
+    title = "Attendance History";
+  } else if (current === "teacherAttendance") {
+    body = <TeacherAttendanceScreen />;
+    title = "Teacher Attendance";
+  } else if (current === "holidayCalendar") {
+    body = <HolidayCalendarScreen />;
+    title = "Holiday Calendar";
+  } else if (current === "applyLeave") {
+    body = <ApplyLeaveScreen openRoute={openRoute} />;
+    title = "Apply Leave";
+  } else if (current === "myLeaveHistory") {
+    body = <MyLeaveHistoryScreen notice={routeState?.notice} />;
+    title = "My Leave History";
+  } else if (current === "leaveManagement") {
+    body = <LeaveManagementScreen initialStatus={routeState?.status} />;
+    title = "Leave Management";
   } else {
-    body = <HomeScreen user={user} model={model} />;
+    body = <HomeScreen user={user} model={model} openRoute={openRoute} />;
     title = "Home";
   }
 
   const labelOf = (item: { label: string }) => item.label;
 
   return (
+    <InnerBackContext.Provider value={innerBackApi}>
     <View style={styles.fill}>
       <Appbar.Header>
         <Appbar.Action icon="menu" onPress={() => setDrawerOpen(true)} accessibilityLabel="Open menu" />
@@ -184,6 +245,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
         </Modal>
       </Portal>
     </View>
+    </InnerBackContext.Provider>
   );
 }
 

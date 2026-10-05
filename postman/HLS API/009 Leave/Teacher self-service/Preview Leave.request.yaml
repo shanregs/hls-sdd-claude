@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Working-day count and any refusal for a draft, nothing is saved. Set leaveFirstDate and leaveLastDate (YYYY-MM-DD) first. Needs MY_LEAVE.CREATE."
+url: "{{baseUrl}}/api/v1/me/leave/preview"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "leaveTypeId": "{{leaveTypeId}}",
+      "firstDate": "{{leaveFirstDate}}",
+      "lastDate": "{{leaveLastDate}}",
+      "halfDayStart": false,
+      "halfDayEnd": false,
+      "reason": "Pongal travel"
+    }
+order: 2000

@@ -108,11 +108,6 @@ function MonthTable({
                       {name}
                     </Typography>
                   )}
-                  {large && !name && kind === "off" && (
-                    <Typography variant="caption" component="div">
-                      {WEEKDAY_LABELS[weekdayIndex(date)]}
-                    </Typography>
-                  )}
                 </Box>
               );
             })}

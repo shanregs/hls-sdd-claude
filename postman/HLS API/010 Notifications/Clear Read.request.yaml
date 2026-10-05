@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Deletes every notification of yours that is already read. Returns {\"deleted\": n}. Needs NOTIFICATIONS.DELETE."
+url: "{{baseUrl}}/api/v1/me/notifications/read"
+method: DELETE
+order: 7000
