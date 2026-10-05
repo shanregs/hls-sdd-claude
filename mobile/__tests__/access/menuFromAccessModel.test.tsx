@@ -18,21 +18,32 @@ const sections = (model: AccessModel) => buildMenu(model).map((s) => s.section);
 
 describe("buildMenu (spec FR-009 to FR-011)", () => {
   it("shows only items the app has a screen for, for a Teacher, Manager and Director", () => {
-    expect(labels(TEACHER_MODEL)).toEqual(["Dashboard", "My Profile"]);
-    expect(labels(MANAGER_MODEL)).toEqual(["Dashboard", "Profile"]);
-    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Profile"]);
+    expect(labels(TEACHER_MODEL)).toEqual([
+      "Dashboard",
+      "My Attendance",
+      "Attendance History",
+      "Holiday Calendar",
+      "My Profile",
+    ]);
+    expect(labels(MANAGER_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Teacher Attendance", "Profile"]);
+    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Profile"]);
   });
 
   it("drops sections left empty by the filter", () => {
-    expect(sections(TEACHER_MODEL)).toEqual(["Dashboard", "ACCOUNT"]);
-    expect(sections(DIRECTOR_MODEL)).toEqual(["Dashboard", "ACCOUNT"]);
+    expect(sections(TEACHER_MODEL)).toEqual(["Dashboard", "MY ATTENDANCE", "MASTER DATA", "ACCOUNT"]);
+    expect(sections(DIRECTOR_MODEL)).toEqual(["Dashboard", "MASTER DATA", "ACCOUNT"]);
   });
 
   it("is the union of both roles with no duplicate entries", () => {
     const menu = buildMenu(ADMIN_TEACHER_MODEL);
     const routes = menu.flatMap((s) => s.items.map((i) => i.route));
 
-    expect(routes).toEqual(["/dashboard", "/account/profile"]);
+    expect(routes).toEqual([
+      "/dashboard",
+      "/my-attendance",
+      "/master-data/holiday-calendar",
+      "/account/profile",
+    ]);
     expect(new Set(routes).size).toBe(routes.length);
   });
 
@@ -43,7 +54,12 @@ describe("buildMenu (spec FR-009 to FR-011)", () => {
 
   it("returns nothing for a missing model and keeps the server order", () => {
     expect(buildMenu(null)).toEqual([]);
-    expect(buildMenu(MANAGER_MODEL).map((s) => s.section)).toEqual(["Dashboard", "ACCOUNT"]);
+    expect(buildMenu(MANAGER_MODEL).map((s) => s.section)).toEqual([
+      "Dashboard",
+      "MASTER DATA",
+      "OPERATIONS",
+      "ACCOUNT",
+    ]);
   });
 });
 
@@ -62,21 +78,29 @@ async function signedInAs(model: AccessModel) {
 
 describe("the drawer shows exactly the server navigation", () => {
   it.each([
-    ["Teacher", TEACHER_MODEL, ["Dashboard", "My Profile", "Log out"]],
-    ["Manager", MANAGER_MODEL, ["Dashboard", "Profile", "Log out"]],
-    ["Director", DIRECTOR_MODEL, ["Dashboard", "Profile", "Log out"]],
-    ["Admin plus Teacher", ADMIN_TEACHER_MODEL, ["Dashboard", "Profile", "Log out"]],
+    [
+      "Teacher",
+      TEACHER_MODEL,
+      ["Dashboard", "My Attendance", "Attendance History", "Holiday Calendar", "My Profile", "Log out"],
+    ],
+    ["Manager", MANAGER_MODEL, ["Dashboard", "Holiday Calendar", "Teacher Attendance", "Profile", "Log out"]],
+    ["Director", DIRECTOR_MODEL, ["Dashboard", "Holiday Calendar", "Profile", "Log out"]],
+    [
+      "Admin plus Teacher",
+      ADMIN_TEACHER_MODEL,
+      ["Dashboard", "My Attendance", "Holiday Calendar", "Profile", "Log out"],
+    ],
   ])("for a %s", async (_name, model, expected) => {
     await signedInAs(model as AccessModel);
 
     const items = screen
-      .getAllByLabelText(/^(Dashboard|Profile|My Profile|Log out)$/)
+      .getAllByLabelText(
+        /^(Dashboard|Profile|My Profile|Log out|My Attendance|Attendance History|Teacher Attendance|Holiday Calendar)$/,
+      )
       .map((n) => n.props.accessibilityLabel);
     expect([...new Set(items)]).toEqual(expected);
     // Nothing the server offered but the app has no screen for is shown, and nothing is disabled.
     for (const hidden of [
-      "My Attendance",
-      "Attendance History",
       "Schools",
       "Teachers",
       "Zones",

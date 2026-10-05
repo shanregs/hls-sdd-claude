@@ -3,11 +3,21 @@
  * A server menu item whose route is not listed here is simply not shown (spec FR-011). Later mobile
  * specs add their screens by adding routes here; nothing in this file knows about roles (FR-009).
  */
-export type ScreenKey = "home" | "profile";
+export type ScreenKey =
+  | "home"
+  | "profile"
+  | "myAttendance"
+  | "attendanceHistory"
+  | "teacherAttendance"
+  | "holidayCalendar";
 
 const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/dashboard": "home",
   "/account/profile": "profile",
+  "/my-attendance": "myAttendance",
+  "/my-attendance/history": "attendanceHistory",
+  "/operations/teacher-attendance": "teacherAttendance",
+  "/master-data/holiday-calendar": "holidayCalendar",
 };
 
 export function screenFor(route: string): ScreenKey | undefined {

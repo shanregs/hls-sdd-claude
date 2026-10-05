@@ -65,7 +65,7 @@ describe("Home (spec FR-015)", () => {
 
     expect(screen.getByLabelText("Roles: DIRECTOR")).toBeTruthy();
     expect(screen.getByText("Director")).toBeTruthy();
-    for (const section of ["MASTER DATA", "OPERATIONS", "SYSTEM"]) {
+    for (const section of ["OPERATIONS", "SYSTEM"]) {
       expect(screen.getByLabelText(`${section}, coming to the app soon`)).toBeTruthy();
     }
     // The home and the account area are not previewed as business sections.
@@ -74,9 +74,24 @@ describe("Home (spec FR-015)", () => {
   });
 
   it("renders the same way for a Teacher and a Manager: only the sections differ", async () => {
+    await homeFor(MANAGER_MODEL);
+    expect(screen.queryByLabelText(/coming to the app soon/)).toBeNull();
+  });
+
+  it("does not preview a section that already has a screen in the app (T041)", async () => {
+    await homeFor(DIRECTOR_MODEL);
+
+    // MASTER DATA has the Holiday Calendar screen; OPERATIONS and SYSTEM still have none.
+    expect(screen.queryByLabelText("MASTER DATA, coming to the app soon")).toBeNull();
+    expect(screen.getByLabelText("OPERATIONS, coming to the app soon")).toBeTruthy();
+  });
+
+  it("shows no coming-soon card for a Teacher, whose sections all have screens (T041)", async () => {
     await homeFor(TEACHER_MODEL);
-    expect(screen.getByLabelText("MY ATTENDANCE, coming to the app soon")).toBeTruthy();
-    expect(screen.queryByLabelText("OPERATIONS, coming to the app soon")).toBeNull();
+
+    expect(screen.queryByLabelText("MY ATTENDANCE, coming to the app soon")).toBeNull();
+    expect(screen.queryByLabelText("MASTER DATA, coming to the app soon")).toBeNull();
+    expect(screen.queryByLabelText(/coming to the app soon/)).toBeNull();
   });
 
   it("shows no cards when the menu has no business sections", async () => {

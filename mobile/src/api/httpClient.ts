@@ -1,6 +1,7 @@
 import * as Application from "expo-application";
 import { Platform } from "react-native";
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from "../config/constants";
+import { recordServerDate } from "../attendance/serverClock";
 import { getAccessToken } from "../security/memoryToken";
 import {
   ApiError,
@@ -120,6 +121,9 @@ async function send(method: HttpMethod, path: string, options: RequestOptions): 
     clearTimeout(timer);
   }
 
+  // The server clock, used only to pick the default month on attendance screens.
+  recordServerDate(response.headers.get("Date"));
+
   const text = await response.text();
   let data: unknown;
   try {
@@ -138,6 +142,10 @@ async function send(method: HttpMethod, path: string, options: RequestOptions): 
 function messageOf(data: unknown, fallback: string): string {
   if (data && typeof data === "object" && "message" in data && typeof data.message === "string") {
     return data.message;
+  }
+  // The attendance endpoints (spec 008) put the refusal text in `reason`.
+  if (data && typeof data === "object" && "reason" in data && typeof data.reason === "string") {
+    return data.reason;
   }
   return fallback;
 }
