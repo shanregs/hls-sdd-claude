@@ -43,6 +43,9 @@ class OtpAndPasswordResetIntegrationTest {
     @Autowired
     private UserAdminService userAdminService;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     private RestTestClient client;
     private ListAppender<ILoggingEvent> smsAppender;
     private ListAppender<ILoggingEvent> emailAppender;
@@ -226,6 +229,48 @@ class OtpAndPasswordResetIntegrationTest {
                 .exchange()
                 .expectStatus()
                 .isUnauthorized();
+    }
+
+    @Test
+    void usingOneUsersCodeDoesNotUseUpAnotherUsersCodeThatHappensToBeTheSameNumber() {
+        userAdminService.createUser(
+                "Collide First", "9876511101", Set.of(Role.MANAGER), null, "old-password-123", null, null);
+        userAdminService.createUser(
+                "Collide Second", "9876511102", Set.of(Role.MANAGER), null, "old-password-123", null, null);
+        for (String phone : new String[] {"9876511101", "9876511102"}) {
+            client.post()
+                    .uri("/api/v1/auth/otp/request")
+                    .body(new OtpDtos.OtpRequest(phone, OtpChannel.SMS, OtpPurpose.PASSWORD_RESET))
+                    .exchange()
+                    .expectStatus()
+                    .isOk();
+        }
+        // Give the second user's stored code the same hash as the first user's (the code is only six digits,
+        // so two users can really be sent the same number).
+        String sharedHash = jdbc.queryForObject(
+                "select code_hash from one_time_code where destination = '9876511101'", String.class);
+        jdbc.update("update one_time_code set code_hash = ? where destination = '9876511102'", sharedHash);
+        Matcher first = CODE_PATTERN.matcher(smsAppender.list.get(smsAppender.list.size() - 2).getFormattedMessage());
+        assertThat(first.find()).isTrue();
+        String firstUsersCode = first.group(1);
+
+        client.post()
+                .uri("/api/v1/auth/otp/verify")
+                .body(new OtpDtos.OtpVerifyRequest("9876511101", firstUsersCode, OtpPurpose.PASSWORD_RESET, OtpChannel.SMS))
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        assertThat(jdbc.queryForObject(
+                        "select used_at is null from one_time_code where destination = '9876511102'", Boolean.class))
+                .as("the second user's code was left alone")
+                .isTrue();
+        client.post()
+                .uri("/api/v1/auth/otp/verify")
+                .body(new OtpDtos.OtpVerifyRequest("9876511102", firstUsersCode, OtpPurpose.PASSWORD_RESET, OtpChannel.SMS))
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 
     @Test
