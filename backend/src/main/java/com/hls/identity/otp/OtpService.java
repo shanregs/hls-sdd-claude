@@ -11,8 +11,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -162,7 +164,12 @@ public class OtpService {
             }
             // Match: mark this row and every sibling created by the same BOTH request as used
             // (research.md §14), so the code cannot complete a second reset from the other channel.
-            for (OneTimeCode sibling : repository.findByCodeHashAndPurpose(codeHash, purpose)) {
+            // Siblings are only this person's own destinations; another user's code that happens to be
+            // the same number must not be used up.
+            Set<String> ownDestinations =
+                    resolved.stream().map(Resolved::destination).collect(Collectors.toSet());
+            for (OneTimeCode sibling :
+                    repository.findByDestinationInAndPurposeAndCodeHash(ownDestinations, purpose, codeHash)) {
                 if (!sibling.isUsed()) {
                     sibling.markUsed(now);
                     repository.save(sibling);
