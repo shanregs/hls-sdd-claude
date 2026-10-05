@@ -157,6 +157,7 @@ class IdentityActivityPublishingTest {
                 .header("alg", "none")
                 .claim("sub", user.getId().toString())
                 .claim("sid", sessionId.toString())
+                .claim("roles", java.util.List.of("MANAGER"))
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(60))
                 .build();
