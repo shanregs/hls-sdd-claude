@@ -28,4 +28,14 @@ class DevSeedTest extends IntegrationTestBase {
         // Tara plus the two other demo Teachers placed in Demo School One by the Teacher seeder.
         assertThat(total(get("/api/v1/teachers", manoj.token()))).isEqualTo(3);
     }
+    @Test
+    void recruitmentDemoDataLeavesReadyRaniReadyToDeployWithTheFunnelFilled() {
+        Signed director = signIn(null, "9800000002", "Password123!");
+
+        assertThat(get("/api/v1/induction/ready-to-deploy", director.token()).body()).contains("Ready Rani");
+        assertThat(get("/api/v1/recruitment/colleges", director.token()).body()).contains("Demo College of Arts", "Dr. Principal");
+        String offers = get("/api/v1/recruitment/offers", director.token()).body();
+        assertThat(offers).contains("ACCEPTED", "DECLINED", "ISSUED", "DRAFT");
+        assertThat(get("/api/v1/recruitment/dashboard", director.token()).body()).contains("\"interviewed\":6", "\"inducted\":1");
+    }
 }

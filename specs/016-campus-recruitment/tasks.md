@@ -189,7 +189,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 
 ## Phase 8: Polish and Cross-Cutting Concerns
 
-- [ ] T056 [P] `recruitment/internal/RecruitmentDevSeeder.java` (only with the demo flag, idempotent): one college, a held drive with six candidates, offers in several statuses, a batch and "Ready Rani" who completed it
+- [X] T056 [P] `recruitment/internal/RecruitmentDevSeeder.java` (only with the demo flag, idempotent): one college, a held drive with six candidates, offers in several statuses, a batch and "Ready Rani" who completed it
 - [ ] T057 [P] Role-by-role UI test of the RECRUITMENT menu and every action visibility (Admin, Director, Zone Manager, Teacher, System) in `frontend/src/features/recruitment/` and the navigation tests
 - [ ] T058 [P] Add the new pages and dialogs to the axe harness in `frontend/src/a11y/a11y.test.tsx` (light and dark) and record the keyboard-only and screen-reader pass and the phone-width check in `specs/016-campus-recruitment/quickstart-results.md`
 - [ ] T059 [P] Add a "016 Campus Recruitment" folder to the Postman collection in `postman/HLS API/` and refresh the schema dump `docs/db/schema-v22.sql`
