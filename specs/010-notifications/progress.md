@@ -11,24 +11,22 @@ data model, contract, quickstart and tasks are done and pushed. Implementation i
   Passing: `NotificationModuleRulesTest`, `MessageFactoryTest` (8), `NotificationServiceTest` (7),
   `PermissionEligibilityTest`, `NavigationSectionOrderTest`, `ApplicationModulesTest`.
 
-## Written but NOT yet run (committed as work in progress)
+## Also done (2026-10-05)
 
-- T010: `notification/web/NotificationController.java` (six endpoints) and `com.hls.notification` added to
-  `MasterDataExceptionAdvice`.
-- T011: `backend/src/test/java/com/hls/notification/NotificationApiTest.java`. Just changed
-  `turnedOff.accepted()` to `turnedOff.success()` (the record method is `success()`); never compiled since.
-  Run: `cd backend; mvn -o test -Dtest=NotificationApiTest`.
+- T010-T011: `NotificationController` and `NotificationApiTest` (4 tests) pass.
+- T012-T013 (commit `1de8bfd`): `features/notifications/` with `notificationsApi.ts`, `NotificationBell` (mounted in
+  `AppShell`), `NotificationsPage`, route `/account/notifications`, 18 tests, a11y cases in both themes.
+- T014-T018: events `LeaveDecided`/`LeaveRequested`/`LeaveCancelled` in `leave/api`, published from
+  `LeaveDecisionService` and `LeaveRequestService`; `RecipientResolver` and `LeaveEventListener` in
+  `notification/internal`; `LeaveDecisionNotificationTest` (8) and `LeaveRequestNotificationTest` (7) pass, and the
+  existing leave suite still passes. Added `RoleAssignmentRepository.userIdsWithRole` (no lock) because `findByRole`
+  takes a pessimistic write lock that a recipient lookup must not take.
 
 ## Next, in order (see tasks.md)
 
-1. Run `NotificationApiTest`, fix anything, tick T010/T011.
-2. T012-T013 frontend: `NotificationBell.tsx` (30 s polling), mount in `frontend/src/app/AppShell.tsx`,
-   `NotificationsPage.tsx`, route `/account/notifications` in `App.tsx`, `notificationsApi.ts`, tests, a11y cases
-   (mock `/api/v1/me/notifications` and `/unread-count` in `src/a11y/a11y.test.tsx`).
-3. T014-T018 leave events (publish from `LeaveRequestService`/`LeaveDecisionService`, listeners, `RecipientResolver`).
-4. T019-T021 attendance events (`MarkService`, `MonthLockService`), merge already built in the service.
-5. T022-T024 retention job (`@EnableScheduling`), demo seeder.
-6. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
+1. T019-T021 attendance events (`MarkService`, `MonthLockService`), merge already built in the service.
+2. T022-T024 retention job (`@EnableScheduling`), demo seeder.
+3. T025-T028 docs, Postman, roadmap, quickstart results, PR (PR must wait for #13 to merge, or target it).
 
 ## Environment notes
 

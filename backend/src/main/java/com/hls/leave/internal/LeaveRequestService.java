@@ -2,6 +2,8 @@ package com.hls.leave.internal;
 
 import com.hls.attendance.api.LeaveAttendance;
 import com.hls.attendance.api.LeaveAttendance.LeaveDay;
+import com.hls.leave.api.LeaveCancelled;
+import com.hls.leave.api.LeaveRequested;
 import com.hls.leave.internal.LeaveViewFactory.LeaveView;
 import com.hls.leave.internal.LeaveViewFactory.Perspective;
 import com.hls.school.api.ConflictException;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -49,6 +52,7 @@ public class LeaveRequestService {
     private final LeaveViewFactory views;
     private final LeaveAudit audit;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public LeaveRequestService(
             LeaveRequestRepository requests,
@@ -57,7 +61,8 @@ public class LeaveRequestService {
             TeacherDirectory teachers,
             LeaveViewFactory views,
             LeaveAudit audit,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.requests = requests;
         this.types = types;
         this.attendance = attendance;
@@ -65,6 +70,7 @@ public class LeaveRequestService {
         this.views = views;
         this.audit = audit;
         this.clock = clock;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -119,6 +125,13 @@ public class LeaveRequestService {
             throw new ConflictException("These dates overlap another leave request of yours.");
         }
         audit.created(userId, saved);
+        events.publishEvent(new LeaveRequested(
+                saved.getId(),
+                teacherId,
+                saved.getSchoolId(),
+                saved.getFirstDate(),
+                saved.getLastDate(),
+                teacherName(teacherId)));
         return views.of(saved, Perspective.OWN);
     }
 
@@ -152,7 +165,20 @@ public class LeaveRequestService {
         request.cancel("TEACHER", userId, null, clock.instant());
         LeaveRequest saved = requests.saveAndFlush(request);
         audit.status(userId, saved, before, "cancelled by the Teacher");
+        events.publishEvent(new LeaveCancelled(
+                saved.getId(),
+                teacherId,
+                saved.getSchoolId(),
+                saved.getFirstDate(),
+                saved.getLastDate(),
+                teacherName(teacherId),
+                before == LeaveStatus.APPROVED));
         return views.of(saved, Perspective.OWN);
+    }
+
+    private String teacherName(UUID teacherId) {
+        var info = teachers.teacherInfo(List.of(teacherId)).get(teacherId);
+        return info == null ? "A Teacher" : info.name();
     }
 
     /** Works out the days a draft would cover and every reason it cannot be submitted. */

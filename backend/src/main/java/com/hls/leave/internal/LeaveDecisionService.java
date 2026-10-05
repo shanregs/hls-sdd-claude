@@ -2,6 +2,8 @@ package com.hls.leave.internal;
 
 import com.hls.attendance.api.LeaveAttendance;
 import com.hls.identity.user.Role;
+import com.hls.leave.api.LeaveDecided;
+import com.hls.leave.api.LeaveDecided.Decision;
 import com.hls.leave.internal.LeaveRequestService.PreviewDay;
 import com.hls.leave.internal.LeaveScope.Scope;
 import com.hls.leave.internal.LeaveViewFactory.LeaveView;
@@ -17,6 +19,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,7 @@ public class LeaveDecisionService {
     private final LeaveViewFactory views;
     private final LeaveAudit audit;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public LeaveDecisionService(
             LeaveRequestRepository requests,
@@ -49,13 +53,15 @@ public class LeaveDecisionService {
             LeaveAttendance attendance,
             LeaveViewFactory views,
             LeaveAudit audit,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.requests = requests;
         this.scope = scope;
         this.attendance = attendance;
         this.views = views;
         this.audit = audit;
         this.clock = clock;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -132,6 +138,7 @@ public class LeaveDecisionService {
         request.approve(actor, cleanNote, counted.total(), clock.instant());
         LeaveRequest saved = requests.saveAndFlush(request);
         audit.status(actor, saved, before, cleanNote);
+        publish(saved, Decision.APPROVED, null);
         return views.of(saved, Perspective.SUPERVISOR);
     }
 
@@ -146,6 +153,7 @@ public class LeaveDecisionService {
         request.reject(actor, cleanReason, clock.instant());
         LeaveRequest saved = requests.saveAndFlush(request);
         audit.status(actor, saved, before, cleanReason);
+        publish(saved, Decision.REJECTED, cleanReason);
         return views.of(saved, Perspective.SUPERVISOR);
     }
 
@@ -163,7 +171,14 @@ public class LeaveDecisionService {
         request.cancel("SUPERVISOR", actor, cleanReason, clock.instant());
         LeaveRequest saved = requests.saveAndFlush(request);
         audit.status(actor, saved, before, "revoked: " + cleanReason);
+        publish(saved, Decision.REVOKED, cleanReason);
         return views.of(saved, Perspective.SUPERVISOR);
+    }
+
+    /** Tells the notification module inside this transaction, so a failed decision leaves no notification. */
+    private void publish(LeaveRequest request, Decision decision, String reason) {
+        events.publishEvent(new LeaveDecided(
+                request.getId(), request.getTeacherId(), decision, request.getFirstDate(), request.getLastDate(), reason));
     }
 
     private LeaveRequest lockedInScope(UUID userId, Set<Role> roles, UUID id) {
