@@ -68,6 +68,11 @@ public class AssignmentService {
         if ("EXITED".equals(teacher.status())) {
             throw new ConflictException("An exited Teacher cannot be placed in a School.");
         }
+        // a recruit is mapped only after induction sign-off makes them active (spec 012 FR-005, decision D1)
+        if ("IN_TRAINING".equals(teacher.status())) {
+            throw new ConflictException(
+                    "This Teacher is still in training; mapping is possible after induction is signed off.");
+        }
         if (schoolId == null) {
             throw new InvalidInputException("A School is required.");
         }

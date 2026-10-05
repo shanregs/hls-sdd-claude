@@ -192,7 +192,8 @@ interface only; 023 reads Schools and Zones of 005 and contracts of 012 through 
 Taken from the business-flow doc (2026-10-05):
 
 - **D1** A Teacher still in training cannot be mapped to a School position (012). Induction sign-off makes the Teacher
-  active, which is the gate.
+  active, which is the gate. A trained Teacher may then wait unplaced for any length of time; they receive no salary
+  until they are mapped to a School (D2).
 - **D2** Salary starts when the Teacher reports to the School (first School assignment), not at offer acceptance. The
   deck adds: training is unpaid, and attendance counts for salary only from that date.
 - **D3** The 4 stored Teacher statuses stay; Available, Assigned, Under Review, Transferred, Replaced are derived views.

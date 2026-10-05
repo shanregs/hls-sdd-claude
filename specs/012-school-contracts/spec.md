@@ -36,6 +36,11 @@
   leave; a Teacher in training or exited is refused. Induction sign-off (spec 016) is what makes a recruit active.
   This replaces an earlier answer that allowed any non-exited Teacher. Carried-over placements of Teachers already
   in training are kept as they are (they keep working), but no new mapping of a trainee is accepted.
+- Q: Can a Teacher who has finished training wait without a School? → A: Yes (decided 2026-10-05). After induction
+  sign-off (spec 016) a Teacher is active and "ready to deploy", and may stay unplaced for any length of time; being
+  unplaced is a normal state, not an error. Such a Teacher receives **no salary until mapped to a School**: salary
+  starts on the first assignment (the School reporting date, D2), and training is unpaid. Nothing in this spec pays or
+  blocks a waiting Teacher; it only records the assignment whose first start date payroll (spec 013) uses.
 - Q: Can a contract's end date be removed again? → A: Yes. An Admin or Director can set, move or clear the end date
   at any time while no later MoU exists for the School; each change is audited with the prior and new value.
 - Q: Where does the MoU come from, and where do the Teachers come from? → A: HLS runs two parallel activities. School
@@ -136,6 +141,9 @@ positions and see their assignments continue without a gap.
 3. **Given** a contract with every position filled, **When** another Teacher is mapped, **Then** it is refused
    with "All N positions are filled; record a new contract to add Teachers."
 3a. **Given** a Teacher whose status is in training, **When** a user tries to map them, **Then** it is refused with "This Teacher is still in training; mapping is possible after induction is signed off"; an active or on-leave Teacher is accepted.
+3b. **Given** a Teacher who has finished training and is active but not yet placed, **When** nobody has mapped them
+   to a position, **Then** they stay valid with no School and no error, they appear as available to be mapped, and
+   they have no assignment, so no salary starts (spec 013 pays only from the first assignment).
 4. **Given** a Teacher already mapped at another School on overlapping dates, **When** they are mapped, **Then**
    it is refused; a move to another School on a later date is accepted as a scheduled move.
 5. **Given** a School with no contract covering the start date, **When** a Teacher is mapped to it, **Then** a
@@ -178,6 +186,8 @@ each state in the list, filter by status, and see a Zone Manager's list limited 
 
 ### Edge Cases
 
+- A Teacher who has finished training waits for a School: active, no assignment, no salary. The wait may be long; it
+  ends when a Zone Manager, Admin or Director maps the Teacher, and salary starts from that assignment's start date.
 - A contract has fewer Teachers mapped than positions: the vacant positions show as vacant, nothing else changes.
 - More Teachers than positions: refused until a new contract adds positions.
 - A new MoU with fewer positions than the Teachers placed: it is accepted; the re-map covers as many Teachers as there
@@ -348,7 +358,9 @@ added when this spec merges (see Assumptions).
   Teachers who are then mapped here).
 - Teachers that can be mapped are those of spec 005 whose status is active or on leave. A Teacher in training or
   exited is refused. Spec 016's induction sign-off makes a recruit active, so "ready to deploy" means active with no
-  current School assignment.
+  current School assignment. A ready Teacher may wait unplaced for any length of time and is not paid until the first
+  assignment; the earliest assignment start date is the reporting date that payroll (spec 013) reads through the
+  existing placement queries, so this spec adds no salary rule and no new interface for it.
 - An MoU recorded here may have been prepared in spec 023. The contract carries no link to the pipeline; spec 023
   keeps the link and reads the contract (existence, positions and filled count) through the public interface in FR-017.
   Only Admin and Director record the MoU, as in FR-001, whoever negotiated it.

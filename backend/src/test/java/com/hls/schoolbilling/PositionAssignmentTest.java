@@ -174,6 +174,29 @@ class PositionAssignmentTest extends SchoolContractsTestBase {
     }
 
     @Test
+    void aTeacherStillInTrainingCannotBeMappedUntilTheyAreActive() {
+        String admin = signInAs(Role.ADMIN).token();
+        Fixture f = fixture(admin);
+        contractId(createContract(admin, f.schoolId(), sameSalaryBody(f, director().userId(), 2, "15000")));
+        Resp created = post("/api/v1/teachers", admin, Map.of("name", uniqueName("Recruit"), "status", "IN_TRAINING"));
+        assertThat(created.status()).as(created.body()).isEqualTo(201);
+        UUID recruit = created.id();
+
+        Resp refused = assign(admin, recruit, f.schoolId(), null, today);
+
+        assertThat(refused.status()).isEqualTo(409);
+        assertThat(refused.body()).contains("still in training");
+        assertThat(position(admin, f.schoolId(), 1).get("teacherId")).isNull();
+        // a Zone Manager is refused the same way
+        assertThat(assign(f.manager().token(), recruit, f.schoolId(), null, today).status()).isEqualTo(409);
+
+        // induction sign-off makes the recruit active; from then on they can be mapped, and may wait unplaced until then
+        assertThat(post("/api/v1/teachers/" + recruit + "/status", admin, Map.of("status", "ACTIVE")).status()).isEqualTo(200);
+        assertThat(assign(admin, recruit, f.schoolId(), null, today).status()).isEqualTo(200);
+        assertThat(position(admin, f.schoolId(), 1).get("teacherId")).isEqualTo(recruit.toString());
+    }
+
+    @Test
     void everyMapMoveAndExitIsAudited() {
         String admin = signInAs(Role.ADMIN).token();
         Fixture f = fixture(admin);
