@@ -375,6 +375,9 @@ compact module × role table of action icons, define which grants are eligible, 
       `MY_LEAVE` (Teacher: View, Create, Delete) in the matrix, eligibility (System excluded from both;
       each only for the roles that use it) and seeds; navigation: LEAVE section for Teacher (Apply Leave,
       My Leave History) and OPERATIONS → Leave Management for Admin, Director and Manager
+- [x] T057 [US1] Notifications module (spec 010): `NOTIFICATIONS` (Admin, Director, Manager, Teacher: View, Delete;
+      System excluded) in the matrix, eligibility and seeds; navigation: ACCOUNT -> Notifications (order 93,
+      after Sessions); the header bell renders only when the access model grants the item
 - [x] T052 [US1] Menu section order (spec.md FR-008a, data-model.md `order` bands): renumber
       `NavigationCatalog` so the sections run Dashboard, MASTER DATA, OPERATIONS (MY ATTENDANCE for
       Teachers), SYSTEM (SYSTEM CONFIGURATION for System), AUDIT, ACCOUNT; test per role in
