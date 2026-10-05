@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationsPage } from "./NotificationsPage";
+import { NOTIFICATIONS_CHANGED } from "./notificationsApi";
 
 const authFetch = vi.fn();
 let grantedActions = ["VIEW", "DELETE"];
@@ -162,6 +163,31 @@ describe("NotificationsPage", () => {
     expect(calls("POST").map(([url]) => url)).toContain(
       "/api/v1/me/notifications/read-all",
     );
+  });
+
+  it("tells the header bell after reading, marking all and deleting", async () => {
+    const changed = vi.fn();
+    window.addEventListener(NOTIFICATIONS_CHANGED, changed);
+    try {
+      renderPage();
+      await screen.findByText("Title n1");
+      await userEvent.click(
+        screen.getByRole("button", { name: "Mark all as read" }),
+      );
+      await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(1));
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Delete Title n1" }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      await userEvent.click(
+        within(dialog).getByRole("button", { name: "Delete" }),
+      );
+      await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+      await userEvent.click(await screen.findByText("Title n1"));
+      await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(3));
+    } finally {
+      window.removeEventListener(NOTIFICATIONS_CHANGED, changed);
+    }
   });
 
   it("filters to unread only", async () => {

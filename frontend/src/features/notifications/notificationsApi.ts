@@ -31,6 +31,13 @@ export interface NotificationPage {
 
 const BASE = "/api/v1/me/notifications";
 
+/** Raised after the page reads or deletes notifications, so the header bell refreshes at once. */
+export const NOTIFICATIONS_CHANGED = "hls:notifications-changed";
+
+export function announceNotificationsChanged(): void {
+  window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED));
+}
+
 export function listNotifications(
   authFetch: AuthFetch,
   params: { unreadOnly: boolean; page: number; size: number },

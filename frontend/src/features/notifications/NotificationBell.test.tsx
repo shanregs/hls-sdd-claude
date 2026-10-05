@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationBell, POLL_MS } from "./NotificationBell";
+import { announceNotificationsChanged } from "./notificationsApi";
 
 const authFetch = vi.fn();
 let actions: string[] = ["VIEW", "DELETE"];
@@ -130,6 +131,19 @@ describe("NotificationBell", () => {
       await vi.advanceTimersByTimeAsync(POLL_MS * 3);
     });
     expect(countCalls()).toBe(before);
+  });
+
+  it("refreshes at once when the page announces a change", async () => {
+    await renderBell();
+    const before = countCalls();
+    unread = 0;
+    await act(async () => {
+      announceNotificationsChanged();
+    });
+    expect(countCalls()).toBe(before + 1);
+    expect(
+      screen.getByRole("link", { name: "Notifications, none unread" }),
+    ).toBeInTheDocument();
   });
 
   it("refreshes when the window regains focus", async () => {

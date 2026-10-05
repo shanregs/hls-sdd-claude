@@ -4,7 +4,7 @@ import { Badge, IconButton, Tooltip } from "@mui/material";
 import NotificationsOutlined from "@mui/icons-material/NotificationsOutlined";
 import { useAuth } from "../../auth/useAuth";
 import { useGrantedActions } from "../common/useGrantedActions";
-import { getUnreadCount } from "./notificationsApi";
+import { NOTIFICATIONS_CHANGED, getUnreadCount } from "./notificationsApi";
 
 export const NOTIFICATIONS_ROUTE = "/account/notifications";
 export const POLL_MS = 30_000;
@@ -30,10 +30,12 @@ export function NotificationBell() {
     void refresh();
     const timer = setInterval(() => void refresh(), POLL_MS);
     window.addEventListener("focus", refresh);
+    window.addEventListener(NOTIFICATIONS_CHANGED, refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener(NOTIFICATIONS_CHANGED, refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [allowed, refresh]);

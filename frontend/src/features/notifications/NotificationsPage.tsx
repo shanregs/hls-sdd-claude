@@ -19,6 +19,7 @@ import { ConfirmDialog } from "../common/ConfirmDialog";
 import { RowActionButton } from "../common/RowActionButton";
 import { useGrantedActions } from "../common/useGrantedActions";
 import {
+  announceNotificationsChanged,
   clearRead,
   deleteNotification,
   listNotifications,
@@ -100,6 +101,7 @@ export function NotificationsPage() {
         setError("Could not mark the notification as read.");
         return;
       }
+      announceNotificationsChanged();
     }
     if (row.link) {
       navigate(row.link);
@@ -110,8 +112,10 @@ export function NotificationsPage() {
 
   const readAll = async () => {
     const result = await markAllRead(authFetch);
-    if (result.ok) reload();
-    else setError("Could not mark notifications as read.");
+    if (result.ok) {
+      announceNotificationsChanged();
+      reload();
+    } else setError("Could not mark notifications as read.");
   };
 
   const confirm = async () => {
@@ -123,8 +127,10 @@ export function NotificationsPage() {
         : await deleteNotification(authFetch, pending.row.id);
     setBusy(false);
     setPending(null);
-    if (result.ok) reload();
-    else setError("Could not delete. Please try again.");
+    if (result.ok) {
+      announceNotificationsChanged();
+      reload();
+    } else setError("Could not delete. Please try again.");
   };
 
   return (
