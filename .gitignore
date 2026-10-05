@@ -60,3 +60,6 @@ desktop.ini
 
 ### Docker ###
 *.pid
+
+### Local scratch ###
+docs/sample-ids.txt
