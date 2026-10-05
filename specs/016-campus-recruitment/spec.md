@@ -248,7 +248,7 @@ and see the ready-to-deploy list with the number of recruits.
 **Drives and colleges**
 
 - **FR-001**: The system MUST let an Admin, Director or Zone Manager schedule a campus drive with a college, one or more dates, a venue, the attending HLS interviewers and a status (planned, held, cancelled with a reason); and MUST show drives on a month calendar and in a list.
-- **FR-002**: The system MUST keep a College list (name, city, contact person, phone, email) with no duplicate of the same name and city, and show each college's drive history.
+- **FR-002**: The system MUST keep a College list (name, city and the college's contacts: a **placement officer** and a **principal**, each with name, phone and email) with no duplicate of the same name and city, and show each college's drive history.
 
 **Candidates and outcomes**
 
@@ -277,13 +277,15 @@ and see the ready-to-deploy list with the number of recruits.
 - **FR-014**: Every list, search and detail MUST apply the caller's access: Admin and Director read and write org-wide as permitted; a Zone Manager reads all drives, candidates, outcomes and offers but can change only drives they scheduled or attend and the candidates and outcomes on them. Every write endpoint MUST refuse a Zone Manager outside that set with a clear "not your drive" message.
 - **FR-015**: Every drive, outcome, offer, acceptance, Teacher creation, enrolment, attendance entry and sign-off MUST be written to the audit store (spec 003) with actor, roles, time, and prior and new values (Constitution Principle I).
 - **FR-016**: Menu items and actions MUST be offered only when the server's access model grants them, and every endpoint MUST be tested per role and per scope boundary.
+- **FR-002a**: The system MUST let an Admin or Director (and a Zone Manager for Schools in their Zones) record a **principal** and an **accountant** contact (name, phone, email, each optional) on a School, as an amendment to spec 005; changes are audited and the contacts are shown on the School screen.
 - **FR-017**: Candidate phone numbers and emails MUST be shown only to roles holding `RECRUITMENT` `VIEW` (which includes every Zone Manager) and never logged in plain text. Candidate details are kept as history and are not cleared automatically, including those of rejected, declined and expired candidates.
 - **FR-019**: Drives MUST be exposed to other modules as planned activities (kind, owner, date, place, status) through a public interface, and induction batches MUST be exposed by identifier so that Training Stay expenses (spec 015) can be linked to a batch; this spec stores no food or accommodation cost.
 - **FR-018**: Amounts MUST show in rupees with Indian digit grouping and dates as DD/MM/YYYY; screens MUST meet WCAG 2.2 AA, have loading, empty and error states, and work at phone width.
 
 ### Key Entities *(include if feature involves data)*
 
-- **College**: an institution HLS recruits from: name, city, contact; has many drives.
+- **College**: an institution HLS recruits from: name, city, placement officer and principal contacts; has many drives.
+- **School contact** (amendment A8 to spec 005): a School also keeps a **principal** and an **accountant** contact (name, phone, email), next to its existing contact person and billing contact; used by marketing (spec 023) and billing (spec 022).
 - **Campus Drive**: a scheduled visit to a college: dates, venue, interviewers, status.
 - **Candidate**: a person interviewed at a drive: contact details, qualification, outcome history.
 - **Job Offer**: an offer to a selected candidate: role, package, dates, status; never edited, superseded by a new offer.

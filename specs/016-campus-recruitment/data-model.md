@@ -8,7 +8,8 @@ a module boundary (ids are plain UUIDs); foreign keys inside `recruitment` or in
 
 | Table | Columns (constraints) |
 | --- | --- |
-| `college` | id PK; name varchar(160) not null; city varchar(120) not null; contact_person varchar(160); phone varchar(20); email varchar(200); active boolean default true; version; created_by, created_at. **Unique** `(lower(name), lower(city))`. |
+| `college` | id PK; name varchar(160) not null; city varchar(120) not null; active boolean default true; version; created_by, created_at. **Unique** `(lower(name), lower(city))`. |
+| `college_contact` | college_id FK; role varchar(16) in PLACEMENT_OFFICER, PRINCIPAL; name varchar(160) not null; phone varchar(20); email varchar(200). PK (college_id, role): one contact of each role. |
 | `campus_drive` | id PK; college_id FK; season_label varchar(40) null; venue varchar(200); status varchar(10) in PLANNED, HELD, CANCELLED; cancel_reason varchar(300) (required when CANCELLED); scheduled_by uuid not null; version; created_at. |
 | `campus_drive_date` | drive_id FK, drive_date date; PK (drive_id, drive_date). At least one row per drive (service rule). |
 | `campus_drive_interviewer` | drive_id FK, user_id uuid; PK (drive_id, user_id). |
@@ -28,6 +29,10 @@ of `role`, `monthly_salary`, `allowances`, `terms`, `expected_joining`, `offer_d
 | `induction_batch` | id PK; name varchar(120) not null; starts_on, ends_on date (`ends_on >= starts_on`); trainer varchar(160); venue_type varchar(8) in PHYSICAL, VIRTUAL; venue varchar(200); seat_limit int check >= 1; status varchar(10) in PLANNED, RUNNING, COMPLETED, CANCELLED; version; created_by, created_at. |
 | `induction_enrolment` | id PK; batch_id FK; teacher_id uuid not null; starts_on, ends_on date (copied from the batch); enrolled_by, enrolled_at; result varchar(14) null in COMPLETED, NOT_COMPLETED; remarks varchar(300); signed_by, signed_at; follow_up varchar(10) null in NEXT_BATCH, RELEASED. **Unique** `(batch_id, teacher_id)`; gist exclusion on `(teacher_id =, daterange(starts_on, ends_on, '[]') &&)` for enrolments whose `result` is null or COMPLETED, so a Teacher is never in two batches on overlapping dates. |
 | `induction_absence` | id PK; enrolment_id FK; absent_on date; reason varchar(300) not null; recorded_by, recorded_at. **Unique** `(enrolment_id, absent_on)`. A present day has no row here: it is a training-day mark in 008. |
+
+## school contacts in the same migration (A8, spec 005)
+
+`school_contact (school_id, role in PRINCIPAL/ACCOUNTANT, name not null, phone, email)`, PK `(school_id, role)`, owned by the `school` module (the foreign key to `school` is inside that module). Exposed by `GET` and `PUT /api/v1/schools/{id}/contacts`; audit entity `SCHOOL`, fields `principal` and `accountant`.
 
 ## attendance change in the same migration (A5)
 

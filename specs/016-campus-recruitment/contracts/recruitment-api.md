@@ -10,7 +10,8 @@ locked month).
 | Method | Path | Action | Purpose |
 | --- | --- | --- | --- |
 | GET | `/colleges?query=` | VIEW | the College list |
-| POST | `/colleges` | CREATE | add a college (duplicate name and city is 409) |
+| POST | `/colleges` | CREATE | add a college with `placementOfficer` and `principal` contacts `{name, phone, email}` (duplicate name and city is 409) |
+| PUT | `/colleges/{id}` | EDIT | change name, city and contacts |
 | GET | `/drives?from=&to=&season=&mine=` | VIEW | drives for the calendar or list; `mine=true` keeps drives the caller scheduled or attends |
 | POST | `/drives` | CREATE | schedule a drive (`collegeId`, `dates[]`, `venue`, `season`, `interviewerUserIds[]`) |
 | GET | `/drives/{id}` | VIEW | the drive with its candidates and outcome counts |
@@ -101,3 +102,10 @@ interface DriveActivities { List<PlannedActivity> plannedBetween(LocalDate from,
 record PlannedActivity(String kind, UUID id, UUID ownerUserId, LocalDate date, String place, String status) {}
 record InductionBatchView(UUID id, String name, LocalDate startsOn, LocalDate endsOn) {}
 ```
+
+## School contacts (amendment A8, module `SCHOOLS`)
+
+| Method | Path | Action | Purpose |
+| --- | --- | --- | --- |
+| GET | `/api/v1/schools/{id}/contacts` | VIEW | `{ principal, accountant }`, each `{name, phone, email}` or null |
+| PUT | `/api/v1/schools/{id}/contacts` | EDIT | replace both (a null clears one); a Zone Manager only for a School in their Zones |

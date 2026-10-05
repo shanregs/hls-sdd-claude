@@ -93,6 +93,7 @@ public class PermissionMatrixService {
         seedLeave();
         seedNotifications();
         seedSchoolContracts();
+        seedRecruitment();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -188,6 +189,25 @@ public class PermissionMatrixService {
             }
         }
         seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.VIEW, true);
+        grants.invalidateAround();
+    }
+
+    /**
+     * Recruitment defaults (spec 016): the Director runs it all; Admin runs recruitment and induction and only
+     * views offers; the Zone Manager takes part in drives (scoped to own drives in the service) and views offers.
+     */
+    private void seedRecruitment() {
+        List<PermissionAction> full = List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+        for (PermissionAction action : full) {
+            seed(Role.DIRECTOR, PermissionModule.RECRUITMENT, action, true);
+            seed(Role.DIRECTOR, PermissionModule.OFFERS, action, true);
+            seed(Role.DIRECTOR, PermissionModule.INDUCTION, action, true);
+            seed(Role.ADMIN, PermissionModule.RECRUITMENT, action, true);
+            seed(Role.ADMIN, PermissionModule.INDUCTION, action, true);
+            seed(Role.MANAGER, PermissionModule.RECRUITMENT, action, true);
+        }
+        seed(Role.ADMIN, PermissionModule.OFFERS, PermissionAction.VIEW, true);
+        seed(Role.MANAGER, PermissionModule.OFFERS, PermissionAction.VIEW, true);
         grants.invalidateAround();
     }
 
