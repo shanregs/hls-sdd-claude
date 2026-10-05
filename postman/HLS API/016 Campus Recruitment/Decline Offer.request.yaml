@@ -1,0 +1,14 @@
+$kind: http-request
+name: Decline Offer
+description: "A reason is required."
+url: "{{baseUrl}}/api/v1/recruitment/offers/{{offerId}}/decline"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Accepted another job"
+    }
+order: 17000

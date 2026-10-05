@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Candidates
+description: "Filters: drive, outcome, query."
+url: "{{baseUrl}}/api/v1/recruitment/candidates?drive={{driveId}}"
+method: GET
+order: 12000

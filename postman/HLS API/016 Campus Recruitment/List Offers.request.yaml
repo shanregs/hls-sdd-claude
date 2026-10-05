@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Offers
+description: "Every role with OFFERS.VIEW sees all offers."
+url: "{{baseUrl}}/api/v1/recruitment/offers"
+method: GET
+order: 18000

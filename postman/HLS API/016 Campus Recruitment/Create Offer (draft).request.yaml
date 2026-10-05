@@ -1,0 +1,24 @@
+$kind: http-request
+name: Create Offer (draft)
+description: "Only a SELECTED candidate with no open offer. Needs OFFERS.CREATE (Director). Saves offerId."
+url: "{{baseUrl}}/api/v1/recruitment/candidates/{{candidateId}}/offers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "role": "Trainee / English Trainer",
+      "monthlySalary": "16000",
+      "allowances": "Travel 1000",
+      "terms": "Two months notice",
+      "expectedJoining": "2026-11-15",
+      "offerDate": "2026-10-25",
+      "responseDeadline": "2026-11-05"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("offerId", v); } }
+    language: text/javascript
+order: 13000

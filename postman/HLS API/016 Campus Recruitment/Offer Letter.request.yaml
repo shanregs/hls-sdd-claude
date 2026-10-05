@@ -1,0 +1,6 @@
+$kind: http-request
+name: Offer Letter
+description: "The printable letter as HTML."
+url: "{{baseUrl}}/api/v1/recruitment/offers/{{offerId}}/letter"
+method: GET
+order: 19000

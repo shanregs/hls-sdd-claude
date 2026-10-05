@@ -1,0 +1,6 @@
+$kind: http-request
+name: School Contacts
+description: "Principal and accountant of a School (amendment A8 to spec 005)."
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/contacts"
+method: GET
+order: 30000

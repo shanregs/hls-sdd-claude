@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V21) and the demo data seeded itself.
+(V1-V22) and the demo data seeded itself.
 
 ## Prerequisites
 
@@ -179,6 +179,30 @@ filled and vacant positions, and the Teachers not mapped yet. Open a School to s
 The demo data adds a 4-Teacher MoU (one salary, INR 15,000) for **Demo School One**, signed by Manoj (Zone Manager)
 and Divya (Director), with Tara, Meena and Karthik mapped to positions 1 to 3 and position 4 vacant. Demo School
 Two has no Zone Manager, so it stays **MoU pending**.
+
+### Recruitment, offers and induction
+
+The recruitment flow is: **campus drive, candidates and assessment, job offer, acceptance, induction, ready to deploy,
+placement in a School** (placement and the first salary come from the School contracts of spec 012). The RECRUITMENT menu
+has Campus Drives, Candidates, Offers, Induction and Dashboard.
+
+- **Campus Drives** (Admin, Director, Zone Manager): add a college (name, city, placement officer and principal),
+  then schedule a drive (dates, venue, season, interviewers). Open a drive to add candidates one by one or import a
+  CSV (header `name,phone,email,degree,year,notes`), set an outcome (selected, waitlisted, rejected) and record an
+  assessment (speaking, English, communication, 1 to 5). A Zone Manager reads every drive but changes only drives they
+  scheduled or attend.
+- **Offers** (the Director sends, replaces, accepts and declines; Admin and Zone Manager read): a draft can change, an
+  issued offer never does (a new offer replaces it). **Accept** creates the Teacher "in training" from the candidate
+  with no salary yet, and enrols them in the next induction batch with room. If the person is already a Teacher the
+  acceptance is refused and names them. **Letter** opens the printable offer letter.
+- **Induction** (Admin, Director): create a batch, enrol recruits (or let acceptance do it), record attendance (a
+  present or half day becomes a training-day mark in Attendance with no School), and sign off each recruit. A
+  completed recruit becomes active and appears under **Ready to deploy**; map them to a School in School Contracts.
+  The first assignment writes the salary of the accepted offer, once.
+- A School now also keeps a **principal** and an **accountant** contact (Master Data -> Schools -> Edit).
+
+The demo data adds **Demo College of Arts** with a held drive, six candidates, offers in several statuses, and
+**Ready Rani**, whose offer was accepted and who completed the **Demo Induction** batch, so she is ready to deploy.
 
 ## Postman
 

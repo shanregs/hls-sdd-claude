@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Drive
+description: "The drive with candidate and outcome counts."
+url: "{{baseUrl}}/api/v1/recruitment/drives/{{driveId}}"
+method: GET
+order: 6000

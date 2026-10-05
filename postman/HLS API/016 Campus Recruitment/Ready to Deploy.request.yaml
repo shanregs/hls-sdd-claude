@@ -1,0 +1,6 @@
+$kind: http-request
+name: Ready to Deploy
+description: "Active Teachers who completed induction with no School."
+url: "{{baseUrl}}/api/v1/induction/ready-to-deploy"
+method: GET
+order: 28000

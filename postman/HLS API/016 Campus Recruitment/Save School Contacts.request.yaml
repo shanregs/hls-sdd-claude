@@ -1,0 +1,22 @@
+$kind: http-request
+name: Save School Contacts
+description: "A Zone Manager only for a School in their Zones; a null contact clears it."
+url: "{{baseUrl}}/api/v1/schools/{{schoolId}}/contacts"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "principal": {
+        "name": "Mrs Rao",
+        "phone": "9111111111",
+        "email": "rao@school.test"
+      },
+      "accountant": {
+        "name": "Mr Iyer",
+        "phone": "9222222222"
+      }
+    }
+order: 31000

@@ -1,0 +1,19 @@
+$kind: http-request
+name: Assess Candidate
+description: "Scores 1 to 5; a re-assessment adds rows and the latest is current."
+url: "{{baseUrl}}/api/v1/recruitment/candidates/{{candidateId}}/assessment"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "scores": {
+        "SPEAKING": 4,
+        "ENGLISH": 4,
+        "COMMUNICATION": 3
+      },
+      "remarks": "Clear voice"
+    }
+order: 10000

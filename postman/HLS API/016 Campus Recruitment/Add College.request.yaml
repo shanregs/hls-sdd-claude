@@ -1,0 +1,28 @@
+$kind: http-request
+name: Add College
+description: "A duplicate name and city is 409. Needs RECRUITMENT.CREATE. Saves collegeId."
+url: "{{baseUrl}}/api/v1/recruitment/colleges"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Demo College of Arts",
+      "city": "Chennai",
+      "placementOfficer": {
+        "name": "Ms Placement",
+        "phone": "9444400001",
+        "email": "placement@demo-college.test"
+      },
+      "principal": {
+        "name": "Dr Principal",
+        "phone": "9444400002"
+      }
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { const x = pm.response.json(); const v = x.id; if (v) { pm.collectionVariables.set("collegeId", v); } }
+    language: text/javascript
+order: 2000

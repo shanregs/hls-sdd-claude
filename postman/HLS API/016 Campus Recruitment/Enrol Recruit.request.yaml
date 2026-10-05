@@ -1,0 +1,14 @@
+$kind: http-request
+name: Enrol Recruit
+description: "Seat limit and overlapping dates are 409. Accepting an offer also enrols the recruit in the next batch with room."
+url: "{{baseUrl}}/api/v1/induction/batches/{{batchId}}/enrol"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherId": "{{teacherId}}"
+    }
+order: 23000

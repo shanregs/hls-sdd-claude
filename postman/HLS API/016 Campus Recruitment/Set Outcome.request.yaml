@@ -1,0 +1,15 @@
+$kind: http-request
+name: Set Outcome
+description: "SELECTED, WAITLISTED or REJECTED; the earlier outcome stays in the history."
+url: "{{baseUrl}}/api/v1/recruitment/candidates/{{candidateId}}/outcome"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "outcome": "SELECTED",
+      "note": "Good spoken English"
+    }
+order: 9000
