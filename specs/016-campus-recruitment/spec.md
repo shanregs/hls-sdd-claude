@@ -43,7 +43,7 @@
   candidate data can be added later if HLS needs one.)
 - Q: When does the Teacher's salary start, and how is it recorded? → A: When the Teacher reports to the School (the first
   School assignment in spec 012), not at acceptance (D2). Acceptance creates the Teacher without a salary history entry;
-  the offered monthly salary stays on the accepted offer. When the Teacher is first mapped to a School position, the
+  the offered monthly salary stays on the accepted offer. When the Teacher is first assigned to a School (under a contract, with or without a position yet), the
   system writes the accepted offer's monthly salary to the Teacher's salary history (spec 005) with the assignment's
   start date as the effective date, with no retyping (decided 2026-10-05); an Admin or Director can correct it. A
   trained Teacher may wait unplaced for any length of time and is not paid until then. Spec 012 publishes an event on a
@@ -231,7 +231,7 @@ and see the ready-to-deploy list with the number of recruits.
 
 ### Edge Cases
 
-- A candidate is selected in two drives: allowed, but only one open offer at a time.
+- A candidate is selected in two drives: allowed, but only one open offer at a time for the person (matched by phone).
 - An offer is accepted after its deadline: refused as expired; a new offer is needed.
 - A drive is cancelled after candidates were recorded: the candidates stay, with the drive marked cancelled.
 - A recruit leaves during induction: the Teacher exits with a reason (spec 005 rules); the seat frees from the next day.
@@ -258,13 +258,14 @@ and see the ready-to-deploy list with the number of recruits.
 **Job offers**
 
 - **FR-005**: The system MUST let a Director generate and issue a Job Offer to a selected candidate with role, package (monthly salary, allowances, notice or bond terms as text; induction is unpaid, so there is no stipend), offer date and response deadline; the system MUST generate a printable offer letter from the offer data; the offer status MUST be draft, issued, accepted, declined, expired or superseded, and issuing MUST record who and when.
-- **FR-006**: An offer MUST NOT be edited after it is sent; a changed package MUST be a new offer that supersedes the open one. A candidate MUST have at most one open offer.
+- **FR-006**: An offer MUST NOT be edited after it is sent; a changed package MUST be a new offer that supersedes the open one. A person MUST have at most one open offer, identified by phone number, even when the same person was selected at two drives.
 - **FR-007**: An offer MUST expire when its deadline passes unanswered, and acceptance after expiry MUST be refused.
 
 **Teacher creation and induction**
 
 - **FR-008**: On acceptance the system MUST create the Teacher (spec 005) with the candidate's details, status "in training" and no salary history entry, exactly once, through the `teacher` public interface; a candidate whose phone or email matches a Teacher who has not exited MUST NOT be accepted (no Teacher created, linked or mapped), and a match with an exited Teacher MUST need the user's confirmation to create a new record; records are never merged silently.
-- **FR-008a**: When a Teacher created from an accepted offer is first mapped to a School position (spec 012 publishes the first-assignment event), the system MUST write the accepted offer's monthly salary to the Teacher's salary history (spec 005) with the assignment start date as the effective date, exactly once; an Admin or Director MAY correct it afterwards. A trained Teacher who is not yet placed MUST receive no salary.
+- **FR-008a**: When a Teacher created from an accepted offer is first assigned to a School (under a contract, with or without a position yet) (spec 012 publishes the first-assignment event), the system MUST write the accepted offer's monthly salary to the Teacher's salary history (spec 005) with the assignment start date as the effective date, exactly once; an Admin or Director MAY correct it afterwards. A trained Teacher who is not yet placed MUST receive no salary.
+- **FR-008b**: On acceptance the system MUST enrol the Teacher in the next induction batch that has room, or leave them in the "to be enrolled" list when there is none. `recruitment` MUST NOT call `training`: it publishes an event and `training` enrols, so the two modules do not depend on each other in a cycle.
 - **FR-009**: The system MUST let an Admin or Director create induction batches (name, dates, trainer, venue, seat limit), enrol recruits (no overlapping batches, no more than the seat limit), and record daily attendance with half days and corrections that keep history; each present day MUST be written as a training-day mark (code T) in the attendance records of spec 008 through the `attendance` public interface.
 - **FR-010**: Induction attendance MUST have no second source of truth: it lives only in spec 008's records. Spec 008 MUST accept a training-day mark for a Teacher with no current School (the School is empty for these marks only), and induction marks MUST respect 008's month lock, status codes and weights.
 - **FR-011**: At the end of a batch an Admin or Director MUST sign off each enrolment as completed or not completed with remarks (a recruit moved to the next batch has a new enrolment and sign-off; earlier ones are kept). Completed MUST set the Teacher's status to active (ready to deploy); not completed MUST allow moving to the next batch or releasing (exit) with a reason.
@@ -332,7 +333,7 @@ The constitution's Default role access matrix gets Recruitment, Offers and Induc
 - Candidates are not users and do not log in; a recruit has no login until an Admin or Director creates one (spec 004).
 - Offer letters are generated here from the offer data and their status is tracked; e-mailing the letter, e-signature, resume parsing and mobile screens are out of scope.
 - Induction is unpaid. Payroll (spec 013) pays nothing for induction days, and a trained Teacher who has not yet been placed is not paid either; salary starts at the first School assignment, when it is written from the accepted offer (FR-008a).
-- Spec 012 gains one small addition: an event published when a Teacher is first mapped to a School position, so this spec can write the salary entry without 012 depending on recruitment.
+- Spec 012 gains one small addition: an event published when a Teacher is first assigned to a School (under a contract, with or without a position yet), so this spec can write the salary entry without 012 depending on recruitment.
 - Spec 015 (expenses) links Training Stay expenses to induction batches; the cost is not stored here.
 - Weekend and monthly refresher training is a later spec (024).
 - Zone Managers read all recruitment records and write only to drives they scheduled or are interviewers on (see Clarifications); colleges are not Zone-bound.

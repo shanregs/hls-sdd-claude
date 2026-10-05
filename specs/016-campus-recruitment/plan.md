@@ -20,7 +20,7 @@ changes in `teacher`, `attendance` and `schoolbilling` they need:
   Teacher "in training" with no salary entry, matches phone and email against existing Teachers, activates on
   sign-off, exits on release, and records the first salary entry.
 - **First salary from the accepted offer (decision, Clarifications)**: spec 012 publishes `TeacherFirstAssigned`
-  (this is the small 012 event, amendment **A4**) from its assignment service; `recruitment` listens and, for a
+  (this is the small 012 event, amendment **A4**) from its assignment service on a Teacher's first assignment of any kind (a contract with no position yet counts); `recruitment` listens and, for a
   Teacher created from an accepted offer, writes the offer's monthly salary to the salary history with the
   assignment start date as effective date, exactly once. 012 never depends on `recruitment`.
 - **Spec 008 amendment (A5, required by FR-010)**: a training-day mark may have no School, and the rollup counts
@@ -30,7 +30,7 @@ changes in `teacher`, `attendance` and `schoolbilling` they need:
 
 `recruitment` depends on `teacher.api`, `attendance.api` (through `training`), `schoolbilling.api` (the event) and
 `identity.user`; `training` depends on `recruitment.api` (the accepted offer and candidate), `teacher.api` and
-`attendance.api`. Nothing depends on `recruitment.internal` or `training.internal`.
+`attendance.api`. Nothing depends on `recruitment.internal` or `training.internal`. **`recruitment` never depends on `training`**: acceptance publishes `OfferAccepted(offerId, candidateId, teacherId)` from `recruitment.api` in the acceptance transaction, and `training` listens and enrols the Teacher in the next batch with room (or leaves them in "to be enrolled"); ArchUnit enforces the direction.
 
 ## Technical Context
 

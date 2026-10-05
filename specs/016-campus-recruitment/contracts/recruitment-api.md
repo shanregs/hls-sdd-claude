@@ -94,6 +94,8 @@ interface TrainingAttendance {
 }
 // schoolbilling.api  (spec 012, amendment A4)
 record TeacherFirstAssigned(UUID teacherId, UUID schoolId, LocalDate startsOn) {}
+// recruitment.api: published when an offer is accepted; training listens (recruitment never depends on training)
+record OfferAccepted(UUID offerId, UUID candidateId, UUID teacherId) {}
 // recruitment.api / training.api
 interface DriveActivities { List<PlannedActivity> plannedBetween(LocalDate from, LocalDate to, UUID ownerUserId); }
 record PlannedActivity(String kind, UUID id, UUID ownerUserId, LocalDate date, String place, String status) {}

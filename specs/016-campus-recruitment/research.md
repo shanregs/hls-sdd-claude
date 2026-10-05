@@ -11,8 +11,9 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 - **Exactly once**: `AcceptanceService.accept(offerId)` runs in one transaction that locks the offer row
   (`SELECT ... FOR UPDATE` through `PESSIMISTIC_WRITE`), refuses unless the offer is `ISSUED` and not expired, creates
   the Teacher, stores `teacher_id` on the offer and candidate, and sets `ACCEPTED`. A second call finds `ACCEPTED` and
-  answers 409 "already accepted". A partial unique index on `job_offer(candidate_id)` where `status = 'ACCEPTED'` is
+  answers 409 "already accepted". A partial unique index on `job_offer(phone_key)` where `status = 'ACCEPTED'` is
   the backstop.
+- **Enrolment without a cycle**: `AcceptanceService` publishes `OfferAccepted` in the same transaction; `training` has `OfferAcceptedListener`, which enrols the Teacher in the next batch with room under the same row lock as manual enrolment, or does nothing so the Teacher stays in "to be enrolled". `recruitment` does not depend on `training`.
 - **Duplicate Teacher** (spec FR-008): before creating, `findMatches` compares the normalized phone and the lower-cased
   e-mail. A match that is not exited refuses the acceptance and names the Teacher; a match that has exited needs the
   caller to pass `confirmNewRecord = true`. Nothing is merged or linked.
@@ -44,6 +45,7 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
   would be lost. It now counts a TRAINING mark on an unplaced day into `trainingAvailable` and `trainingAttended`
   only: not into `workingDays` (it is not a School working day) and not into `weightedTotal` (induction is unpaid,
   decision D2). `RollupCalculatorTest` gets cases for an unplaced training day, a half day, and a month with both.
+(c) every other reader of `attendance_mark.school_id` must cope with a null School: the mark view factory (`schoolNames.getOrDefault(null, ...)` fails on an immutable map), the grid, the Teacher month view, the mark history and the CSV export. A task audits each reader and a test renders an unplaced Teacher's month, history and export with a training day.
 - **SC-007** (induction days equal the training days 008 reports) is proved by a test that records five induction
   days and reads the rollup.
 - **Alternatives**: a separate induction register (a second truth, rejected in the spec); marking against a dummy
@@ -54,7 +56,7 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 - **Decision**: statuses `DRAFT`, `ISSUED`, `ACCEPTED`, `DECLINED`, `EXPIRED`, `SUPERSEDED`. Only a `DRAFT` row can be
   edited (the letter is regenerated); issuing records who and when and freezes it. A changed package is a new offer
   with `supersedes_id`; the old one becomes `SUPERSEDED` in the same transaction. A partial unique index on
-  `job_offer(candidate_id)` where `status IN ('DRAFT','ISSUED')` enforces "at most one open offer"; a database
+  `job_offer(phone_key)` where `status IN ('DRAFT','ISSUED')` enforces "at most one open offer" per person (a candidate is one row per drive, so the key is the normalized phone copied onto the offer); a database
   trigger rejects an `UPDATE` of the package columns once `status <> 'DRAFT'`.
 - **No stipend**: induction is unpaid (Clarifications), so the offer has no stipend column.
 - **Expiry**: `OfferExpiryJob` (daily, `hls.recruitment.offer-expiry.enabled`, off in `IntegrationTestBase`, the same
