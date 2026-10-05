@@ -183,6 +183,7 @@ public class ActivityService {
     @Transactional
     public ActivityDto complete(UUID actor, Set<Role> roles, UUID id, CompleteRequest request) {
         MarketingActivity activity = visible(actor, roles, id);
+        checkVersion(activity, id, request.version());
         requirePlanned(activity, "completed");
         String outcome = Texts.clean(request.outcome(), 1000, "Outcome");
         if (outcome == null) {
@@ -205,6 +206,7 @@ public class ActivityService {
     @Transactional
     public ActivityDto reschedule(UUID actor, Set<Role> roles, UUID id, RescheduleRequest request) {
         MarketingActivity activity = visible(actor, roles, id);
+        checkVersion(activity, id, request.version());
         requirePlanned(activity, "rescheduled");
         if (request.date() == null) {
             throw new InvalidInputException("The new date is required.");
@@ -223,6 +225,7 @@ public class ActivityService {
     @Transactional
     public ActivityDto cancel(UUID actor, Set<Role> roles, UUID id, CancelRequest request) {
         MarketingActivity activity = visible(actor, roles, id);
+        checkVersion(activity, id, request.version());
         requirePlanned(activity, "cancelled");
         String reason = Texts.clean(request.reason(), 300, "Reason");
         if (reason == null) {
@@ -254,6 +257,12 @@ public class ActivityService {
     private Map<UUID, Prospect> prospectsOf(Collection<MarketingActivity> list) {
         Set<UUID> ids = list.stream().map(MarketingActivity::getProspectId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
         return prospects.findAllById(ids).stream().collect(Collectors.toMap(Prospect::getId, p -> p));
+    }
+
+    private static void checkVersion(MarketingActivity activity, UUID id, Long version) {
+        if (version != null) {
+            com.hls.school.api.StaleVersion.check(MarketingActivity.class, id, activity.getVersion(), version);
+        }
     }
 
     private void requirePlanned(MarketingActivity activity, String what) {

@@ -110,8 +110,13 @@ public class ProposalService {
             default -> throw new InvalidInputException("The salary mode must be SAME_FOR_ALL or PER_TEACHER.");
         }
         int number = revisions.latestNumber(prospectId) + 1;
-        ProposalRevision revision = revisions.saveAndFlush(new ProposalRevision(
-                prospectId, number, count, start, mode, rate, Texts.clean(request.notes(), 500, "Notes"), actor, clock.instant()));
+        ProposalRevision revision;
+        try {
+            revision = revisions.saveAndFlush(new ProposalRevision(
+                    prospectId, number, count, start, mode, rate, Texts.clean(request.notes(), 500, "Notes"), actor, clock.instant()));
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new com.hls.school.api.ConflictException("Someone else saved a revision at the same time. Reload and try again.");
+        }
         for (int i = 0; i < amounts.size(); i++) {
             positions.save(new ProposalPosition(revision.getId(), i + 1, titles.get(i), amounts.get(i)));
         }

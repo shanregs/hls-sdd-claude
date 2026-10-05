@@ -1,6 +1,11 @@
 spring:
   application:
     name: hls-backend
+  servlet:
+    multipart:
+      # the file store allows 10 MB a file; these limits leave headroom for the form around it
+      max-file-size: 11MB
+      max-request-size: 12MB
   modulith:
     events:
       # Spec 018: every Android request now publishes an event for the API Access trail. Delete a

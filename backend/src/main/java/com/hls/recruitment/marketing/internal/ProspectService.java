@@ -167,7 +167,9 @@ public class ProspectService {
             }
             owner = requireUser(request.ownerUserId());
         }
-        Prospect prospect = prospects.saveAndFlush(new Prospect(
+        Prospect prospect;
+        try {
+            prospect = prospects.saveAndFlush(new Prospect(
                 fields.name(),
                 fields.board(),
                 fields.address(),
@@ -181,6 +183,9 @@ public class ProspectService {
                 owner,
                 actor,
                 clock.instant()));
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new ConflictException("This School is already a prospect (added at the same time by someone else).");
+        }
         changes.recordLifecycle(actor, "PROSPECT", prospect.getId(), "created", fields.name());
         return dtoOf(prospect);
     }

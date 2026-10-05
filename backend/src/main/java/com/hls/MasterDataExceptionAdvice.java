@@ -8,6 +8,7 @@ import com.hls.school.api.Reason;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Maps the master-data exceptions to the contract's status codes and {@code {"reason"}} body. */
@@ -34,6 +35,11 @@ public class MasterDataExceptionAdvice {
     @ExceptionHandler(ForbiddenFieldException.class)
     ResponseEntity<Reason> forbidden(ForbiddenFieldException e) {
         return ResponseEntity.status(403).body(new Reason(e.getMessage()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<Reason> tooBig(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(400).body(new Reason("The file is too large. A file can be at most 10 MB."));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)

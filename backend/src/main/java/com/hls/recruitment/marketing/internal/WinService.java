@@ -110,8 +110,11 @@ public class WinService {
                     request.placeId(),
                     new SchoolRegistry.NewSchool(prospect.getName(), prospect.getAddress(), prospect.getContactPerson(), prospect.getPhone(), billing));
         }
+        // contacts are saved only for a School created by this win: linking an existing School never changes its contacts
         SchoolContacts contactWriter = contacts.getIfAvailable();
-        if (contactWriter != null && (request.principal() != null || request.accountant() != null)) {
+        if (request.linkSchoolId() == null
+                && contactWriter != null
+                && (request.principal() != null || request.accountant() != null)) {
             contactWriter.replace(actor, schoolId, request.principal(), request.accountant());
         }
         prospect.linkSchool(request.placeId(), schoolId);

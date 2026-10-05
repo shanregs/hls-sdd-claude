@@ -123,6 +123,9 @@ public class PipelineService {
     /** Director or the Zone Manager of the prospect's Zone approves or rejects a Final Stage prospect. */
     @Transactional
     public ProspectService.ProspectDto review(UUID actor, Set<Role> roles, UUID id, ReviewRequest request) {
+        if (!roles.contains(Role.DIRECTOR) && !roles.contains(Role.MANAGER)) {
+            throw new com.hls.school.api.ForbiddenFieldException("Only a Director or the Zone Manager of the prospect's Zone can review a Final Stage prospect.");
+        }
         Prospect prospect = prospectService.visible(actor, roles, id);
         if (prospect.isWon()) {
             throw new ConflictException("This prospect has already been approved.");

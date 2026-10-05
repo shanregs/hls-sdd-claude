@@ -31,7 +31,9 @@ BEGIN
         OR NEW.content_type IS DISTINCT FROM OLD.content_type OR NEW.size_bytes IS DISTINCT FROM OLD.size_bytes
         OR NEW.sha256 IS DISTINCT FROM OLD.sha256 OR NEW.storage_path IS DISTINCT FROM OLD.storage_path
         OR NEW.added_by IS DISTINCT FROM OLD.added_by OR NEW.added_at IS DISTINCT FROM OLD.added_at
-        OR (OLD.removed_at IS NOT NULL AND NEW.removed_at IS DISTINCT FROM OLD.removed_at) THEN
+        OR (OLD.removed_at IS NOT NULL AND (NEW.removed_at IS DISTINCT FROM OLD.removed_at
+            OR NEW.removed_by IS DISTINCT FROM OLD.removed_by
+            OR NEW.removal_reason IS DISTINCT FROM OLD.removal_reason)) THEN
         RAISE EXCEPTION 'A stored file is never changed, only removed';
     END IF;
     RETURN NEW;
@@ -56,7 +58,7 @@ CREATE TABLE marketing_prospect (
     board             VARCHAR(60),
     address           VARCHAR(300),
     zone_id           UUID         NOT NULL,
-    name_key          VARCHAR(260) NOT NULL,
+    name_key          VARCHAR(320) NOT NULL,
     contact_person    VARCHAR(160),
     designation       VARCHAR(160),
     phone             VARCHAR(20),
@@ -76,7 +78,9 @@ CREATE TABLE marketing_prospect (
     created_at        TIMESTAMPTZ  NOT NULL,
     CONSTRAINT uq_marketing_prospect_name_key UNIQUE (name_key),
     CONSTRAINT ck_marketing_prospect_lost CHECK (stage <> 'LOST' OR length(trim(coalesce(lost_reason, ''))) > 0),
-    CONSTRAINT ck_marketing_prospect_won CHECK ((won_at IS NULL) = (won_by IS NULL))
+    CONSTRAINT ck_marketing_prospect_won CHECK ((won_at IS NULL) = (won_by IS NULL)),
+    CONSTRAINT ck_marketing_prospect_before CHECK (stage_before_hold IS NULL OR stage_before_hold IN (
+        'PROSPECT', 'CONTACTED', 'VISIT', 'FOLLOW_UP', 'INTERESTED', 'NEGOTIATION', 'FINAL_STAGE'))
 );
 
 CREATE INDEX idx_marketing_prospect_zone_stage ON marketing_prospect (zone_id, stage);
@@ -129,6 +133,7 @@ CREATE TABLE marketing_activity (
 
 CREATE INDEX idx_marketing_activity_date ON marketing_activity (activity_date);
 CREATE INDEX idx_marketing_activity_prospect ON marketing_activity (prospect_id) WHERE prospect_id IS NOT NULL;
+CREATE INDEX idx_marketing_activity_school ON marketing_activity (school_id, activity_date DESC) WHERE school_id IS NOT NULL;
 
 CREATE TABLE activity_attendee (
     activity_id UUID NOT NULL REFERENCES marketing_activity (id),
@@ -147,6 +152,8 @@ CREATE TABLE activity_date_history (
     changed_at  TIMESTAMPTZ NOT NULL
 );
 
+CREATE INDEX idx_activity_date_history_activity ON activity_date_history (activity_id);
+
 CREATE TABLE activity_attachment (
     id          UUID PRIMARY KEY,
     activity_id UUID        NOT NULL REFERENCES marketing_activity (id),
@@ -156,6 +163,7 @@ CREATE TABLE activity_attachment (
 );
 
 CREATE INDEX idx_activity_attachment_activity ON activity_attachment (activity_id);
+CREATE INDEX idx_activity_attachment_file ON activity_attachment (file_id);
 
 CREATE TABLE proposal_revision (
     id            UUID PRIMARY KEY,
@@ -213,9 +221,12 @@ CREATE TABLE overdue_notice (
     PRIMARY KEY (prospect_id, limit_days)
 );
 
--- The overdue-MoU notification (spec 010 pattern): keep every existing type and add the new one.
+-- The overdue-MoU notification (spec 010 pattern): keep every existing type and add the new one. The new check is added
+-- NOT VALID and validated afterwards so the table is not locked against reads while it is scanned.
+SET LOCAL lock_timeout = '10s';
 ALTER TABLE notification DROP CONSTRAINT notification_type_check;
 ALTER TABLE notification ADD CONSTRAINT notification_type_check CHECK (type IN (
     'LEAVE_DECIDED', 'LEAVE_REQUESTED', 'LEAVE_CANCELLED',
     'ATTENDANCE_CHANGED', 'ATTENDANCE_MONTH_LOCKED', 'ATTENDANCE_MONTH_REOPENED',
-    'MOU_NOT_RECORDED'));
+    'MOU_NOT_RECORDED')) NOT VALID;
+ALTER TABLE notification VALIDATE CONSTRAINT notification_type_check;

@@ -56,7 +56,8 @@ class AttachmentTest extends MarketingTestBase {
         big[3] = 'F';
         big[4] = '-';
         Resp tooBig = upload(admin, visit, "big.pdf", big);
-        assertThat(tooBig.status()).isIn(400, 413);
+        assertThat(tooBig.status()).isEqualTo(400);
+        assertThat(tooBig.body()).contains("10 MB");
         assertThat(get(M + "/activities/" + visit, admin).body()).contains("\"attachments\":[]");
     }
 

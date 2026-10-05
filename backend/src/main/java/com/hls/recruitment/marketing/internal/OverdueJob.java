@@ -32,6 +32,7 @@ public class OverdueJob {
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final boolean enabled;
+    private final org.springframework.transaction.support.TransactionTemplate tx;
 
     OverdueJob(
             ProspectRepository prospects,
@@ -40,7 +41,9 @@ public class OverdueJob {
             SettingsService settings,
             ApplicationEventPublisher events,
             Clock clock,
+            org.springframework.transaction.PlatformTransactionManager transactions,
             @Value("${hls.marketing.overdue.enabled:true}") boolean enabled) {
+        this.tx = new org.springframework.transaction.support.TransactionTemplate(transactions);
         this.prospects = prospects;
         this.notices = notices;
         this.stages = stages;
@@ -53,7 +56,7 @@ public class OverdueJob {
     @Scheduled(cron = "0 0 3 * * *")
     void scheduled() {
         if (enabled) {
-            int reported = runNow();
+            Integer reported = tx.execute(status -> runNow());
             log.info("Reported {} won prospects with no MoU recorded", reported);
         }
     }
