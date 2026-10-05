@@ -105,6 +105,8 @@ public class AccessModelService {
             addAttendanceScope(dataScope, callerRoles, recruitment, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
             addAttendanceScope(dataScope, callerRoles, recruitment, DataScope.ASSIGNED, Role.MANAGER);
         }
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MARKETING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MARKETING, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(
                 dataScope,
                 callerRoles,

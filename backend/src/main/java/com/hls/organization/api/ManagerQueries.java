@@ -18,6 +18,9 @@ public interface ManagerQueries {
 
     Optional<ManagerRef> managerByUserId(UUID userId);
 
+    /** The active Managers currently assigned to the Zone (spec 023 notifies them); empty when it has none. */
+    java.util.List<ManagerRef> managersOfZone(UUID zoneId);
+
     /** The Schools currently assigned to each of the given Managers. */
     Map<UUID, java.util.Set<UUID>> currentSchoolIds(Collection<UUID> managerIds);
 }

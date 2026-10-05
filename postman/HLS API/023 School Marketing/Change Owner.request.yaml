@@ -1,0 +1,14 @@
+$kind: http-request
+name: Change Owner
+description: "Admin and Director only; kept in the owner history."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/owner"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "ownerUserId": "{{userId}}"
+    }
+order: 5000

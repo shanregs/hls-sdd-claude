@@ -1,0 +1,14 @@
+$kind: http-request
+name: Move Stage
+description: "PROSPECT, CONTACTED, VISIT, FOLLOW_UP, INTERESTED, NEGOTIATION, FINAL_STAGE (needs a proposal), ON_HOLD, RESUME, LOST (needs a reason), REOPEN. MoU and Active cannot be set."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/stage"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "stage": "VISIT"
+    }
+order: 6000

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Complete Activity
+description: "An outcome is required. A follow-up date publishes FollowUpScheduled (spec 025 will make the task)."
+url: "{{baseUrl}}/api/v1/marketing/activities/{{activityId}}/complete"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "outcome": "Met the principal; wants a proposal",
+      "followUpOn": "2026-11-05"
+    }
+order: 15000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Prospects
+description: "Filters: zone, owner, stage (including WON, MOU, ACTIVE), query. A Zone Manager sees only their Zones."
+url: "{{baseUrl}}/api/v1/marketing/prospects?size=25"
+method: GET
+order: 2000

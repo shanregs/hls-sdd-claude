@@ -38,4 +38,15 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(offers).contains("ACCEPTED", "DECLINED", "ISSUED", "DRAFT");
         assertThat(get("/api/v1/recruitment/dashboard", director.token()).body()).contains("\"interviewed\":6", "\"inducted\":1");
     }
+    @Test
+    void marketingDemoDataHasProspectsAtSeveralStagesAndAWonSchoolWithAnMou() {
+        Signed director = signIn(null, "9800000002", "Password123!");
+
+        String list = get("/api/v1/marketing/prospects?size=100", director.token()).body();
+        assertThat(list).contains("Green Valley Public School", "Sunrise Matriculation School", "Lakeview International School", "Hilltop Public School");
+        assertThat(list).contains("\"followUpOverdue\":true");
+        assertThat(list).contains("\"effectiveStage\":\"ACTIVE\"");
+        assertThat(get("/api/v1/marketing/pipeline", director.token()).body()).contains("FINAL_STAGE");
+        assertThat(get("/api/v1/marketing/dashboard", director.token()).body()).contains("\"won\":1");
+    }
 }

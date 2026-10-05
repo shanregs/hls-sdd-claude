@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download Visit Attachment
+description: "Always an attachment with nosniff; 404 for a caller who cannot see the visit."
+url: "{{baseUrl}}/api/v1/marketing/files/{{fileId}}"
+method: GET
+order: 31000

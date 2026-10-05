@@ -39,6 +39,12 @@ import { DrivesPage } from "./features/recruitment/DrivesPage";
 import { InductionPage } from "./features/recruitment/InductionPage";
 import { OffersPage } from "./features/recruitment/OffersPage";
 import { RecruitmentDashboard } from "./features/recruitment/RecruitmentDashboard";
+import { MarketingCalendar } from "./features/marketing/MarketingCalendar";
+import { MarketingDashboard } from "./features/marketing/MarketingDashboard";
+import { MarketingSettingsPage } from "./features/marketing/MarketingSettingsPage";
+import { PipelineBoard } from "./features/marketing/PipelineBoard";
+import { ProspectDetailPage } from "./features/marketing/ProspectDetailPage";
+import { ProspectsPage } from "./features/marketing/ProspectsPage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -292,6 +298,54 @@ export function App() {
           element={
             <RouteGuard>
               <RecruitmentDashboard />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/prospects"
+          element={
+            <RouteGuard>
+              <ProspectsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/prospects/:id"
+          element={
+            <RouteGuard>
+              <ProspectDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/calendar"
+          element={
+            <RouteGuard>
+              <MarketingCalendar />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/pipeline"
+          element={
+            <RouteGuard>
+              <PipelineBoard />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/dashboard"
+          element={
+            <RouteGuard>
+              <MarketingDashboard />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/marketing/settings"
+          element={
+            <RouteGuard>
+              <MarketingSettingsPage />
             </RouteGuard>
           }
         />

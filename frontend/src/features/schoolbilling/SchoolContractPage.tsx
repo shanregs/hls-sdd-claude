@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link as RouterLink, useLocation, useParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -21,7 +21,7 @@ import { ConfirmDialog } from "../common/ConfirmDialog";
 import { formatDate, formatRupees, todayIso } from "../teachers/formatters";
 import { ContractStatusChip } from "./ContractStatusChip";
 import { MapTeachersDialog, type MappableTeacher } from "./MapTeachersDialog";
-import { MouFormDialog } from "./MouFormDialog";
+import { MouFormDialog, type MouInitial } from "./MouFormDialog";
 import {
   cancelContract,
   endContract,
@@ -45,6 +45,26 @@ type Dialog =
 
 const ROUTE = "/operations/school-contracts";
 
+/** The proposal handed over by a won prospect (spec 023, amendment A7), carried in the router state. */
+function handoffOf(state: unknown): MouInitial | undefined {
+  const proposal = (state as { proposal?: Record<string, unknown> } | null)
+    ?.proposal;
+  if (!proposal || typeof proposal.teacherCount !== "number") {
+    return undefined;
+  }
+  const positions = Array.isArray(proposal.positions)
+    ? (proposal.positions as { title?: string | null; salary: string }[])
+    : undefined;
+  return {
+    teacherCount: proposal.teacherCount,
+    salaryMode:
+      proposal.salaryMode === "PER_TEACHER" ? "PER_TEACHER" : "SAME_FOR_ALL",
+    rate: (proposal.rate as string | null | undefined) ?? null,
+    positions,
+    startMonth: proposal.startMonth as string | undefined,
+  };
+}
+
 /**
  * One School's contracts (spec 012): the MoU in effect with its positions, signatories and mapped Teachers,
  * the Teachers not mapped yet, and the history. Admin and Director record, end and cancel contracts; the
@@ -58,6 +78,9 @@ export function SchoolContractPage() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
   const [message, setMessage] = useState<string | null>(null);
+  const location = useLocation();
+  const handoff = handoffOf(location.state);
+  const handoffOpened = useRef(false);
 
   const load = useCallback(async () => {
     const result = await getSchoolContracts(authFetch, schoolId);
@@ -75,6 +98,36 @@ export function SchoolContractPage() {
 
   const canCreate = granted.has("CREATE");
   const canEdit = granted.has("EDIT");
+
+  // A won prospect hands over its proposal: open the MoU form pre-filled, once, when the School has no MoU yet.
+  useEffect(() => {
+    if (!handoff || handoffOpened.current || state.kind !== "ready") {
+      return;
+    }
+    const todayDate = todayIso();
+    const hasLive = state.data.contracts.some(
+      (c) =>
+        c.state === "ACTIVE" &&
+        c.status !== "ENDED" &&
+        c.status !== "CANCELLED" &&
+        c.startsOn <= todayDate &&
+        (c.endsOn === null || c.endsOn >= todayDate),
+    );
+    if (hasLive) {
+      return;
+    }
+    const pendingContract = state.data.contracts.find(
+      (c) => c.state === "RATE_PENDING",
+    );
+    if (pendingContract && canEdit) {
+      handoffOpened.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- opens the dialog once after the contracts load
+      setDialog({ kind: "record", contract: pendingContract });
+    } else if (!pendingContract && canCreate) {
+      handoffOpened.current = true;
+      setDialog({ kind: "new" });
+    }
+  }, [handoff, state, canCreate, canEdit]);
   const canMap = teacherActions.has("EDIT");
 
   const closeAndReload = () => {
@@ -264,6 +317,7 @@ export function SchoolContractPage() {
         <MouFormDialog
           schoolId={schoolId}
           schoolName={data.schoolName}
+          initial={handoff}
           onClose={() => setDialog({ kind: "none" })}
           onSaved={() => {
             setMessage("The MoU was recorded.");
@@ -276,6 +330,7 @@ export function SchoolContractPage() {
           schoolId={schoolId}
           schoolName={data.schoolName}
           pending={dialog.contract}
+          initial={handoff}
           onClose={() => setDialog({ kind: "none" })}
           onSaved={() => {
             setMessage("The MoU was recorded.");

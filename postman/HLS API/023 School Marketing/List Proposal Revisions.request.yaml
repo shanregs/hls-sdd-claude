@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Proposal Revisions
+description: "Newest first."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/proposals"
+method: GET
+order: 12000

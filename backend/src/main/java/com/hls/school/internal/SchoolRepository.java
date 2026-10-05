@@ -13,6 +13,8 @@ public interface SchoolRepository extends JpaRepository<School, UUID> {
 
     boolean existsByPlaceId(UUID placeId);
 
+    List<School> findByPlaceId(UUID placeId);
+
     @Query("select count(s) from School s, Place p where s.placeId = p.id and p.zoneId = :zoneId")
     long countInZone(@Param("zoneId") UUID zoneId);
 

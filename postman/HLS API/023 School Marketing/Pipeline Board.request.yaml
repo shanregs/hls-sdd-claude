@@ -1,0 +1,6 @@
+$kind: http-request
+name: Pipeline Board
+description: "Counts and cards by stage; MoU and Active are derived from the contract in spec 012."
+url: "{{baseUrl}}/api/v1/marketing/pipeline"
+method: GET
+order: 9000

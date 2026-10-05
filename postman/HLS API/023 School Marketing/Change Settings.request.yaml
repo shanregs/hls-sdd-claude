@@ -1,0 +1,15 @@
+$kind: http-request
+name: Change Settings
+description: "Days (1 to 90) a won prospect may wait for its MoU before it is flagged; audited."
+url: "{{baseUrl}}/api/v1/marketing/settings"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "mouOverdueDays": 14,
+      "version": 0
+    }
+order: 20000

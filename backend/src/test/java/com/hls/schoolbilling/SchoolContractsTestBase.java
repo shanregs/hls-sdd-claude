@@ -21,6 +21,11 @@ public abstract class SchoolContractsTestBase extends MasterDataTestBase {
     /** A School in a fresh Zone with its Zone Manager (user, record) assigned. */
     protected record Fixture(UUID zoneId, UUID schoolId, ManagerCtx manager) {}
 
+    /** A Fixture for a School made elsewhere (spec 023 creates one by winning a prospect). */
+    protected Fixture fixtureOf(UUID zoneId, UUID schoolId, ManagerCtx manager) {
+        return new Fixture(zoneId, schoolId, manager);
+    }
+
     protected Fixture fixture(String adminToken) {
         UUID[] ids = schoolInNewZone(adminToken);
         ManagerCtx manager = newManager(adminToken, ids[0]);

@@ -1,0 +1,28 @@
+$kind: http-request
+name: Add Proposal Revision (different salaries)
+description: "One amount for each Teacher."
+url: "{{baseUrl}}/api/v1/marketing/prospects/{{prospectId}}/proposals"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherCount": 3,
+      "startMonth": "2026-12",
+      "salaryMode": "PER_TEACHER",
+      "positions": [
+        {
+          "title": "Maths",
+          "salary": "16000"
+        },
+        {
+          "salary": "15000"
+        },
+        {
+          "salary": "15000"
+        }
+      ]
+    }
+order: 11000

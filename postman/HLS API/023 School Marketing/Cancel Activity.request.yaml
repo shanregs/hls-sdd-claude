@@ -1,0 +1,14 @@
+$kind: http-request
+name: Cancel Activity
+description: "A reason is required."
+url: "{{baseUrl}}/api/v1/marketing/activities/{{activityId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "School closed"
+    }
+order: 17000

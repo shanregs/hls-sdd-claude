@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.4.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then one MINOR: 2.4.0)
+Version change: 1.7.0 → 2.5.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.0 (MINOR, spec 023): Principle IV gains a *MARKETING* navigation section (Prospects, Calendar,
+    Pipeline, Dashboard, Settings) after *RECRUITMENT*; Principle VII adds the shared `files` module (stored
+    uploads, never changed, only removed) and names the `recruitment.marketing` sub-package's boundaries; the
+    Default role access matrix gains a Marketing row. Admin, Director and the Zone Manager run prospects, visits
+    and proposals (the Zone Manager only in the Zones they manage); the Director and the Zone Manager also review a
+    Final Stage prospect (Admin does not by default); Admin and Director hold the settings. Teacher and System have
+    no access.
   - 2.4.0 (MINOR, spec 016): Principle IV gains a *RECRUITMENT* navigation section (Campus Drives,
     Candidates, Offers, Induction, Dashboard) after *OPERATIONS*, and the Default role access matrix
     gains Recruitment, Offers and Induction rows. The Director runs all three; the Admin runs
@@ -143,7 +150,7 @@ role-based dashboard, the role-based navigation, and the role-based permissions.
   collapsible, plus a main content area of about 70–75%. On tablet and phone the navigation becomes
   a drawer. There is no horizontal page scroll at phone width.
 - **Navigation sections** for staff roles: *Dashboard*, *MASTER DATA*, *OPERATIONS*, *RECRUITMENT* (Campus Drives, Candidates, Offers,
-  Induction, Dashboard), *REPORTS*, *SYSTEM*, *ACCOUNT* (Profile, Logout). The System role uses *SYSTEM DASHBOARD*,
+  Induction, Dashboard), *MARKETING* (Prospects, Calendar, Pipeline, Dashboard, Settings), *REPORTS*, *SYSTEM*, *ACCOUNT* (Profile, Logout). The System role uses *SYSTEM DASHBOARD*,
   *SYSTEM CONFIGURATION*, *AUDIT*, *ACCOUNT*. The Teacher role uses self-service sections:
   *Dashboard*, *MY ATTENDANCE* (My Attendance, Attendance History), *LEAVE* (Apply Leave,
   My Leave History), *NOTIFICATIONS*, *ACCOUNT* (My Profile, Logout). Sections with no authorized
@@ -203,6 +210,8 @@ The system is one deployable Spring Boot application with one package per bounde
   APIs and events.
 - `payroll`: payroll computation, salary processing, and payslips.
 - `notification`: in-app notifications, with SMS and push later.
+- `files`: the shared store for uploaded files (visit photos now; bills, MoU documents and check-in photos later). A
+  stored file is never changed, only removed with a reason; callers decide who may see a file.
 - `expense`, `training`, `substitution`, `recruitment` (with a `marketing` sub-package).
 - `settings`: system and security settings, owned by the System role.
 - `reporting`: owns no transactional data. It reads other modules only through public APIs or
@@ -284,6 +293,7 @@ kept intentionally lightweight for v1.
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
+  | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |
   | Offers                          | View  | ✓        | View     | —       | —      |
   | Induction                       | ✓     | ✓        | —        | —       | —      |
   | Attendance                      | ✓     | ✓        | Assigned | Own     | —      |
@@ -336,4 +346,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.4.0 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-05
+**Version**: 2.5.0 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-05
