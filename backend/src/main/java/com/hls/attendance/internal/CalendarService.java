@@ -1,6 +1,8 @@
 package com.hls.attendance.internal;
 
 import com.hls.attendance.internal.RollupCalculator.WeeklyOffRules;
+import com.hls.cache.SnapshotCache;
+import com.hls.cache.SnapshotCaches;
 import com.hls.school.api.ConflictException;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
@@ -9,12 +11,16 @@ import com.hls.school.api.StaleVersion;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -34,20 +40,36 @@ public class CalendarService {
             List<SchoolOverrideView> schoolOverrides,
             List<NonWorkingView> nonWorkingDates) {}
 
+    /** What every rollup, grid and leave count needs: the weekly off rules and the holiday dates, as one copy. */
+    private record CalendarData(WeeklyOffRules rules, NavigableSet<LocalDate> holidays) {}
+
     private final CalendarSettingRepository settings;
     private final NonWorkingDateRepository dates;
     private final SchoolDirectory schools;
     private final AttendanceAudit audit;
+    private final SnapshotCache<CalendarData> data;
 
     public CalendarService(
             CalendarSettingRepository settings,
             NonWorkingDateRepository dates,
             SchoolDirectory schools,
-            AttendanceAudit audit) {
+            AttendanceAudit audit,
+            SnapshotCaches caches) {
         this.settings = settings;
         this.dates = dates;
         this.schools = schools;
         this.audit = audit;
+        this.data = caches.create("attendanceCalendar", this::loadData);
+    }
+
+    private CalendarData loadData() {
+        Map<UUID, Set<DayOfWeek>> overrides = new HashMap<>();
+        settings.findOverrides().forEach(o -> overrides.put(o.getSchoolId(), Set.copyOf(o.weeklyOff())));
+        NavigableSet<LocalDate> holidays = new TreeSet<>();
+        dates.findAll().forEach(d -> holidays.add(d.getOnDate()));
+        return new CalendarData(
+                new WeeklyOffRules(Set.copyOf(defaultSetting().weeklyOff()), Map.copyOf(overrides)),
+                Collections.unmodifiableNavigableSet(holidays));
     }
 
     @Transactional(readOnly = true)
@@ -74,6 +96,7 @@ public class CalendarService {
         audit.changed(actor, AttendanceAudit.CALENDAR, "default", "weeklyOff", codes(def.weeklyOff()), codes(next));
         def.setWeeklyOff(next);
         settings.saveAndFlush(def);
+        data.invalidateAround();
         return calendar();
     }
 
@@ -93,6 +116,7 @@ public class CalendarService {
             settings.save(existing);
         }
         settings.flush();
+        data.invalidateAround();
         return calendar();
     }
 
@@ -102,6 +126,7 @@ public class CalendarService {
         audit.changed(actor, AttendanceAudit.CALENDAR, "school:" + schoolId, "weeklyOff", codes(existing.weeklyOff()), null);
         settings.delete(existing);
         settings.flush();
+        data.invalidateAround();
         return calendar();
     }
 
@@ -121,6 +146,7 @@ public class CalendarService {
             throw new ConflictException("That date is already a non-working date.");
         }
         dates.saveAndFlush(new NonWorkingDate(onDate, text, actor));
+        data.invalidateAround();
         audit.lifecycle(actor, AttendanceAudit.CALENDAR, "date:" + onDate, "created", text);
         return calendar();
     }
@@ -131,20 +157,21 @@ public class CalendarService {
         audit.lifecycle(actor, AttendanceAudit.CALENDAR, "date:" + onDate, "deleted", found.getDescription());
         dates.delete(found);
         dates.flush();
+        data.invalidateAround();
         return calendar();
     }
 
     /** The weekly off rules in force, for the rollup calculator. */
-    @Transactional(readOnly = true)
     public WeeklyOffRules rules() {
-        Map<UUID, Set<DayOfWeek>> overrides = new HashMap<>();
-        settings.findOverrides().forEach(o -> overrides.put(o.getSchoolId(), o.weeklyOff()));
-        return new WeeklyOffRules(defaultSetting().weeklyOff(), overrides);
+        return data.get().rules();
     }
 
-    @Transactional(readOnly = true)
+    /** The non-working dates from {@code from} to {@code to}, both included. The result is a new set. */
     public Set<LocalDate> nonWorkingDates(LocalDate from, LocalDate to) {
-        return dates.findByOnDateBetween(from, to).stream().map(NonWorkingDate::getOnDate).collect(Collectors.toSet());
+        if (from.isAfter(to)) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(data.get().holidays().subSet(from, true, to, true));
     }
 
     private CalendarSetting defaultSetting() {

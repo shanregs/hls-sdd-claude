@@ -73,7 +73,7 @@ public class AttendanceGridService {
     private final SchoolDirectory schools;
     private final ManagerQueries managers;
     private final AttendanceMarkRepository marks;
-    private final StatusCodeRepository codes;
+    private final StatusCodeCatalog codes;
     private final TeacherMonthRepository months;
     private final CalendarService calendar;
     private final BusinessCalendar business;
@@ -84,7 +84,7 @@ public class AttendanceGridService {
             SchoolDirectory schools,
             ManagerQueries managers,
             AttendanceMarkRepository marks,
-            StatusCodeRepository codes,
+            StatusCodeCatalog codes,
             TeacherMonthRepository months,
             CalendarService calendar,
             BusinessCalendar business) {
@@ -189,7 +189,7 @@ public class AttendanceGridService {
             marksByTeacher.computeIfAbsent(m.getTeacherId(), k -> new HashMap<>()).put(m.getMarkDate(), m);
         }
         Map<UUID, StatusCode> codeById =
-                codes.findAll().stream().collect(Collectors.toMap(StatusCode::getId, Function.identity()));
+                codes.byId();
         Map<UUID, TeacherMonth> monthRows = months.findByTeacherIdInAndYearMonth(teacherIds, month.toString()).stream()
                 .collect(Collectors.toMap(TeacherMonth::getTeacherId, Function.identity()));
         var rules = calendar.rules();

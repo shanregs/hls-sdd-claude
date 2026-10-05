@@ -26,11 +26,14 @@ public class StatusCodeService {
             Long version) {}
 
     private final StatusCodeRepository codes;
+    private final StatusCodeCatalog catalog;
     private final AttendanceMarkRepository marks;
     private final AttendanceAudit audit;
 
-    public StatusCodeService(StatusCodeRepository codes, AttendanceMarkRepository marks, AttendanceAudit audit) {
+    public StatusCodeService(
+            StatusCodeRepository codes, StatusCodeCatalog catalog, AttendanceMarkRepository marks, AttendanceAudit audit) {
         this.codes = codes;
+        this.catalog = catalog;
         this.marks = marks;
         this.audit = audit;
     }
@@ -51,6 +54,7 @@ public class StatusCodeService {
             throw new ConflictException("A status code with the short code " + code + " already exists.");
         }
         StatusCode saved = codes.save(new StatusCode(code, label, parsed, validWeight, codes.maxSortOrder() + 1));
+        catalog.changed();
         audit.lifecycle(actor, AttendanceAudit.CODE, saved.getId(), "created", code + " " + label);
         return view(saved);
     }
@@ -71,18 +75,20 @@ public class StatusCodeService {
         code.setName(label);
         code.setWeight(validWeight);
         code.setActive(nextActive);
-        return view(codes.saveAndFlush(code));
+        StatusCode saved = codes.saveAndFlush(code);
+        catalog.changed();
+        return view(saved);
     }
 
     StatusCode require(UUID id) {
-        return codes.findById(id).orElseThrow(() -> new NotFoundException("Status code not found."));
+        return catalog.find(id).orElseThrow(() -> new NotFoundException("Status code not found."));
     }
 
     StatusCode requireByShortCode(String shortCode) {
         if (shortCode == null || shortCode.isBlank()) {
             throw new InvalidInputException("Choose a status.");
         }
-        return codes.findByShortCodeIgnoreCase(shortCode.trim())
+        return catalog.findByShortCode(shortCode.trim())
                 .orElseThrow(() -> new InvalidInputException("Unknown status " + shortCode + "."));
     }
 

@@ -1,10 +1,14 @@
 package com.hls.identity.permissions;
 
+import com.hls.cache.SnapshotCache;
+import com.hls.cache.SnapshotCaches;
 import com.hls.identity.user.Role;
 import java.time.Clock;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,15 +35,32 @@ public class PermissionMatrixService {
             PermissionModule.AUDIT_USER_ACTIVITY,
             PermissionModule.AUDIT_API_ACCESS);
 
+    /** One cell of the matrix. */
+    private record GrantKey(Role role, PermissionModule module, PermissionAction action) {}
+
     private final PermissionMatrixRepository repository;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
+    /**
+     * Every grant, read on almost every request (each endpoint check and each menu item), so it is kept in memory.
+     * A cell with no row means not granted.
+     */
+    private final SnapshotCache<Map<GrantKey, Boolean>> grants;
+
     public PermissionMatrixService(
-            PermissionMatrixRepository repository, ApplicationEventPublisher eventPublisher, Clock clock) {
+            PermissionMatrixRepository repository,
+            ApplicationEventPublisher eventPublisher,
+            Clock clock,
+            SnapshotCaches caches) {
         this.repository = repository;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
+        this.grants = caches.create("permissionMatrix", () -> repository.findAll().stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        e -> new GrantKey(e.getRole(), e.getModule(), e.getAction()),
+                        PermissionMatrixEntry::isGranted,
+                        (first, second) -> second)));
     }
 
     /**
@@ -154,6 +175,7 @@ public class PermissionMatrixService {
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.VIEW, true);
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.DELETE, true);
         }
+        grants.invalidateAround();
     }
 
     private void seed(Role role, PermissionModule module, PermissionAction action, boolean granted) {
@@ -163,10 +185,7 @@ public class PermissionMatrixService {
     }
 
     public boolean isGranted(Role role, PermissionModule module, PermissionAction action) {
-        return repository
-                .findByRoleAndModuleAndAction(role, module, action)
-                .map(PermissionMatrixEntry::isGranted)
-                .orElse(false);
+        return grants.get().getOrDefault(new GrantKey(role, module, action), false);
     }
 
     public List<PermissionMatrixEntry> findAll() {
@@ -196,6 +215,7 @@ public class PermissionMatrixService {
         entry.setUpdatedBy(actorUserId);
         entry.setUpdatedAt(clock.instant());
         PermissionMatrixEntry saved = repository.save(entry);
+        grants.invalidateAround();
 
         eventPublisher.publishEvent(new PermissionMatrixChanged(
                 UUID.randomUUID(), actorUserId, clock.instant(), role, module, action, before, granted));

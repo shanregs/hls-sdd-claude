@@ -46,6 +46,12 @@ hls:
     min-app-version: ${HLS_MOBILE_MIN_APP_VERSION:0.0.0}
     location-wait-seconds: ${HLS_MOBILE_LOCATION_WAIT_SECONDS:4}
     location-reuse-seconds: ${HLS_MOBILE_LOCATION_REUSE_SECONDS:10}
+  cache:
+    # Small reference tables (permission matrix, status codes, calendar, leave types, OTP policy) are kept in
+    # memory; see docs/caching.md. ttl-seconds is the longest a copy is served without a reload, which is how a
+    # change made by another application instance or by hand in the database is picked up.
+    enabled: ${HLS_CACHE_ENABLED:true}
+    ttl-seconds: ${HLS_CACHE_TTL_SECONDS:60}
   notification:
     retention:
       # Spec 010 FR-010: a daily job at 02:30 deletes notifications created more than 90 days ago.

@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,12 +29,12 @@ public class MarkHistoryService {
             Instant setAt) {}
 
     private final MarkHistoryRepository history;
-    private final StatusCodeRepository codes;
+    private final StatusCodeCatalog codes;
     private final SchoolDirectory schools;
     private final AppUserRepository users;
 
     public MarkHistoryService(
-            MarkHistoryRepository history, StatusCodeRepository codes, SchoolDirectory schools, AppUserRepository users) {
+            MarkHistoryRepository history, StatusCodeCatalog codes, SchoolDirectory schools, AppUserRepository users) {
         this.history = history;
         this.codes = codes;
         this.schools = schools;
@@ -46,7 +45,7 @@ public class MarkHistoryService {
     public List<HistoryView> of(UUID teacherId, LocalDate date) {
         List<MarkHistoryEntry> entries = history.findByTeacherIdAndMarkDateOrderBySetAtDesc(teacherId, date);
         Map<UUID, StatusCode> codeById =
-                codes.findAll().stream().collect(Collectors.toMap(StatusCode::getId, Function.identity()));
+                codes.byId();
         Map<UUID, String> schoolNames = schools
                 .schools(entries.stream().map(MarkHistoryEntry::getSchoolId).filter(java.util.Objects::nonNull).distinct().toList())
                 .stream()

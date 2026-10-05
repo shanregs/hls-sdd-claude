@@ -25,6 +25,9 @@ class LeaveAttendanceTest extends AttendanceTestBase {
     @Autowired
     private LeaveAttendance leave;
 
+    @Autowired
+    private com.hls.cache.SnapshotCaches caches;
+
     /** A Monday about 40 days ago, inside the 60-day placement the test Teachers have. */
     private LocalDate monday() {
         return today().minusDays(40).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -73,6 +76,7 @@ class LeaveAttendanceTest extends AttendanceTestBase {
                 UUID.randomUUID(),
                 holiday,
                 UUID.randomUUID());
+        caches.invalidateAll(); // the holiday went in by SQL, behind the application's back
         try {
             List<LeaveDay> days = leave.workingDays(teacher, mon, mon.plusDays(6));
             assertThat(days).extracting(LeaveDay::date).doesNotContain(holiday, mon.plusDays(6));
@@ -81,6 +85,7 @@ class LeaveAttendanceTest extends AttendanceTestBase {
             assertThat(days).allSatisfy(d -> assertThat(d.value()).isEqualByComparingTo("1"));
         } finally {
             jdbc.update("delete from attendance_non_working_date where on_date = ? and description = 'Test holiday'", holiday);
+            caches.invalidateAll();
         }
 
         assertThat(leave.workingDays(teacher, today().minusDays(90), today().minusDays(80))).isEmpty();

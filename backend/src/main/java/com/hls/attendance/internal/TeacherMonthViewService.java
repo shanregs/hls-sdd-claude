@@ -56,7 +56,7 @@ public class TeacherMonthViewService {
 
     private final TeacherDirectory teachers;
     private final AttendanceMarkRepository marks;
-    private final StatusCodeRepository codes;
+    private final StatusCodeCatalog codes;
     private final TeacherMonthRepository months;
     private final CalendarService calendar;
     private final MarkViewFactory markViews;
@@ -65,7 +65,7 @@ public class TeacherMonthViewService {
     public TeacherMonthViewService(
             TeacherDirectory teachers,
             AttendanceMarkRepository marks,
-            StatusCodeRepository codes,
+            StatusCodeCatalog codes,
             TeacherMonthRepository months,
             CalendarService calendar,
             MarkViewFactory markViews,
@@ -92,7 +92,7 @@ public class TeacherMonthViewService {
         List<PlacementSpan> placements = teachers.placementsOverlapping(List.of(teacherId), from, to);
         List<AttendanceMark> monthMarks = marks.findByTeacherIdAndMarkDateBetween(teacherId, from, to);
         Map<UUID, StatusCode> codeById =
-                codes.findAll().stream().collect(Collectors.toMap(StatusCode::getId, Function.identity()));
+                codes.byId();
         Map<LocalDate, MarkView> viewByDate = markViews.ofAll(monthMarks).stream()
                 .collect(Collectors.toMap(MarkView::date, Function.identity()));
         Map<LocalDate, MarkFacts> facts = new HashMap<>();

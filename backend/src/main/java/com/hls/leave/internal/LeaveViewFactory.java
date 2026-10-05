@@ -53,14 +53,14 @@ public class LeaveViewFactory {
 
     private final TeacherDirectory teachers;
     private final SchoolDirectory schools;
-    private final LeaveTypeRepository types;
+    private final LeaveTypeCatalog types;
     private final AppUserRepository users;
     private final LeaveAttendance attendance;
 
     public LeaveViewFactory(
             TeacherDirectory teachers,
             SchoolDirectory schools,
-            LeaveTypeRepository types,
+            LeaveTypeCatalog types,
             AppUserRepository users,
             LeaveAttendance attendance) {
         this.teachers = teachers;
@@ -89,8 +89,7 @@ public class LeaveViewFactory {
                 .schools(requests.stream().map(LeaveRequest::getSchoolId).distinct().toList())
                 .stream()
                 .collect(Collectors.toMap(SchoolDirectory.SchoolInfo::id, SchoolDirectory.SchoolInfo::name));
-        Map<UUID, String> typeNames =
-                types.findAll().stream().collect(Collectors.toMap(LeaveType::getId, LeaveType::getName));
+        Map<UUID, String> typeNames = types.namesById();
         Map<UUID, String> userNames = users
                 .findAllById(requests.stream()
                         .map(LeaveRequest::getDecidedByUserId)
