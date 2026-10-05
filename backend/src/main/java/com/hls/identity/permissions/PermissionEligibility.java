@@ -31,7 +31,8 @@ public final class PermissionEligibility {
             PermissionModule.MY_ATTENDANCE,
             PermissionModule.ATTENDANCE_SETUP,
             PermissionModule.LEAVE_MANAGEMENT,
-            PermissionModule.MY_LEAVE);
+            PermissionModule.MY_LEAVE,
+            PermissionModule.NOTIFICATIONS);
 
     /** Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. */
     static final Map<PermissionModule, Set<Role>> ROLE_RESTRICTED_MODULES = Map.of(

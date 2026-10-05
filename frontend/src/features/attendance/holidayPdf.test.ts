@@ -74,13 +74,13 @@ describe("downloadHolidayPdf", () => {
     expect(texts).not.toContain("Deepavali");
   });
 
-  it("fills holiday days amber and weekly off days grey", async () => {
+  it("fills holiday days amber and weekly off days light blue", async () => {
     const { downloadHolidayPdf } = await import("./holidayPdf");
 
     await downloadHolidayPdf(FACTS, { type: "month", month: "2026-10" });
 
     expect(fills).toContainEqual([255, 213, 128]);
-    expect(fills).toContainEqual([226, 228, 232]);
+    expect(fills).toContainEqual([215, 236, 248]);
   });
 
   it("says so when there are no holidays", async () => {

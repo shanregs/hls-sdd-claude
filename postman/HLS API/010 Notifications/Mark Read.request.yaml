@@ -1,0 +1,11 @@
+$kind: http-request
+description: "Marks one of your notifications read (safe to repeat) and returns it. Another user's id gives 404."
+url: "{{baseUrl}}/api/v1/me/notifications/{{notificationId}}/read"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 4000

@@ -133,6 +133,30 @@ which has no Manager, so only Admin and Director see it).
 - Signing in: every user can use a password or, for example after forgetting it, a one-time code (the link
   under the password form). Tara has the password `Password123!` too.
 
+### Notifications
+
+The bell in the top bar shows how many notifications you have not read (hidden at zero, "99+" above 99) and
+refreshes every 30 seconds while the tab is open. It opens ACCOUNT -> **Notifications**: newest first, unread
+ones marked "Unread", **Unread only** filter, **Mark all as read**, **Clear read**, a delete icon per row, and
+**Load more**. Clicking a notification marks it read and goes to the related screen. Every signed-in business
+role sees only its own; the System role has no notifications. Delete and Clear read need the Delete action.
+
+What creates a notification (inside the same transaction as the action, so a refused action leaves none):
+
+- A Manager, Admin or Director **approves, rejects or revokes** a leave request: the Teacher is told, with the
+  reason when there is one.
+- A Teacher **submits or cancels** a leave request: the Teacher's Manager is told; when the School has no active
+  Manager, every active Admin and Director is told.
+- A supervisor **sets or clears an attendance day** for a Teacher: the Teacher is told. Several changes by the
+  same person within 10 minutes become one notification ("updated 3 days of your attendance in October 2026").
+  The Teacher's own marks and the Leave marks made by an approved leave create none.
+- A supervisor **locks or reopens** a month: each Teacher is told once.
+
+Notifications older than 90 days are deleted every night at 02:30 (`hls.notification.retention.enabled`, default
+on). The demo data adds: Tara a read "leave approved", an unread "leave rejected" and an attendance notice;
+Manoj the leave requests of Meena and Karthik; Asha the one from Lakshmi (her School has no Manager).
+To see it live: sign in as Manoj and reject Tara's pending request, then sign in as Tara and watch the bell.
+
 ## Postman
 
 Import `postman/HLS.postman_collection.json` and `postman/HLS-Local.postman_environment.json`

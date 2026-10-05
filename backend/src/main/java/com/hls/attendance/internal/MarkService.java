@@ -1,6 +1,9 @@
 package com.hls.attendance.internal;
 
+import com.hls.attendance.api.AttendanceMarkChanged;
 import com.hls.attendance.api.MarkView;
+import com.hls.identity.user.AppUser;
+import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.ConflictException;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
@@ -14,6 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,8 @@ public class MarkService {
     private final AttendanceAudit audit;
     private final MarkViewFactory views;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
+    private final AppUserRepository users;
 
     public MarkService(
             AttendanceMarkRepository marks,
@@ -47,7 +53,9 @@ public class MarkService {
             BusinessCalendar calendar,
             AttendanceAudit audit,
             MarkViewFactory views,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events,
+            AppUserRepository users) {
         this.marks = marks;
         this.history = history;
         this.codes = codes;
@@ -57,6 +65,8 @@ public class MarkService {
         this.audit = audit;
         this.views = views;
         this.clock = clock;
+        this.events = events;
+        this.users = users;
     }
 
     @Transactional
@@ -131,6 +141,9 @@ public class MarkService {
                 kind,
                 saved.getSetAt()));
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", before, code.getShortCode() + " " + value.toPlainString());
+        if (kind == SetByKind.SUPERVISOR) {
+            publishChanged(actorUserId, teacherId, date);
+        }
         return views.of(saved);
     }
 
@@ -228,6 +241,13 @@ public class MarkService {
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", describe(existing), null);
         marks.delete(existing);
         marks.flush();
+        publishChanged(actorUserId, teacherId, date);
+    }
+
+    /** Tells the notification module inside this transaction, so a refused change leaves no notification. */
+    private void publishChanged(UUID actorUserId, UUID teacherId, LocalDate date) {
+        String actorName = users.findById(actorUserId).map(AppUser::getDisplayName).orElse("A supervisor");
+        events.publishEvent(new AttendanceMarkChanged(teacherId, date, actorUserId, actorName));
     }
 
     private PlacementSpan placementOn(UUID teacherId, LocalDate date, TeacherInfo teacher) {

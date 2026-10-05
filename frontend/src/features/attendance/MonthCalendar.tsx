@@ -60,7 +60,15 @@ export function MonthCalendar({
                 <TableCell
                   key={i}
                   align="center"
-                  sx={{ verticalAlign: "top", minWidth: 64, p: 0.5 }}
+                  // The tint is on the cell itself so the whole cell is coloured, not just the content height.
+                  sx={{
+                    verticalAlign: "top",
+                    minWidth: 64,
+                    p: 0.5,
+                    bgcolor: day
+                      ? dayBackground(appearanceOf(day).kind)
+                      : undefined,
+                  }}
                 >
                   {day && (
                     <DayCell
@@ -81,6 +89,16 @@ export function MonthCalendar({
   );
 }
 
+function appearanceOf(day: DayView) {
+  return dayAppearance({
+    date: day.date,
+    state: day.state,
+    code: day.mark?.code,
+    category: day.mark?.category,
+    dayValue: day.mark?.dayValue,
+  });
+}
+
 function DayCell({
   day,
   clickable,
@@ -92,15 +110,7 @@ function DayCell({
 }) {
   const number = Number(day.date.slice(8));
   const label = describeDay(day);
-  const appearance = dayAppearance({
-    date: day.date,
-    state: day.state,
-    code: day.mark?.code,
-    category: day.mark?.category,
-    dayValue: day.mark?.dayValue,
-  });
-  const code = appearance.text;
-  const tint = dayBackground(appearance.kind);
+  const code = appearanceOf(day).text;
   const content = (
     <Box>
       <Typography variant="caption" component="div">
@@ -112,7 +122,7 @@ function DayCell({
       <Typography variant="caption" component="div" color="text.secondary">
         {day.state === "MARKED" && day.mark!.setByKind === "SUPERVISOR"
           ? `by ${day.mark!.setByName}`
-          : day.state === "MARKED"
+          : day.state === "MARKED" || day.state === "WEEKLY_OFF"
             ? ""
             : label}
       </Typography>
@@ -128,7 +138,6 @@ function DayCell({
           minWidth: 0,
           p: 0.5,
           textTransform: "none",
-          bgcolor: tint,
         }}
       >
         {content}
@@ -139,7 +148,7 @@ function DayCell({
     <Box
       role="group"
       aria-label={`${formatDate(day.date)}: ${label}`}
-      sx={{ p: 0.5, borderRadius: 1, bgcolor: tint }}
+      sx={{ p: 0.5, borderRadius: 1 }}
     >
       {content}
     </Box>

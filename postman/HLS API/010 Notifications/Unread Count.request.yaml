@@ -1,0 +1,5 @@
+$kind: http-request
+description: "The number behind the header bell: {\"unread\": 3}. The web app polls this every 30 seconds."
+url: "{{baseUrl}}/api/v1/me/notifications/unread-count"
+method: GET
+order: 3000

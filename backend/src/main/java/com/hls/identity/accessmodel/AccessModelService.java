@@ -98,6 +98,15 @@ public class AccessModelService {
         addAttendanceScope(dataScope, callerRoles, PermissionModule.LEAVE_MANAGEMENT, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.LEAVE_MANAGEMENT, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.MY_LEAVE, DataScope.OWN, Role.TEACHER);
+        addAttendanceScope(
+                dataScope,
+                callerRoles,
+                PermissionModule.NOTIFICATIONS,
+                DataScope.OWN,
+                Role.ADMIN,
+                Role.DIRECTOR,
+                Role.MANAGER,
+                Role.TEACHER);
 
         List<String> roleNames = callerRoles.stream().map(Enum::name).sorted().toList();
         return new AccessModelResponse(roleNames, navigation, dataScope);

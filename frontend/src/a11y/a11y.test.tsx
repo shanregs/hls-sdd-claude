@@ -45,6 +45,7 @@ import { MarkDialog } from "../features/attendance/MarkDialog";
 import { RolePermissionsGrid } from "../features/permissions/RolePermissionsGrid";
 import { SessionsPage } from "../account/SessionsPage";
 import { AllSessionsPage } from "../features/sessions/AllSessionsPage";
+import { NotificationsPage } from "../features/notifications/NotificationsPage";
 import { SettingsPage } from "../account/SettingsPage";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
@@ -86,6 +87,11 @@ const ACCESS_MODEL = {
         {
           label: "Sessions",
           route: "/account/sessions",
+          actions: ["VIEW", "DELETE"],
+        },
+        {
+          label: "Notifications",
+          route: "/account/notifications",
           actions: ["VIEW", "DELETE"],
         },
         {
@@ -271,6 +277,33 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
         page: 0,
         size: 25,
         totalElements: 2,
+      }),
+    } as Response;
+  }
+  if (url.includes("/me/notifications/unread-count")) {
+    return { ok: true, json: async () => ({ unread: 1 }) } as Response;
+  }
+  if (url.includes("/me/notifications")) {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            id: "n1",
+            type: "LEAVE_DECIDED",
+            title: "Your leave was approved",
+            message: "Your leave 12/10/2026 to 13/10/2026 was approved.",
+            link: "/leave/history",
+            channel: "IN_APP",
+            read: false,
+            createdAt: "2026-10-05T08:30:00Z",
+            updatedAt: "2026-10-05T08:30:00Z",
+          },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+        unread: 1,
       }),
     } as Response;
   }
@@ -866,6 +899,11 @@ const pages: PageCase[] = [
     name: "SessionsPage",
     render: () => <SessionsPage />,
     settle: () => screen.findByRole("table", { name: "Sessions" }),
+  },
+  {
+    name: "NotificationsPage",
+    render: () => <NotificationsPage />,
+    settle: () => screen.findByText("Your leave was approved"),
   },
   {
     name: "AllSessionsPage",

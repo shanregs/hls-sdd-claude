@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Only the unread ones (unread=true), newest first."
+url: "{{baseUrl}}/api/v1/me/notifications?unread=true&page=0&size=25"
+method: GET
+order: 2000

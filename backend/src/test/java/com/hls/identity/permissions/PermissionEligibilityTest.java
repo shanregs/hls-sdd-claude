@@ -62,6 +62,17 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void notificationsApplyToTheFourBusinessRolesAndNeverToSystem() {
+        for (Role role : Role.values()) {
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.NOTIFICATIONS))
+                    .as("NOTIFICATIONS " + role)
+                    .isEqualTo(role == Role.SYSTEM
+                            ? java.util.EnumSet.noneOf(PermissionAction.class)
+                            : java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.DELETE));
+        }
+    }
+
+    @Test
     void leaveModulesApplyOnlyToTheRolesThatUseThem() {
         for (Role role : Role.values()) {
             boolean supervisor = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
@@ -91,7 +102,8 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.MY_ATTENDANCE,
                 PermissionModule.ATTENDANCE_SETUP,
                 PermissionModule.LEAVE_MANAGEMENT,
-                PermissionModule.MY_LEAVE)) {
+                PermissionModule.MY_LEAVE,
+                PermissionModule.NOTIFICATIONS)) {
             assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, business)).as(business.name()).isEmpty();
         }
         assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, PermissionModule.HOLIDAY_CALENDAR))

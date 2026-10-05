@@ -46,6 +46,11 @@ hls:
     min-app-version: ${HLS_MOBILE_MIN_APP_VERSION:0.0.0}
     location-wait-seconds: ${HLS_MOBILE_LOCATION_WAIT_SECONDS:4}
     location-reuse-seconds: ${HLS_MOBILE_LOCATION_REUSE_SECONDS:10}
+  notification:
+    retention:
+      # Spec 010 FR-010: a daily job at 02:30 deletes notifications created more than 90 days ago.
+      # The test suite turns it off so the schedule never fires mid-test; purge() is still callable.
+      enabled: ${HLS_NOTIFICATION_RETENTION_ENABLED:true}
   session:
     renewal-ttl-days: ${SESSION_RENEWAL_TTL_DAYS:14}
   sms:
