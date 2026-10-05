@@ -157,7 +157,7 @@ public class AttendanceDevSeeder implements ApplicationRunner {
         // The Teacher's own account marks her last days herself; everything older was set by the Manager.
         boolean self = info.userId() != null && day.isAfter(today.minusDays(4));
         try {
-            marks.setMark(
+            marks.setMarkWithoutNotifying(
                     self ? info.userId() : supervisor,
                     span.teacherId(),
                     day,

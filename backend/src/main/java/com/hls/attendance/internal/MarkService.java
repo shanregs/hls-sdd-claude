@@ -79,6 +79,36 @@ public class MarkService {
             String note,
             Long version,
             SetByKind kind) {
+        return apply(actorUserId, teacherId, date, statusCode, dayValue, note, version, kind, true);
+    }
+
+    /**
+     * The same rules, history and audit as {@link #setMark}, but nobody is notified. For the dev demo seeder,
+     * which writes months of marks at start-up and must not fill the Teacher's bell.
+     */
+    @Transactional
+    public MarkView setMarkWithoutNotifying(
+            UUID actorUserId,
+            UUID teacherId,
+            LocalDate date,
+            String statusCode,
+            BigDecimal dayValue,
+            String note,
+            Long version,
+            SetByKind kind) {
+        return apply(actorUserId, teacherId, date, statusCode, dayValue, note, version, kind, false);
+    }
+
+    private MarkView apply(
+            UUID actorUserId,
+            UUID teacherId,
+            LocalDate date,
+            String statusCode,
+            BigDecimal dayValue,
+            String note,
+            Long version,
+            SetByKind kind,
+            boolean notify) {
         if (date == null) {
             throw new InvalidInputException("The date is required.");
         }
@@ -141,7 +171,7 @@ public class MarkService {
                 kind,
                 saved.getSetAt()));
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", before, code.getShortCode() + " " + value.toPlainString());
-        if (kind == SetByKind.SUPERVISOR) {
+        if (notify && kind == SetByKind.SUPERVISOR) {
             publishChanged(actorUserId, teacherId, date);
         }
         return views.of(saved);
