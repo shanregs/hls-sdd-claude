@@ -4,7 +4,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict aRUj1B1ckq6wnHEpJSphfV7WaHuA72631Gawdlyml3hFv16lbfpagqOH5n8MOzc
+\restrict uzzfUKfyQHdJhFmAikNJAmgJ7XU4zvxgt8rQvhkgIpuQvTR3EE8OWbdqKZiyIS0
 
 -- Dumped from database version 16.13
 -- Dumped by pg_dump version 16.13
@@ -65,6 +65,19 @@ $$;
 
 
 --
+-- Name: job_offer_no_delete(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.job_offer_no_delete() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'A job offer is never deleted';
+END;
+$$;
+
+
+--
 -- Name: job_offer_terms_locked(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -72,6 +85,9 @@ CREATE FUNCTION public.job_offer_terms_locked() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
+    IF OLD.status <> 'DRAFT' AND NEW.status = 'DRAFT' THEN
+        RAISE EXCEPTION 'The terms of an issued offer cannot be changed';
+    END IF;
     IF OLD.status <> 'DRAFT' AND (
         NEW.role IS DISTINCT FROM OLD.role
         OR NEW.monthly_salary IS DISTINCT FROM OLD.monthly_salary
@@ -342,7 +358,8 @@ CREATE TABLE public.candidate (
     created_at timestamp with time zone NOT NULL,
     version bigint DEFAULT 0 NOT NULL,
     CONSTRAINT candidate_name_check CHECK ((length(TRIM(BOTH FROM name)) > 0)),
-    CONSTRAINT candidate_outcome_check CHECK (((outcome)::text = ANY ((ARRAY['SELECTED'::character varying, 'WAITLISTED'::character varying, 'REJECTED'::character varying])::text[])))
+    CONSTRAINT candidate_outcome_check CHECK (((outcome)::text = ANY ((ARRAY['SELECTED'::character varying, 'WAITLISTED'::character varying, 'REJECTED'::character varying])::text[]))),
+    CONSTRAINT candidate_phone_key_check CHECK (((phone_key)::text ~ '^[0-9]{10}$'::text))
 );
 
 
@@ -615,6 +632,7 @@ CREATE TABLE public.job_offer (
     created_at timestamp with time zone NOT NULL,
     CONSTRAINT ck_job_offer_deadline CHECK ((response_deadline >= offer_date)),
     CONSTRAINT job_offer_monthly_salary_check CHECK ((monthly_salary > (0)::numeric)),
+    CONSTRAINT job_offer_phone_key_check CHECK (((phone_key)::text ~ '^[0-9]{10}$'::text)),
     CONSTRAINT job_offer_role_check CHECK ((length(TRIM(BOTH FROM role)) > 0)),
     CONSTRAINT job_offer_status_check CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'ISSUED'::character varying, 'ACCEPTED'::character varying, 'DECLINED'::character varying, 'EXPIRED'::character varying, 'SUPERSEDED'::character varying])::text[])))
 );
@@ -1697,6 +1715,13 @@ CREATE INDEX idx_job_offer_status_deadline ON public.job_offer USING btree (stat
 
 
 --
+-- Name: idx_job_offer_teacher; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_job_offer_teacher ON public.job_offer USING btree (teacher_id) WHERE (teacher_id IS NOT NULL);
+
+
+--
 -- Name: idx_leave_request_status_created; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1900,13 +1925,6 @@ CREATE UNIQUE INDEX uq_college_name_city ON public.college USING btree (lower((n
 
 
 --
--- Name: uq_job_offer_accepted; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uq_job_offer_accepted ON public.job_offer USING btree (phone_key) WHERE ((status)::text = 'ACCEPTED'::text);
-
-
---
 -- Name: uq_job_offer_open; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1960,6 +1978,13 @@ CREATE TRIGGER trg_contract_position_final BEFORE DELETE OR UPDATE ON public.con
 --
 
 CREATE TRIGGER trg_contract_signatory_final BEFORE DELETE OR UPDATE ON public.contract_signatory FOR EACH ROW EXECUTE FUNCTION public.contract_signed_rows_are_final();
+
+
+--
+-- Name: job_offer trg_job_offer_no_delete; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_job_offer_no_delete BEFORE DELETE ON public.job_offer FOR EACH ROW EXECUTE FUNCTION public.job_offer_no_delete();
 
 
 --
@@ -2082,6 +2107,14 @@ ALTER TABLE ONLY public.job_offer
 
 
 --
+-- Name: job_offer job_offer_supersedes_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_offer
+    ADD CONSTRAINT job_offer_supersedes_id_fkey FOREIGN KEY (supersedes_id) REFERENCES public.job_offer(id);
+
+
+--
 -- Name: leave_request leave_request_leave_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2173,5 +2206,5 @@ ALTER TABLE ONLY public.zone_manager_assignment
 -- PostgreSQL database dump complete
 --
 
-\unrestrict aRUj1B1ckq6wnHEpJSphfV7WaHuA72631Gawdlyml3hFv16lbfpagqOH5n8MOzc
+\unrestrict uzzfUKfyQHdJhFmAikNJAmgJ7XU4zvxgt8rQvhkgIpuQvTR3EE8OWbdqKZiyIS0
 
