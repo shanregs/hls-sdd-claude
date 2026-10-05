@@ -1,0 +1,24 @@
+$kind: http-request
+name: Record New MoU (same salary)
+description: "A new MoU ends the School current contract the day before it starts. Same salary for every Teacher. Needs SCHOOL_CONTRACTS.CREATE (Admin, Director). Saves contractId."
+url: "{{baseUrl}}/api/v1/school-contracts/schools/{{schoolId}}/contracts"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherCount": 4,
+      "salaryMode": "SAME_FOR_ALL",
+      "rate": "15000.00",
+      "startsOn": "2026-10-01",
+      "endsOn": null,
+      "signedOn": "2026-09-20",
+      "schoolSignatories": [ { "name": "R. Kumar", "designation": "Principal" } ],
+      "hlsSignatories": [
+        { "userId": "{{managerUserId}}", "designation": "Zone Manager" },
+        { "userId": "{{directorUserId}}", "designation": "Director" }
+      ]
+    }
+order: 4000

@@ -205,10 +205,10 @@ class AttendanceExportTest extends AttendanceTestBase {
                         + " select gen_random_uuid(), 'Export ' || n, null, 'ACTIVE', current_date - 60, 0, now(), now()"
                         + " from generate_series(1, 500) n");
         jdbc.update(
-                "insert into teacher_placement (id, teacher_id, school_id, starts_on, status, created_at)"
+                "insert into contract_assignment (id, teacher_id, school_id, starts_on, status, created_at)"
                         + " select gen_random_uuid(), t.id, ?, current_date - 60, 'ACTIVE', now()"
                         + " from teacher t where t.name like 'Export %' and not exists"
-                        + " (select 1 from teacher_placement p where p.teacher_id = t.id)",
+                        + " (select 1 from contract_assignment p where p.teacher_id = t.id)",
                 school);
         try {
             long started = System.nanoTime();
@@ -219,7 +219,7 @@ class AttendanceExportTest extends AttendanceTestBase {
             assertThat(csv.lines()).hasSize(501);
             assertThat(millis).as("500-teacher export").isLessThan(3000);
         } finally {
-            jdbc.update("delete from teacher_placement where teacher_id in (select id from teacher where name like 'Export %')");
+            jdbc.update("delete from contract_assignment where teacher_id in (select id from teacher where name like 'Export %')");
             jdbc.update("delete from teacher where name like 'Export %'");
         }
     }

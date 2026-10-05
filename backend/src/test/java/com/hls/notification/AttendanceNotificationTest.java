@@ -197,7 +197,7 @@ class AttendanceNotificationTest extends AttendanceTestBase {
     private TeacherCtx placedForMonth(String admin, UUID school, YearMonth month) {
         TeacherCtx teacher = newTeacher(admin, null, 0);
         jdbc.update(
-                "insert into teacher_placement (id, teacher_id, school_id, starts_on, ends_on, status, created_at)"
+                "insert into contract_assignment (id, teacher_id, school_id, starts_on, ends_on, status, created_at)"
                         + " values (?, ?, ?, ?, ?, 'ACTIVE', now())",
                 UUID.randomUUID(),
                 teacher.teacherId(),

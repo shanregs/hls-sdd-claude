@@ -1,0 +1,25 @@
+$kind: http-request
+name: Record New MoU (different salaries)
+description: "A salary for each position; exactly teacherCount positions. HLS signatories: the Zone Manager and/or a Director, at least one."
+url: "{{baseUrl}}/api/v1/school-contracts/schools/{{schoolId}}/contracts"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherCount": 3,
+      "salaryMode": "PER_TEACHER",
+      "positions": [
+        { "title": "Maths PGT", "salary": "20000.00" },
+        { "title": "Science TGT", "salary": "18000.00" },
+        { "salary": "15000.00" }
+      ],
+      "startsOn": "2026-11-01",
+      "endsOn": null,
+      "signedOn": "2026-10-20",
+      "schoolSignatories": [ { "name": "R. Kumar", "designation": "Principal" } ],
+      "hlsSignatories": [ { "userId": "{{directorUserId}}", "designation": "Director" } ]
+    }
+order: 5000

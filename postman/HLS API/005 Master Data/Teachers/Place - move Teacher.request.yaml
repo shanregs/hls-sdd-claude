@@ -1,6 +1,6 @@
 $kind: http-request
 name: Place / move Teacher
-description: Interim placement. A future effectiveOn schedules the move.
+description: Assigns or moves a Teacher (spec 012: under the School contract). A future effectiveOn schedules the move. positionId is optional for a same-salary contract and required for different salaries; see 012 School Contracts.
 url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/placements"
 method: POST
 headers:
@@ -10,6 +10,7 @@ body:
   content: |-
     {
       "schoolId": "{{schoolId}}",
+      "positionId": null,
       "effectiveOn": null
     }
 order: 7000

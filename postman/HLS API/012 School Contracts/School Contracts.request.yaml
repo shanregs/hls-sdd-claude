@@ -1,0 +1,6 @@
+$kind: http-request
+name: School Contracts
+description: "A School contract history, newest first, with positions, signatories, the Teacher on each position today, and Teachers not mapped to the contract in effect. Needs SCHOOL_CONTRACTS.VIEW."
+url: "{{baseUrl}}/api/v1/school-contracts/schools/{{schoolId}}"
+method: GET
+order: 2000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Contracts
+description: "Every School in scope with its contract status (ACTIVE, ENDS_SOON, MOU_PENDING, NONE, ENDED), filled and vacant positions and Teachers not mapped. Filters: status, managerId. Needs SCHOOL_CONTRACTS.VIEW."
+url: "{{baseUrl}}/api/v1/school-contracts?size=25"
+method: GET
+order: 1000

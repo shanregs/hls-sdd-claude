@@ -44,7 +44,8 @@ public enum PermissionModule {
     HOLIDAY_CALENDAR(VIEW, EDIT),
     LEAVE_MANAGEMENT(VIEW, APPROVE),
     MY_LEAVE(VIEW, CREATE, DELETE),
-    NOTIFICATIONS(VIEW, DELETE);
+    NOTIFICATIONS(VIEW, DELETE),
+    SCHOOL_CONTRACTS(VIEW, CREATE, EDIT);
 
     private final Set<PermissionAction> actions;
 

@@ -13,7 +13,11 @@ import {
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { listSchools, type SchoolSummary } from "../schools/schoolsApi";
-import { formatDate, todayIso } from "./formatters";
+import {
+  getSchoolContracts,
+  type ContractRow,
+} from "../schoolbilling/schoolContractsApi";
+import { formatDate, formatRupees, todayIso } from "./formatters";
 import {
   cancelScheduledPlacement,
   placeTeacher,
@@ -27,9 +31,8 @@ interface PlacementDialogProps {
 }
 
 /**
- * Places or moves a Teacher with an effective date (FR-012). A future date schedules the move; a
- * scheduled move can be cancelled. The placement is interim: a later billing/contract feature
- * replaces it, and every place it is shown says so.
+ * Assigns or moves a Teacher with an effective date (FR-012). A future date schedules the move; a
+ * scheduled move can be cancelled. Since spec 012 the assignment sits under the School's contract (MoU).
  */
 export function PlacementDialog({
   teacher,
@@ -40,6 +43,8 @@ export function PlacementDialog({
   const [schools, setSchools] = useState<SchoolSummary[]>([]);
   const [school, setSchool] = useState<SchoolSummary | null>(null);
   const [effectiveOn, setEffectiveOn] = useState(todayIso());
+  const [contract, setContract] = useState<ContractRow | null>(null);
+  const [positionId, setPositionId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -60,9 +65,36 @@ export function PlacementDialog({
     };
   }, [authFetch]);
 
+  // the School's live MoU decides whether a position has to be chosen (spec 012 FR-006)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears the position when the School changes
+    setContract(null);
+    setPositionId("");
+    if (!school) return;
+    let cancelled = false;
+    (async () => {
+      const result = await getSchoolContracts(authFetch, school.id);
+      if (cancelled || !result.ok) return;
+      const live = (result.data.contracts ?? []).find(
+        (c) => c.state === "ACTIVE" && c.status !== "ENDED",
+      );
+      setContract(live ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, school]);
+
+  const vacant = contract?.positions.filter((p) => p.teacherId === null) ?? [];
+  const perTeacher = contract?.salaryMode === "PER_TEACHER";
+
   const save = async () => {
     if (!school) {
       setError("Choose a school.");
+      return;
+    }
+    if (perTeacher && !positionId) {
+      setError("Choose the position this Teacher fills.");
       return;
     }
     setSaving(true);
@@ -71,6 +103,7 @@ export function PlacementDialog({
       teacher.id,
       school.id,
       effectiveOn,
+      perTeacher ? positionId : null,
     );
     setSaving(false);
     if (!result.ok) {
@@ -97,7 +130,7 @@ export function PlacementDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2">
-            Interim placement (replaced later by the school contract).{" "}
+            School assignment, under the School's contract.{" "}
             {teacher.school
               ? `Currently at ${teacher.school.name}.`
               : "Not placed in a school."}
@@ -139,6 +172,43 @@ export function PlacementDialog({
               <TextField {...params} label="School" required />
             )}
           />
+          {contract && (
+            <Typography variant="body2" color="text.secondary">
+              MoU: {contract.teacherCount} Teachers,{" "}
+              {contract.salaryMode === "SAME_FOR_ALL"
+                ? `${formatRupees(Number(contract.rate))} each`
+                : "a salary for each position"}
+              . {vacant.length} of {contract.positions.length} positions vacant.
+            </Typography>
+          )}
+          {perTeacher && (
+            <TextField
+              select
+              label="Position"
+              required
+              value={positionId}
+              onChange={(e) => {
+                setPositionId(e.target.value);
+                setError(null);
+              }}
+              helperText={
+                vacant.length === 0
+                  ? "Every position is filled. Record a new contract to add Teachers."
+                  : "The salary the School pays for this Teacher."
+              }
+              slotProps={{
+                select: { native: true },
+                inputLabel: { shrink: true },
+              }}
+            >
+              <option value=""></option>
+              {vacant.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {`Position ${p.number}${p.title ? ` (${p.title})` : ""} - ${formatRupees(Number(p.salary))}`}
+                </option>
+              ))}
+            </TextField>
+          )}
           <TextField
             label="Effective date"
             type="date"

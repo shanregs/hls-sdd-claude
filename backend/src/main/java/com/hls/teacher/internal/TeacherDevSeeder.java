@@ -4,6 +4,7 @@ import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
+import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.LocalDate;
 import java.util.List;
 import org.slf4j.Logger;
@@ -29,19 +30,19 @@ public class TeacherDevSeeder implements ApplicationRunner {
     private static final int DEMO_HISTORY_DAYS = 75;
 
     private final TeacherService teacherService;
-    private final TeacherPlacementService placementService;
+    private final TeacherPlacementSource placementSource;
     private final TeacherRepository teacherRepository;
     private final SchoolDirectory schoolDirectory;
     private final AppUserRepository appUserRepository;
 
     public TeacherDevSeeder(
             TeacherService teacherService,
-            TeacherPlacementService placementService,
+            TeacherPlacementSource placementSource,
             TeacherRepository teacherRepository,
             SchoolDirectory schoolDirectory,
             AppUserRepository appUserRepository) {
         this.teacherService = teacherService;
-        this.placementService = placementService;
+        this.placementSource = placementSource;
         this.teacherRepository = teacherRepository;
         this.schoolDirectory = schoolDirectory;
         this.appUserRepository = appUserRepository;
@@ -68,7 +69,7 @@ public class TeacherDevSeeder implements ApplicationRunner {
                     admin.getId(),
                     new TeacherService.NewTeacher("Unplaced Teacher", "9800000010", null, null, TeacherStatus.IN_TRAINING, null));
             if (!schools.isEmpty()) {
-                placementService.place(admin.getId(), teacher.id(), schools.get(0).id(), placedFrom);
+                placementSource.assign(admin.getId(), teacher.id(), schools.get(0).id(), null, placedFrom);
             }
             log.info("[DEV SEED] Teacher demo data ready: Tara (linked) placed in the first demo School.");
         }
@@ -87,7 +88,7 @@ public class TeacherDevSeeder implements ApplicationRunner {
             var created = teacherService.create(
                     admin.getId(),
                     new TeacherService.NewTeacher(extra[0], extra[1], null, null, TeacherStatus.ACTIVE, null));
-            placementService.place(admin.getId(), created.id(), schools.get(schoolIndex).id(), placedFrom);
+            placementSource.assign(admin.getId(), created.id(), schools.get(schoolIndex).id(), null, placedFrom);
         }
     }
 }

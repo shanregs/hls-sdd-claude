@@ -32,12 +32,17 @@ public final class PermissionEligibility {
             PermissionModule.ATTENDANCE_SETUP,
             PermissionModule.LEAVE_MANAGEMENT,
             PermissionModule.MY_LEAVE,
-            PermissionModule.NOTIFICATIONS);
+            PermissionModule.NOTIFICATIONS,
+            PermissionModule.SCHOOL_CONTRACTS);
 
-    /** Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. */
+    /**
+     * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
+     * contracts (spec 012): staff roles only; a Teacher never reaches the School's MoU.
+     */
     static final Map<PermissionModule, Set<Role>> ROLE_RESTRICTED_MODULES = Map.of(
             PermissionModule.LEAVE_MANAGEMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
-            PermissionModule.MY_LEAVE, EnumSet.of(Role.TEACHER));
+            PermissionModule.MY_LEAVE, EnumSet.of(Role.TEACHER),
+            PermissionModule.SCHOOL_CONTRACTS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
     private PermissionEligibility() {}
 

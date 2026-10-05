@@ -1,0 +1,14 @@
+$kind: http-request
+name: Map Teachers to New Contract
+description: "Re-maps the School current Teachers to the positions of a new contract in one step: each earlier assignment ends the day before the contract starts and a new one begins under the position, with no gap. All or nothing. Needs TEACHERS.EDIT."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/map-teachers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    [
+      { "teacherId": "{{teacherId}}", "positionId": "{{positionId}}" }
+    ]
+order: 10000

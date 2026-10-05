@@ -1,0 +1,16 @@
+$kind: http-request
+name: Map Teacher to Position
+description: "Maps or moves a Teacher; this is the Teachers placement endpoint. positionId is optional for a same-salary contract (the next vacant position is used) and required for different salaries. A School with no contract gets a MoU-pending contract. Needs TEACHERS.EDIT; a Zone Manager only for their own Schools."
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/placements"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "schoolId": "{{schoolId}}",
+      "positionId": null,
+      "effectiveOn": null
+    }
+order: 9000

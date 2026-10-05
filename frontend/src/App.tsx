@@ -31,6 +31,8 @@ import { ApplyLeavePage } from "./features/leave/ApplyLeavePage";
 import { MyLeaveHistoryPage } from "./features/leave/MyLeaveHistoryPage";
 import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
 import { NotificationsPage } from "./features/notifications/NotificationsPage";
+import { ContractsListPage } from "./features/schoolbilling/ContractsListPage";
+import { SchoolContractPage } from "./features/schoolbilling/SchoolContractPage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -220,6 +222,22 @@ export function App() {
           element={
             <RouteGuard>
               <LeaveManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/school-contracts"
+          element={
+            <RouteGuard>
+              <ContractsListPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/school-contracts/schools/:schoolId"
+          element={
+            <RouteGuard>
+              <SchoolContractPage />
             </RouteGuard>
           }
         />

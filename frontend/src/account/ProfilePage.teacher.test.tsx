@@ -59,9 +59,7 @@ describe("ProfilePage Teacher block (spec 005 User Story 7)", () => {
     renderPage();
 
     expect(await screen.findByText("Account details")).toBeInTheDocument();
-    expect(
-      await screen.findByText(/current school \(interim placement\)/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/current school:/i)).toBeInTheDocument();
     expect(screen.getByText("My teacher record")).toBeInTheDocument();
     expect(screen.queryByText("My sessions")).toBeNull();
   });

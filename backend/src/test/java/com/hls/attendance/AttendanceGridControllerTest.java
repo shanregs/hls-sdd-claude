@@ -152,10 +152,10 @@ class AttendanceGridControllerTest extends AttendanceTestBase {
                         + " select gen_random_uuid(), 'Bulk ' || n, null, 'ACTIVE', current_date - 60, 0, now(), now()"
                         + " from generate_series(1, 500) n");
         jdbc.update(
-                "insert into teacher_placement (id, teacher_id, school_id, starts_on, status, created_at)"
+                "insert into contract_assignment (id, teacher_id, school_id, starts_on, status, created_at)"
                         + " select gen_random_uuid(), t.id, ?, current_date - 60, 'ACTIVE', now()"
                         + " from teacher t where t.name like 'Bulk %' and not exists"
-                        + " (select 1 from teacher_placement p where p.teacher_id = t.id)",
+                        + " (select 1 from contract_assignment p where p.teacher_id = t.id)",
                 school);
 
         long started = System.nanoTime();
@@ -166,7 +166,7 @@ class AttendanceGridControllerTest extends AttendanceTestBase {
         assertThat(page.map().get("totalElements")).isEqualTo(500);
         assertThat(millis).as("first page of a 500-teacher grid").isLessThan(3000);
         // Remove the bulk rows so other tests' org-wide counts stay small.
-        jdbc.update("delete from teacher_placement where teacher_id in (select id from teacher where name like 'Bulk %')");
+        jdbc.update("delete from contract_assignment where teacher_id in (select id from teacher where name like 'Bulk %')");
         jdbc.update("delete from teacher where name like 'Bulk %'");
     }
 }

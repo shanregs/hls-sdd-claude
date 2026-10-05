@@ -17,7 +17,7 @@ describe("MyTeacherProfile (User Story 7)", () => {
     authFetch.mockReset();
   });
 
-  it("shows the teacher's own details and current school, labelled interim, with no salary", async () => {
+  it("shows the teacher's own details and current school, with no salary", async () => {
     authFetch.mockResolvedValue(
       jsonResponse({
         id: "t1",
@@ -36,9 +36,7 @@ describe("MyTeacherProfile (User Story 7)", () => {
     expect(await screen.findByText("Tara Teacher")).toBeInTheDocument();
     expect(screen.getByText(/9800000004/)).toBeInTheDocument();
     expect(screen.getByText(/tara@example.com/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/current school \(interim placement\): st mary's/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/current school: st mary's/i)).toBeInTheDocument();
     expect(screen.getByText(/status since 01\/04\/2026/i)).toBeInTheDocument();
     expect(screen.queryByText(/salary/i)).not.toBeInTheDocument();
     expect(String(authFetch.mock.calls[0][0])).toBe("/api/v1/teachers/me");

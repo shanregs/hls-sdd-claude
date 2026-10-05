@@ -4,6 +4,7 @@ import com.hls.identity.user.Role;
 import com.hls.organization.api.ScopeQueries;
 import com.hls.organization.api.ScopeView;
 import com.hls.school.api.CallerContext;
+import com.hls.teacher.api.TeacherPlacementSource;
 import com.hls.teacher.api.TeacherScopeQueries;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -23,17 +24,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class TeacherScopeService implements TeacherScopeQueries {
 
     private final ScopeQueries scopeQueries;
-    private final TeacherPlacementRepository placementRepository;
+    private final TeacherPlacementSource placementSource;
     private final TeacherRepository teacherRepository;
     private final Clock clock;
 
     public TeacherScopeService(
             ScopeQueries scopeQueries,
-            TeacherPlacementRepository placementRepository,
+            TeacherPlacementSource placementSource,
             TeacherRepository teacherRepository,
             Clock clock) {
         this.scopeQueries = scopeQueries;
-        this.placementRepository = placementRepository;
+        this.placementSource = placementSource;
         this.teacherRepository = teacherRepository;
         this.clock = clock;
     }
@@ -47,7 +48,7 @@ public class TeacherScopeService implements TeacherScopeQueries {
         if (roles.contains(Role.MANAGER)) {
             ScopeView scope = scopeQueries.scopeOf(userId, roles);
             if (!scope.schoolIds().isEmpty()) {
-                ids.addAll(placementRepository.teacherIdsAtSchoolsOn(scope.schoolIds(), LocalDate.now(clock)));
+                ids.addAll(placementSource.teacherIdsAtSchoolsOn(scope.schoolIds(), LocalDate.now(clock)));
             }
         }
         if (roles.contains(Role.TEACHER)) {

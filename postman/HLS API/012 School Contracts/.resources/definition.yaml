@@ -1,0 +1,3 @@
+$kind: collection
+description: "School contracts, the MoU between HLS and a School (spec 012). Admin and Director record, end and cancel contracts; the Zone Manager (Manoj) reads their own Schools and maps Teachers. Mapping reuses the Teachers placement endpoint. Collection variables: schoolId and teacherId (from the 005 folder), contractId (saved by School Contracts), positionId, directorUserId and managerUserId (see Signatory Candidates). Teacher and System get 403; a School outside a Zone Manager's scope is a 404."
+order: 11000

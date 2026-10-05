@@ -90,6 +90,28 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void schoolContractsApplyToStaffRolesOnlyWithTheSeededDefaults() {
+        for (Role role : Role.values()) {
+            boolean staff = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.SCHOOL_CONTRACTS))
+                    .as("SCHOOL_CONTRACTS " + role)
+                    .isEqualTo(staff
+                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
+                            : java.util.EnumSet.noneOf(PermissionAction.class));
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                assertThat(matrix.isGranted(role, PermissionModule.SCHOOL_CONTRACTS, action))
+                        .as(role + " " + action)
+                        .isTrue();
+            }
+        }
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.VIEW)).isTrue();
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.CREATE)).isFalse();
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.EDIT)).isFalse();
+    }
+
+    @Test
     void systemHasNoBusinessDataModulesButKeepsTheHolidayCalendarAndAudit() {
         for (PermissionModule business : List.of(
                 PermissionModule.ZONES,
@@ -103,7 +125,8 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.ATTENDANCE_SETUP,
                 PermissionModule.LEAVE_MANAGEMENT,
                 PermissionModule.MY_LEAVE,
-                PermissionModule.NOTIFICATIONS)) {
+                PermissionModule.NOTIFICATIONS,
+                PermissionModule.SCHOOL_CONTRACTS)) {
             assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, business)).as(business.name()).isEmpty();
         }
         assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, PermissionModule.HOLIDAY_CALENDAR))

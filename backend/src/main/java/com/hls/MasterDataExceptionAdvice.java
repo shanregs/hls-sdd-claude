@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Maps the master-data exceptions to the contract's status codes and {@code {"reason"}} body. */
-@RestControllerAdvice(basePackages = {"com.hls.school", "com.hls.organization", "com.hls.teacher", "com.hls.attendance", "com.hls.leave", "com.hls.notification"})
+@RestControllerAdvice(basePackages = {"com.hls.school", "com.hls.organization", "com.hls.teacher", "com.hls.attendance", "com.hls.leave", "com.hls.notification", "com.hls.schoolbilling"})
 public class MasterDataExceptionAdvice {
 
     static final String STALE_MESSAGE = "This record was changed by someone else. Reload and try again.";

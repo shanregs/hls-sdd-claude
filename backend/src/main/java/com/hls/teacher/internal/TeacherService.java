@@ -16,6 +16,8 @@ import com.hls.school.api.NotFoundException;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.school.api.StaleVersion;
+import com.hls.teacher.api.TeacherPlacementSource;
+import com.hls.teacher.api.TeacherPlacementSource.Assignment;
 import com.hls.teacher.api.TeacherScopeQueries.TeacherScope;
 import com.hls.teacher.api.TeacherView;
 import java.time.Clock;
@@ -47,8 +49,7 @@ public class TeacherService {
     private static final UUID NO_ID = new UUID(0L, 0L);
 
     private final TeacherRepository teacherRepository;
-    private final TeacherPlacementRepository placementRepository;
-    private final TeacherPlacementService placementService;
+    private final TeacherPlacementSource placementSource;
     private final TeacherScopeService scopeService;
     private final ScopeQueries scopeQueries;
     private final ManagerQueries managerQueries;
@@ -59,8 +60,7 @@ public class TeacherService {
 
     public TeacherService(
             TeacherRepository teacherRepository,
-            TeacherPlacementRepository placementRepository,
-            TeacherPlacementService placementService,
+            TeacherPlacementSource placementSource,
             TeacherScopeService scopeService,
             ScopeQueries scopeQueries,
             ManagerQueries managerQueries,
@@ -69,8 +69,7 @@ public class TeacherService {
             ChangeRecorder changes,
             Clock clock) {
         this.teacherRepository = teacherRepository;
-        this.placementRepository = placementRepository;
-        this.placementService = placementService;
+        this.placementSource = placementSource;
         this.scopeService = scopeService;
         this.scopeQueries = scopeQueries;
         this.managerQueries = managerQueries;
@@ -94,7 +93,7 @@ public class TeacherService {
         Set<UUID> restrict = scope.orgWide() ? null : new HashSet<>(scope.teacherIds());
         if (schoolId != null) {
             Set<UUID> atSchool =
-                    new HashSet<>(placementRepository.teacherIdsAtSchoolsOn(List.of(schoolId), LocalDate.now(clock)));
+                    new HashSet<>(placementSource.teacherIdsAtSchoolsOn(List.of(schoolId), LocalDate.now(clock)));
             if (restrict == null) {
                 restrict = atSchool;
             } else {
@@ -113,6 +112,47 @@ public class TeacherService {
                 pageable);
         List<TeacherView> views = viewsOf(page.getContent(), null);
         return new PageImpl<>(views, pageable, page.getTotalElements());
+    }
+
+    /**
+     * Assigns or moves a Teacher (spec 012). Admin and Director act anywhere; a Zone Manager only maps a
+     * Teacher into a School of theirs, and only one who is not placed yet or is placed at one of their
+     * Schools. Anything outside that scope is answered as not found.
+     */
+    @Transactional
+    public TeacherView assign(
+            UUID userId, Set<Role> roles, UUID teacherId, UUID schoolId, UUID positionId, LocalDate effectiveOn) {
+        if (!CallerContext.isOrgWide(roles)) {
+            if (schoolId == null || !scopeQueries.scopeOf(userId, roles).allowsSchool(schoolId)) {
+                throw new NotFoundException("School not found.");
+            }
+            LocalDate today = LocalDate.now(clock);
+            if (effectiveOn != null && effectiveOn.isBefore(today)) {
+                throw new InvalidInputException("A Zone Manager assigns Teachers from today onwards.");
+            }
+            ScopeView scope = scopeQueries.scopeOf(userId, roles);
+            // neither the Teacher's current School nor a move already scheduled may belong to someone else's scope
+            Assignment current = placementSource.currentOf(List.of(teacherId), today).get(teacherId);
+            Assignment scheduled = placementSource.pendingOf(List.of(teacherId), today).get(teacherId);
+            if ((current != null && !scope.allowsSchool(current.schoolId()))
+                    || (scheduled != null && !scope.allowsSchool(scheduled.schoolId()))) {
+                throw new NotFoundException("Teacher not found.");
+            }
+        }
+        placementSource.assign(userId, teacherId, schoolId, positionId, effectiveOn);
+        // authorized above; a move scheduled for later is not in a Zone Manager's scope yet, so build the view directly
+        Teacher teacher = teacherRepository
+                .findById(teacherId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found."));
+        Set<UUID> schoolFilter = CallerContext.isOrgWide(roles) ? null : scopeQueries.scopeOf(userId, roles).schoolIds();
+        return viewsOf(List.of(teacher), schoolFilter).get(0);
+    }
+
+    /** Cancels a scheduled move; a Zone Manager only for a Teacher in their scope. */
+    @Transactional
+    public void cancelScheduledMove(UUID userId, Set<Role> roles, UUID teacherId) {
+        visible(userId, roles, teacherId);
+        placementSource.cancelPending(userId, teacherId);
     }
 
     @Transactional(readOnly = true)
@@ -229,7 +269,7 @@ public class TeacherService {
         }
         LocalDate on = effectiveOn == null ? LocalDate.now(clock) : effectiveOn;
         if (next == TeacherStatus.EXITED) {
-            placementService.endForExit(id, on);
+            placementSource.endForExit(id, on);
             if (teacher.getUserId() != null) {
                 changes.record(actor, "TEACHER", id, "userId", teacher.getUserId(), null);
                 teacher.setUserId(null);
@@ -289,40 +329,38 @@ public class TeacherService {
         }
         LocalDate today = LocalDate.now(clock);
         List<UUID> ids = teachers.stream().map(Teacher::getId).toList();
-        Map<UUID, TeacherPlacement> current = placementRepository.inEffectOn(ids, today).stream()
-                .collect(Collectors.toMap(TeacherPlacement::getTeacherId, p -> p, (a, b) -> a));
-        Map<UUID, TeacherPlacement> pending = placementRepository.scheduledAfter(ids, today).stream()
-                .collect(Collectors.toMap(TeacherPlacement::getTeacherId, p -> p, (a, b) -> a));
-        Map<UUID, List<TeacherPlacement>> history = new HashMap<>();
+        Map<UUID, Assignment> current = placementSource.currentOf(ids, today);
+        Map<UUID, Assignment> pending = placementSource.pendingOf(ids, today);
+        Map<UUID, List<Assignment>> history = new HashMap<>();
         if (schoolFilter != null || teachers.size() == 1) {
             for (UUID id : ids) {
-                history.put(id, placementRepository.findByTeacherIdOrderByStartsOnDesc(id));
+                history.put(id, placementSource.historyOf(id));
             }
         }
         Set<UUID> schoolIds = new HashSet<>();
-        current.values().forEach(p -> schoolIds.add(p.getSchoolId()));
-        pending.values().forEach(p -> schoolIds.add(p.getSchoolId()));
-        history.values().forEach(rows -> rows.forEach(p -> schoolIds.add(p.getSchoolId())));
+        current.values().forEach(p -> schoolIds.add(p.schoolId()));
+        pending.values().forEach(p -> schoolIds.add(p.schoolId()));
+        history.values().forEach(rows -> rows.forEach(p -> schoolIds.add(p.schoolId())));
         Map<UUID, String> schoolNames = schoolDirectory.schools(schoolIds).stream()
                 .collect(Collectors.toMap(SchoolInfo::id, SchoolInfo::name));
         Map<UUID, ManagerRef> managers = managerQueries.managersOfSchools(
-                current.values().stream().map(TeacherPlacement::getSchoolId).collect(Collectors.toSet()));
+                current.values().stream().map(Assignment::schoolId).collect(Collectors.toSet()));
 
         return teachers.stream()
                 .map(t -> {
-                    TeacherPlacement cur = current.get(t.getId());
-                    TeacherPlacement pen = pending.get(t.getId());
-                    ManagerRef manager = cur == null ? null : managers.get(cur.getSchoolId());
+                    Assignment cur = current.get(t.getId());
+                    Assignment pen = pending.get(t.getId());
+                    ManagerRef manager = cur == null ? null : managers.get(cur.schoolId());
                     List<TeacherView.PlacementRow> rows = history.containsKey(t.getId())
                             ? history.get(t.getId()).stream()
-                                    .filter(p -> schoolFilter == null || schoolFilter.contains(p.getSchoolId()))
+                                    .filter(p -> schoolFilter == null || schoolFilter.contains(p.schoolId()))
                                     .map(p -> new TeacherView.PlacementRow(
-                                            p.getSchoolId(),
-                                            schoolNames.getOrDefault(p.getSchoolId(), "?"),
-                                            p.getStartsOn(),
-                                            p.getEndsOn(),
-                                            p.getStatus().name(),
-                                            true))
+                                            p.schoolId(),
+                                            schoolNames.getOrDefault(p.schoolId(), "?"),
+                                            p.startsOn(),
+                                            p.endsOn(),
+                                            p.status(),
+                                            p.positionNumber()))
                                     .toList()
                             : null;
                     return new TeacherView(
@@ -339,14 +377,14 @@ public class TeacherService {
                             cur == null
                                     ? null
                                     : new TeacherView.SchoolRef(
-                                            cur.getSchoolId(), schoolNames.getOrDefault(cur.getSchoolId(), "?")),
+                                            cur.schoolId(), schoolNames.getOrDefault(cur.schoolId(), "?")),
                             manager == null ? null : new TeacherView.ManagerRef(manager.id(), manager.displayName()),
                             pen == null
                                     ? null
                                     : new TeacherView.PendingPlacement(
-                                            pen.getSchoolId(),
-                                            schoolNames.getOrDefault(pen.getSchoolId(), "?"),
-                                            pen.getStartsOn()),
+                                            pen.schoolId(),
+                                            schoolNames.getOrDefault(pen.schoolId(), "?"),
+                                            pen.startsOn()),
                             rows);
                 })
                 .toList();
