@@ -25,7 +25,7 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 
 ## 3. Winning creates the School; hand-off to 012
 
-- **Decision**: after approval, an Admin or Director opens the Win dialog: choose a **Place** of the prospect's Zone
+- **Decision**: after approval, an Admin or Director opens the Win dialog: choose a **Place** of the prospect's Zone and confirm the **billing contact** (prefilled from the prospect's contact; name, address, contact person and phone come from the prospect)
   (a School in 005 belongs to a Place) and confirm; `WinService` calls the new `school.api.SchoolRegistry.create`
   (which wraps `SchoolService.create`) and stores `school_id` on the prospect; if a School of the same name and Place
   already exists the user is asked to link it instead (the duplicate rule of the spec). The dialog then navigates to the
@@ -93,8 +93,9 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 ## 10. Dashboard and the supply figure
 
 - **Decision**: one grouped query each for visits this month, prospects by stage, win rate (won divided by won plus
-  lost, by Zone and owner), Schools won per Zone and owner. **Demand** is the sum of `occupancyOf(...).vacant` over won
-  Schools with a live contract. **Supply** comes from `recruitment.api.SupplySource.readyToDeployCount()`, an interface
+  lost, by Zone and owner), Schools won per Zone and owner. **Demand** is the sum of `occupancyOfAll(schoolIds, today).vacant` over won
+  Schools with a live contract; the same batch call gives the derived MoU and Active stage of every won prospect, so the
+  board and the dashboard never ask 012 once per prospect. **Supply** comes from `recruitment.api.SupplySource.readyToDeployCount()`, an interface
   defined here; a default bean returns "not available" and spec 016's `training` module provides the real one (a
   one-line addition listed in 016's tasks). A Zone Manager sees only their Zones.
 
@@ -113,6 +114,7 @@ Every open point is settled here. No `NEEDS CLARIFICATION` remains.
 
 ## 13. Navigation and settings
 
-- **Decision**: a MARKETING navigation section with Prospects, Calendar, Pipeline, Dashboard and Settings (Settings only
-  with `MARKETING` EDIT and an Admin or Director scope). The one setting (days until a won prospect without an MoU is
+- **Decision**: a MARKETING navigation section with Prospects, Calendar, Pipeline, Dashboard and Settings (Settings by the
+  new permission `MARKETING_SETTINGS`, seeded to Admin and Director). Owner change, creating the School and removing an
+  attachment are fixed Admin and Director rules in the service, as organization-level actions. The one setting (days until a won prospect without an MoU is
   flagged) is stored in `marketing_setting`; spec 011 may absorb it.

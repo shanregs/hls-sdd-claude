@@ -73,7 +73,7 @@ absent (FR-016): supply shows "not available" when no `SupplySource` is provided
 
 - **Principle I (Auditable)** - PASS: every prospect, activity, stage change, proposal revision, win, loss,
   reassignment, attachment (add and removal) and hand-off is audited through `ChangeRecorder`.
-- **Principle II (Roles, configurable permissions)** - PASS with one addition to the spec's table: module `MARKETING`
+- **Principle II (Roles, configurable permissions)** - PASS with two additions to the spec's table: a module `MARKETING_SETTINGS` guards the settings screen (so it stays configurable), and module `MARKETING`
   also has an `APPROVE` action (Final Stage review, decision D5), seeded to Director and Zone Manager and not to Admin.
   Runtime-editable; Teacher and System ineligible. The spec's Role & Permission section is updated to say so.
 - **Principle III (Data scope)** - PASS: a Zone Manager reads and writes only their Zones' prospects, activities,
@@ -115,7 +115,7 @@ specs/023-school-marketing-mou/
 ```text
 backend/src/main/java/com/hls/
 ├── identity/
-│   ├── permissions/{PermissionModule,PermissionEligibility,PermissionMatrixService}.java   # + MARKETING(VIEW, CREATE, EDIT, APPROVE)
+│   ├── permissions/{PermissionModule,PermissionEligibility,PermissionMatrixService}.java   # + MARKETING(VIEW, CREATE, EDIT, APPROVE), MARKETING_SETTINGS(VIEW, EDIT)
 │   └── accessmodel/{NavigationCatalog,AccessModelService}.java        # + MARKETING section, Zone scope
 ├── files/
 │   ├── api/FileStore.java                  # store, open, remove; FileRef(id, name, contentType, size, addedBy, addedAt)

@@ -15,7 +15,7 @@ caller's Zones), 409 conflict (duplicate, stale version, a state that forbids th
 | POST | `/prospects/{id}/stage` | EDIT | `{ stage, reason }` (reason required for LOST); ON_HOLD, resume and reopen are `stage` values `ON_HOLD`, `RESUME`, `REOPEN` |
 | POST | `/prospects/{id}/owner` | EDIT | `{ ownerUserId }`, Admin and Director only |
 | POST | `/prospects/{id}/review` | APPROVE | `{ decision: APPROVE|REJECT, reason }` on a prospect in FINAL_STAGE; approval makes it won |
-| POST | `/prospects/{id}/win` | EDIT | Admin and Director: `{ placeId }` creates the School (or `{ linkSchoolId }` links one); returns the hand-off target |
+| POST | `/prospects/{id}/win` | EDIT | Admin and Director: `{ placeId, billingContact }` creates the School (or `{ linkSchoolId }` links one); returns the hand-off target |
 | GET | `/pipeline?zone=&owner=` | VIEW | counts and cards by stage for the board |
 
 ## Activities, calendar, attachments (module `MARKETING`)
@@ -44,7 +44,7 @@ caller's Zones), 409 conflict (duplicate, stale version, a state that forbids th
 | --- | --- | --- | --- |
 | GET | `/dashboard?period=` | VIEW | visits, prospects by stage, win rate, Schools won per Zone and owner, demand, supply (`null` when not available), shortfall |
 | GET | `/settings` | VIEW | `{ mouOverdueDays }` |
-| PUT | `/settings` | EDIT | Admin and Director: `{ mouOverdueDays (1 to 90), version }`, audited |
+| PUT | `/settings` | `MARKETING_SETTINGS` EDIT | `{ mouOverdueDays (1 to 90), version }`, audited (GET needs `MARKETING_SETTINGS` VIEW) |
 
 ## Role matrix (default grants)
 
@@ -70,5 +70,6 @@ record ProspectWon(UUID prospectId, UUID schoolId) {}
 // school.api (new)        SchoolRegistry.create(UUID actor, UUID placeId, SchoolProfile profile) -> UUID
 // organization.api        ManagerQueries.managersOfZone(UUID zoneId) -> List<ManagerRef>
 // schoolbilling.api (A6)  SchoolContracts.occupancyOf(UUID schoolId, LocalDate on) -> Occupancy(positions, filled, vacant)
+//                         SchoolContracts.occupancyOfAll(Collection<UUID> schoolIds, LocalDate on) -> Map<UUID, Occupancy>
 // files.api (new)         FileStore.store/open/remove
 ```

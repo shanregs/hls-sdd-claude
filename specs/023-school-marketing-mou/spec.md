@@ -233,17 +233,18 @@ supply 5 and a shortfall of 4.
 
 **Win and hand-off**
 
-- **FR-008**: The system MUST let a Director or the Zone Manager of its Zone approve a prospect's Final Stage, which makes it won. If it is not yet a School in spec 005, an Admin or Director MUST create it (in the prospect's Zone) as part of winning; a Zone Manager's win MUST be accepted as "won, MoU to be recorded".
+- **FR-008**: The system MUST let a Director or the Zone Manager of its Zone approve a prospect's Final Stage, which makes it won. If it is not yet a School in spec 005, an Admin or Director MUST create it (in the prospect's Zone, in a Place of that Zone they choose, with the billing contact confirmed and prefilled from the prospect's contact) as part of winning; a Zone Manager's win MUST be accepted as "won, MoU to be recorded".
 - **FR-009**: For a won prospect, an Admin or Director MUST be able to open the MoU form of spec 012 pre-filled from the latest proposal; the contract MUST be recorded only in spec 012 (with its signatories and signed date) and this spec MUST NOT hold a copy of it.
 - **FR-010**: The system MUST keep the link between a prospect and its contract and MUST show, from spec 012's public interface, whether a contract exists, its dates, and how many positions are filled and vacant; a won prospect without a contract after the configured number of days MUST be flagged and notified (FR-017).
 
 **Dashboard, scope, audit**
 
-- **FR-011**: The system MUST show visits this month, prospects by stage, win rate, Schools won per Zone and per owner, and for won Schools the vacant positions (demand) against recruits ready to deploy (supply, spec 016) with the shortfall.
+- **FR-011**: The system MUST show visits this month, prospects by stage, win rate, Schools won per Zone and per owner (counting won prospects by their MoU or Active stage read from spec 012 in one batch), and for won Schools the vacant positions (demand) against recruits ready to deploy (supply, spec 016) with the shortfall.
 - **FR-012**: Every list, search and detail MUST be filtered by the caller's scope: Admin and Director org-wide; a Zone Manager only their Zones' prospects (Constitution Principle III), with no leakage between Zone Managers.
 - **FR-013**: Every prospect, activity, stage change, proposal revision, win, loss, reassignment and hand-off MUST be written to the audit store (spec 003) with actor, roles, time, and prior and new values (Constitution Principle I).
 - **FR-014**: Menu items and actions MUST be offered only when the server's access model grants them, and every endpoint MUST be tested per role and per scope boundary.
 - **FR-015**: Amounts MUST show in rupees with Indian digit grouping and dates as DD/MM/YYYY; screens MUST meet WCAG 2.2 AA, have loading, empty and error states, and work at phone width.
+- **FR-016**: The system MUST function without spec 012 or 016 being present: the calendar, pipeline and proposals work on their own; the hand-off, MoU status, demand and supply appear only when those specs are available.
 - **FR-017**: The number of days after which a won prospect with no MoU is flagged MUST be a setting (default 14, a
   whole number from 1 to 90) that an Admin or Director can change on a Marketing Settings screen; each change MUST be
   audited with the prior and new value. A daily check MUST create one in-app notification (spec 010) per overdue
@@ -251,10 +252,9 @@ supply 5 and a shortfall of 4.
   same prospect unless the limit is changed and passed again.
 - **FR-018**: Each visit MUST carry a status (planned, completed, missed, rescheduled, cancelled); completing MUST need an outcome; a planned visit past its date MUST show as missed until rescheduled or cancelled with a reason; the history MUST keep earlier dates.
 - **FR-019**: A visit MUST accept file attachments (photos, brochures, notes) stored with who added them and when, visible to anyone who may see the visit, never changed, removable only by an Admin or Director with the removal recorded. The file storage MUST be a shared capability that other specs (015, 031, 032) can reuse.
-- **FR-020**: When a visit outcome sets a follow-up date and spec 025 is present, the system MUST create a task for the prospect's owner through the shared task interface; without 025 only the "follow-up overdue" flag applies.
+- **FR-020**: When a visit outcome sets a follow-up date and spec 025 is present, the system MUST publish an event that spec 025 turns into a task for the prospect's owner (contract C2); without 025 only the "follow-up overdue" flag applies.
 - **FR-021**: Visits MUST be exposed to other modules as planned activities (kind, owner, date, place, status) through a public interface, so a school visit can be the activity a Manager's field day links to (spec 032).
 - **FR-022**: When the MoU of a prospect's School is recorded and approved, the system MUST make the prospect's owner and School available to the incentive spec (030) through a public interface; this spec pays nothing.
-- **FR-016**: The system MUST function without spec 012 or 016 being present: the calendar, pipeline and proposals work on their own; the hand-off, MoU status, demand and supply appear only when those specs are available.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -275,9 +275,9 @@ supply 5 and a shortfall of 4.
 | System   | none (System MUST NOT see business data) | none | None |
 
 **New permission keys**: module `MARKETING` with actions `VIEW`, `CREATE`, `EDIT` (prospects, activities, proposals,
-stages, and the Marketing Settings screen, which only Admin and Director are seeded to edit) and `APPROVE` (the Final
+and stages) and `APPROVE` (the Final
 Stage review, decision D5), seeded to the Director and the Zone Manager and not to the Admin; the Zone Manager's
-approval is limited to prospects in their own Zones. Seeded as in the table; not eligible for Teacher or System. Creating a School on a win reuses the existing
+approval is limited to prospects in their own Zones. A second module `MARKETING_SETTINGS` (`VIEW`, `EDIT`) guards the Marketing Settings screen and is seeded to Admin and Director only, so it stays configurable. Changing a prospect's owner, creating the School on a win and removing an attachment are organization-level actions limited to Admin and Director by a fixed rule, documented as such. Seeded as in the table; not eligible for Teacher or System. Creating a School on a win reuses the existing
 `SCHOOLS` `CREATE` permission, and recording the MoU reuses `SCHOOL_CONTRACTS` `CREATE` (spec 012); neither is changed
 here. Runtime-editable in Role & Permissions; only Admin, Director and System edit the matrix. The constitution's
 Default role access matrix gets a Marketing row when this spec merges.

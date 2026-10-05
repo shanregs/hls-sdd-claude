@@ -75,6 +75,9 @@ trigger rejects update and delete on both tables.
 
 ## files module
 
+The `files` module has no migration of its own yet, so this migration creates its table; ownership stays with `files`.
+
+
 `stored_file (id UUID PK, owner_type varchar(30), owner_id UUID, original_name varchar(255), content_type varchar(100),
 size_bytes bigint, sha256 char(64), storage_path varchar(300), added_by UUID, added_at timestamptz, removed_at
 timestamptz null, removed_by UUID null, removal_reason varchar(300) null)`; index on `(owner_type, owner_id)`. Rows are
