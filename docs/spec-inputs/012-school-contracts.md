@@ -23,7 +23,7 @@ Contracts list shows each School's status, filled and vacant positions, and Scho
 Upstream flows (2026-10-05): HLS runs campus recruitment and school marketing in parallel. **023 School Marketing and
 MoU Pipeline** (`docs/spec-inputs/023-school-marketing-mou.md`) wins the School and hands over to this spec with the
 proposed terms pre-filled; **016 Campus Recruitment** (`docs/spec-inputs/016-campus-recruitment.md`) produces the
-Teachers (012 maps any non-exited Teacher whatever their status; 016 may add a "Ready to deploy" rule later). This spec stays the only record of the signed MoU and the mapping,
+Teachers (012 refuses to map a Teacher still in training; induction sign-off in 016 makes a recruit active). This spec stays the only record of the signed MoU and the mapping,
 exposes contract existence, positions and filled count to 023 through its public interface, and holds no prospects,
 visits, candidates, offers or training.
 
@@ -38,3 +38,9 @@ document, the marketing pipeline (023), recruitment and induction (016), mobile 
 - Can a Director sign for HLS on contracts for Schools in any Zone, and may a Zone Manager sign for a School outside
   their Zone? (The draft says the Zone Manager is always the School's own.)
 - Can the end date of a contract be removed (made open-ended) again, or only set?
+
+## Additions from `docs/HLS-core-business-flow.md` (2026-10-05)
+
+Decided: mapping requires an active or on-leave Teacher (rule 9). Open for `/speckit-clarify`: an assignment reason and
+remarks; "assigned" versus "active once the Teacher reports"; a School vacancy request; who approves the MoU and
+whether an approval step comes before the MoU is active.

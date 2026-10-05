@@ -14,7 +14,7 @@ scope through `organization.api.ScopeQueries`; a Zone Manager never receives ano
 | GET | `/schools/{schoolId}` | VIEW | the School's contract history, each with positions, signatories and mapped Teachers |
 | POST | `/schools/{schoolId}/contracts` | CREATE | record a new MoU (ends the current contract the day before) |
 | PUT | `/contracts/{id}/mou` | EDIT | record the MoU on a `RATE_PENDING` contract, once |
-| POST | `/contracts/{id}/end` | EDIT | set the end date (not before the start date) |
+| POST | `/contracts/{id}/end` | EDIT | set, move or clear the end date (`{ "endsOn": "2027-03-31" }` or `{ "endsOn": null }`); not before the start date, and refused with 409 once a later contract exists for the School |
 | POST | `/contracts/{id}/cancel` | EDIT | cancel a contract that has no mapped Teacher |
 | GET | `/signatory-candidates?schoolId=` | VIEW | the HLS signatories on offer: the School's Zone Manager and the active Directors |
 
@@ -62,9 +62,11 @@ through `ScopeQueries`):
 
 `positionId` may be left out for a `SAME_FOR_ALL` contract (the next vacant position is used); for `PER_TEACHER` it
 is required. A School with no contract covering the date gets a "MoU pending" contract and the Teacher is assigned without a position. Refusals: every position of an active MoU is filled; the position is not on
-the School's contract or is already filled on those dates; the Teacher is exited; the dates overlap another
-assignment of the Teacher. `map-teachers` is all or nothing and keeps each Teacher's placement continuous (the old
-assignment ends the day before the new contract starts).
+the School's contract or is already filled on those dates; the Teacher is exited or still in training (only active or on-leave Teachers can be mapped); the dates overlap
+another assignment of the Teacher. `map-teachers` is all or nothing and keeps each Teacher's placement continuous (the old
+assignment ends the day before the new contract starts). It is for a MoU that replaces one with positions; it covers
+as many Teachers as the new contract has positions, and the rest stay placed and are reported as unmapped. Teachers
+carried over with no position are mapped one at a time through `POST /api/v1/teachers/{id}/placements`.
 
 ## Role matrix (default grants)
 
@@ -88,6 +90,8 @@ interface SchoolContracts {
     List<ContractView> contractsOverlapping(UUID schoolId, LocalDate from, LocalDate to);
     /** Teachers at the School in from..to who are not mapped to any position. */
     Set<UUID> unmappedTeachers(UUID schoolId, LocalDate from, LocalDate to);
+    /** Number of the contract's positions that hold a Teacher on the date (for spec 023: still needs Teachers). */
+    int filledPositions(UUID schoolId, LocalDate date);
 }
 record ContractView(UUID id, UUID schoolId, String state, String salaryMode, Integer teacherCount, BigDecimal rate,
                     LocalDate signedOn, LocalDate startsOn, LocalDate endsOn, List<PositionView> positions) {}

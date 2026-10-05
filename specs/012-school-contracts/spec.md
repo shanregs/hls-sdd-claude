@@ -31,9 +31,11 @@
 - Q: If a new MoU has fewer positions than the Teachers currently placed, what happens to the extra Teachers? → A:
   The new MoU is accepted. Teachers who get no position stay placed and show as "not mapped to the current MoU"
   (FR-007a) until an Admin or Director moves or exits them; nothing is ended automatically.
-- Q: Can a Teacher still in "Recruited" or in-training status be mapped to a position? → A: Yes. Mapping checks only
-  that the Teacher is not exited (FR-005); the Teacher's status is not a condition. Any rule that holds trainees back
-  until induction is signed off would be added by spec 016 if it chooses, not here.
+- Q: Can a Teacher still in training be mapped to a position? → A: No (decided 2026-10-05 from the business-flow doc,
+  rule 9: training must be completed before School assignment). Mapping requires the Teacher to be active or on
+  leave; a Teacher in training or exited is refused. Induction sign-off (spec 016) is what makes a recruit active.
+  This replaces an earlier answer that allowed any non-exited Teacher. Carried-over placements of Teachers already
+  in training are kept as they are (they keep working), but no new mapping of a trainee is accepted.
 - Q: Can a contract's end date be removed again? → A: Yes. An Admin or Director can set, move or clear the end date
   at any time while no later MoU exists for the School; each change is audited with the prior and new value.
 - Q: Where does the MoU come from, and where do the Teachers come from? → A: HLS runs two parallel activities. School
@@ -133,6 +135,7 @@ positions and see their assignments continue without a gap.
    its salary is shown; for a "same for all" contract the next vacant position is used.
 3. **Given** a contract with every position filled, **When** another Teacher is mapped, **Then** it is refused
    with "All N positions are filled; record a new contract to add Teachers."
+3a. **Given** a Teacher whose status is in training, **When** a user tries to map them, **Then** it is refused with "This Teacher is still in training; mapping is possible after induction is signed off"; an active or on-leave Teacher is accepted.
 4. **Given** a Teacher already mapped at another School on overlapping dates, **When** they are mapped, **Then**
    it is refused; a move to another School on a later date is accepted as a scheduled move.
 5. **Given** a School with no contract covering the start date, **When** a Teacher is mapped to it, **Then** a
@@ -221,7 +224,7 @@ each state in the list, filter by status, and see a Zone Manager's list limited 
 
 - **FR-005**: The system MUST let an Admin, a Director or the School's Zone Manager map a Teacher to a vacant
   position of the School's contract, with a start date and an optional end date, and MUST refuse overlapping
-  assignments for the same Teacher, a position that is already filled on those dates, and an exited Teacher. When
+  assignments for the same Teacher, a position that is already filled on those dates, an exited Teacher, and a Teacher still in training. When
   the School has no contract covering the start date, the system MUST create a "MoU pending" contract from that
   date and assign the Teacher without a position; once an active MoU covers the date a vacant position MUST be used. A School's contract MUST NOT have more Teachers mapped at once than it has positions.
 - **FR-006**: For a "different for each" contract the position MUST be chosen when mapping; for a "same for all"
@@ -343,9 +346,9 @@ added when this spec merges (see Assumptions).
   their own specs: school marketing and the MoU pipeline (spec 023, which hands the won School to this spec, with
   the proposed terms pre-filled by it) and campus recruitment, offers and induction (spec 016, which creates the
   Teachers who are then mapped here).
-- Teachers that can be mapped are those of spec 005 who are not exited, whatever their status (including "Recruited"
-  or in training). Spec 016 may later restrict this (for example to "Ready to deploy"); that would be a change made
-  there and would not change this spec's tables or interface.
+- Teachers that can be mapped are those of spec 005 whose status is active or on leave. A Teacher in training or
+  exited is refused. Spec 016's induction sign-off makes a recruit active, so "ready to deploy" means active with no
+  current School assignment.
 - An MoU recorded here may have been prepared in spec 023. The contract carries no link to the pipeline; spec 023
   keeps the link and reads the contract (existence, positions and filled count) through the public interface in FR-017.
   Only Admin and Director record the MoU, as in FR-001, whoever negotiated it.

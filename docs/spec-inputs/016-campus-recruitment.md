@@ -68,3 +68,15 @@ for the stipend (013 reads it), candidate self-service portal, resume parsing, m
 - Is a College a Zone-bound record, and does a Zone Manager see only colleges of their Zone?
 - Season definition (academic year, drive batch) for the dashboard.
 - Should a recruit be blocked from mapping (012) until "Ready to deploy"? 012 currently maps any non-exited Teacher, so this would be a rule added in 016.
+
+## Additions from `docs/HLS-core-business-flow.md` (2026-10-05)
+
+Decided: D1 (012 refuses to map a Teacher in training; induction sign-off makes the Teacher active), D2 (salary starts
+at the first School assignment; no salary history entry at acceptance), D3 (no new Teacher statuses), D4 (generate the
+offer letter and track its status). Still to add to the spec through `/speckit-clarify`:
+
+- College workflow (identified, contacted, Placement Officer discussion, date confirmed), Placement Officer, assigned manager, next recruitment date.
+- Structured group speaking assessment with scores (English, communication, correctness, expression, confidence, overall suitability) and qualified or not qualified, alongside selected, waitlisted, rejected.
+- Joining ratio (actual joiners / selected x 100); funnel steps "School joined" and "Active Teachers".
+- Training assessment score; optional food, accommodation and cost capture (policy unconfirmed).
+- Teacher fields: college, qualification, recruitment batch, training batch.

@@ -70,3 +70,13 @@ mobile screens, e-signature.
 - Lost prospects: can they be reopened, and after how long are they dropped from the board?
 - Does the proposal's salary basis have to match what the signed MoU says, or is the MoU free to differ (it is only
   pre-filled)?
+
+## Additions from `docs/HLS-core-business-flow.md` (2026-10-05, not yet in the spec)
+
+- Visit status flow (planned, confirmed, visited, report submitted, follow-up required); a visit must have an outcome before it can be closed.
+- On Hold stage; a Final stage with management review before the MoU.
+- Manager activity plan with missed and rescheduled activities; today, tomorrow and this week views.
+- Principal and management contacts; attachments on visits.
+- Activity timeline per School and per Manager.
+- Link to incentives (030) once a School is confirmed.
+- Open: who approves the MoU (D5).
