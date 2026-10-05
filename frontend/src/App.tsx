@@ -30,6 +30,7 @@ import { AttendanceGridPage } from "./features/attendance/AttendanceGridPage";
 import { ApplyLeavePage } from "./features/leave/ApplyLeavePage";
 import { MyLeaveHistoryPage } from "./features/leave/MyLeaveHistoryPage";
 import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
+import { NotificationsPage } from "./features/notifications/NotificationsPage";
 
 /**
  * The real client-side router (spec 002, FR-010/FR-011): every authenticated screen renders
@@ -251,6 +252,14 @@ export function App() {
           element={
             <RouteGuard>
               <AllSessionsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/account/notifications"
+          element={
+            <RouteGuard>
+              <NotificationsPage />
             </RouteGuard>
           }
         />
