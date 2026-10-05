@@ -887,7 +887,7 @@ const pages: PageCase[] = [
   {
     name: "SettingsPage",
     render: () => <SettingsPage />,
-    settle: () => screen.findByText("Change password", { selector: "h2" }),
+    settle: () => screen.findByRole("button", { name: "Edit" }),
   },
   {
     name: "RolePermissionsGrid",

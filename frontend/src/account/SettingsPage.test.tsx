@@ -29,6 +29,18 @@ function mockApi(write: Response = json(PROFILE)) {
   });
 }
 
+async function openPassword() {
+  await userEvent
+    .setup()
+    .click(await screen.findByRole("tab", { name: "Change password" }));
+}
+
+async function openEdit() {
+  await userEvent
+    .setup()
+    .click(await screen.findByRole("button", { name: "Edit" }));
+}
+
 function lastWrite() {
   const call = authFetch.mock.calls.filter(([, init]) => init?.method).at(-1);
   return call ? { url: String(call[0]), body: JSON.parse(call[1].body) } : null;
@@ -43,18 +55,24 @@ describe("SettingsPage", () => {
     mockApi();
     render(<SettingsPage />);
 
-    expect(await screen.findByLabelText(/^Name/)).toHaveValue("Tara Teacher");
+    expect(await screen.findByText("Tara Teacher")).toBeInTheDocument();
+    expect(screen.getByText("9800000004")).toBeInTheDocument();
+    expect(screen.getByText("TEACHER")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Name/)).toBeNull();
+    expect(screen.queryByLabelText(/Current password/)).toBeNull();
+
+    await openEdit();
+    expect(screen.getByLabelText(/^Name/)).toHaveValue("Tara Teacher");
     expect(screen.getByLabelText("Phone number")).toBeDisabled();
-    expect(screen.getByText(/Roles: TEACHER/)).toBeInTheDocument();
   });
 
   it("holds the password form but not the sessions, which have their own page", async () => {
     mockApi();
     render(<SettingsPage />);
 
-    expect(
-      await screen.findByRole("heading", { name: "Change password" }),
-    ).toBeInTheDocument();
+    await openPassword();
+    expect(screen.getByLabelText(/Current password/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Name/)).toBeNull();
     expect(screen.queryByText("My sessions")).toBeNull();
     expect(authFetch.mock.calls.map((c) => String(c[0]))).not.toContain(
       "/api/v1/me/sessions",
@@ -64,6 +82,7 @@ describe("SettingsPage", () => {
   it("saves an edited name, username and email", async () => {
     mockApi(json({ ...PROFILE, displayName: "Tara T", username: "tara.t" }));
     render(<SettingsPage />);
+    await openEdit();
     const user = userEvent.setup();
 
     const name = await screen.findByLabelText(/^Name/);
@@ -75,6 +94,7 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByText("Your profile was saved."),
     ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Name/)).toBeNull();
     expect(lastWrite()).toEqual({
       url: "/api/v1/me/profile",
       body: { displayName: "Tara T", username: "tara.t", email: "" },
@@ -84,6 +104,7 @@ describe("SettingsPage", () => {
   it("validates the profile fields before sending", async () => {
     mockApi();
     render(<SettingsPage />);
+    await openEdit();
     const user = userEvent.setup();
 
     const name = await screen.findByLabelText(/^Name/);
@@ -103,6 +124,7 @@ describe("SettingsPage", () => {
   it("shows the server refusal when a username is taken", async () => {
     mockApi(json({ reason: "That username is already taken." }, 409));
     render(<SettingsPage />);
+    await openEdit();
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText("Username"), "taken");
@@ -114,6 +136,7 @@ describe("SettingsPage", () => {
   it("changes the password when the form is valid", async () => {
     mockApi(json(null, 204));
     render(<SettingsPage />);
+    await openPassword();
     const user = userEvent.setup();
 
     await user.type(
@@ -142,6 +165,7 @@ describe("SettingsPage", () => {
   it("refuses a short or mismatched new password without calling the server", async () => {
     mockApi();
     render(<SettingsPage />);
+    await openPassword();
     const user = userEvent.setup();
 
     await user.type(
@@ -162,6 +186,7 @@ describe("SettingsPage", () => {
   it("shows the server message for a wrong current password", async () => {
     mockApi(json({ reason: "Your current password is incorrect." }, 400));
     render(<SettingsPage />);
+    await openPassword();
     const user = userEvent.setup();
 
     await user.type(
