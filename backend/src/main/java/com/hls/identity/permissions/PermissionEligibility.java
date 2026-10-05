@@ -36,7 +36,9 @@ public final class PermissionEligibility {
             PermissionModule.SCHOOL_CONTRACTS,
             PermissionModule.RECRUITMENT,
             PermissionModule.OFFERS,
-            PermissionModule.INDUCTION);
+            PermissionModule.INDUCTION,
+            PermissionModule.MARKETING,
+            PermissionModule.MARKETING_SETTINGS);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -48,7 +50,9 @@ public final class PermissionEligibility {
             PermissionModule.SCHOOL_CONTRACTS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.RECRUITMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.OFFERS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
-            PermissionModule.INDUCTION, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
+            PermissionModule.INDUCTION, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.MARKETING, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.MARKETING_SETTINGS, EnumSet.of(Role.ADMIN, Role.DIRECTOR));
 
     private PermissionEligibility() {}
 

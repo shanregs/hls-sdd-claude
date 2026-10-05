@@ -94,6 +94,7 @@ public class PermissionMatrixService {
         seedNotifications();
         seedSchoolContracts();
         seedRecruitment();
+        seedMarketing();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -208,6 +209,27 @@ public class PermissionMatrixService {
         }
         seed(Role.ADMIN, PermissionModule.OFFERS, PermissionAction.VIEW, true);
         seed(Role.MANAGER, PermissionModule.OFFERS, PermissionAction.VIEW, true);
+        grants.invalidateAround();
+    }
+
+    /**
+     * Marketing defaults (spec 023): Admin and Director run prospects, visits and proposals; the Director and the
+     * Zone Manager (scoped to their Zones in the service) also review a Final Stage prospect; the settings screen is
+     * for Admin and Director.
+     */
+    private void seedMarketing() {
+        List<PermissionAction> write = List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            for (PermissionAction action : write) {
+                seed(role, PermissionModule.MARKETING, action, true);
+            }
+        }
+        seed(Role.DIRECTOR, PermissionModule.MARKETING, PermissionAction.APPROVE, true);
+        seed(Role.MANAGER, PermissionModule.MARKETING, PermissionAction.APPROVE, true);
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.MARKETING_SETTINGS, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.MARKETING_SETTINGS, PermissionAction.EDIT, true);
+        }
         grants.invalidateAround();
     }
 
