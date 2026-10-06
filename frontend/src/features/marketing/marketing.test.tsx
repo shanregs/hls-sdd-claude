@@ -691,6 +691,94 @@ describe("MarketingCalendar (spec 023 US1)", () => {
   });
 });
 
+describe("ActivityDialog: planning for a prospect not yet on the list (spec 023 US1)", () => {
+  const ZONES = {
+    content: [
+      {
+        id: "z1",
+        name: "Demo Zone",
+        version: 0,
+        placeCount: 1,
+        schoolCount: 1,
+      },
+    ],
+    page: 0,
+    size: 100,
+    totalElements: 1,
+  };
+
+  function openPlan() {
+    render(
+      <MemoryRouter>
+        <MarketingCalendar />
+      </MemoryRouter>,
+    );
+    return screen
+      .findByRole("button", { name: "Plan an activity" })
+      .then((b) => userEvent.click(b));
+  }
+
+  it("offers adding a prospect only to a role that may create prospects", async () => {
+    grants["/marketing/calendar"] = ["VIEW", "CREATE"];
+    grants["/marketing/prospects"] = ["VIEW"];
+    route({ "/activities": { content: [], drives: [] } });
+
+    await openPlan();
+
+    await screen.findByRole("dialog");
+    expect(
+      screen.queryByRole("button", { name: "Add a new prospect" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("adds a new prospect inside the dialog and selects it for the activity", async () => {
+    grants["/marketing/calendar"] = ["VIEW", "CREATE"];
+    grants["/marketing/prospects"] = ["VIEW", "CREATE"];
+    authFetch.mockImplementation(async (input: string, init?: RequestInit) => {
+      const url = String(input);
+      if (init?.method === "POST" && url.endsWith("/prospects"))
+        return json(
+          { row: { ...ROW, id: "p9", name: "Lakeview School" } },
+          201,
+        );
+      if (url.includes("/prospects/p9"))
+        return json(detail({}, { id: "p9", name: "Lakeview School" }));
+      if (url.includes("/zones")) return json(ZONES);
+      if (url.includes("/activities")) return json({ content: [], drives: [] });
+      return json({ content: [], page: 0, size: 50, totalElements: 0 });
+    });
+
+    await openPlan();
+    const plan = await screen.findByRole("dialog", {
+      name: "Plan an activity",
+    });
+    await userEvent.click(
+      within(plan).getByRole("button", { name: "Add a new prospect" }),
+    );
+    const add = await screen.findByRole("dialog", { name: "Add a prospect" });
+    await userEvent.type(
+      within(add).getByLabelText(/School name/),
+      "Lakeview School",
+    );
+    await userEvent.click(within(add).getByLabelText(/Zone/));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Demo Zone" }),
+    );
+    await userEvent.click(
+      within(add).getByRole("button", { name: "Add prospect" }),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Add a prospect" }),
+      ).toBeNull(),
+    );
+    expect(await within(plan).findByLabelText(/Prospect/)).toHaveValue(
+      "Lakeview School (Demo Zone)",
+    );
+  });
+});
+
 describe("MarketingDashboard and settings (spec 023 US4, US5)", () => {
   const data = {
     period: "2026-10",

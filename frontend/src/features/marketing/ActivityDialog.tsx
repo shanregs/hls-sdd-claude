@@ -12,11 +12,14 @@ import {
   TextField,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
+import { useGrantedActions } from "../common/useGrantedActions";
 import { listInterviewers } from "../recruitment/recruitmentApi";
+import { ProspectDialog } from "./ProspectDialog";
 import {
   ACTIVITY_LABEL,
   cancelActivity,
   completeActivity,
+  getProspect,
   listProspects,
   planActivity,
   rescheduleActivity,
@@ -58,7 +61,12 @@ export function ActivityDialog({
   onSaved,
 }: ActivityDialogProps) {
   const { authFetch } = useAuth();
+  const canAddProspect = useGrantedActions("/marketing/prospects").has(
+    "CREATE",
+  );
+  const [addingProspect, setAddingProspect] = useState(false);
   const [prospects, setProspects] = useState<ProspectRow[]>([]);
+  const [search, setSearch] = useState("");
   const [people, setPeople] = useState<PersonRef[]>([]);
   const [prospectId, setProspectId] = useState(prospect?.id ?? "");
   const [type, setType] = useState<ActivityType>("VISIT");
@@ -74,16 +82,49 @@ export function ActivityDialog({
   useEffect(() => {
     if (mode !== "plan") return;
     void (async () => {
-      const [p, a] = await Promise.all([
-        prospect
-          ? Promise.resolve(null)
-          : listProspects(authFetch, { size: 100 }),
-        listInterviewers(authFetch),
-      ]);
-      if (p && p.ok) setProspects(p.data.content);
+      const a = await listInterviewers(authFetch);
       if (a.ok) setPeople(a.data);
     })();
-  }, [authFetch, mode, prospect]);
+  }, [authFetch, mode]);
+
+  // The prospect list follows what is typed, so a School beyond the first page is still found.
+  useEffect(() => {
+    if (mode !== "plan" || prospect) return;
+    const timer = setTimeout(() => {
+      void (async () => {
+        const p = await listProspects(authFetch, {
+          size: 50,
+          query: search.trim() || undefined,
+        });
+        if (p.ok) {
+          setProspects((current) => {
+            const chosen = current.find((c) => c.id === prospectId);
+            const found = p.data.content;
+            return chosen && !found.some((f) => f.id === chosen.id)
+              ? [chosen, ...found]
+              : found;
+          });
+        }
+      })();
+    }, 250);
+    return () => clearTimeout(timer);
+    // prospectId is read only to keep the chosen row listed while the search changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authFetch, mode, prospect, search]);
+
+  const prospectAdded = async (id: string) => {
+    setAddingProspect(false);
+    const added = await getProspect(authFetch, id);
+    if (added.ok) {
+      setProspects((current) => [added.data.row, ...current]);
+      setProspectId(id);
+      setError(null);
+    } else {
+      setError(
+        "The prospect was added, but could not be loaded. Search for it by name.",
+      );
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -165,19 +206,43 @@ export function ActivityDialog({
               {prospect ? (
                 <TextField label="Prospect" value={prospect.name} disabled />
               ) : (
-                <TextField
-                  select
-                  required
-                  label="Prospect"
-                  value={prospectId}
-                  onChange={(e) => setProspectId(e.target.value)}
-                >
-                  {prospects.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <>
+                  <Autocomplete
+                    options={prospects}
+                    value={prospects.find((p) => p.id === prospectId) ?? null}
+                    getOptionLabel={(p) =>
+                      p.zoneName ? `${p.name} (${p.zoneName})` : p.name
+                    }
+                    isOptionEqualToValue={(a, b) => a.id === b.id}
+                    filterOptions={(options) => options}
+                    onInputChange={(_e, value, reason) => {
+                      if (reason === "input") setSearch(value);
+                    }}
+                    onChange={(_e, value) => setProspectId(value?.id ?? "")}
+                    noOptionsText={
+                      canAddProspect
+                        ? "No prospect found. Use Add a new prospect."
+                        : "No prospect found."
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        label="Prospect"
+                        helperText="A School you are still approaching. It becomes a School in Master data when it is won."
+                      />
+                    )}
+                  />
+                  {canAddProspect && (
+                    <Button
+                      variant="text"
+                      sx={{ alignSelf: "flex-start" }}
+                      onClick={() => setAddingProspect(true)}
+                    >
+                      Add a new prospect
+                    </Button>
+                  )}
+                </>
               )}
               <TextField
                 select
@@ -286,6 +351,12 @@ export function ActivityDialog({
                 : "Cancel activity"}
         </Button>
       </DialogActions>
+      {addingProspect && (
+        <ProspectDialog
+          onClose={() => setAddingProspect(false)}
+          onSaved={(id) => void prospectAdded(id)}
+        />
+      )}
     </Dialog>
   );
 }

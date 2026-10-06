@@ -216,6 +216,7 @@ Contracts**. The MARKETING menu has Prospects, Calendar, Pipeline, Dashboard and
   stays) or cancel it (a reason). A planned visit past its date shows as **missed**. Attach photos or documents to a
   visit (jpg, png, pdf, docx, xlsx, txt up to 10 MB, ten per visit); only Admin and Director remove one, with a reason.
 - **Calendar** shows the month's visits and your recruitment drives side by side; a clash is shown, not blocked.
+  **Plan an activity** is for a prospect, found by typing part of its name; for a School not on the list yet, choose **Add a new prospect** in the dialog (no need to add it to Master data first; the School is created when the prospect is won).
 - **Pipeline** is the board: Prospect, Contacted, Visit, Follow-up, Interested, Negotiation, Final Stage, then Won, MoU and
   Active, with On Hold and Lost. **MoU and Active follow the contract** in School Contracts (a live contract, then a
   Teacher placed), they are not dragged. Moving to Final Stage needs a **proposal** (Teacher count, start month, the
