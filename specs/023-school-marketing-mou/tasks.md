@@ -190,6 +190,10 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 
 ---
 
+## Amendment 2026-10-06: plan an activity for a new prospect
+
+- [x] T060 [US1] `ActivityDialog`: prospect choice as a search by name; "Add a new prospect" (only with the create action on `/marketing/prospects`) opens `ProspectDialog` and selects the saved prospect. Tests in `marketing.test.tsx` (button hidden without the grant; add and select). Frontend only; no API or migration change (`GET /prospects?query=` already exists).
+
 ## Dependencies and Execution Order
 
 - Phase 1 then Phase 2. T003 blocks every table-using task; T007 before T008; T013 after T003; T012 before T020.

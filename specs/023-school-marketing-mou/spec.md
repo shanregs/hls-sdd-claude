@@ -10,6 +10,15 @@
 
 ## Clarifications
 
+### Session 2026-10-06
+
+- Q: When planning an activity for a School that is not on the prospect list yet, must it be added to Master data
+  first? → A: No (decided 2026-10-06). Activities are planned against a **prospect**, never against a Master data
+  School; a School is created in Master data only when its prospect is won (FR-008), so adding it first would bypass
+  the duplicate check and the win. The Plan an activity dialog lets a person who may create prospects add a new
+  prospect there and then (the same form and duplicate refusal as the Prospects screen); the new prospect is selected
+  and the activity is planned in one flow. The prospect choice is a search by name, not a fixed first page.
+
 ### Session 2026-10-05
 
 - Q: How does this relate to the MoU (012) and to recruitment (016)? → A: This spec is the sales side up to the signature. The signed MoU, its signatories and the mapping of Teachers are spec 012, the only contract record; this spec keeps a link to it and shows its status. Recruitment (016) supplies the Teachers; the two run in parallel and meet only in the demand-versus-supply view.
@@ -82,6 +91,12 @@ outcome and a follow-up date, and see them on the calendar, with the follow-up f
    Director with the removal recorded.
 9. **Given** an outcome with a follow-up date, **When** it is saved and spec 025 is present, **Then** a task is
    created for the prospect's owner with that due date; if 025 is absent only the "follow-up overdue" flag applies.
+9. **Given** the Plan an activity dialog and a School that is not on the prospect list, **When** a person who may
+   create prospects chooses "Add a new prospect", fills the prospect form and saves, **Then** the prospect is created
+   (a duplicate is refused as on the Prospects screen), is selected in the dialog, and the activity is planned
+   without leaving the calendar. A person without the create action on prospects is not offered it.
+10. **Given** more prospects than fit on one page, **When** the person types part of a name in the dialog, **Then**
+    the matching prospects are listed, so any prospect can be chosen.
 
 ---
 
@@ -218,7 +233,7 @@ supply 5 and a shortfall of 4.
 **Prospects, visits and calendar**
 
 - **FR-001**: The system MUST let an Admin, Director or Zone Manager create a School prospect with name, board, address, Zone, contact person, designation, phone, expected Teachers and owner, refusing a duplicate (same name, board and Zone) and linking to an existing School of spec 005 when there is one.
-- **FR-002**: The system MUST let them log activity on a prospect or School: type (visit, call, proposal meeting, follow-up), status (planned, completed, missed, rescheduled, cancelled; an outcome is required to complete), date, HLS attendees, notes, outcome and an optional follow-up date; and MUST show it on a month calendar and list with the person's own entries and overdue follow-ups highlighted.
+- **FR-002**: The system MUST let them log activity on a prospect or School: type (visit, call, proposal meeting, follow-up), status (planned, completed, missed, rescheduled, cancelled; an outcome is required to complete), date, HLS attendees, notes, outcome and an optional follow-up date; and MUST show it on a month calendar and list with the person's own entries and overdue follow-ups highlighted. The dialog that plans an activity MUST let a person who may create prospects add a new prospect inside it, and MUST find a prospect by typing part of its name rather than showing only a first page; planning never requires the School to exist in Master data first.
 - **FR-003**: The system MUST show a person's school visits and their recruitment drives (spec 016, when present) together so clashes are visible, without blocking either.
 
 **Pipeline**
