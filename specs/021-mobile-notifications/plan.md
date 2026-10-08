@@ -96,8 +96,8 @@ mobile/
 │   │   ├── notificationMessages.ts          # NEW: plain wording for failures
 │   │   ├── NotificationRow.tsx              # NEW: one row with read state and actions
 │   │   ├── NotificationDetailDialog.tsx     # NEW: full text when no link can be followed
-│   │   ├── ConfirmDialog.tsx                # NEW: title, text, Cancel and Confirm (Clear read)
 │   │   └── useNotificationList.ts           # NEW: paged list with filter, reload and error state
+│   │                                        # (Clear read reuses leave/ReasonDialog in its no-text mode)
 │   ├── navigation/AppShell.tsx              # CHANGED: provider under AccessModelProvider, bell in the header,
 │   │                                        #          render the screen, RouteState.month
 │   ├── screens/NotificationsScreen.tsx      # NEW

@@ -27,7 +27,8 @@ The bell opens the same route through the shell's `openRoute`. Nothing chooses t
 
 - An `Appbar.Action` in the shell header, shown when the access model offers `/account/notifications`.
 - Number: hidden when `count` is 0 or `null`; the exact number up to 99; `99+` above 99.
-- Accessibility label: `Notifications, N unread` (`Notifications` with no number when none or unknown).
+- Accessibility label: `Notifications, N unread` (including `0`), or `Notifications, count unavailable` while the count is
+  unknown; never the bare `Notifications`, which is the drawer item's name.
 - Tap opens the Notifications screen. 48 dp target.
 
 ## Notifications screen

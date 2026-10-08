@@ -96,8 +96,8 @@ the web `NotificationBell` and `notificationsApi.ts`, and the app after specs 01
 
 ## 10. Confirmation and destructive actions
 
-- **Decision**: Clear read opens a confirmation dialog (new small `ConfirmDialog`, the existing `ReasonDialog` takes
-  text and is not reused); delete one acts at once. Both update the screen only after the server confirms. "Clear read"
+- **Decision**: Clear read opens a confirmation dialog (the existing `leave/ReasonDialog`, which supports a plain confirmation
+  with no text field, so no new dialog is built); delete one acts at once. Both update the screen only after the server confirms. "Clear read"
   is disabled when the loaded list has no read notification and the filter is Unread only, to avoid an empty action.
 
 ## 11. Dependencies and tooling

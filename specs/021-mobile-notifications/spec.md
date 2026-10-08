@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-08
 
-**Status**: Draft
+**Status**: Implemented (device pass pending)
 
 **Input**: User description: "021-mobile-notifications: Notifications for the HLS Android app, built on the app shell, sign-in and server-driven menus of spec 018 and the notifications API of spec 010, which stays unchanged. A bell in the app header with the unread count (hidden at zero, 99+ above 99) and a Notifications list (ACCOUNT, Notifications): the user's own notifications newest first, unread highlighted, in pages, filter to unread; open one (marks it read and follows its link to a screen the app has, otherwise just shows it), mark one or all as read, delete one, clear all read. The count is refreshed on app open, on returning to the foreground, on pull-to-refresh and every 30 seconds while the app is open. The web links (leave history, leave management, my attendance for a month) are mapped to the screens of specs 019 and 020. No new business rules; same scope and permission rules as the web. Every call carries the device location or its reason. Out of scope: push notifications, SMS, email, offline capture, notification settings, new event types, iOS, Admin and System use. Per docs/spec-roadmap.md row 021 and docs/spec-inputs/021-mobile-notifications.md."
 

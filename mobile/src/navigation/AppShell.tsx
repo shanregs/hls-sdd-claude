@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
 import { Appbar, Button, Drawer, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { AccessModelProvider, useAccessModel } from "../access/AccessModelProvider";
-import { HOME_ROUTE, screenFor } from "../access/screenRegistry";
+import { HOME_ROUTE, NOTIFICATIONS_ROUTE, screenFor } from "../access/screenRegistry";
 import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
 import type { LeaveStatus } from "../api/leaveApi";
@@ -19,6 +19,9 @@ import { LocationPrivacyScreen } from "../screens/LocationPrivacyScreen";
 import { HomeScreen } from "../screens/HomeScreen";
 import { NoConnectionScreen } from "../screens/NoConnectionScreen";
 import { NotAuthorizedScreen } from "../screens/NotAuthorizedScreen";
+import { NotificationBell } from "../notifications/NotificationBell";
+import { NotificationsProvider } from "../notifications/NotificationsProvider";
+import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { Screen } from "../screens/Screen";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
@@ -33,7 +36,9 @@ import { InnerBackContext, type InnerBackHandler, type InnerBackRegistry } from 
 export function AppShell({ user }: { user: SignedInUser }) {
   return (
     <AccessModelProvider>
-      <ShellContent user={user} />
+      <NotificationsProvider>
+        <ShellContent user={user} />
+      </NotificationsProvider>
     </AccessModelProvider>
   );
 }
@@ -42,6 +47,8 @@ export function AppShell({ user }: { user: SignedInUser }) {
 export interface RouteState {
   notice?: string;
   status?: LeaveStatus;
+  /** The month ("YYYY-MM") My Attendance opens on, from a notification link. */
+  month?: string;
 }
 
 /** Opens a screen by its route, through the same menu check as the drawer. */
@@ -162,7 +169,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
     body = <ProfileScreen onOpenDevices={() => setOverlay("devices")} onOpenPrivacy={() => setOverlay("privacy")} />;
     title = "Profile";
   } else if (current === "myAttendance") {
-    body = <MyAttendanceScreen />;
+    body = <MyAttendanceScreen initialMonth={routeState?.month} />;
     title = "My Attendance";
   } else if (current === "attendanceHistory") {
     body = <AttendanceHistoryScreen />;
@@ -182,6 +189,9 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "leaveManagement") {
     body = <LeaveManagementScreen initialStatus={routeState?.status} />;
     title = "Leave Management";
+  } else if (current === "notifications") {
+    body = <NotificationsScreen openRoute={openRoute} canOpen={canOpen} />;
+    title = "Notifications";
   } else {
     body = <HomeScreen user={user} model={model} openRoute={openRoute} />;
     title = "Home";
@@ -195,6 +205,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
       <Appbar.Header>
         <Appbar.Action icon="menu" onPress={() => setDrawerOpen(true)} accessibilityLabel="Open menu" />
         <Appbar.Content title={title} />
+        <NotificationBell onOpen={() => openRoute(NOTIFICATIONS_ROUTE)} />
       </Appbar.Header>
       {body}
 
