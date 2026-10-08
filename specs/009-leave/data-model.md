@@ -7,8 +7,8 @@ Migration `V17__create_leave_tables.sql`. Plain ids, no cross-module foreign key
 | Column | Type | Notes |
 | --- | --- | --- |
 | id | uuid PK | |
-| code | varchar(20) unique | CASUAL, SICK, PERSONAL, OTHER |
-| name | varchar(60) | Casual, Sick, Personal, Other |
+| code | varchar(20) unique | CASUAL, SICK, PERSONAL, OTHER, LOP (A3) |
+| name | varchar(60) | Casual, Sick, Personal, Other, Loss of Pay (A3) |
 | sort_order | int | display order |
 | active | boolean | default true |
 
@@ -72,5 +72,5 @@ REJECTED and CANCELLED are terminal.
 
 ## Seed data (V17, idempotent)
 
-`leave_type` rows Casual, Sick, Personal, Other. Permission matrix rows are seeded by
+`leave_type` rows Casual, Sick, Personal, Other (V17) and Loss of Pay (V25, amendment A3). Permission matrix rows are seeded by
 `PermissionMatrixService.seedDefaults` (idempotent), not by SQL.

@@ -239,7 +239,7 @@ two-Manager boundary tests.
 - **Leave Request**: a Teacher's ask for leave: type, first and last date, half-day-start and
   half-day-end flags, reason, working-day count, status (Pending, Approved, Rejected, Cancelled),
   decided by, decided at, decision note or rejection reason.
-- **Leave Type**: Casual, Sick, Personal, Other (seeded).
+- **Leave Type**: Casual, Sick, Personal, Other (seeded); **Loss of Pay** (code `LOP`) added by amendment A3.
 - **Leave Mark Link**: the tie between an attendance mark and the request that created it, so a revoke
   and the history can find it.
 
@@ -292,3 +292,19 @@ before ACCOUNT, and an **OPERATIONS → Leave Management** item.
 - Only supervisors approve; a Teacher cannot approve at all, so self-approval does not arise.
 - The Android app (019 and later) will reuse the same APIs; no mobile screen is built here.
 - Demo Teachers and the 2026 Tamil Nadu holiday calendar from spec 008 are available for the seed.
+
+## Amendment A3: Loss-of-Pay leave type
+
+Added for spec 013a (salary structures), which treats an approved day of Loss-of-Pay leave as an unpaid day.
+
+- A fifth seeded leave type, **Loss of Pay**, code `LOP`, sort order 5, active. Migration
+  `V25__add_loss_of_pay_leave_type.sql` (idempotent). It is listed on Apply Leave like the others (the type list is
+  server-driven, so web and mobile need no change).
+- It behaves exactly like Casual, Sick, Personal and Other: same limits, preview, approval, cancel and revoke, and
+  approval writes the same Leave (L) marks. Leave adds no pay logic (the "no pay or deduction logic" assumption above
+  stands); payroll decides what an unpaid day is worth.
+- `leave.api.LeaveTypes` exposes the code (`LOSS_OF_PAY_CODE = "LOP"`) and `isLossOfPay(requestId)` /
+  `lossOfPayRequests(requestIds)`. A leave mark in attendance carries its request id (`MarkView.leaveRequestId`), and
+  attendance keeps a leave mark only while the request is approved, so other modules identify an approved Loss-of-Pay
+  day without reading leave tables. A half day keeps its day value on the mark.
+- No other requirement changes.
