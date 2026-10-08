@@ -81,3 +81,9 @@ public interface LeaveAttendance {
 
 `LEAVE_REQUEST` entity changes: `created`, `status` (before to after, with the reason or note), and
 `cancelledBy`. Leave-made marks: `ATTENDANCE_MARK` changes whose detail names the request.
+
+## Amendment A3: Loss-of-Pay type
+
+`GET /api/v1/me/leave/types` now also returns `{"code": "LOP", "name": "Loss of Pay"}` after the four original
+types. Nothing else in this contract changes. In-process (not HTTP) for other modules: `leave.api.LeaveTypes`
+(`LOSS_OF_PAY_CODE`, `isLossOfPay(requestId)`, `lossOfPayRequests(requestIds)`).

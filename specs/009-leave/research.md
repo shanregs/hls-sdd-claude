@@ -135,3 +135,11 @@ exams). It runs after the attendance seeder.
 **Decision**: entity type `LEAVE_REQUEST` mapped in `AuditVisibility` to `LEAVE_MANAGEMENT` VIEW, so
 Admin and Director (and Manager within the existing scope filter) see it in Change History. Leave
 marks use the existing `ATTENDANCE_MARK` entity type with the request id in the detail.
+
+## Amendment A3: how payroll recognises Loss-of-Pay
+
+**Decision**: the type has the stable code `LOP`; `leave.api.LeaveTypes.lossOfPayRequests(ids)` answers which leave
+request ids are Loss-of-Pay. **Why**: attendance marks already carry `leave_request_id` and are removed when a request
+is cancelled, rejected or revoked, so "a mark with a Loss-of-Pay request id" is exactly an approved Loss-of-Pay day,
+with no cross-module table access and no new column or event. **Alternative rejected**: a per-day flag on the
+attendance mark (needs an attendance change and would duplicate the type).

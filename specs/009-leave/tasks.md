@@ -164,3 +164,10 @@ Backend `backend/src/main/java/com/hls/{leave,attendance,identity,audit}/...`, t
 - **MVP**: Phase 1, Phase 2, US1 (apply and preview), US2 (history, cancel), US3 (decide) - a working request/approval loop with attendance feed already active; then US4's revoke and Teacher cancel.
 - Land each phase as its own commit with tests green; run the frontend a11y cases for each new screen as it is added.
 - Specs, docs and Postman are updated in Phase 8 but each task that changes a contract must update `contracts/leave-api.md` in the same commit.
+
+## Amendment A3: Loss-of-Pay leave type
+
+- [x] T0A3-1 Test first: `backend/src/test/java/com/hls/leave/LeaveLossOfPayTest.java` (type seeded and listed to a Teacher; apply, preview, approve, revoke, cancel like any type; the interface identifies Loss-of-Pay requests and marks)
+- [x] T0A3-2 `backend/src/main/resources/db/migration/V25__add_loss_of_pay_leave_type.sql` (idempotent insert of `LOP` / Loss of Pay, sort order 5)
+- [x] T0A3-3 `leave/api/LeaveTypes.java` and `leave/internal/LeaveTypesImpl.java`
+- [x] T0A3-4 Verified web (`ApplyLeavePage.tsx`) and mobile (`ApplyLeaveScreen.tsx`) read the type list from `GET /me/leave/types`; no frontend or mobile change

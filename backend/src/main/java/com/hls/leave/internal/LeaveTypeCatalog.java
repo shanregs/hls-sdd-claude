@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 /**
- * The leave types (Casual, Sick, Personal, Other), kept in memory: a handful of rows that are read for every leave
+ * The leave types (Casual, Sick, Personal, Other; Loss of Pay since amendment A3), kept in memory: a handful of rows that are read for every leave
  * list and every application. Nothing edits them yet; when an editor is added it must call {@link #changed()}.
  *
  * <p>The returned {@link LeaveType}s are shared: read them, never change them.

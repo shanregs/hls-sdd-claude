@@ -6,7 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
-/** A kind of leave (Casual, Sick, Personal, Other). Seeded and read-only in spec 009. */
+/** A kind of leave (Casual, Sick, Personal, Other; Loss of Pay since amendment A3). Seeded and read-only in spec 009. */
 @Entity
 @Table(name = "leave_type")
 public class LeaveType {

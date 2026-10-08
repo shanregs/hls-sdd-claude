@@ -155,3 +155,9 @@ frontend/src/App.tsx                                      # + guarded routes /le
 ## Complexity Tracking
 
 No violations. Table intentionally omitted.
+
+## Amendment A3: Loss-of-Pay leave type
+
+One data migration, `V25__add_loss_of_pay_leave_type.sql` (V17 is not edited), and one public interface,
+`leave.api.LeaveTypes` (implemented by `leave.internal.LeaveTypesImpl` over `LeaveRequestRepository` and
+`LeaveTypeCatalog`). No endpoint, screen, permission or attendance change. Tests: `LeaveLossOfPayTest`.
