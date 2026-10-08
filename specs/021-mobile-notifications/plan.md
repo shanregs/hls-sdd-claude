@@ -102,7 +102,7 @@ mobile/
 │   │                                        #          render the screen, RouteState.month
 │   ├── screens/NotificationsScreen.tsx      # NEW
 │   ├── screens/MyAttendanceScreen.tsx       # CHANGED: optional initialMonth, range kind for a previous-year month
-│   └── formats/dates.ts                     # CHANGED (small): date-and-time in the business zone, if not present
+│   └── formats/dates.ts                     # unchanged: formatDateTime already gives DD/MM/YYYY HH:mm
 └── __tests__/
     ├── support/notificationsFixtures.ts     # NEW: realistic notifications and pages
     ├── support/notificationsServer.ts       # NEW: notification routes on the FakeServer
@@ -131,8 +131,8 @@ No Constitution Check violations to justify.
   link shows the detail dialog instead (FR-005).
 - **My Attendance remount**: pass `key={month}` so a second link to another month re-initialises `MonthPane`; the
   month is also dropped from `RouteState` when the user navigates elsewhere.
-- **Time zone**: format `createdAt` in India Standard Time like the other screens; check `formats/dates.ts` and reuse
-  rather than add a second formatter.
+- **Time zone**: use the existing `formatDateTime` from `formats/dates.ts` for `createdAt` (it formats in the device's
+  zone, like the other screens); add no second formatter.
 - **Single-tap safety**: a row with a request in flight ignores further taps; repeated opens of a read notification
   send no call.
 - **Header on sub-screens**: Devices and Location privacy keep their own header with no bell (research §3); say so in
