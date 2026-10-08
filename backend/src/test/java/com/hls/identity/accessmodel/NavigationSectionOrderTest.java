@@ -130,6 +130,28 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     }
 
     @Test
+    void designationsIsAMasterDataItemForAdminAndDirectorOnly() {
+        for (Role role : Role.values()) {
+            var navigation = client.get()
+                    .uri("/api/v1/me/access-model")
+                    .header("Authorization", "Bearer " + signInAs(role).token())
+                    .exchange()
+                    .expectBody(AccessModelDtos.AccessModelResponse.class)
+                    .returnResult()
+                    .getResponseBody();
+            boolean has = navigation.navigation().stream()
+                    .filter(s -> s.section().equals("MASTER DATA"))
+                    .flatMap(s -> s.items().stream())
+                    .anyMatch(i -> i.label().equals("Designations") && i.route().equals("/master-data/designations"));
+            boolean expected = role == Role.ADMIN || role == Role.DIRECTOR;
+            assertThat(has).as(role.name()).isEqualTo(expected);
+            assertThat(navigation.dataScope().get("DESIGNATIONS"))
+                    .as(role.name() + " scope")
+                    .isEqualTo(expected ? "ORG_WIDE" : null);
+        }
+    }
+
+    @Test
     void leaveItemsAppearOnlyForTheRolesThatHoldThem() {
         record Expect(Role role, boolean applyLeave, boolean leaveManagement) {}
         for (Expect e : new Expect[] {

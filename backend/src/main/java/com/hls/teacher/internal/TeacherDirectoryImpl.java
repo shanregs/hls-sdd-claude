@@ -4,6 +4,7 @@ import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,47 @@ class TeacherDirectoryImpl implements TeacherDirectory {
     @Override
     public Set<UUID> teachersPlacedDuring(LocalDate from, LocalDate to) {
         return new HashSet<>(placements.teachersAssignedDuring(from, to));
+    }
+
+    @Override
+    public Optional<UUID> currentDesignation(UUID teacherId) {
+        return teachers.findById(teacherId).map(Teacher::getDesignationId);
+    }
+
+    @Override
+    public Map<UUID, UUID> currentDesignations(Collection<UUID> teacherIds) {
+        Map<UUID, UUID> result = new HashMap<>();
+        if (!teacherIds.isEmpty()) {
+            teachers.findAllById(teacherIds).forEach(t -> {
+                if (t.getDesignationId() != null) {
+                    result.put(t.getId(), t.getDesignationId());
+                }
+            });
+        }
+        return result;
+    }
+
+    @Override
+    public Map<UUID, TeacherEmployment> employment(Collection<UUID> teacherIds) {
+        if (teacherIds.isEmpty()) {
+            return Map.of();
+        }
+        return teachers.findAllById(teacherIds).stream()
+                .collect(Collectors.toMap(
+                        Teacher::getId,
+                        t -> new TeacherEmployment(t.getId(), t.getDesignationId(), t.getEmployeeId())));
+    }
+
+    @Override
+    public Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds) {
+        Map<UUID, Long> result = new HashMap<>();
+        for (Object[] row : teachers.countByDesignation()) {
+            UUID id = (UUID) row[0];
+            if (designationIds == null || designationIds.isEmpty() || designationIds.contains(id)) {
+                result.put(id, (Long) row[1]);
+            }
+        }
+        return result;
     }
 
     private static TeacherInfo toInfo(Teacher t) {

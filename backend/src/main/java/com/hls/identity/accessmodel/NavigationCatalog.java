@@ -134,6 +134,14 @@ public final class NavigationCatalog {
                     25,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
+                    "Designations",
+                    "/master-data/designations",
+                    PermissionModule.DESIGNATIONS,
+                    PermissionAction.VIEW,
+                    "MASTER DATA",
+                    26,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
                     "Teacher Attendance",
                     "/operations/teacher-attendance",
                     PermissionModule.TEACHER_ATTENDANCE,

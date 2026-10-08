@@ -112,6 +112,30 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void designationsAreForStaffRolesWithManagerLimitedToViewAndSeededToAdminAndDirector() {
+        for (Role role : Role.values()) {
+            var expected = switch (role) {
+                case ADMIN, DIRECTOR -> java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+                case MANAGER -> java.util.EnumSet.of(PermissionAction.VIEW);
+                default -> java.util.EnumSet.noneOf(PermissionAction.class);
+            };
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.DESIGNATIONS))
+                    .as("DESIGNATIONS " + role)
+                    .isEqualTo(expected);
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                assertThat(matrix.isGranted(role, PermissionModule.DESIGNATIONS, action)).as(role + " " + action).isTrue();
+            }
+        }
+        for (Role role : List.of(Role.MANAGER, Role.TEACHER, Role.SYSTEM)) {
+            for (PermissionAction action : PermissionModule.DESIGNATIONS.actions()) {
+                assertThat(matrix.isGranted(role, PermissionModule.DESIGNATIONS, action)).as(role + " " + action).isFalse();
+            }
+        }
+    }
+
+    @Test
     void recruitmentModulesApplyToStaffRolesOnlyWithTheSeededDefaults() {
         List<PermissionModule> modules =
                 List.of(PermissionModule.RECRUITMENT, PermissionModule.OFFERS, PermissionModule.INDUCTION);
@@ -186,6 +210,7 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.MY_LEAVE,
                 PermissionModule.NOTIFICATIONS,
                 PermissionModule.SCHOOL_CONTRACTS,
+                PermissionModule.DESIGNATIONS,
                 PermissionModule.RECRUITMENT,
                 PermissionModule.OFFERS,
                 PermissionModule.INDUCTION,

@@ -24,6 +24,7 @@ public final class PermissionEligibility {
             PermissionModule.ZONES,
             PermissionModule.SCHOOLS,
             PermissionModule.MANAGERS,
+            PermissionModule.DESIGNATIONS,
             PermissionModule.TEACHERS,
             PermissionModule.TEACHER_SALARY,
             PermissionModule.ATTENDANCE,
@@ -48,6 +49,7 @@ public final class PermissionEligibility {
             PermissionModule.LEAVE_MANAGEMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.MY_LEAVE, EnumSet.of(Role.TEACHER),
             PermissionModule.SCHOOL_CONTRACTS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.DESIGNATIONS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.RECRUITMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.OFFERS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.INDUCTION, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
@@ -67,6 +69,10 @@ public final class PermissionEligibility {
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        // A Zone Manager may be allowed to read the designation list, never to change it (spec 005a FR-011).
+        if (role == Role.MANAGER && module == PermissionModule.DESIGNATIONS) {
+            return EnumSet.of(PermissionAction.VIEW);
         }
         return module.actions();
     }

@@ -1,5 +1,6 @@
 package com.hls.organization.api;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -23,4 +24,19 @@ public interface ManagerQueries {
 
     /** The Schools currently assigned to each of the given Managers. */
     Map<UUID, java.util.Set<UUID>> currentSchoolIds(Collection<UUID> managerIds);
+
+    /** A Manager's employee id, joining and exit dates (spec 005a); any may be null. */
+    record ManagerEmployment(UUID managerId, String employeeId, LocalDate joiningDate, LocalDate exitDate, boolean active) {}
+
+    /** The id of the designation the Manager held on {@code date}: the latest row on or before it; empty when none. */
+    Optional<UUID> designationOn(UUID managerId, LocalDate date);
+
+    /** Bulk form of {@link #designationOn}; a Manager with none on the date is absent from the map. */
+    Map<UUID, UUID> designationsOn(Collection<UUID> managerIds, LocalDate date);
+
+    /** Employee id, joining and exit dates of the given Managers (unknown ids absent). */
+    Map<UUID, ManagerEmployment> employment(Collection<UUID> managerIds);
+
+    /** For each given designation, how many Managers hold it today (absent key means none). */
+    Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds);
 }

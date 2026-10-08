@@ -7,6 +7,7 @@ import com.hls.school.api.CallerContext;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.PageResponse;
 import com.hls.teacher.api.TeacherView;
+import com.hls.teacher.internal.TeacherEmploymentService;
 import com.hls.teacher.internal.TeacherService;
 import com.hls.teacher.internal.TeacherStatus;
 import java.time.LocalDate;
@@ -35,11 +36,15 @@ public class TeacherController {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final TeacherService teacherService;
+    private final TeacherEmploymentService employmentService;
     private final PermissionGuard permissionGuard;
 
     public TeacherController(
-            TeacherService teacherService, PermissionGuard permissionGuard) {
+            TeacherService teacherService,
+            TeacherEmploymentService employmentService,
+            PermissionGuard permissionGuard) {
         this.teacherService = teacherService;
+        this.employmentService = employmentService;
         this.permissionGuard = permissionGuard;
     }
 
@@ -52,6 +57,8 @@ public class TeacherController {
 
     public record UserLinkRequest(UUID userId) {}
 
+    public record EmploymentRequest(UUID designationId, String employeeId, Long version) {}
+
     public record PlacementRequest(UUID schoolId, UUID positionId, LocalDate effectiveOn) {}
 
     @GetMapping
@@ -59,6 +66,7 @@ public class TeacherController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) UUID schoolId,
+            @RequestParam(defaultValue = "false") boolean missingDesignation,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
@@ -69,6 +77,7 @@ public class TeacherController {
                 query,
                 parseStatus(status),
                 schoolId,
+                missingDesignation,
                 PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, MAX_PAGE_SIZE)), Sort.by("name"))));
     }
 
@@ -112,6 +121,20 @@ public class TeacherController {
                 id,
                 new TeacherService.Contact(
                         request.name(), request.phone(), request.email(), request.address(), request.version()));
+    }
+
+    /** Designation and employee id: needs DESIGNATIONS EDIT, not TEACHERS EDIT (spec 005a FR-011). */
+    @PutMapping("/{id}/employment")
+    public TeacherView updateEmployment(
+            @PathVariable UUID id, @RequestBody EmploymentRequest request, @AuthenticationPrincipal Jwt jwt) {
+        permissionGuard.require(CallerContext.roles(jwt), PermissionModule.DESIGNATIONS, PermissionAction.EDIT);
+        return employmentService.update(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                id,
+                request.designationId(),
+                request.employeeId(),
+                request.version());
     }
 
     @PostMapping("/{id}/status")

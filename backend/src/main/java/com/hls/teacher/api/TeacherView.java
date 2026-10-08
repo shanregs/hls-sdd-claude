@@ -24,7 +24,14 @@ public record TeacherView(
         SchoolRef school,
         ManagerRef manager,
         PendingPlacement pendingPlacement,
-        List<PlacementRow> placements) {
+        List<PlacementRow> placements,
+        Employment employment) {
+
+    /** The designation a Teacher holds. */
+    public record DesignationRef(UUID id, String name, boolean retired) {}
+
+    /** Employment details (spec 005a); {@code missing} holds DESIGNATION when none is recorded. */
+    public record Employment(String employeeId, DesignationRef designation, List<String> missing) {}
 
     public record SchoolRef(UUID id, String name) {}
 

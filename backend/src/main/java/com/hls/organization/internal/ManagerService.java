@@ -48,6 +48,7 @@ public class ManagerService implements ManagerQueries {
     private final SchoolDirectory schoolDirectory;
     private final UserAdminService userAdminService;
     private final List<ManagerViewEnricher> enrichers;
+    private final ManagerEmploymentService employment;
     private final ChangeRecorder changes;
     private final Clock clock;
 
@@ -58,6 +59,7 @@ public class ManagerService implements ManagerQueries {
             SchoolDirectory schoolDirectory,
             UserAdminService userAdminService,
             List<ManagerViewEnricher> enrichers,
+            ManagerEmploymentService employment,
             ChangeRecorder changes,
             Clock clock) {
         this.managerRepository = managerRepository;
@@ -66,6 +68,7 @@ public class ManagerService implements ManagerQueries {
         this.schoolDirectory = schoolDirectory;
         this.userAdminService = userAdminService;
         this.enrichers = enrichers;
+        this.employment = employment;
         this.changes = changes;
         this.clock = clock;
     }
@@ -90,10 +93,17 @@ public class ManagerService implements ManagerQueries {
 
     @Transactional(readOnly = true)
     public Page<ManagerView> list(String query, Pageable pageable) {
+        return list(query, false, pageable);
+    }
+
+    /** {@code missingOnly} keeps Managers with no designation, no joining date, or inactive with no exit date. */
+    @Transactional(readOnly = true)
+    public Page<ManagerView> list(String query, boolean missingOnly, Pageable pageable) {
         String term = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         List<Manager> all = managerRepository.findAll();
         Map<UUID, UserWithRoles> users = usersOf(all);
         List<ManagerView> views = viewsOf(all, users, false).stream()
+                .filter(v -> !missingOnly || !v.employment().missing().isEmpty())
                 .filter(v -> term.isEmpty()
                         || v.displayName().toLowerCase(Locale.ROOT).contains(term)
                         || (v.phone() != null && v.phone().contains(term)))
@@ -127,6 +137,26 @@ public class ManagerService implements ManagerQueries {
     }
 
     // -------------------------------------------------------------- ManagerQueries
+
+    @Override
+    public Optional<UUID> designationOn(UUID managerId, LocalDate date) {
+        return employment.designationOn(managerId, date);
+    }
+
+    @Override
+    public Map<UUID, UUID> designationsOn(Collection<UUID> managerIds, LocalDate date) {
+        return employment.designationsOn(managerIds, date);
+    }
+
+    @Override
+    public Map<UUID, ManagerEmployment> employment(Collection<UUID> managerIds) {
+        return employment.employment(managerIds);
+    }
+
+    @Override
+    public Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds) {
+        return employment.holderCountsByDesignation(designationIds);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -345,6 +375,7 @@ public class ManagerService implements ManagerQueries {
                 .collect(Collectors.toSet());
         Map<UUID, String> zoneNames = schoolDirectory.zones(allZoneIds).stream()
                 .collect(Collectors.toMap(SchoolDirectory.ZoneInfo::id, SchoolDirectory.ZoneInfo::name));
+        Map<UUID, ManagerView.Employment> employmentViews = employment.employmentViews(managers, withHistory);
         Map<UUID, Map<String, Object>> extras = new HashMap<>();
         for (ManagerViewEnricher enricher : enrichers) {
             enricher.enrich(ids).forEach((id, attrs) -> extras.computeIfAbsent(id, k -> new HashMap<>()).putAll(attrs));
@@ -366,6 +397,7 @@ public class ManagerService implements ManagerQueries {
                             zones,
                             schoolCounts.getOrDefault(m.getId(), 0L),
                             withHistory ? historyOf(m, zoneNames) : null,
+                            employmentViews.get(m.getId()),
                             extras.getOrDefault(m.getId(), Map.of()));
                 })
                 .toList();

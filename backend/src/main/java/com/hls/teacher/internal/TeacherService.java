@@ -1,5 +1,7 @@
 package com.hls.teacher.internal;
 
+import com.hls.designation.api.DesignationDirectory;
+import com.hls.designation.api.DesignationDirectory.DesignationInfo;
 import com.hls.identity.user.Role;
 import com.hls.identity.user.UserAdminService;
 import com.hls.identity.user.UserAdminService.UserWithRoles;
@@ -56,6 +58,7 @@ public class TeacherService {
     private final SchoolDirectory schoolDirectory;
     private final UserAdminService userAdminService;
     private final ChangeRecorder changes;
+    private final DesignationDirectory designations;
     private final Clock clock;
 
     public TeacherService(
@@ -67,6 +70,7 @@ public class TeacherService {
             SchoolDirectory schoolDirectory,
             UserAdminService userAdminService,
             ChangeRecorder changes,
+            DesignationDirectory designations,
             Clock clock) {
         this.teacherRepository = teacherRepository;
         this.placementSource = placementSource;
@@ -76,6 +80,7 @@ public class TeacherService {
         this.schoolDirectory = schoolDirectory;
         this.userAdminService = userAdminService;
         this.changes = changes;
+        this.designations = designations;
         this.clock = clock;
     }
 
@@ -88,6 +93,19 @@ public class TeacherService {
             String query,
             TeacherStatus status,
             UUID schoolId,
+            Pageable pageable) {
+        return list(userId, roles, query, status, schoolId, false, pageable);
+    }
+
+    /** {@code missingDesignation} keeps only Teachers with no designation (spec 005a FR-013). */
+    @Transactional(readOnly = true)
+    public Page<TeacherView> list(
+            UUID userId,
+            Set<Role> roles,
+            String query,
+            TeacherStatus status,
+            UUID schoolId,
+            boolean missingDesignation,
             Pageable pageable) {
         TeacherScope scope = scopeService.teacherScope(userId, roles);
         Set<UUID> restrict = scope.orgWide() ? null : new HashSet<>(scope.teacherIds());
@@ -109,6 +127,7 @@ public class TeacherService {
                 status == null ? TeacherStatus.ACTIVE : status,
                 restrict != null,
                 restrict == null ? Set.of(NO_ID) : restrict,
+                missingDesignation,
                 pageable);
         List<TeacherView> views = viewsOf(page.getContent(), null);
         return new PageImpl<>(views, pageable, page.getTotalElements());
@@ -186,6 +205,7 @@ public class TeacherService {
                 full.userId(),
                 full.version(),
                 full.school(),
+                null,
                 null,
                 null,
                 null);
@@ -301,7 +321,7 @@ public class TeacherService {
 
     // ------------------------------------------------------------------ helpers
 
-    private Teacher visible(UUID userId, Set<Role> roles, UUID id) {
+    Teacher visible(UUID userId, Set<Role> roles, UUID id) {
         Teacher teacher = teacherRepository.findById(id).orElseThrow(() -> new NotFoundException("Teacher not found."));
         if (!scopeService.teacherScope(userId, roles).allows(id)) {
             throw new NotFoundException("Teacher not found.");
@@ -345,6 +365,10 @@ public class TeacherService {
                 .collect(Collectors.toMap(SchoolInfo::id, SchoolInfo::name));
         Map<UUID, ManagerRef> managers = managerQueries.managersOfSchools(
                 current.values().stream().map(Assignment::schoolId).collect(Collectors.toSet()));
+        Map<UUID, DesignationInfo> designationInfos = designations.findAll(teachers.stream()
+                .map(Teacher::getDesignationId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()));
 
         return teachers.stream()
                 .map(t -> {
@@ -385,9 +409,21 @@ public class TeacherService {
                                             pen.schoolId(),
                                             schoolNames.getOrDefault(pen.schoolId(), "?"),
                                             pen.startsOn()),
-                            rows);
+                            rows,
+                            employmentOf(t, designationInfos));
                 })
                 .toList();
+    }
+
+    private static TeacherView.Employment employmentOf(Teacher t, Map<UUID, DesignationInfo> infos) {
+        TeacherView.DesignationRef ref = null;
+        if (t.getDesignationId() != null) {
+            DesignationInfo info = infos.get(t.getDesignationId());
+            ref = new TeacherView.DesignationRef(
+                    t.getDesignationId(), info == null ? "?" : info.name(), info != null && info.retired());
+        }
+        return new TeacherView.Employment(
+                t.getEmployeeId(), ref, t.getDesignationId() == null ? List.of("DESIGNATION") : List.of());
     }
 
     private static String requireName(String name) {
