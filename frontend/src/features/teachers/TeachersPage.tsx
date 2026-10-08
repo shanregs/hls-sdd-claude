@@ -4,7 +4,9 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
+  FormControlLabel,
   MenuItem,
   Stack,
   TextField,
@@ -18,6 +20,7 @@ import { LinkAccountDialog } from "./LinkAccountDialog";
 import { PlacementDialog } from "./PlacementDialog";
 import { SalaryDialog } from "./SalaryDialog";
 import { StatusDialog } from "./StatusDialog";
+import { TeacherEmploymentDialog } from "./TeacherEmploymentDialog";
 import { TeacherDialog } from "./TeacherDialog";
 import {
   listTeachers,
@@ -28,6 +31,7 @@ import {
 import { RowActionButton } from "../common/RowActionButton";
 
 const ROUTE = "/master-data/teachers";
+const DESIGNATIONS_ROUTE = "/master-data/designations";
 
 /**
  * Teacher management (FR-011..FR-015): list/search/filter, create, edit contact, change status,
@@ -40,6 +44,8 @@ export function TeachersPage() {
   const canCreate = actions.has("CREATE");
   const canEdit = actions.has("EDIT");
   const limitedEdit = canEdit && !canCreate;
+  // designation and employee id need DESIGNATIONS EDIT, not TEACHERS EDIT (spec 005a FR-011)
+  const canEditEmployment = useGrantedActions(DESIGNATIONS_ROUTE).has("EDIT");
   // Salary is shown only when the access model reports a salary scope (TEACHER_SALARY granted).
   const { accessModel } = useAccessModel();
   const canSeeSalary = Boolean(accessModel?.dataScope?.TEACHER_SALARY);
@@ -49,6 +55,10 @@ export function TeachersPage() {
   >({
     query: "",
     status: "",
+    // the Designations screen links here with ?missingDesignation=true
+    missingDesignation:
+      new URLSearchParams(window.location.search).get("missingDesignation") ===
+      "true",
   });
   const [paging, setPaging] = useState({ page: 0, pageSize: 25 });
   const [rows, setRows] = useState<TeacherSummary[]>([]);
@@ -62,6 +72,9 @@ export function TeachersPage() {
   const [placementFor, setPlacementFor] = useState<TeacherSummary | null>(null);
   const [salaryFor, setSalaryFor] = useState<TeacherSummary | null>(null);
   const [accountFor, setAccountFor] = useState<TeacherSummary | null>(null);
+  const [employmentFor, setEmploymentFor] = useState<TeacherSummary | null>(
+    null,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -128,6 +141,31 @@ export function TeachersPage() {
       ),
     },
     {
+      field: "designation",
+      headerName: "Designation",
+      flex: 1.1,
+      sortable: false,
+      renderCell: (params) => {
+        const e = params.row.employment;
+        if (!e) return null;
+        return e.designation ? (
+          <span>
+            {e.designation.name}
+            {e.designation.retired ? " (retired)" : ""}
+          </span>
+        ) : (
+          <Chip size="small" color="warning" label="designation missing" />
+        );
+      },
+    },
+    {
+      field: "employeeId",
+      headerName: "Employee id",
+      flex: 0.8,
+      sortable: false,
+      valueGetter: (_value, row) => row.employment?.employeeId ?? "",
+    },
+    {
       field: "manager",
       headerName: "Manager",
       flex: 1,
@@ -135,7 +173,7 @@ export function TeachersPage() {
       valueGetter: (_value, row) => row.manager?.displayName ?? "",
     },
   ];
-  if (canEdit) {
+  if (canEdit || canEditEmployment) {
     columns.push({
       field: "actions",
       headerName: "Actions",
@@ -143,27 +181,34 @@ export function TeachersPage() {
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <RowActionButton
-            action="Edit"
-            subject={params.row.name}
-            onClick={() => setEditing(params.row)}
-          />
-          {!limitedEdit && (
+          {canEdit && (
+            <RowActionButton
+              action="Edit"
+              subject={params.row.name}
+              onClick={() => setEditing(params.row)}
+            />
+          )}
+          {canEditEmployment && (
+            <Button size="small" onClick={() => setEmploymentFor(params.row)}>
+              Employment
+            </Button>
+          )}
+          {canEdit && !limitedEdit && (
             <Button size="small" onClick={() => setStatusFor(params.row)}>
               Status
             </Button>
           )}
-          {!limitedEdit && params.row.status !== "EXITED" && (
+          {canEdit && !limitedEdit && params.row.status !== "EXITED" && (
             <Button size="small" onClick={() => setAccountFor(params.row)}>
               {params.row.userId ? "Account" : "Link account"}
             </Button>
           )}
-          {canSeeSalary && (
+          {canEdit && canSeeSalary && (
             <Button size="small" onClick={() => setSalaryFor(params.row)}>
               Salary
             </Button>
           )}
-          {!limitedEdit && params.row.status !== "EXITED" && (
+          {canEdit && !limitedEdit && params.row.status !== "EXITED" && (
             <Button size="small" onClick={() => setPlacementFor(params.row)}>
               Placement
             </Button>
@@ -222,6 +267,21 @@ export function TeachersPage() {
             ),
           )}
         </TextField>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={Boolean(filters.missingDesignation)}
+              onChange={(e) => {
+                setPaging((p) => ({ ...p, page: 0 }));
+                setFilters((f) => ({
+                  ...f,
+                  missingDesignation: e.target.checked,
+                }));
+              }}
+            />
+          }
+          label="Missing designation"
+        />
       </Stack>
 
       {error && (
@@ -282,6 +342,16 @@ export function TeachersPage() {
           onClose={() => setPlacementFor(null)}
           onSaved={() => {
             setPlacementFor(null);
+            reload();
+          }}
+        />
+      )}
+      {employmentFor && (
+        <TeacherEmploymentDialog
+          teacher={employmentFor}
+          onClose={() => setEmploymentFor(null)}
+          onSaved={() => {
+            setEmploymentFor(null);
             reload();
           }}
         />

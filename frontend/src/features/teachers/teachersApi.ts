@@ -26,6 +26,14 @@ export interface PlacementRow {
   positionNumber: number | null;
 }
 
+/** Employment details of a Teacher (spec 005a); null on My Profile and absent before the feature. */
+export interface TeacherEmployment {
+  employeeId: string | null;
+  designation: { id: string; name: string; retired: boolean } | null;
+  /** DESIGNATION when none is recorded. */
+  missing: string[];
+}
+
 export interface TeacherSummary {
   id: string;
   name: string;
@@ -45,6 +53,7 @@ export interface TeacherSummary {
     startsOn: string;
   } | null;
   placements: PlacementRow[] | null;
+  employment?: TeacherEmployment | null;
 }
 
 export interface TeacherContact {
@@ -57,6 +66,7 @@ export interface TeacherContact {
 export interface TeacherListParams {
   query: string;
   status: "" | TeacherStatus;
+  missingDesignation?: boolean;
   page: number;
   size: number;
 }
@@ -70,6 +80,7 @@ export function listTeachers(
     `/api/v1/teachers?${queryString({
       query: params.query.trim(),
       status: params.status,
+      missingDesignation: params.missingDesignation || undefined,
       page: params.page,
       size: params.size,
     })}`,
@@ -177,5 +188,21 @@ export function cancelScheduledPlacement(
     `/api/v1/teachers/${teacherId}/placements/pending`,
     undefined,
     false,
+  );
+}
+
+export function updateTeacherEmployment(
+  authFetch: AuthFetch,
+  teacher: TeacherSummary,
+  values: { designationId: string | null; employeeId: string | null },
+): Promise<ApiResult<TeacherSummary>> {
+  return sendJson(
+    authFetch,
+    "PUT",
+    `/api/v1/teachers/${teacher.id}/employment`,
+    {
+      ...values,
+      version: teacher.version,
+    },
   );
 }

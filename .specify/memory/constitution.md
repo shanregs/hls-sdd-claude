@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0)
+Version change: 1.7.0 → 2.5.1 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then one PATCH: 2.5.1)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,12 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.1 (PATCH, spec 005a): Principle VII's module list gains `designation` (the list of designations, the
+    employee-id registry and the holder-count SPI that `organization` and `teacher` implement; it depends on neither),
+    and the Default role access matrix gains a Designations row. Admin and Director keep the list and the designation,
+    employee id and joining or exit dates of Managers and Teachers (View, Create, Edit); the Zone Manager (Manager)
+    may be granted View only, and sees those fields on the Managers and Teachers screens within scope; Teacher and
+    System have no access. No principle changes.
   - 2.5.0 (MINOR, spec 023): Principle IV gains a *MARKETING* navigation section (Prospects, Calendar,
     Pipeline, Dashboard, Settings) after *RECRUITMENT*; Principle VII adds the shared `files` module (stored
     uploads, never changed, only removed) and names the `recruitment.marketing` sub-package's boundaries; the
@@ -202,6 +208,10 @@ The system is one deployable Spring Boot application with one package per bounde
   every other module's data scoping uses, and reads Zone and School–Zone data through `school`'s
   public API.
 - `teacher`: Teacher master data (profile, status, salary history, bank details).
+- `designation`: the list of designations (job titles for Teachers or Managers), the employee-id registry (unique
+  across Managers and Teachers) and an SPI through which `organization` and `teacher` report who holds each
+  designation. A Manager's dated designation history lives in `organization`; a Teacher's current designation in
+  `teacher`. `designation` depends on neither.
 - `school`: School master data and **Zones**, including each School's current Zone and Places.
 - `schoolbilling`: the Teacher–School–Manager contract (rate, billing terms) and receivables. It
   reads Teacher and School data only through their public APIs.
@@ -291,6 +301,7 @@ kept intentionally lightweight for v1.
   | Zone Management                 | ✓     | ✓        | —        | —       | —      |
   | School Management               | ✓     | ✓        | Assigned | —       | —      |
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
+  | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |
@@ -346,4 +357,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.0 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-05
+**Version**: 2.5.1 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-08

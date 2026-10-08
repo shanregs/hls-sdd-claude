@@ -1,0 +1,16 @@
+$kind: http-request
+name: Rename or Retire Designation
+description: "Rename, retire (retired true) or reactivate (retired false). A retired designation stays on the people who hold it. 409 if the kind is changed once held, or the version is stale. DELETE on the same path always answers 409: a designation is never deleted. Needs DESIGNATIONS.EDIT."
+url: "{{baseUrl}}/api/v1/designations/{{designationId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Senior Teacher",
+      "retired": false,
+      "version": {{designationVersion}}
+    }
+order: 5000

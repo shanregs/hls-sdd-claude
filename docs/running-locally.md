@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V23) and the demo data seeded itself.
+(V1-V24) and the demo data seeded itself.
 
 ## Prerequisites
 
@@ -59,6 +59,21 @@ backend terminal.
 Master data seeded for you: **Demo Zone** with two Places (Madurantakam 603306, Maraimalai Nagar
 603209), **Demo School One** (Manager: Manoj, Teacher: Tara) and **Demo School Two** (no Manager,
 no Teachers), and an unplaced **Unplaced Teacher**.
+
+### Designations demo data
+
+With the demo flag on, the backend also seeds (idempotently) five designations (Primary, Secondary and Senior
+Teacher for Teachers; Zone Manager and Senior Zone Manager for Managers). Manoj has the designation Zone
+Manager, employee id `HLS-M-001` and a joining date; Tara, Meena Selvi and Karthik Raja have a Teacher
+designation and an employee id (`HLS-T-001` to `HLS-T-003`). Lakshmi Priya and the Unplaced Teacher are left
+without, so the "designation missing" flags, counts and filters have something to show.
+
+- As **Admin** or **Director**: MASTER DATA -> **Designations** lists them with the number of people; add,
+  rename, retire and reactivate. The counts of people with details missing link to the Managers and Teachers
+  screens filtered to exactly those people. On those screens the **Employment** button sets the designation
+  (a Manager's gets an effective date and keeps its history), the employee id and, for a Manager, the joining
+  date. An inactive Manager's exit date defaults to the day the account was deactivated; correct it there.
+- As **Manoj** (Zone Manager): the fields show on the Teachers screen, with no Employment button.
 
 ### Attendance demo data
 

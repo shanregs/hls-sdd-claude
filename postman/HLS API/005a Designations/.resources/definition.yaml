@@ -1,0 +1,3 @@
+$kind: collection
+description: "Designations and employment details (spec 005a, amendment A1 to spec 005). Admin and Director keep the list of designations and set a person's designation, employee id and joining or exit date (DESIGNATIONS EDIT); the Zone Manager (Manoj) reads the fields on the Managers and Teachers lists but cannot change them (403). Teacher and System get 403 on every endpoint. Collection variables: designationId (saved by Add Designation), managerId and teacherId (from the 005 folder), designationVersion."
+order: 5500

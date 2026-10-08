@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Designations
+description: "Every designation with kind, retired flag and how many people hold it. Optional filters kind (TEACHER or MANAGER) and status (ACTIVE or RETIRED). Needs DESIGNATIONS.VIEW."
+url: "{{baseUrl}}/api/v1/designations"
+method: GET
+order: 1000

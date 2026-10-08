@@ -35,19 +35,19 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ## Phase 1: Setup
 
-- [ ] T001 Create the `designation` module skeleton: `backend/src/main/java/com/hls/designation/{api,internal,web}/` with `package-info.java` (the `api` package a `@NamedInterface`) and `backend/src/test/java/com/hls/designation/DesignationModuleRulesTest.java` (ArchUnit: nothing outside `designation` uses `designation.internal`; `designation` does not depend on `organization` or `teacher`; no module reads the `designation`, `employee_id_claim` or `manager_designation` tables outside its owner)
-- [ ] T002 [P] Create `frontend/src/features/designations/designationsApi.ts` (types and calls for every endpoint in contracts/designations-api.md) and add the employment types and calls to `frontend/src/features/managers/managersApi.ts` and `frontend/src/features/teachers/teachersApi.ts`
+- [X] T001 Create the `designation` module skeleton: `backend/src/main/java/com/hls/designation/{api,internal,web}/` with `package-info.java` (the `api` package a `@NamedInterface`) and `backend/src/test/java/com/hls/designation/DesignationModuleRulesTest.java` (ArchUnit: nothing outside `designation` uses `designation.internal`; `designation` does not depend on `organization` or `teacher`; no module reads the `designation`, `employee_id_claim` or `manager_designation` tables outside its owner)
+- [X] T002 [P] Create `frontend/src/features/designations/designationsApi.ts` (types and calls for every endpoint in contracts/designations-api.md) and add the employment types and calls to `frontend/src/features/managers/managersApi.ts` and `frontend/src/features/teachers/teachersApi.ts`
 
 ---
 
 ## Phase 2: Foundational (blocking prerequisites)
 
-- [ ] T003 Write `backend/src/main/resources/db/migration/V24__create_designations.sql` per data-model.md: `designation` (id uuid PK, name varchar(80) not null, kind varchar(8) not null check in ('TEACHER','MANAGER'), retired boolean not null default false, held_ever boolean not null default false, version bigint not null, created_by uuid not null, created_at/updated_at timestamptz not null; unique index on `(kind, lower(regexp_replace(btrim(name), '\s+', ' ', 'g')))`), `employee_id_claim` (employee_key varchar(20) PK, person_kind varchar(8) not null, person_id uuid not null unique, employee_id varchar(20) not null, person_name varchar(200) not null, claimed_at timestamptz not null), `ALTER TABLE manager ADD employee_id varchar(20) null, joining_date date null, exit_date date null` with check `exit_date >= joining_date` when both set, `manager_designation` (id uuid PK, seq bigint generated always as identity, manager_id uuid not null FK manager(id), designation_id uuid not null with no foreign key, effective_on date not null, recorded_by uuid not null, recorded_at timestamptz not null; index `(manager_id, effective_on, seq)`; `BEFORE UPDATE OR DELETE` trigger raising an exception), `ALTER TABLE teacher ADD designation_id uuid null, employee_id varchar(20) null`
-- [ ] T004 [P] Add permission module `DESIGNATIONS(VIEW, CREATE, EDIT)` to `identity/permissions/PermissionModule.java`; in `PermissionEligibility` make it a business module (System excluded), restrict it to Admin, Director and Manager, and let Manager hold `VIEW` only (never CREATE or EDIT); seed defaults in `PermissionMatrixService` (Admin and Director: VIEW, CREATE, EDIT; nobody else)
-- [ ] T005 [P] Add navigation `MASTER DATA -> Designations` (`/master-data/designations`, DESIGNATIONS VIEW, Admin and Director) to `identity/accessmodel/NavigationCatalog.java` and add `DESIGNATIONS` to the org-wide data scope in `AccessModelService.java`
-- [ ] T006 [P] Extend `PermissionEligibilityTest`, `NavigationSectionOrderTest` and the access-model and seed tests under `backend/src/test/java/com/hls/identity/` for the module (Teacher and System excluded; Manager VIEW only) and the MASTER DATA item per role
-- [ ] T007 [P] Add `designation/api/{DesignationDirectory,EmployeeIds,HolderCounter,BusinessDate}.java` exactly as in contracts/designations-api.md (`BusinessDate` is a component giving today's date in `hls.business-timezone`, default Asia/Kolkata)
-- [ ] T008 Entities and repositories in `designation/internal` (`Designation`, `EmployeeIdClaim`, Spring Data repositories) and in `organization/internal` (`ManagerDesignation`, insert-only, plus new fields on `Manager`) and `teacher/internal` (new fields on `Teacher`); Hibernate only validates the schema
+- [X] T003 Write `backend/src/main/resources/db/migration/V24__create_designations.sql` per data-model.md: `designation` (id uuid PK, name varchar(80) not null, kind varchar(8) not null check in ('TEACHER','MANAGER'), retired boolean not null default false, held_ever boolean not null default false, version bigint not null, created_by uuid not null, created_at/updated_at timestamptz not null; unique index on `(kind, lower(regexp_replace(btrim(name), '\s+', ' ', 'g')))`), `employee_id_claim` (employee_key varchar(20) PK, person_kind varchar(8) not null, person_id uuid not null unique, employee_id varchar(20) not null, person_name varchar(200) not null, claimed_at timestamptz not null), `ALTER TABLE manager ADD employee_id varchar(20) null, joining_date date null, exit_date date null` with check `exit_date >= joining_date` when both set, `manager_designation` (id uuid PK, seq bigint generated always as identity, manager_id uuid not null FK manager(id), designation_id uuid not null with no foreign key, effective_on date not null, recorded_by uuid not null, recorded_at timestamptz not null; index `(manager_id, effective_on, seq)`; `BEFORE UPDATE OR DELETE` trigger raising an exception), `ALTER TABLE teacher ADD designation_id uuid null, employee_id varchar(20) null`
+- [X] T004 [P] Add permission module `DESIGNATIONS(VIEW, CREATE, EDIT)` to `identity/permissions/PermissionModule.java`; in `PermissionEligibility` make it a business module (System excluded), restrict it to Admin, Director and Manager, and let Manager hold `VIEW` only (never CREATE or EDIT); seed defaults in `PermissionMatrixService` (Admin and Director: VIEW, CREATE, EDIT; nobody else)
+- [X] T005 [P] Add navigation `MASTER DATA -> Designations` (`/master-data/designations`, DESIGNATIONS VIEW, Admin and Director) to `identity/accessmodel/NavigationCatalog.java` and add `DESIGNATIONS` to the org-wide data scope in `AccessModelService.java`
+- [X] T006 [P] Extend `PermissionEligibilityTest`, `NavigationSectionOrderTest` and the access-model and seed tests under `backend/src/test/java/com/hls/identity/` for the module (Teacher and System excluded; Manager VIEW only) and the MASTER DATA item per role
+- [X] T007 [P] Add `designation/api/{DesignationDirectory,EmployeeIds,HolderCounter,BusinessDate}.java` exactly as in contracts/designations-api.md (`BusinessDate` is a component giving today's date in `hls.business-timezone`, default Asia/Kolkata)
+- [X] T008 Entities and repositories in `designation/internal` (`Designation`, `EmployeeIdClaim`, Spring Data repositories) and in `organization/internal` (`ManagerDesignation`, insert-only, plus new fields on `Manager`) and `teacher/internal` (new fields on `Teacher`); Hibernate only validates the schema
 
 **Checkpoint**: migration applies on a database holding existing Managers and Teachers; permission and navigation seeded; entities validate against the schema.
 
@@ -61,16 +61,16 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationServiceTest.java` (rules first): name 1 to 80 after trimming; duplicate per kind ignoring capitals and extra spaces refused, same name in the other kind allowed; rename audited with old and new; retire and reactivate; kind change refused once `held_ever`; `assign` refuses retired, wrong kind and unknown ids and sets `held_ever`; stale `version` is a 409
-- [ ] T010 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationApiTest.java`: per-role matrix for every endpoint in contracts/designations-api.md (Admin and Director succeed; Zone Manager, Teacher and System 403; DELETE always 409 for Admin); the list shows holder counts; `options` returns only active designations of the kind
-- [ ] T011 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationAuditTest.java`: each create, rename, retire and reactivate writes an audit entry with actor and old and new values
-- [ ] T012 [P] [US1] `frontend/src/features/designations/DesignationsPage.test.tsx`: role fixtures (Admin and Director with add, rename, retire; read-only grant shows no actions), validation messages, empty and error states, axe in both themes
+- [X] T009 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationServiceTest.java` (rules first): name 1 to 80 after trimming; duplicate per kind ignoring capitals and extra spaces refused, same name in the other kind allowed; rename audited with old and new; retire and reactivate; kind change refused once `held_ever`; `assign` refuses retired, wrong kind and unknown ids and sets `held_ever`; stale `version` is a 409 *(Covered by `DesignationApiTest` and `EmployeeIdsAndInterfacesTest`; several of the planned test classes were merged into fewer files: audit, missing-details, per-role, history-on-a-date and bulk-interface cases are in `DesignationApiTest`, `EmployeeIdsAndInterfacesTest`, `ManagerEmploymentApiTest`, `ManagerDesignationOnDateTest` and `TeacherEmploymentApiTest`.)*
+- [X] T010 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationApiTest.java`: per-role matrix for every endpoint in contracts/designations-api.md (Admin and Director succeed; Zone Manager, Teacher and System 403; DELETE always 409 for Admin); the list shows holder counts; `options` returns only active designations of the kind
+- [X] T011 [P] [US1] `backend/src/test/java/com/hls/designation/DesignationAuditTest.java`: each create, rename, retire and reactivate writes an audit entry with actor and old and new values
+- [X] T012 [P] [US1] `frontend/src/features/designations/DesignationsPage.test.tsx`: role fixtures (Admin and Director with add, rename, retire; read-only grant shows no actions), validation messages, empty and error states, axe in both themes
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] `designation/internal/DesignationService.java` (implements `DesignationDirectory`; create, update, list with counts collected from all `HolderCounter` beans, `summary`, options; audit entity `DESIGNATION` through `ChangeRecorder`; `BusinessDate` not needed here)
-- [ ] T014 [US1] `designation/web/DesignationController.java` for the `/api/v1/designations` endpoints with `PermissionGuard` on `DESIGNATIONS`
-- [ ] T015 [P] [US1] `frontend/src/features/designations/DesignationsPage.tsx` and its dialog: list with kind, status and people count, add, rename, retire and reactivate (actions only with the grants); route `/master-data/designations` guarded in `frontend/src/App.tsx`
+- [X] T013 [US1] `designation/internal/DesignationService.java` (implements `DesignationDirectory`; create, update, list with counts collected from all `HolderCounter` beans, `summary`, options; audit entity `DESIGNATION` through `ChangeRecorder`; `BusinessDate` not needed here)
+- [X] T014 [US1] `designation/web/DesignationController.java` for the `/api/v1/designations` endpoints with `PermissionGuard` on `DESIGNATIONS`
+- [X] T015 [P] [US1] `frontend/src/features/designations/DesignationsPage.tsx` and its dialog: list with kind, status and people count, add, rename, retire and reactivate (actions only with the grants); route `/master-data/designations` guarded in `frontend/src/App.tsx`
 
 **Checkpoint**: the list works end to end for each role.
 
@@ -84,20 +84,20 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] `designation/EmployeeIdServiceTest.java` (rules first, in the `designation` test package): format `[A-Za-z0-9-]{1,20}`, trimmed; key is lower-cased trim; duplicate across Manager and Teacher refused naming the holder; clearing releases; two simultaneous claims of one id: exactly one succeeds
-- [ ] T017 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerDesignationHistoryTest.java`: table of at least 6 cases for the designation on a date (before the first row, on a row's date, between rows, after the last, two rows on one date with the later recorded winning, a change in the middle of a month); effective-date rules (first designation from the joining date or any date up to today when none; later changes not before the first day of the current month; the same designation refused; retired or wrong-kind refused); rows cannot be updated or deleted even by SQL
-- [ ] T018 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerEmploymentTest.java`: joining date not after the exit date; exit date only while inactive, not before the joining date, not more than 90 days after today (boundary days); deactivating the account sets the exit date to today and audits it; reactivation clears it and the old value is in the audit log; legacy inactive Manager has no exit date and is flagged; views show `missing` codes
-- [ ] T019 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerEmploymentApiTest.java`: per-role and per-scope matrix for `PUT /managers/{id}/employment` and `POST /managers/{id}/designation` (Admin and Director succeed; Zone Manager, Teacher, System 403 even if the Manager edit permission is granted); Zone Manager reads `employment` on `GET /managers/{id}`; audit entries per field (SC-002)
-- [ ] T020 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerQueriesEmploymentTest.java`: `designationOn`, `designationsOn`, `employment`, `holderCountsByDesignation` return what the screens show, and the bulk forms use a fixed number of statements for 300 Managers (SC-007)
-- [ ] T021 [P] [US2] `frontend/src/features/managers/ManagersPage.test.tsx`: the new fields, missing flags, editor only with `DESIGNATIONS` EDIT, read-only for a Zone Manager fixture, history list
+- [X] T016 [P] [US2] `designation/EmployeeIdServiceTest.java` (rules first, in the `designation` test package): format `[A-Za-z0-9-]{1,20}`, trimmed; key is lower-cased trim; duplicate across Manager and Teacher refused naming the holder; clearing releases; two simultaneous claims of one id: exactly one succeeds
+- [X] T017 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerDesignationHistoryTest.java`: table of at least 6 cases for the designation on a date (before the first row, on a row's date, between rows, after the last, two rows on one date with the later recorded winning, a change in the middle of a month); effective-date rules (first designation from the joining date or any date up to today when none; later changes not before the first day of the current month; the same designation refused; retired or wrong-kind refused); rows cannot be updated or deleted even by SQL
+- [X] T018 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerEmploymentTest.java`: joining date not after the exit date; exit date only while inactive, not before the joining date, not more than 90 days after today (boundary days); deactivating the account sets the exit date to today and audits it; reactivation clears it and the old value is in the audit log; legacy inactive Manager has no exit date and is flagged; views show `missing` codes
+- [X] T019 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerEmploymentApiTest.java`: per-role and per-scope matrix for `PUT /managers/{id}/employment` and `POST /managers/{id}/designation` (Admin and Director succeed; Zone Manager, Teacher, System 403 even if the Manager edit permission is granted); Zone Manager reads `employment` on `GET /managers/{id}`; audit entries per field (SC-002)
+- [X] T020 [P] [US2] `backend/src/test/java/com/hls/organization/ManagerQueriesEmploymentTest.java`: `designationOn`, `designationsOn`, `employment`, `holderCountsByDesignation` return what the screens show, and the bulk forms use a fixed number of statements for 300 Managers (SC-007)
+- [X] T021 [P] [US2] `frontend/src/features/managers/ManagersPage.test.tsx`: the new fields, missing flags, editor only with `DESIGNATIONS` EDIT, read-only for a Zone Manager fixture, history list
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] `designation/internal/EmployeeIdService.java` implementing `EmployeeIds` over `employee_id_claim` (insert, translate the primary-key violation into a 409 naming the holder, release)
-- [ ] T023 [US2] `organization/internal/ManagerEmploymentService.java`: `updateEmployment` (employee id, joining and exit dates) and `appendDesignation`, using `DesignationDirectory.assign`, `EmployeeIds.claim` and `BusinessDate`; audit entity `MANAGER` with fields `employeeId`, `joiningDate`, `exitDate`, `designation`; extend `ManagerService` (implements the new `ManagerQueries` methods; `ManagerView.employment`) and `ManagerRepository`/`ManagerDesignationRepository` bulk queries
-- [ ] T024 [US2] `organization/internal/ManagerAccountSync.java`: set the exit date to the business date when a Manager becomes inactive without one, clear it when active again; audit as the event's actor
-- [ ] T025 [US2] `organization/web/ManagerController.java`: the two endpoints, each requiring `DESIGNATIONS` `EDIT`
-- [ ] T026 [P] [US2] `frontend/src/features/managers/{ManagersPage,EmploymentDialog}.tsx`: show designation, employee id, joining and exit dates and missing flags; the dialog for editing (designation with effective date, employee id, dates) only with the `DESIGNATIONS` EDIT action; history list
+- [X] T022 [US2] `designation/internal/EmployeeIdService.java` implementing `EmployeeIds` over `employee_id_claim` (insert, translate the primary-key violation into a 409 naming the holder, release)
+- [X] T023 [US2] `organization/internal/ManagerEmploymentService.java`: `updateEmployment` (employee id, joining and exit dates) and `appendDesignation`, using `DesignationDirectory.assign`, `EmployeeIds.claim` and `BusinessDate`; audit entity `MANAGER` with fields `employeeId`, `joiningDate`, `exitDate`, `designation`; extend `ManagerService` (implements the new `ManagerQueries` methods; `ManagerView.employment`) and `ManagerRepository`/`ManagerDesignationRepository` bulk queries
+- [X] T024 [US2] `organization/internal/ManagerAccountSync.java`: set the exit date to the business date when a Manager becomes inactive without one, clear it when active again; audit as the event's actor
+- [X] T025 [US2] `organization/web/ManagerController.java`: the two endpoints, each requiring `DESIGNATIONS` `EDIT`
+- [X] T026 [P] [US2] `frontend/src/features/managers/{ManagersPage,EmploymentDialog}.tsx`: show designation, employee id, joining and exit dates and missing flags; the dialog for editing (designation with effective date, employee id, dates) only with the `DESIGNATIONS` EDIT action; history list
 
 **Checkpoint**: a Manager's details work end to end for each role; 013a can read `ManagerQueries`.
 
@@ -111,16 +111,16 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ### Tests for User Story 3
 
-- [ ] T027 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherEmploymentTest.java`: only active TEACHER designations accepted (a retired one is accepted only when unchanged); duplicate id across Teachers and Managers refused; clearing the id; the designation may be changed or cleared (audited); an exited Teacher can still be corrected; audit per field with old and new values
-- [ ] T028 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherEmploymentApiTest.java`: per-role and per-scope matrix for `PUT /teachers/{id}/employment` (Zone Manager 403 even with TEACHERS EDIT; Teacher and System 403) and reads (Zone Manager sees `employment` in scope, 404 outside; `/teachers/me` has `employment` null); existing Teachers without the fields are unchanged
-- [ ] T029 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherDirectoryEmploymentTest.java`: `currentDesignation`, `currentDesignations`, `employment`, `holderCountsByDesignation` and a fixed statement count for 300 Teachers (SC-007)
-- [ ] T030 [P] [US3] `frontend/src/features/teachers/TeachersPage.test.tsx` (extend) and `MyTeacherProfile.test.tsx`: fields and missing flag, editor only with the grant, My Profile shows none
+- [X] T027 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherEmploymentTest.java`: only active TEACHER designations accepted (a retired one is accepted only when unchanged); duplicate id across Teachers and Managers refused; clearing the id; the designation may be changed or cleared (audited); an exited Teacher can still be corrected; audit per field with old and new values
+- [X] T028 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherEmploymentApiTest.java`: per-role and per-scope matrix for `PUT /teachers/{id}/employment` (Zone Manager 403 even with TEACHERS EDIT; Teacher and System 403) and reads (Zone Manager sees `employment` in scope, 404 outside; `/teachers/me` has `employment` null); existing Teachers without the fields are unchanged
+- [X] T029 [P] [US3] `backend/src/test/java/com/hls/teacher/TeacherDirectoryEmploymentTest.java`: `currentDesignation`, `currentDesignations`, `employment`, `holderCountsByDesignation` and a fixed statement count for 300 Teachers (SC-007)
+- [X] T030 [P] [US3] `frontend/src/features/teachers/TeachersPage.test.tsx` (extend) and `MyTeacherProfile.test.tsx`: fields and missing flag, editor only with the grant, My Profile shows none
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] `teacher/internal/TeacherEmploymentService.java` (update with `DESIGNATIONS` rules, `DesignationDirectory.assign`, `EmployeeIds.claim`, audit entity `TEACHER` fields `designation` and `employeeId`), the new `TeacherDirectory` methods in `TeacherDirectoryImpl`, `TeacherView.employment` filled in `TeacherService.viewsOf` and null in `mine`
-- [ ] T032 [US3] `teacher/web/TeacherController.java`: `PUT /api/v1/teachers/{id}/employment` requiring `DESIGNATIONS` `EDIT` plus the Teacher's scope
-- [ ] T033 [P] [US3] `frontend/src/features/teachers/{TeachersPage,EmploymentDialog}.tsx`: show and edit the fields; none on My Profile
+- [X] T031 [US3] `teacher/internal/TeacherEmploymentService.java` (update with `DESIGNATIONS` rules, `DesignationDirectory.assign`, `EmployeeIds.claim`, audit entity `TEACHER` fields `designation` and `employeeId`), the new `TeacherDirectory` methods in `TeacherDirectoryImpl`, `TeacherView.employment` filled in `TeacherService.viewsOf` and null in `mine`
+- [X] T032 [US3] `teacher/web/TeacherController.java`: `PUT /api/v1/teachers/{id}/employment` requiring `DESIGNATIONS` `EDIT` plus the Teacher's scope
+- [X] T033 [P] [US3] `frontend/src/features/teachers/{TeachersPage,EmploymentDialog}.tsx`: show and edit the fields; none on My Profile
 
 **Checkpoint**: Teachers' details work end to end; 013a can read `TeacherDirectory`.
 
@@ -134,13 +134,13 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ### Tests for User Story 4
 
-- [ ] T034 [P] [US4] `backend/src/test/java/com/hls/designation/MissingDetailsTest.java`: `summary` counts equal the lengths of `GET /managers?missing=true` and `GET /teachers?missingDesignation=true` (SC-006); zero when everyone is complete; Zone Manager list stays in scope
-- [ ] T035 [P] [US4] `frontend/src/features/designations/DesignationsPage.test.tsx` (extend): the missing counts and links with filters; no flag when counts are zero
+- [X] T034 [P] [US4] `backend/src/test/java/com/hls/designation/MissingDetailsTest.java`: `summary` counts equal the lengths of `GET /managers?missing=true` and `GET /teachers?missingDesignation=true` (SC-006); zero when everyone is complete; Zone Manager list stays in scope
+- [X] T035 [P] [US4] `frontend/src/features/designations/DesignationsPage.test.tsx` (extend): the missing counts and links with filters; no flag when counts are zero
 
 ### Implementation for User Story 4
 
-- [ ] T036 [US4] `HolderCounter` implementations `organization/internal/ManagerHolderCounter.java` and `teacher/internal/TeacherHolderCounter.java`; `missing` filters in `ManagerService.list` and `TeacherService.list`/`TeacherRepository`; controller parameters
-- [ ] T037 [P] [US4] Frontend: summary cards on `DesignationsPage.tsx`; "Missing details" filter in `ManagersPage.tsx` and "Missing designation" filter in `TeachersPage.tsx`, read from the URL query so the links work
+- [X] T036 [US4] `HolderCounter` implementations `organization/internal/ManagerHolderCounter.java` and `teacher/internal/TeacherHolderCounter.java`; `missing` filters in `ManagerService.list` and `TeacherService.list`/`TeacherRepository`; controller parameters
+- [X] T037 [P] [US4] Frontend: summary cards on `DesignationsPage.tsx`; "Missing details" filter in `ManagersPage.tsx` and "Missing designation" filter in `TeachersPage.tsx`, read from the URL query so the links work
 
 **Checkpoint**: all four stories work.
 
@@ -148,12 +148,12 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 
 ## Phase 7: Polish and Cross-Cutting Concerns
 
-- [ ] T038 [P] `designation/internal/DesignationDevSeeder.java` (a few Teacher and Manager designations) and extend `OrganizationDevSeeder` and `TeacherDevSeeder` to give the demo people a designation and employee id (idempotent, demo flag only; leave one person incomplete so the missing counts show something)
-- [ ] T039 [P] Add a "Designations" folder to the Postman collection in `docs/postman/` and refresh the schema doc if one exists
-- [ ] T040 [P] Add a Designations row to the Default role access matrix and `designation` to the module list in `.specify/memory/constitution.md` (patch 2.5.1 with a Sync Impact note); update `docs/spec-roadmap.md` and `docs/running-locally.md` (V24, demo data)
-- [ ] T041 Run `ApplicationModulesTest`, `DesignationModuleRulesTest`, `MasterDataModuleRulesTest` and fix any fixtures the new menu item or fields legitimately change (menu counts, `TeacherView`/`ManagerView` constructors); existing specs 005, 008, 009 and 012 tests stay unchanged in their assertions (SC-005)
-- [ ] T042 Run the full backend suite and the full frontend suite (tests, `npm run build` for typecheck, `npm run lint`) once
-- [ ] T043 Walk the scenarios in `quickstart.md` as far as the environment allows and record the outcomes in `specs/005a-designations/quickstart-results.md`
+- [X] T038 [P] `designation/internal/DesignationDevSeeder.java` (a few Teacher and Manager designations) and extend `OrganizationDevSeeder` and `TeacherDevSeeder` to give the demo people a designation and employee id (idempotent, demo flag only; leave one person incomplete so the missing counts show something)
+- [X] T039 [P] Add a "Designations" folder to the Postman collection in `docs/postman/` and refresh the schema doc if one exists
+- [X] T040 [P] Add a Designations row to the Default role access matrix and `designation` to the module list in `.specify/memory/constitution.md` (patch 2.5.1 with a Sync Impact note); update `docs/spec-roadmap.md` and `docs/running-locally.md` (V24, demo data)
+- [X] T041 Run `ApplicationModulesTest`, `DesignationModuleRulesTest`, `MasterDataModuleRulesTest` and fix any fixtures the new menu item or fields legitimately change (menu counts, `TeacherView`/`ManagerView` constructors); existing specs 005, 008, 009 and 012 tests stay unchanged in their assertions (SC-005)
+- [ ] T042 Run the full backend suite and the full frontend suite (tests, `npm run build` for typecheck, `npm run lint`) once **Partly done:** frontend typecheck (`tsc -b`) and lint clean (0 errors); the 18 frontend tests of this spec pass; backend classes of this spec plus the identity and architecture tests pass (62). The full backend suite is run after the rebase onto main (see `quickstart-results.md`).
+- [ ] T043 Walk the scenarios in `quickstart.md` as far as the environment allows and record the outcomes in `specs/005a-designations/quickstart-results.md` **Pending:** needs the running app; recorded as pending in `quickstart-results.md`.
 
 ---
 
