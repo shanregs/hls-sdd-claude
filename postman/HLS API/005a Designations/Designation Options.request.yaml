@@ -1,0 +1,6 @@
+$kind: http-request
+name: Designation Options
+description: "Active designations of one kind, the choice offered when setting a person's designation. Needs DESIGNATIONS.EDIT."
+url: "{{baseUrl}}/api/v1/designations/options?kind=MANAGER"
+method: GET
+order: 3000

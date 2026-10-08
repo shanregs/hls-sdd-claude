@@ -19,28 +19,33 @@ public class ManagerAccountSync {
 
     private final ManagerRepository managerRepository;
     private final UserAdminService userAdminService;
+    private final ManagerEmploymentService employment;
     private final Clock clock;
 
     public ManagerAccountSync(
-            ManagerRepository managerRepository, UserAdminService userAdminService, Clock clock) {
+            ManagerRepository managerRepository,
+            UserAdminService userAdminService,
+            ManagerEmploymentService employment,
+            Clock clock) {
         this.managerRepository = managerRepository;
         this.userAdminService = userAdminService;
+        this.employment = employment;
         this.clock = clock;
     }
 
     @ApplicationModuleListener
     void on(UserRoleChanged event) {
         if (event.role() == Role.MANAGER) {
-            resync(event.affectedUserId());
+            resync(event.affectedUserId(), event.actorUserId());
         }
     }
 
     @ApplicationModuleListener
     void on(AccountActivationChanged event) {
-        resync(event.affectedUserId());
+        resync(event.affectedUserId(), event.actorUserId());
     }
 
-    private void resync(UUID userId) {
+    private void resync(UUID userId, UUID actor) {
         managerRepository.findByUserId(userId).ifPresent(manager -> {
             boolean shouldBeActive = userAdminService
                     .find(userId)
@@ -49,6 +54,8 @@ public class ManagerAccountSync {
             if (manager.isActive() != shouldBeActive) {
                 manager.setActive(shouldBeActive, clock.instant());
                 managerRepository.save(manager);
+                // spec 005a FR-008: inactive gets today's exit date when none, active again clears it
+                employment.accountStateChanged(actor, manager);
             }
         });
     }

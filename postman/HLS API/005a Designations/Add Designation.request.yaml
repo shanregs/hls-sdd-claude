@@ -1,0 +1,15 @@
+$kind: http-request
+name: Add Designation
+description: "Name 1 to 80 characters; kind TEACHER or MANAGER. 409 for the same name (ignoring capitals and extra spaces) for the same kind. Needs DESIGNATIONS.CREATE."
+url: "{{baseUrl}}/api/v1/designations"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Primary Teacher",
+      "kind": "TEACHER"
+    }
+order: 4000

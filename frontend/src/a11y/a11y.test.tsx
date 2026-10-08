@@ -30,6 +30,10 @@ import { PlaceDialog } from "../features/zones/PlaceDialog";
 import { BulkImportPlacesDialog } from "../features/zones/BulkImportPlacesDialog";
 import { SchoolsPage } from "../features/schools/SchoolsPage";
 import { SchoolDialog } from "../features/schools/SchoolDialog";
+import { DesignationsPage } from "../features/designations/DesignationsPage";
+import { DesignationDialog } from "../features/designations/DesignationDialog";
+import { ManagerEmploymentDialog } from "../features/managers/ManagerEmploymentDialog";
+import { TeacherEmploymentDialog } from "../features/teachers/TeacherEmploymentDialog";
 import { ManagersPage } from "../features/managers/ManagersPage";
 import { TeachersPage } from "../features/teachers/TeachersPage";
 import { TeacherDialog } from "../features/teachers/TeacherDialog";
@@ -233,6 +237,11 @@ const ACCESS_MODEL = {
           route: "/master-data/teachers",
           actions: ["VIEW", "CREATE", "EDIT"],
         },
+        {
+          label: "Designations",
+          route: "/master-data/designations",
+          actions: ["VIEW", "CREATE", "EDIT"],
+        },
       ],
     },
     {
@@ -264,6 +273,31 @@ const TEACHER = {
   manager: null,
   pendingPlacement: null,
   placements: null,
+  employment: {
+    employeeId: null,
+    designation: null,
+    missing: ["DESIGNATION"],
+  },
+};
+
+const MANAGER = {
+  id: "m1",
+  userId: "u1",
+  displayName: "Manoj Manager",
+  phone: "9800000003",
+  active: true,
+  version: 0,
+  zones: [{ id: "z1", name: "North Zone" }],
+  schoolCount: 1,
+  teacherCount: 1,
+  employment: {
+    employeeId: "HLS-M-001",
+    joiningDate: "2026-01-05",
+    exitDate: null,
+    designation: null,
+    history: [],
+    missing: ["DESIGNATION"],
+  },
 };
 
 const ZONE = {
@@ -875,10 +909,63 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
             zones: [{ id: "z1", name: "North Zone" }],
             schoolCount: 1,
             teacherCount: 1,
+            employment: MANAGER.employment,
           },
         ],
         totalElements: 1,
       }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/managers/m1")) {
+    return { ok: true, status: 200, json: async () => MANAGER } as Response;
+  }
+  if (url === "/api/v1/designations") {
+    return {
+      ok: true,
+      json: async () => [
+        {
+          id: "d1",
+          name: "Primary Teacher",
+          kind: "TEACHER",
+          retired: false,
+          holders: 2,
+          version: 0,
+        },
+        {
+          id: "d2",
+          name: "Zone Manager",
+          kind: "MANAGER",
+          retired: true,
+          holders: 1,
+          version: 1,
+        },
+      ],
+    } as Response;
+  }
+  if (url === "/api/v1/designations/summary") {
+    return {
+      ok: true,
+      json: async () => ({
+        teachersMissingDesignation: 3,
+        managersMissingDesignation: 1,
+        managersMissingJoiningDate: 1,
+        managersMissingExitDate: 0,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/designations/options")) {
+    return {
+      ok: true,
+      json: async () => [
+        {
+          id: "d1",
+          name: "Primary Teacher",
+          kind: "TEACHER",
+          retired: false,
+          holders: 2,
+          version: 0,
+        },
+      ],
     } as Response;
   }
   if (url.startsWith("/api/v1/teachers?")) {
@@ -1342,6 +1429,41 @@ const pages: PageCase[] = [
     name: "TeachersPage",
     render: () => <TeachersPage />,
     settle: () => screen.findAllByText("Tara Teacher"),
+  },
+  {
+    name: "DesignationsPage",
+    render: () => <DesignationsPage />,
+    settle: () => screen.findAllByText("Primary Teacher"),
+  },
+  {
+    name: "DesignationDialog",
+    render: () => <DesignationDialog onClose={vi.fn()} onSaved={vi.fn()} />,
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "ManagerEmploymentDialog",
+    render: () => (
+      <ManagerEmploymentDialog
+        manager={MANAGER}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "TeacherEmploymentDialog",
+    render: () => (
+      <TeacherEmploymentDialog
+        teacher={TEACHER as never}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
   },
   {
     name: "TeacherDialog",

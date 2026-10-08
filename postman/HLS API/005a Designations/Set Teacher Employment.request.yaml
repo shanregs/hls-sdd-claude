@@ -1,0 +1,16 @@
+$kind: http-request
+name: Set Teacher Employment
+description: "A Teacher's current designation (an active designation for Teachers, or the one already held) and optional employee id; null clears. The Teacher must be in the caller's scope. Needs DESIGNATIONS.EDIT; a Zone Manager with Teacher edit still gets 403."
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/employment"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "designationId": "{{designationId}}",
+      "employeeId": "HLS-T-001",
+      "version": 0
+    }
+order: 8000

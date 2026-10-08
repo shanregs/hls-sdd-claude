@@ -41,6 +41,12 @@ public class Teacher {
     @Column(name = "status_effective_on", nullable = false)
     private LocalDate statusEffectiveOn;
 
+    @Column(name = "designation_id")
+    private UUID designationId;
+
+    @Column(name = "employee_id")
+    private String employeeId;
+
     @Column(name = "user_id", unique = true)
     private UUID userId;
 
@@ -110,6 +116,20 @@ public class Teacher {
 
     public Long getVersion() {
         return version;
+    }
+
+    public UUID getDesignationId() {
+        return designationId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployment(UUID designationId, String employeeId, Instant now) {
+        this.designationId = designationId;
+        this.employeeId = employeeId;
+        this.updatedAt = now;
     }
 
     public void setName(String name) {

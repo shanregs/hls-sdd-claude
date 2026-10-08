@@ -1,12 +1,16 @@
 package com.hls.teacher.internal;
 
+import com.hls.designation.api.DesignationDirectory;
+import com.hls.designation.api.DesignationDirectory.Kind;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
+import com.hls.identity.user.Role;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.teacher.api.TeacherPlacementSource;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -34,18 +38,24 @@ public class TeacherDevSeeder implements ApplicationRunner {
     private final TeacherRepository teacherRepository;
     private final SchoolDirectory schoolDirectory;
     private final AppUserRepository appUserRepository;
+    private final TeacherEmploymentService employment;
+    private final DesignationDirectory designations;
 
     public TeacherDevSeeder(
             TeacherService teacherService,
             TeacherPlacementSource placementSource,
             TeacherRepository teacherRepository,
             SchoolDirectory schoolDirectory,
-            AppUserRepository appUserRepository) {
+            AppUserRepository appUserRepository,
+            TeacherEmploymentService employment,
+            DesignationDirectory designations) {
         this.teacherService = teacherService;
         this.placementSource = placementSource;
         this.teacherRepository = teacherRepository;
         this.schoolDirectory = schoolDirectory;
         this.appUserRepository = appUserRepository;
+        this.employment = employment;
+        this.designations = designations;
     }
 
     @Override
@@ -89,6 +99,33 @@ public class TeacherDevSeeder implements ApplicationRunner {
                     admin.getId(),
                     new TeacherService.NewTeacher(extra[0], extra[1], null, null, TeacherStatus.ACTIVE, null));
             placementSource.assign(admin.getId(), created.id(), schools.get(schoolIndex).id(), null, placedFrom);
+        }
+        seedEmployment(admin);
+    }
+
+    /**
+     * Spec 005a: Tara, Meena and Karthik get a designation and an employee id; Lakshmi and the unplaced Teacher are
+     * left without so the "missing designation" counts and filter have something to show.
+     */
+    private void seedEmployment(AppUser admin) {
+        String[][] people = {
+            {"9800000004", "Primary Teacher", "HLS-T-001"},
+            {"9800000011", "Secondary Teacher", "HLS-T-002"},
+            {"9800000012", "Senior Teacher", "HLS-T-003"},
+        };
+        for (String[] person : people) {
+            teacherRepository.findFirstByPhone(person[0]).ifPresent(teacher -> {
+                var designation = designations.findByName(Kind.TEACHER, person[1]);
+                if (teacher.getDesignationId() == null && designation.isPresent()) {
+                    employment.update(
+                            admin.getId(),
+                            Set.of(Role.ADMIN),
+                            teacher.getId(),
+                            designation.get().id(),
+                            person[2],
+                            teacher.getVersion());
+                }
+            });
         }
     }
 }

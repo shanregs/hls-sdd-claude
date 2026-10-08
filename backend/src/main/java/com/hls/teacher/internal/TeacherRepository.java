@@ -43,6 +43,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
                    or lower(t.email) like lower(concat('%', :term, '%')))
               and (:filterStatus = false or t.status = :status)
               and (:filterIds = false or t.id in :ids)
+              and (:onlyMissing = false or t.designationId is null)
             """)
     Page<Teacher> search(
             @Param("term") String term,
@@ -50,5 +51,11 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
             @Param("status") TeacherStatus status,
             @Param("filterIds") boolean filterIds,
             @Param("ids") Collection<UUID> ids,
+            @Param("onlyMissing") boolean onlyMissing,
             Pageable pageable);
+
+    @Query("select t.designationId, count(t) from Teacher t where t.designationId is not null group by t.designationId")
+    List<Object[]> countByDesignation();
+
+    long countByDesignationIdIsNull();
 }

@@ -93,6 +93,7 @@ public class PermissionMatrixService {
         seedLeave();
         seedNotifications();
         seedSchoolContracts();
+        seedDesignations();
         seedRecruitment();
         seedMarketing();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
@@ -177,6 +178,17 @@ public class PermissionMatrixService {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.VIEW, true);
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.DELETE, true);
+        }
+        grants.invalidateAround();
+    }
+
+    /** Designation defaults (spec 005a): Admin and Director keep the list and the people's employment details. */
+    private void seedDesignations() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action :
+                    List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                seed(role, PermissionModule.DESIGNATIONS, action, true);
+            }
         }
         grants.invalidateAround();
     }

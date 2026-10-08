@@ -1,0 +1,6 @@
+$kind: http-request
+name: Missing Details Summary
+description: "Counts of Teachers and Managers without a designation, Managers without a joining date and inactive Managers without an exit date. The same people are listed by GET /api/v1/managers?missing=true and GET /api/v1/teachers?missingDesignation=true. Needs DESIGNATIONS.VIEW."
+url: "{{baseUrl}}/api/v1/designations/summary"
+method: GET
+order: 2000

@@ -1,9 +1,12 @@
 package com.hls.organization.internal;
 
+import com.hls.designation.api.DesignationDirectory;
+import com.hls.designation.api.DesignationDirectory.Kind;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -29,16 +32,22 @@ public class OrganizationDevSeeder implements ApplicationRunner {
     private final ManagerRepository managerRepository;
     private final SchoolDirectory schoolDirectory;
     private final AppUserRepository appUserRepository;
+    private final ManagerEmploymentService employment;
+    private final DesignationDirectory designations;
 
     public OrganizationDevSeeder(
             ManagerService managerService,
             ManagerRepository managerRepository,
             SchoolDirectory schoolDirectory,
-            AppUserRepository appUserRepository) {
+            AppUserRepository appUserRepository,
+            ManagerEmploymentService employment,
+            DesignationDirectory designations) {
         this.managerService = managerService;
         this.managerRepository = managerRepository;
         this.schoolDirectory = schoolDirectory;
         this.appUserRepository = appUserRepository;
+        this.employment = employment;
+        this.designations = designations;
     }
 
     @Override
@@ -46,7 +55,11 @@ public class OrganizationDevSeeder implements ApplicationRunner {
         AppUser admin = appUserRepository.findByPhone("9800000001").orElse(null);
         AppUser manoj = appUserRepository.findByPhone("9800000003").orElse(null);
         var zone = schoolDirectory.zoneByName("Demo Zone");
-        if (admin == null || manoj == null || zone.isEmpty() || managerRepository.findByUserId(manoj.getId()).isPresent()) {
+        if (admin == null || manoj == null || zone.isEmpty()) {
+            return;
+        }
+        if (managerRepository.findByUserId(manoj.getId()).isPresent()) {
+            seedEmployment(admin, managerRepository.findByUserId(manoj.getId()).get());
             return;
         }
         UUID managerId = managerService.create(admin.getId(), manoj.getId()).id();
@@ -57,5 +70,18 @@ public class OrganizationDevSeeder implements ApplicationRunner {
             managerService.assignSchoolManager(admin.getId(), schools.get(0).id(), managerId);
         }
         log.info("[DEV SEED] Manager demo data ready: Manoj covers Demo Zone and manages the first demo School.");
+        seedEmployment(admin, managerRepository.findByUserId(manoj.getId()).orElseThrow());
+    }
+
+    /** Spec 005a: Manoj gets a designation, an employee id and a joining date, so the new fields have something to show. */
+    private void seedEmployment(AppUser admin, Manager manoj) {
+        if (manoj.getJoiningDate() != null) {
+            return;
+        }
+        LocalDate joining = LocalDate.now().minusDays(400);
+        employment.updateEmployment(admin.getId(), manoj.getId(), "HLS-M-001", joining, null, manoj.getVersion());
+        designations
+                .findByName(Kind.MANAGER, "Zone Manager")
+                .ifPresent(d -> employment.appendDesignation(admin.getId(), manoj.getId(), d.id(), joining));
     }
 }

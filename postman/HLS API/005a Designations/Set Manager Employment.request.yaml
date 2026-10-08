@@ -1,0 +1,17 @@
+$kind: http-request
+name: Set Manager Employment
+description: "Employee id (1 to 20 letters, digits or hyphens; unique across Managers and Teachers, 409 with the holder's name otherwise), joining date and exit date; null clears. An exit date is accepted only while the Manager is inactive, not before the joining date and at most 90 days after today. Needs DESIGNATIONS.EDIT; the Manager edit permission does not cover it."
+url: "{{baseUrl}}/api/v1/managers/{{managerId}}/employment"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "employeeId": "HLS-M-001",
+      "joiningDate": "2026-01-05",
+      "exitDate": null,
+      "version": 0
+    }
+order: 6000

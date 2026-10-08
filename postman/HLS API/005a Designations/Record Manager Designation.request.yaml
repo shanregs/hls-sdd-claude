@@ -1,0 +1,15 @@
+$kind: http-request
+name: Record Manager Designation
+description: "Appends a dated row to the Manager's designation history; earlier rows are never changed. The designation cannot be cleared. A change may not take effect before the first day of the current month, except the first designation (from the joining date, or any date up to today when none is set). Needs DESIGNATIONS.EDIT."
+url: "{{baseUrl}}/api/v1/managers/{{managerId}}/designation"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "designationId": "{{designationId}}",
+      "effectiveOn": "2026-10-01"
+    }
+order: 7000

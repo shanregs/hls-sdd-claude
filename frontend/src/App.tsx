@@ -14,6 +14,7 @@ import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
 import { DashboardRouter } from "./dashboards/DashboardRouter";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
+import { DesignationsPage } from "./features/designations/DesignationsPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -106,6 +107,14 @@ export function App() {
           element={
             <RouteGuard>
               <TeachersPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/designations"
+          element={
+            <RouteGuard>
+              <DesignationsPage />
             </RouteGuard>
           }
         />

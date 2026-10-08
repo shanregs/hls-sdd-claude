@@ -33,4 +33,19 @@ public interface TeacherDirectory {
 
     /** Ids of Teachers with an ACTIVE placement overlapping {@code from..to} inclusive. */
     Set<UUID> teachersPlacedDuring(LocalDate from, LocalDate to);
+
+    /** A Teacher's designation and optional employee id (spec 005a); either may be null. */
+    record TeacherEmployment(UUID teacherId, UUID designationId, String employeeId) {}
+
+    /** The Teacher's current designation id; empty when none is set. Only the current one is kept. */
+    Optional<UUID> currentDesignation(UUID teacherId);
+
+    /** Bulk form of {@link #currentDesignation}; a Teacher with none is absent from the map. */
+    Map<UUID, UUID> currentDesignations(Collection<UUID> teacherIds);
+
+    /** Designation and employee id of the given Teachers (unknown ids absent). */
+    Map<UUID, TeacherEmployment> employment(Collection<UUID> teacherIds);
+
+    /** For each given designation, how many Teachers hold it (absent key means none). */
+    Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds);
 }
