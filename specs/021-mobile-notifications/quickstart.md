@@ -28,7 +28,8 @@ contract test (`api/notificationsContract.test.ts`).
 1. **Bell and refresh (US1)**: sign in as the Manager. On the web, sign in as the Teacher and submit leave. Within 30
    seconds the Manager's bell shows 1 without any tap. Background the app, create another, return: the bell updates at
    once. Turn the network off: the bell keeps no number and no error appears.
-2. **Open and follow (US2)**: open the list; the unread request is highlighted. Tap it: it becomes read, the bell
+2. **Open and follow (US2)**: time the path from the bell to the destination screen (target under 10 seconds) and
+   compare titles, messages and times with the web for the same user (SC-002, SC-003). Open the list; the unread request is highlighted. Tap it: it becomes read, the bell
    drops, Leave Management opens. As the Teacher, reject the request on the web; in the app open "Your leave was
    rejected": My Leave History opens. Trigger an attendance change for the Teacher: the notification opens My
    Attendance on the linked month.

@@ -35,7 +35,8 @@ open app shows 1; open the list and the bell drops after reading.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user with unread notifications, **When** any signed-in screen is shown, **Then** the header
+1. **Given** a user with unread notifications, **When** any screen with the app header is shown (Home, the menu screens, the lists and "Not authorized"; not the
+   full-screen Devices and Location privacy sub-screens), **Then** the header
    bell shows the unread count, "99+" above 99, and no number at zero.
 2. **Given** the app is open, **When** a new notification is created for the user, **Then** the bell shows
    the new count within 30 seconds, without the user doing anything.
@@ -110,7 +111,7 @@ delete one; clear read and confirm the list is empty.
 6. **Given** another user's notification id (for example from an old screen), **When** the app asks for it,
    **Then** it is shown as not found and no data about it appears.
 7. **Given** the server refuses or cannot be reached for any of these actions, **When** the user acts,
-   **Then** the app says so in plain language, changes nothing on screen, and offers a retry.
+   **Then** the app says so in plain language, changes nothing on screen, and lets the user try the same action again.
 
 ---
 
@@ -135,7 +136,8 @@ after the next menu refresh.
    from the union of what the server offered.
 3. **Given** two users, **When** one reads or deletes a notification, **Then** the other's are unchanged.
 4. **Given** an Admin or System account, **When** it tries to sign in to the app, **Then** it is refused as
-   in spec 018, so no Admin notification screens exist in the app.
+   in spec 018, so no Admin notification screens exist in the app (behaviour of spec 018, checked by that spec's tests
+   and by the absence of any Admin notification screen here).
 5. **Given** any call made by these screens, **When** it is sent, **Then** it carries the device location or
    the reason there is none, and behaves the same without it.
 6. **Given** a user signs out, **When** they sign in as someone else on the same device, **Then** no
@@ -258,8 +260,8 @@ permissions and scope of specs 019 and 020.
 - **SC-001**: A user with the app open sees a new notification on the bell within 30 seconds of it being
   created, and immediately on returning to the app, in 100% of tests.
 - **SC-002**: A user can go from the bell to the screen a notification refers to in under 10 seconds.
-- **SC-003**: For test data, 100% of unread counts, titles, messages and times shown in the app equal what
-  the web shows for the same user.
+- **SC-003**: For test data, 100% of unread counts, titles, messages and the instant of each time shown in the app
+  equal what the web shows for the same user (displayed in the viewer's own time zone).
 - **SC-004**: With several users in the data, 100% of lists, counts, reads and deletes in the app affect
   only the signed-in user's own notifications; opening anyone else's shows no data.
 - **SC-005**: 100% of notification links produced by spec 010 either open the matching app screen or are

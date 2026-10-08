@@ -92,7 +92,7 @@ the web `NotificationBell` and `notificationsApi.ts`, and the app after specs 01
   is also the accessible path). Filter chips All and Unread only (the `unread=true` query). Pull-to-refresh reloads
   from page 0 and refreshes the count. A poll updates only the bell, never the list, so the list does not move under
   the user's finger (edge case). Rows show title, a two-line message, and the server's `createdAt` formatted as
-  DD/MM/YYYY HH:mm in the business time zone; no relative times, so the phone clock decides nothing (edge case).
+  DD/MM/YYYY HH:mm with the existing `formatDateTime`, in the phone's time zone like the other screens; no relative times, so the phone clock decides nothing (edge case).
 
 ## 10. Confirmation and destructive actions
 
