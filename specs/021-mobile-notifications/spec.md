@@ -14,7 +14,7 @@
 
 - Q: Is polling every 30 seconds while the app is in the foreground enough for the bell? → A: Yes. The count is loaded when the app opens, when it returns to the foreground, on pull-to-refresh and every 30 seconds while the app is in the foreground and a signed-in screen is showing, matching the web (spec 010 FR-008). Nothing runs in the background and there is no push.
 - Q: When the user opens a notification whose link the app cannot follow, is it marked read? → A: Yes. Opening a notification is the user acknowledging it, so it is marked read in every case; the link is simply not followed and the full text stays on screen.
-- Q: Which screens show the bell? → A: The header of every signed-in screen of the app (Home, the menu screens and the lists), as on the web. It is not shown on Sign In or on the "not authorized" screen.
+- Q: Which screens show the bell? → A: The app header, which every signed-in menu screen shares (Home, the menu screens and the lists), as on the web. It is not shown on Sign In, and not on the full-screen Devices and Location privacy sub-screens, which have their own back header (plan research §3).
 - Q: Do the delete actions ask for confirmation? → A: "Clear read" asks for confirmation because it removes many at once; deleting one notification does not, because it only removes a message and never the leave or attendance record behind it (spec 010).
 - Q: What happens when a link leads to a request or month the user can no longer see? → A: The destination screen shows its own normal state ("not found" or "not authorized", specs 019 and 020). The notification itself stays in the list.
 
@@ -169,7 +169,7 @@ after the next menu refresh.
 
 **Bell**
 
-- **FR-001**: The header of every signed-in screen MUST show a bell with the user's unread notification
+- **FR-001**: The app header, shared by every signed-in menu screen, MUST show a bell with the user's unread notification
   count, hidden at zero and shown as "99+" above 99, whenever the server's navigation offers Notifications.
   The count MUST come from the server and the app MUST NOT compute it.
 - **FR-002**: The count MUST be loaded when the app opens, when it returns to the foreground, on
