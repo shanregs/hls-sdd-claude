@@ -151,6 +151,17 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
       (Manoj only his own Teachers). Open one: the days it would mark are shown. Approve with a note, Reject with a
       reason, Revoke an approved one. Home shows "Pending leave requests: N" and opens the list.
     - After approving, Tara's My Attendance shows the Leave days; after revoking or cancelling they disappear.
+14. **Notifications** (spec 021, steps in `specs/021-mobile-notifications/quickstart.md`):
+    - The header bell shows the unread count on Home and every menu screen (not on Signed-in devices or Location
+      privacy, which have their own header). Submit leave as Tara on the web: Manoj's bell shows 1 within 30 seconds
+      with no tap; background the app and return: it updates at once; with the network off it shows no number and
+      no error.
+    - ACCOUNT → Notifications, or the bell: the list, newest first, unread highlighted, with All and Unread only.
+      Tap a notification: it is marked read and My Leave History, Leave Management or My Attendance (on the linked
+      month) opens. A notification with a link the app has no screen for shows its full text.
+    - Mark as read, Mark all as read, Delete, and Clear read (asks to confirm). Remove the Delete permission for the
+      role on the web and refresh the menu: Delete and Clear read disappear, marking read still works.
+    - TalkBack announces "Notifications, N unread" on the bell; check light and dark themes and the largest text size.
 
 ## 6. Automated tests
 

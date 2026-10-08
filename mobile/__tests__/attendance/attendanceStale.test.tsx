@@ -5,14 +5,18 @@ import { TEACHER_MODEL } from "../support/fixtures";
 import { openAttendanceScreen } from "../support/attendanceApp";
 
 let handler: ((state: AppStateStatus) => void) | undefined;
+// Every listener registered for AppState changes (the access model and the notification bell both register one).
+let handlers: ((state: AppStateStatus) => void)[] = [];
 
 beforeEach(() => {
   handler = undefined;
+  handlers = [];
   jest.spyOn(AppState, "addEventListener").mockImplementation(((
     _type: string,
     listener: (s: AppStateStatus) => void,
   ) => {
-    handler = listener;
+    handlers.push(listener);
+    handler = (state) => handlers.forEach((h) => h(state));
     return { remove: () => undefined };
   }) as never);
 });

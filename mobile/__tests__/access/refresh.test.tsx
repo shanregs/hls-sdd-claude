@@ -9,17 +9,21 @@ import { openMenu } from "../support/navigation";
 
 let server: FakeServer;
 let handler: ((state: AppStateStatus) => void) | undefined;
+// Every listener registered for AppState changes (the access model and the notification bell both register one).
+let handlers: ((state: AppStateStatus) => void)[] = [];
 let now = 1_000_000;
 
 beforeEach(async () => {
   handler = undefined;
+  handlers = [];
   now = 1_000_000;
   jest.spyOn(Date, "now").mockImplementation(() => now);
   jest.spyOn(AppState, "addEventListener").mockImplementation(((
     _type: string,
     listener: (s: AppStateStatus) => void,
   ) => {
-    handler = listener;
+    handlers.push(listener);
+    handler = (state) => handlers.forEach((h) => h(state));
     return { remove: () => undefined };
   }) as never);
   server = newServer();
