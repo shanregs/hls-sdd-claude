@@ -1,7 +1,7 @@
 # Running HLS locally
 
 Everything below was verified on a clean database: the backend started, Flyway created every table
-(V1-V24) and the demo data seeded itself.
+(V1-V25) and the demo data seeded itself.
 
 ## Prerequisites
 
