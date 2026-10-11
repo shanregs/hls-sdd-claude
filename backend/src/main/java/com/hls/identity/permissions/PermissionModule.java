@@ -51,7 +51,8 @@ public enum PermissionModule {
     OFFERS(VIEW, CREATE, EDIT),
     INDUCTION(VIEW, CREATE, EDIT),
     MARKETING(VIEW, CREATE, EDIT, APPROVE),
-    MARKETING_SETTINGS(VIEW, EDIT);
+    MARKETING_SETTINGS(VIEW, EDIT),
+    SALARY_STRUCTURES(VIEW, CREATE);
 
     private final Set<PermissionAction> actions;
 

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Pay Policy
+description: "The pay policy in effect today and its full history, newest first. A new installation starts with version 1: working-day divisor, half day 0.500, nearest rupee, calendar month. Needs SALARY_STRUCTURES.VIEW."
+url: "{{baseUrl}}/api/v1/salary-structures/policy"
+method: GET
+order: 4000

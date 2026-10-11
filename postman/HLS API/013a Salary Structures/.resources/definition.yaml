@@ -1,0 +1,3 @@
+$kind: collection
+description: "Salary structures by designation and the pay policy (spec 013a). Admin and Director only (SALARY_STRUCTURES VIEW and CREATE); Zone Manager, Teacher and System get 403 on every endpoint. Rows are append-only: a correction is a new row, and there is no edit or delete. Nothing here returns an individual person's pay. Collection variables: designationId (from 005a Designations - Add Designation)."
+order: 13100

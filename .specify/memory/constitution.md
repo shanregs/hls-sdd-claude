@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.1 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then one PATCH: 2.5.1)
+Version change: 1.7.0 → 2.5.2 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then two PATCH: 2.5.1 and 2.5.2)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.2 (PATCH, spec 013a): Principle VII's `payroll` entry now describes its first half (salary structures by
+    designation and the pay policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
+    it reads the `teacher`, `organization`, `designation`, `attendance`, `leave` and `schoolbilling` api packages and
+    nothing reads its tables), and the Default role access matrix gains a Salary Structures row. Admin and Director view and record
+    salaries and policy versions (View, Create); rows are append-only, so there is no Edit; Manager (Zone Manager),
+    Teacher and System have no access and cannot be granted it. A Teacher's own salary stays under Teacher Salary
+    (spec 005). No principle changes.
   - 2.5.1 (PATCH, spec 005a): Principle VII's module list gains `designation` (the list of designations, the
     employee-id registry and the holder-count SPI that `organization` and `teacher` implement; it depends on neither),
     and the Default role access matrix gains a Designations row. Admin and Director keep the list and the designation,
@@ -218,7 +225,10 @@ The system is one deployable Spring Boot application with one package per bounde
 - `attendance`: daily capture, status codes, monthly rollups, and month locks.
 - `leave`: leave requests, balances, and approvals. It feeds attendance and payroll through public
   APIs and events.
-- `payroll`: payroll computation, salary processing, and payslips.
+- `payroll`: payroll computation, salary processing, and payslips. Its first half (spec 013a) is the rules: salary
+  structures by designation and the pay policy, both append-only, and the one public `PayRules` interface that the
+  monthly run reads. It reads `teacher`, `organization`, `designation`, `attendance`, `leave` and `schoolbilling`
+  through their public APIs only, and no other module reads its tables.
 - `notification`: in-app notifications, with SMS and push later.
 - `files`: the shared store for uploaded files (visit photos now; bills, MoU documents and check-in photos later). A
   stored file is never changed, only removed with a reason; callers decide who may see a file.
@@ -302,6 +312,7 @@ kept intentionally lightweight for v1.
   | School Management               | ✓     | ✓        | Assigned | —       | —      |
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
+  | Salary Structures (by designation, pay policy) | View, Create | View, Create | — | — | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |
@@ -357,4 +368,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.1 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-08
+**Version**: 2.5.2 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11

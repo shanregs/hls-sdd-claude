@@ -21,10 +21,52 @@ class TeacherDirectoryImpl implements TeacherDirectory {
 
     private final TeacherRepository teachers;
     private final TeacherPlacementSource placements;
+    private final SalaryHistoryRepository salaries;
 
-    TeacherDirectoryImpl(TeacherRepository teachers, TeacherPlacementSource placements) {
+    TeacherDirectoryImpl(
+            TeacherRepository teachers, TeacherPlacementSource placements, SalaryHistoryRepository salaries) {
         this.teachers = teachers;
         this.placements = placements;
+        this.salaries = salaries;
+    }
+
+    @Override
+    public Optional<SalaryOn> salaryOn(UUID teacherId, LocalDate date) {
+        return salaries
+                .findFirstByTeacherIdAndEffectiveOnLessThanEqualOrderByEffectiveOnDescCreatedAtDesc(teacherId, date)
+                .map(e -> new SalaryOn(e.getAmount(), e.getEffectiveOn()));
+    }
+
+    @Override
+    public Map<UUID, SalaryOn> salariesOn(Collection<UUID> teacherIds, LocalDate date) {
+        if (teacherIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, SalaryHistoryEntry> latest = new HashMap<>();
+        for (SalaryHistoryEntry entry : salaries.findInEffectCandidates(teacherIds, date)) {
+            latest.merge(entry.getTeacherId(), entry, (a, b) -> newer(a, b) ? a : b);
+        }
+        Map<UUID, SalaryOn> result = new HashMap<>();
+        latest.forEach((id, entry) -> result.put(id, new SalaryOn(entry.getAmount(), entry.getEffectiveOn())));
+        return result;
+    }
+
+    /** Later effective date wins; the same date goes to the entry recorded last. */
+    private static boolean newer(SalaryHistoryEntry a, SalaryHistoryEntry b) {
+        int byDate = a.getEffectiveOn().compareTo(b.getEffectiveOn());
+        return byDate != 0 ? byDate > 0 : a.getCreatedAt().compareTo(b.getCreatedAt()) >= 0;
+    }
+
+    @Override
+    public Map<UUID, List<UUID>> teachersByDesignation(Collection<UUID> designationIds) {
+        if (designationIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, List<UUID>> result = new HashMap<>();
+        for (Object[] row : teachers.idsByDesignation(designationIds)) {
+            result.computeIfAbsent((UUID) row[0], k -> new java.util.ArrayList<>()).add((UUID) row[1]);
+        }
+        return result;
     }
 
     @Override

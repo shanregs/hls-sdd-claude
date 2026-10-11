@@ -182,6 +182,14 @@ public final class NavigationCatalog {
                     34,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
+                    "Salary Structures",
+                    "/operations/salary-structures",
+                    PermissionModule.SALARY_STRUCTURES,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    36,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
                     "Campus Drives",
                     "/recruitment/drives",
                     PermissionModule.RECRUITMENT,

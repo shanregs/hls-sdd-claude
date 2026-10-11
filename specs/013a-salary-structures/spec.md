@@ -265,9 +265,9 @@ this spec merges.
 
 ## Assumptions
 
-- Spec 005a (designations for Managers and Teachers, and a Manager's employee id and joining date) is a prerequisite: it
-  is specified in `docs/spec-inputs/005a-designations.md` but not yet built. This spec cannot be implemented until it
-  is, and the order is 005a, then 013a.
+- Spec 005a (designations for Managers and Teachers, and a Manager's employee id and joining date) is a prerequisite and
+  is built (PR #33). It keeps a **Manager's** designation history, so the designation on a date is exact; it keeps only a
+  **Teacher's** current designation, which this spec never uses for pay.
 - Rounding is applied once, to the total loss-of-pay deduction of a month, never to the value of a single day.
 - Spec 005 (Teacher salary history, Zones, Schools), spec 008 (attendance, holiday calendar and weekly offs), spec 009
   (leave, including the Loss-of-Pay type to be added by amendment A3), spec 012 (the first School assignment is a

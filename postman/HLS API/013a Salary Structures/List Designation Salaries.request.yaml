@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Designation Salaries
+description: "Every designation with the salary in effect today (inEffect is null when none: 'no salary yet'), its kind, retired flag and the missing-salary flag with the number of people left without a salary. Teacher designations carry teacherDefaultNote. Optional filters kind (TEACHER or MANAGER) and includeRetired=true. Needs SALARY_STRUCTURES.VIEW."
+url: "{{baseUrl}}/api/v1/salary-structures/designations?includeRetired=false"
+method: GET
+order: 1000

@@ -195,6 +195,38 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void salaryStructuresHaveViewAndCreateOnlyAndApplyToAdminAndDirectorAlone() {
+        assertThat(PermissionModule.SALARY_STRUCTURES.actions())
+                .containsExactlyInAnyOrder(PermissionAction.VIEW, PermissionAction.CREATE);
+        for (Role role : Role.values()) {
+            boolean heldByStaff = role == Role.ADMIN || role == Role.DIRECTOR;
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.SALARY_STRUCTURES))
+                    .as("SALARY_STRUCTURES " + role)
+                    .isEqualTo(heldByStaff
+                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE)
+                            : java.util.EnumSet.noneOf(PermissionAction.class));
+            for (PermissionAction action : PermissionModule.SALARY_STRUCTURES.actions()) {
+                assertThat(matrix.isGranted(role, PermissionModule.SALARY_STRUCTURES, action))
+                        .as(role + " " + action)
+                        .isEqualTo(heldByStaff);
+            }
+        }
+    }
+
+    @Test
+    void theMatrixRefusesToGrantSalaryStructuresToZoneManagerTeacherOrSystem() {
+        String admin = signInAs(Role.ADMIN).token();
+        for (Role role : List.of(Role.MANAGER, Role.TEACHER, Role.SYSTEM)) {
+            Resp refused = put(MATRIX + "/" + role + "/SALARY_STRUCTURES/VIEW", admin, Map.of("granted", true));
+            assertThat(refused.status()).as(role.name()).isEqualTo(409);
+            assertThat(refused.body()).contains("does not apply");
+        }
+        // there is no EDIT: the rows are append-only
+        Resp edit = put(MATRIX + "/ADMIN/SALARY_STRUCTURES/EDIT", admin, Map.of("granted", true));
+        assertThat(edit.status()).isEqualTo(409);
+    }
+
+    @Test
     void systemHasNoBusinessDataModulesButKeepsTheHolidayCalendarAndAudit() {
         for (PermissionModule business : List.of(
                 PermissionModule.ZONES,
@@ -211,6 +243,7 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.NOTIFICATIONS,
                 PermissionModule.SCHOOL_CONTRACTS,
                 PermissionModule.DESIGNATIONS,
+                PermissionModule.SALARY_STRUCTURES,
                 PermissionModule.RECRUITMENT,
                 PermissionModule.OFFERS,
                 PermissionModule.INDUCTION,
