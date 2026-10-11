@@ -7,7 +7,7 @@ its reason (FR-008, FR-009, SC-007). No method returns zero to mean "missing". B
 ```java
 public interface PayRules {
 
-    enum Kind { TEACHER, MANAGER }
+    enum Kind { TEACHER, MANAGER, STAFF }   // STAFF = a user holding Admin, Director or System; id = user id
     record PersonRef(Kind kind, UUID id) {}
 
     /** FR-008: the monthly salary in effect on a date. */
@@ -38,9 +38,9 @@ public interface PayRules {
 ```java
 sealed interface SalaryInEffect {
     record Found(BigDecimal monthly, LocalDate effectiveOn, Source source) implements SalaryInEffect {}
-    record NoSalary(Reason reason) implements SalaryInEffect {}   // NO_DESIGNATION, DESIGNATION_HAS_NO_SALARY,
-                                                                  //   TEACHER_HAS_NO_RECORDED_SALARY, NOT_EMPLOYED
-    enum Source { DESIGNATION, TEACHER_RECORD }
+    record NoSalary(Reason reason) implements SalaryInEffect {}   // TEACHER_HAS_NO_RECORDED_SALARY,
+                                                                  //   PERSON_HAS_NO_RECORDED_SALARY, NOT_EMPLOYED
+    enum Source { TEACHER_RECORD, PERSON_RECORD }
 }
 
 sealed interface LossOfPayValue {
@@ -67,7 +67,7 @@ sealed interface TotalLossOfPay {
 
 1. The same inputs and the same stored rows always give the same answer (pure calculators, no clock inside).
 2. `salaryOn` equals the latest row on or before the date, ties to the row recorded last (SC-001, 10+ cases).
-3. A Teacher's answer never uses the designation's salary (FR-005, clarified).
+3. Nobody's answer ever uses a designation's amount (FR-005, amended): a Teacher's comes from spec 005's record, a Manager's or staff member's from their own `person_salary`; two people on one designation get their own, different, answers.
 4. `lossOfPayValueOn` for 26 working days and ₹26,000 is a full day ₹1,000 and a half day ₹500 (US3 scenario 3), with no
    rounding applied.
 5. `payableDays` counts each date at most once across Schools and never counts training days, days after exit, or days
@@ -76,10 +76,10 @@ sealed interface TotalLossOfPay {
    salary in effect on that day (clarified). If any unpaid day has no salary, the whole answer is `Cannot`; it never
    pays a partial figure.
 7. A month with no working days gives `NoWorkingDays`; no division is attempted.
-8. `unpaidDays` for a Manager is `Unavailable` until spec 032; it never returns an empty `Found`.
+8. `unpaidDays` for a Manager or a staff member is `Unavailable` until their attendance exists (spec 032); it never returns an empty `Found`.
 
 ## What this interface reads
 
-`teacher.api.TeacherDirectory` (placements, exit date, new `salaryOn`), 005a's Manager and designation interfaces,
+`teacher.api.TeacherDirectory` (placements, exit date, new `salaryOn`), 005a's Manager interface (joining and exit dates), `payroll`'s own `person_salary` and `staff_employment`,
 `attendance.api.AttendanceReadApi` (marks by category), new `attendance.api.WorkingCalendar`, and the Loss-of-Pay leave
 type from spec 009 amendment A3. It does not read any other module's tables.

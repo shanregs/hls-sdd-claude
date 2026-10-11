@@ -165,3 +165,20 @@ Let `W(m, cal)` be the working days of month `m` on calendar `cal` (weekly offs 
 - **Decision**: amounts are `NUMERIC(12,2)`, serialized as strings with two decimals, shown with ₹ and Indian grouping.
   Maximum `9,999,999.99`. The note is at most 500 characters, plain text.
 - **Rationale**: house convention (`V20`); string money avoids float errors in the JSON.
+
+## 11. Salary belongs to the person (amendment 2026-10-11)
+
+- **Decision**: HLS has no pay scale, so the salary of a Manager or staff member is their own, in `person_salary`
+  (`MANAGER` keyed by Manager id, `STAFF` keyed by user account), and a Teacher's stays in spec 005's history. The
+  designation's amount is a suggested default only. Staff are users holding the Admin, Director or System role
+  (`RoleAssignmentRepository.userIdsWithRole`), so no new master-data record is needed; their joining and exit dates are
+  in `staff_employment`.
+- **Rationale**: pay is agreed per person at recruitment; keying it to the designation made two people on one
+  designation indistinguishable. One history per person is also what a raise, a correction and an audit need.
+- **Alternatives**: a salary history inside `organization` for Managers plus another place for staff (payroll would read
+  several sources and Admin/Director still have no home); a new Staff master-data spec first (a larger spec before
+  anyone but a Teacher could be paid).
+- **Consequences**: `PayRules.salaryOn` changes its reasons (`NO_DESIGNATION` and `DESIGNATION_HAS_NO_SALARY` go away,
+  `PERSON_HAS_NO_RECORDED_SALARY` is added) and `PersonRef.Kind` gains `STAFF`. FR-016 is relaxed: the People list shows
+  individual pay to `SALARY_STRUCTURES` holders only. A Teacher's salary is still written only on the Teachers screen.
+  Staff unpaid days are `Unavailable` like a Manager's.

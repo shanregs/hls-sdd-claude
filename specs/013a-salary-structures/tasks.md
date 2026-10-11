@@ -234,3 +234,28 @@ Task: "UnpaidDayClassifier in backend/src/main/java/com/hls/payroll/internal/Unp
 - A missing salary, designation or working day is always a stated reason, never zero (SC-007)
 - Rounding is applied once, to the month total only
 - Commit after each task or logical group
+
+---
+
+## Phase 8: Amendment 2026-10-11 - each person's own salary (User Story 5)
+
+**Goal**: Managers, Admins, Directors and other staff have their own salary history; two people on one designation
+differ; the designation's amount is only a suggestion. See spec.md Clarifications (2026-10-11), data-model.md
+"person_salary" and contracts/salary-structures-api.md "People".
+
+### Tests first
+
+- [X] T052 [P] [US5] `PersonSalaryApiTest`: record for a Manager and for a staff member (Admin user); read back; two Managers on one designation keep different salaries and neither changes the other; same-date tie; refusals each with the problem named; a Teacher is refused; unknown person is 404; employment dates set and an exit before joining refused; the People list filters by kind, name and "without a salary"; a Teacher row is read-only with their own salary
+- [X] T053 [P] [US5] Extend `PayRulesTest`, `PayRulesCalendarTest` and `MissingSalaryReportTest`: a Manager's salary is their own whatever the designation default; a Manager or staff member with none is `PERSON_HAS_NO_RECORDED_SALARY`; staff payable days follow their joining and exit dates; staff unpaid days are `Unavailable`; the designation flag counts holders without a salary of their own; a designation default changes nobody's answer
+- [X] T054 [P] [US5] Extend `SalaryStructuresAuthorizationTest`, `PayRulesBoundaryTest` and the audit tests for the new endpoints (403 for Zone Manager, Teacher and System; `PERSON_SALARY` and `STAFF_EMPLOYMENT` entries; only `/people` responses carry an individual's pay)
+- [X] T055 [P] [US5] Frontend tests `People.test.tsx` and `PersonSalary.test.tsx`: the list, the no-salary filter, a Teacher row read-only with a link, the form with the suggested default, inline refusals, per-role visibility, axe in both themes
+
+### Implementation
+
+- [X] T056 [US5] Migration `V27__create_person_salary.sql`: `person_salary` and `staff_employment` per data-model.md, the append-only trigger on `person_salary`
+- [X] T057 [US5] `PersonSalary` and `StaffEmployment` entities and repositories; extend `PersonDirectory` with the Manager list, the Teacher list and the staff users (`ManagerQueries.allManagers` and `holdersByDesignation`, `TeacherDirectory.allTeachers`, `RoleAssignmentRepository.userIdsWithRole`)
+- [X] T058 [US5] `PayRules` and `PayRulesImpl`: `Kind.STAFF`, `Source.PERSON_RECORD`, the new reasons, a Manager's and a staff member's salary from `person_salary`, staff payable days from `staff_employment`, staff unpaid days `Unavailable`; update `MissingSalaryReport` to count holders without a salary of their own
+- [X] T059 [US5] `PersonSalaryService` and `PersonSalaryController` (`/people`, detail, record, employment) with validation, audit and the suggested default; refuse a Teacher
+- [X] T060 [US5] Frontend: People tab (list, filters, link to the Teachers screen for Teachers), `PersonSalaryPage` (history, form with the suggested default, staff dates), the designation list relabelled "Designation defaults", routes in `App.tsx`
+- [X] T061 [P] [US5] Dev seeder: salaries for the demo Manager and staff so the list shows values and some people without
+- [X] T062 [P] [US5] Docs: Postman requests, roadmap decision D12 and row 013a, the constitution row note, `quickstart-results.md`

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Set Staff Dates
+description: "Sets a staff member's joining and exit dates (staff only; a Manager's are on the Managers screen). Either may be null; an exit before the joining date is refused with 400. Each changed date writes a STAFF_EMPLOYMENT entry in Change History. Needs SALARY_STRUCTURES.CREATE."
+url: "{{baseUrl}}/api/v1/salary-structures/people/STAFF/{{userId}}/employment"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "joiningDate": "2026-06-01",
+      "exitDate": null
+    }
+order: 9000

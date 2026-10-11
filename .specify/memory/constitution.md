@@ -33,12 +33,14 @@ Modified principles:
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
   - 2.5.2 (PATCH, spec 013a): Principle VII's `payroll` entry now describes its first half (salary structures by
-    designation and the pay policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
+    person (Managers and staff; a Teacher's stays in spec 005), the suggested default per designation and the pay
+    policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
     it reads the `teacher`, `organization`, `designation`, `attendance`, `leave` and `schoolbilling` api packages and
     nothing reads its tables), and the Default role access matrix gains a Salary Structures row. Admin and Director view and record
     salaries and policy versions (View, Create); rows are append-only, so there is no Edit; Manager (Zone Manager),
     Teacher and System have no access and cannot be granted it. A Teacher's own salary stays under Teacher Salary
-    (spec 005). No principle changes.
+    (spec 005). This module is also the only place, besides Teacher Salary, where an individual's pay is shown (the
+    People list), and only to its holders. No principle changes.
   - 2.5.1 (PATCH, spec 005a): Principle VII's module list gains `designation` (the list of designations, the
     employee-id registry and the holder-count SPI that `organization` and `teacher` implement; it depends on neither),
     and the Default role access matrix gains a Designations row. Admin and Director keep the list and the designation,
@@ -225,8 +227,9 @@ The system is one deployable Spring Boot application with one package per bounde
 - `attendance`: daily capture, status codes, monthly rollups, and month locks.
 - `leave`: leave requests, balances, and approvals. It feeds attendance and payroll through public
   APIs and events.
-- `payroll`: payroll computation, salary processing, and payslips. Its first half (spec 013a) is the rules: salary
-  structures by designation and the pay policy, both append-only, and the one public `PayRules` interface that the
+- `payroll`: payroll computation, salary processing, and payslips. Its first half (spec 013a) is the rules: each
+  person's own salary (Managers and staff; HLS has no pay scale), the suggested default per designation and the pay
+  policy, all append-only, and the one public `PayRules` interface that the
   monthly run reads. It reads `teacher`, `organization`, `designation`, `attendance`, `leave` and `schoolbilling`
   through their public APIs only, and no other module reads its tables.
 - `notification`: in-app notifications, with SMS and push later.
@@ -312,7 +315,7 @@ kept intentionally lightweight for v1.
   | School Management               | ✓     | ✓        | Assigned | —       | —      |
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
-  | Salary Structures (by designation, pay policy) | View, Create | View, Create | — | — | — |
+  | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List People
+description: "One page of everyone who is paid (Teachers, Managers and staff: users holding the Admin, Director or System role), by name, with the salary in effect today (inEffect is null when none). Filters: kind (TEACHER, MANAGER or STAFF), q (part of the name), withoutSalary=true (people who work here today and have none), page and size (at most 200). A Teacher's salaryEditable is false: it is changed on the Teachers screen. Needs SALARY_STRUCTURES.VIEW."
+url: "{{baseUrl}}/api/v1/salary-structures/people?withoutSalary=false&page=0&size=25"
+method: GET
+order: 6000

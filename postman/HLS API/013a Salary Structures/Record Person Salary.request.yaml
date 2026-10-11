@@ -1,0 +1,16 @@
+$kind: http-request
+name: Record Person Salary
+description: "Appends the person's own salary from an effective date; earlier rows are never changed, and two rows on one date go to the one recorded last. Manager or staff only: a Teacher is refused with 400 (a Teacher's salary is changed on the Teachers screen). Refused with 400 and the problem named: amount missing, zero, negative, more than two decimals or above 9,999,999.99; effectiveOn missing or before the first day of the current month; note over 500 characters. 404 for an unknown person. Each recorded salary writes a PERSON_SALARY entry in Change History. Needs SALARY_STRUCTURES.CREATE."
+url: "{{baseUrl}}/api/v1/salary-structures/people/MANAGER/{{managerId}}/salaries"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "amount": "65000.00",
+      "effectiveOn": "2026-11-01",
+      "note": "Agreed at recruitment"
+    }
+order: 8000
