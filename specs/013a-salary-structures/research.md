@@ -17,11 +17,30 @@ Every open point from the spec is settled here. No `NEEDS CLARIFICATION` remains
      classifier recognizes it by a code the leave module exposes; until A3 lands it simply finds none.
   3. **A working-calendar interface in `attendance`**: `CalendarService` and the weekly-off rules are `internal`;
      `attendance.api` has rollups, marks and leave helpers but nothing that answers "which dates of this range are
-     working days for this School". New here as `WorkingCalendar` (amendment A5 to spec 008, additive).
+     working days for this School". New here as `WorkingCalendar` (amendment A6 to spec 008, additive; the plan first called it A5, but A5 is spec 016's induction attendance).
 - **Rationale**: stand-ins (copying the weekly-off rules, reading designation tables) would break Principle VII and
   produce two truths about working days.
 - **Alternatives**: wait for all three before planning (stalls the order the roadmap fixes); implement 013a with the
   unpaid-day rules inside `attendance` (couples attendance to a pay rule).
+
+### Findings at implementation time (T001, 2026-10-11)
+
+Checked in the code before any payroll code was written:
+
+- **Spec 005a is built** (PR #33). Interface names found and used through the `payroll` port `PersonDirectory`:
+  `designation.api.DesignationDirectory` (`find`, `findAll`, and `designations(kind, includeRetired)`, which 013a added
+  because the screen must list every designation); `organization.api.ManagerQueries` (`designationOn`,
+  `designationsOn`, `employment` = employee id, joining and exit dates, `holderCountsByDesignation`);
+  `teacher.api.TeacherDirectory` (`currentDesignation`, `employment`, `holderCountsByDesignation`).
+- **Designation history**: a **Manager's** designation history is kept (`designationOn(managerId, date)` returns the
+  latest row on or before the date), so a mid-month promotion is valued correctly. A **Teacher** keeps only the current
+  designation, which does not matter here because a Teacher's pay never uses the designation (FR-005).
+- **Amendment A3 to spec 009 is built** (PR #32): `leave.api.LeaveTypes` with code `LOP`, `isLossOfPay(requestId)` and
+  the bulk `lossOfPayRequests(requestIds)`. A leave mark carries its request id (`MarkView.leaveRequestId`).
+- **Amendment A2 to spec 008 is NOT built** (the roadmap still says "A2 not started"). The user chose to continue with
+  the status-code-category fallback this plan already allows (section 4); see the A2 note there.
+- Added by this spec and consumed through interfaces: `attendance.api.WorkingCalendar` (amendment A6),
+  `TeacherDirectory.salaryOn`/`salariesOn`/`teachersByDesignation`.
 
 ## 2. Where "who is a Manager, a Teacher, and since when" comes from
 
@@ -75,6 +94,27 @@ Let `W(m, cal)` be the working days of month `m` on calendar `cal` (weekly offs 
   the spec lists (mid-month change, transfer, holiday).
 - **Alternatives**: a per-month salary (rejected by the clarified mid-month rule); rounding each day (rejected in
   clarify); a calendar-day divisor (rejected by D12).
+
+### Implementation notes on section 4 (2026-10-11)
+
+- **Amendment A2 is not built, so the category fallback is what runs.** The seeded status codes are `P` (WORKED), `L`
+  (LEAVE), `T` (TRAINING), `N` (NON_WORKING), `S` (WORKED), `H` (NON_WORKING) and `A` "Absent" (**LEAVE**, weight 0).
+  There is no ABSENT category, so an absence is a **LEAVE-category mark that no leave request backs**
+  (`leaveRequestId` null); an approved leave day is a LEAVE-category mark that carries a request id, and it is unpaid
+  only when `LeaveTypes.lossOfPayRequests` says the request is Loss-of-Pay. A mark's `dayValue` (1.00 or 0.50) says
+  whether a full or a half day is unpaid. When A2 lands, only `UnpaidDayClassifier` changes.
+- **Known limit of the fallback**: a LEAVE-category mark made by hand with the code `L` and no leave request counts as an
+  absence (unpaid). Leave taken through spec 009 always carries a request id, so it is correct.
+- **Unmarked working days are not classified as unpaid here.** Attendance reports them as `unmarked`; whether payroll
+  pays or deducts an unmarked day is a 013b decision, and it must not be made silently by this interface.
+- **One policy per month**: the half-day fraction and the rounding rule come from the version in effect on the **last
+  day of the month**, so a month is never calculated under two policies. A version dated mid-month therefore governs
+  that whole month's total; a version that starts the next month does not.
+- **Precision**: a day's value is kept to ten decimal places (`LossOfPayCalculator.SCALE`), far finer than a paisa;
+  the only rounding is the month total, to a whole rupee, returned with two decimals.
+- **Working days of a transferred Teacher**: `PayableDays.workingDaysInMonth` is the month's working days on the
+  calendar of the School the Teacher was placed in last; each unpaid day is valued over the working days of its own
+  School's calendar.
 
 ## 5. Manager unpaid days
 

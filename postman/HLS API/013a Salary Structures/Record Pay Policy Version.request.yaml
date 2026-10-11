@@ -1,0 +1,19 @@
+$kind: http-request
+name: Record Pay Policy Version
+description: "Adds a dated version of the pay policy; earlier versions are never changed. A month is calculated under the version in effect on its last day. Answers 201. Refused with 400 and the problem named: halfDayFraction not strictly between 0 and 1 or with more than three decimals; an unknown rounding (NEAREST_RUPEE, UP, DOWN), lopDivisor (WORKING_DAYS) or payMonth (CALENDAR_MONTH); effectiveOn missing or before the first day of the current month; note over 500 characters. A version that changes nothing is accepted. Each changed field writes a PAY_POLICY entry in Change History. Needs SALARY_STRUCTURES.CREATE."
+url: "{{baseUrl}}/api/v1/salary-structures/policy"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "effectiveOn": "2026-11-01",
+      "lopDivisor": "WORKING_DAYS",
+      "halfDayFraction": "0.500",
+      "rounding": "NEAREST_RUPEE",
+      "payMonth": "CALENDAR_MONTH",
+      "note": null
+    }
+order: 5000

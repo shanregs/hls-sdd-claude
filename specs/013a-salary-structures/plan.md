@@ -27,7 +27,7 @@ read. Nothing here computes a payslip.
   month.
 
 Prerequisites that are **not built yet** (see research.md section 1): spec 005a (designations), amendment A3 to spec
-009 (Loss-of-Pay leave type), amendment A2 to spec 008 (loss-of-pay flag per day), and a public working-calendar interface in `attendance` (new here, amendment A5 to
+009 (Loss-of-Pay leave type), amendment A2 to spec 008 (loss-of-pay flag per day), and a public working-calendar interface in `attendance` (new here, amendment A6 to
 spec 008). This plan implements the last one and consumes the other two through interfaces; tasks.md orders the work
 so 005a lands first.
 
@@ -152,7 +152,7 @@ frontend/src/features/payroll/
 frontend/src/App.tsx                                  # + guarded routes under /operations/salary-structures
 
 docs/postman/                       # new folder "Salary Structures"
-docs/spec-roadmap.md                # 013a row status; amendment A5 to 008
+docs/spec-roadmap.md                # 013a row status; amendment A6 to 008
 .specify/memory/constitution.md     # Salary Structures row in the Default role access matrix (patch note)
 ```
 
