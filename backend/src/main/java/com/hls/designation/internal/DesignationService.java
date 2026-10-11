@@ -111,6 +111,16 @@ public class DesignationService implements DesignationDirectory {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DesignationInfo> designations(Kind kind, boolean includeRetired) {
+        return repository.findAllByOrderByKindAscNameAsc().stream()
+                .filter(d -> kind == null || d.getKind() == kind)
+                .filter(d -> includeRetired || !d.isRetired())
+                .map(DesignationService::info)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, DesignationInfo> findAll(Collection<UUID> designationIds) {
         if (designationIds.isEmpty()) {
             return Map.of();

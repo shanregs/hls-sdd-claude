@@ -48,4 +48,20 @@ public interface TeacherDirectory {
 
     /** For each given designation, how many Teachers hold it (absent key means none). */
     Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds);
+
+    /**
+     * The Teacher's own recorded monthly salary in effect on {@code date} (spec 013a): the latest entry on or before
+     * it, ties to the entry recorded last; empty when none. This is the unchecked, server-side read for payroll and
+     * is not exposed over HTTP; spec 005 FR-019 still governs who may see a salary through the endpoints.
+     */
+    Optional<SalaryOn> salaryOn(UUID teacherId, LocalDate date);
+
+    /** A Teacher's recorded monthly amount and the date it took effect. */
+    record SalaryOn(java.math.BigDecimal amount, LocalDate effectiveOn) {}
+
+    /** Bulk form of {@link #salaryOn}; a Teacher with no salary on the date is absent from the map. One query. */
+    Map<UUID, SalaryOn> salariesOn(Collection<UUID> teacherIds, LocalDate date);
+
+    /** The ids of the Teachers holding each given designation (a designation nobody holds is absent). One query. */
+    Map<UUID, List<UUID>> teachersByDesignation(Collection<UUID> designationIds);
 }

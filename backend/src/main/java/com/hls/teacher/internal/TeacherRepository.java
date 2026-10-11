@@ -58,4 +58,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
     List<Object[]> countByDesignation();
 
     long countByDesignationIdIsNull();
+
+    @Query("select t.designationId, t.id from Teacher t where t.designationId in :designationIds")
+    List<Object[]> idsByDesignation(@Param("designationIds") Collection<UUID> designationIds);
 }

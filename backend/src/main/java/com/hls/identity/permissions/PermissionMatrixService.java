@@ -94,6 +94,7 @@ public class PermissionMatrixService {
         seedNotifications();
         seedSchoolContracts();
         seedDesignations();
+        seedSalaryStructures();
         seedRecruitment();
         seedMarketing();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
@@ -189,6 +190,15 @@ public class PermissionMatrixService {
                     List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
                 seed(role, PermissionModule.DESIGNATIONS, action, true);
             }
+        }
+        grants.invalidateAround();
+    }
+
+    /** Salary structure defaults (spec 013a): Admin and Director read and record; rows are append-only, so no Edit. */
+    private void seedSalaryStructures() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.SALARY_STRUCTURES, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.SALARY_STRUCTURES, PermissionAction.CREATE, true);
         }
         grants.invalidateAround();
     }

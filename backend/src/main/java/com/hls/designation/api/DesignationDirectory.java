@@ -21,6 +21,9 @@ public interface DesignationDirectory {
     /** The designation of the kind with this name (capitals and extra spaces ignored), for seeding and imports. */
     Optional<DesignationInfo> findByName(Kind kind, String name);
 
+    /** Every designation, by kind then name; {@code kind} null means both kinds. One query (spec 013a lists them). */
+    java.util.List<DesignationInfo> designations(Kind kind, boolean includeRetired);
+
     /** Bulk form of {@link #find}; unknown ids are absent. One query. */
     Map<UUID, DesignationInfo> findAll(Collection<UUID> designationIds);
 
