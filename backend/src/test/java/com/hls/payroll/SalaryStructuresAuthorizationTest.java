@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.hls.identity.user.Role;
 import com.hls.support.PayrollTestBase;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,21 @@ class SalaryStructuresAuthorizationTest extends PayrollTestBase {
                 new Endpoint(
                         "record salary",
                         (t, token) -> t.recordSalary(token, designation, "20000", t.firstOfMonth(), null)),
+                new Endpoint("people list", (t, token) -> t.get(BASE + "/people", token)),
+                new Endpoint(
+                        "person detail", (t, token) -> t.get(BASE + "/people/MANAGER/" + UUID.randomUUID(), token)),
+                new Endpoint(
+                        "record person salary",
+                        (t, token) -> t.post(
+                                BASE + "/people/MANAGER/" + UUID.randomUUID() + "/salaries",
+                                token,
+                                Map.of("amount", "1000", "effectiveOn", t.firstOfMonth().toString()))),
+                new Endpoint(
+                        "staff employment",
+                        (t, token) -> t.put(
+                                BASE + "/people/STAFF/" + UUID.randomUUID() + "/employment",
+                                token,
+                                Map.of("joiningDate", "2026-01-01"))),
                 new Endpoint("policy", (t, token) -> t.get(BASE + "/policy", token)),
                 new Endpoint(
                         "record policy",
@@ -37,7 +53,8 @@ class SalaryStructuresAuthorizationTest extends PayrollTestBase {
             String token = signInAs(role).token();
             for (Endpoint endpoint : endpoints(designation)) {
                 int status = endpoint.call().apply(this, token).status();
-                assertThat(status).as(role + " " + endpoint.name()).isIn(200, 201);
+                // an unknown person is 404 for those allowed; what matters is that it is not refused as 403
+                assertThat(status).as(role + " " + endpoint.name()).isIn(200, 201, 404);
             }
         }
     }

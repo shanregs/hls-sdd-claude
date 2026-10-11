@@ -83,12 +83,11 @@ class PayRulesCalendarTest extends PayrollTestBase {
         assertThat(payable.dates())
                 .filteredOn(d -> d.getDayOfMonth() >= 16)
                 .noneMatch(d -> d.getDayOfWeek() == DayOfWeek.FRIDAY);
-        // a Friday in the first span and a Sunday in the second are working days there
-        month.atDay(1).datesUntil(month.atEndOfMonth().plusDays(1)).forEach(d -> {
-            if (d.getDayOfMonth() <= 15 && d.getDayOfWeek() == DayOfWeek.FRIDAY) {
-                assertThat(workingCalendar.workingDays(sundaysOff, d, d)).containsExactly(d);
-            }
-        });
+        // a Friday in the first span and a Sunday in the second are working days there (one may be a holiday)
+        assertThat(payable.dates())
+                .anyMatch(d -> d.getDayOfMonth() <= 15 && d.getDayOfWeek() == DayOfWeek.FRIDAY);
+        assertThat(payable.dates())
+                .anyMatch(d -> d.getDayOfMonth() >= 16 && d.getDayOfWeek() == DayOfWeek.SUNDAY);
         List<LocalDate> expected = new java.util.ArrayList<>(workingCalendar.workingDays(sundaysOff, month.atDay(1), month.atDay(15)));
         expected.addAll(workingCalendar.workingDays(fridaysOff, month.atDay(16), month.atEndOfMonth()));
         assertThat(payable.dates()).containsExactlyElementsOf(expected);

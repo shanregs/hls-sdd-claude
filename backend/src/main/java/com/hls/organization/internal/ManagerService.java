@@ -159,6 +159,22 @@ public class ManagerService implements ManagerQueries {
     }
 
     @Override
+    public Map<UUID, List<UUID>> holdersByDesignation(Collection<UUID> designationIds) {
+        return employment.holdersByDesignation(designationIds);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ManagerRef> allManagers() {
+        List<Manager> all = managerRepository.findAll();
+        Map<UUID, UserWithRoles> users = usersOf(all);
+        return all.stream()
+                .map(m -> refOf(m, users))
+                .sorted(Comparator.comparing(m -> m.displayName().toLowerCase(Locale.ROOT)))
+                .toList();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<ManagerRef> managerOfSchool(UUID schoolId) {
         return schoolAssignments

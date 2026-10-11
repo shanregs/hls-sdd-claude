@@ -3,6 +3,7 @@ package com.hls.payroll;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hls.payroll.web.PayPolicyController;
+import com.hls.payroll.web.PersonSalaryController;
 import com.hls.payroll.web.SalaryStructureController;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 /**
  * Spec 013a FR-016, FR-017 (T032): the pay rules are server-side only, and no payroll endpoint or screen model can carry
@@ -27,10 +29,16 @@ class PayRulesBoundaryTest {
     private static final Pattern PERSONAL = Pattern.compile(
             "(?i).*(teacherId|managerId|personId|employeeId|userId|monthlySalary|payslip|lossOfPay|netPay|deduction).*");
 
+    /** The designation and policy endpoints never carry a person; only the People endpoints do, by design. */
+    private static final List<Class<?>> RESPONSES_WITHOUT_INDIVIDUALS =
+            List.of(SalaryStructureController.class, PayPolicyController.class);
+
     private static List<Method> endpoints(Class<?> controller) {
         List<Method> endpoints = new ArrayList<>();
         for (Method method : controller.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(GetMapping.class) || method.isAnnotationPresent(PostMapping.class)) {
+            if (method.isAnnotationPresent(GetMapping.class)
+                    || method.isAnnotationPresent(PostMapping.class)
+                    || method.isAnnotationPresent(PutMapping.class)) {
                 endpoints.add(method);
             }
         }
@@ -59,7 +67,7 @@ class PayRulesBoundaryTest {
 
     private static void inspectResponses(Set<String> fieldNames, Set<Class<?>> classes) {
         Set<Class<?>> seen = new HashSet<>();
-        for (Class<?> controller : List.of(SalaryStructureController.class, PayPolicyController.class)) {
+        for (Class<?> controller : RESPONSES_WITHOUT_INDIVIDUALS) {
             for (Method endpoint : endpoints(controller)) {
                 collect(endpoint.getGenericReturnType(), seen, fieldNames, classes);
             }
@@ -83,7 +91,20 @@ class PayRulesBoundaryTest {
     }
 
     @Test
-    void noResponseCarriesAPersonIdOrAnIndividualsPay() {
+    void thePeopleEndpointsReturnNoPayRulesAnswerAndAreTheOnlyOnesWithAPersonId() {
+        assertThat(endpoints(PersonSalaryController.class)).hasSize(4);
+        Set<String> names = new HashSet<>();
+        Set<Class<?>> classes = new HashSet<>();
+        Set<Class<?>> seen = new HashSet<>();
+        for (Method endpoint : endpoints(PersonSalaryController.class)) {
+            collect(endpoint.getGenericReturnType(), seen, names, classes);
+        }
+        assertThat(names).contains("personId", "inEffect");
+        assertThat(classes).noneMatch(c -> c.getPackageName().equals("com.hls.payroll.api"));
+    }
+
+    @Test
+    void noDesignationOrPolicyResponseCarriesAPersonIdOrAnIndividualsPay() {
         Set<String> names = new HashSet<>();
         Set<Class<?>> classes = new HashSet<>();
         inspectResponses(names, classes);

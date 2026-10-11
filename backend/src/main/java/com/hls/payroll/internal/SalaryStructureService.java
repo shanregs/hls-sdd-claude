@@ -1,6 +1,5 @@
 package com.hls.payroll.internal;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.designation.api.DesignationDirectory.Kind;
 import com.hls.identity.user.AppUser;
@@ -35,7 +34,8 @@ public class SalaryStructureService {
     static final String ENTITY = "DESIGNATION_SALARY";
     static final String MAX_AMOUNT_TEXT = "9,999,999.99";
     static final BigDecimal MAX_AMOUNT = new BigDecimal("9999999.99");
-    static final String TEACHER_DEFAULT_NOTE = "Only the default offered when a Teacher's salary is set.";
+    static final String DEFAULT_NOTE =
+            "A suggested default only: it is offered when a person's salary is entered, and nobody is paid it.";
 
     public record Actor(UUID id, String name) {}
 
@@ -44,7 +44,7 @@ public class SalaryStructureService {
 
     public record MissingSalary(boolean flag, long people, String note) {}
 
-    /** One row of the designation list. The Teacher note is absent on a Manager designation. */
+    /** One row of the designation list: the suggested default in effect, and who holds it without a salary of their own. */
     public record ListEntry(
             UUID designationId,
             String name,
@@ -52,7 +52,7 @@ public class SalaryStructureService {
             boolean retired,
             InEffect inEffect,
             MissingSalary missingSalary,
-            @JsonInclude(JsonInclude.Include.NON_NULL) String teacherDefaultNote) {}
+            String defaultNote) {}
 
     public record SalaryRow(
             UUID id,
@@ -70,7 +70,7 @@ public class SalaryStructureService {
             boolean retired,
             InEffect inEffect,
             MissingSalary missingSalary,
-            @JsonInclude(JsonInclude.Include.NON_NULL) String teacherDefaultNote,
+            String defaultNote,
             List<SalaryRow> history) {}
 
     private final DesignationSalaryRepository salaries;
@@ -106,7 +106,7 @@ public class SalaryStructureService {
         LocalDate today = calendar.businessToday();
         List<DesignationRef> designations = people.designations(kind, includeRetired);
         Map<UUID, DesignationSalary> inEffect = inEffectToday(designations, today);
-        Map<UUID, Missing> gaps = missing.compute(designations, inEffect.keySet(), today);
+        Map<UUID, Missing> gaps = missing.compute(designations, today);
         return designations.stream()
                 .map(d -> entry(d, inEffect.get(d.id()), gaps.get(d.id())))
                 .toList();
@@ -120,11 +120,7 @@ public class SalaryStructureService {
         List<DesignationSalary> rows =
                 salaries.findByDesignationIdOrderByEffectiveOnDescRecordedAtDesc(designationId);
         DesignationSalary current = SalaryResolver.inEffect(rows, today).orElse(null);
-        Map<UUID, DesignationSalary> inEffect = new HashMap<>();
-        if (current != null) {
-            inEffect.put(designationId, current);
-        }
-        Missing gap = missing.compute(List.of(designation), inEffect.keySet(), today).get(designationId);
+        Missing gap = missing.compute(List.of(designation), today).get(designationId);
         Map<UUID, String> names = names(rows);
         return new Detail(
                 designation.id(),
@@ -133,7 +129,7 @@ public class SalaryStructureService {
                 designation.retired(),
                 inEffect(current),
                 gap(gap),
-                teacherNote(designation),
+                DEFAULT_NOTE,
                 SalaryResolver.newestFirst(rows).stream().map(r -> row(r, names)).toList());
     }
 
@@ -203,7 +199,7 @@ public class SalaryStructureService {
 
     private static ListEntry entry(DesignationRef d, DesignationSalary current, Missing gap) {
         return new ListEntry(
-                d.id(), d.name(), d.kind(), d.retired(), inEffect(current), gap(gap), teacherNote(d));
+                d.id(), d.name(), d.kind(), d.retired(), inEffect(current), gap(gap), DEFAULT_NOTE);
     }
 
     private static InEffect inEffect(DesignationSalary current) {
@@ -212,10 +208,6 @@ public class SalaryStructureService {
 
     private static MissingSalary gap(Missing gap) {
         return gap == null ? new MissingSalary(false, 0, null) : new MissingSalary(gap.flag(), gap.people(), gap.note());
-    }
-
-    private static String teacherNote(DesignationRef d) {
-        return d.kind() == Kind.TEACHER ? TEACHER_DEFAULT_NOTE : null;
     }
 
     private SalaryRow row(DesignationSalary r, Map<UUID, String> names) {

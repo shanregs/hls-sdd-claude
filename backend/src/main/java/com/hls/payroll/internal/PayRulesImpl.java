@@ -20,6 +20,7 @@ import com.hls.payroll.internal.LossOfPayCalculator.DayInput;
 import com.hls.payroll.internal.PayableDaysCalculator.Employment;
 import com.hls.payroll.internal.PersonDirectory.ManagerDates;
 import com.hls.payroll.internal.PersonDirectory.Placement;
+import com.hls.payroll.internal.PersonDirectory.StaffUser;
 import com.hls.payroll.internal.PersonDirectory.RecordedSalary;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -51,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 class PayRulesImpl implements PayRules {
 
     static final String MANAGER_ATTENDANCE_NOT_RECORDED = "Manager attendance is not recorded yet";
+    static final String STAFF_ATTENDANCE_NOT_RECORDED = "Staff attendance is not recorded yet";
     static final String UNKNOWN_TEACHER = "The Teacher is not known.";
 
     private static final DateTimeFormatter DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
@@ -62,7 +64,8 @@ class PayRulesImpl implements PayRules {
             Map<LocalDate, UUID> schoolByDate,
             Map<UUID, Integer> monthWorkingDaysBySchool) {}
 
-    private final DesignationSalaryRepository salaries;
+    private final PersonSalaries personSalaries;
+    private final StaffEmploymentRepository staffDates;
     private final PayPolicyService policies;
     private final PersonDirectory people;
     private final AttendanceReadApi attendance;
@@ -70,13 +73,15 @@ class PayRulesImpl implements PayRules {
     private final LeaveTypes leaveTypes;
 
     PayRulesImpl(
-            DesignationSalaryRepository salaries,
+            PersonSalaries personSalaries,
+            StaffEmploymentRepository staffDates,
             PayPolicyService policies,
             PersonDirectory people,
             AttendanceReadApi attendance,
             WorkingCalendar calendar,
             LeaveTypes leaveTypes) {
-        this.salaries = salaries;
+        this.personSalaries = personSalaries;
+        this.staffDates = staffDates;
         this.policies = policies;
         this.people = people;
         this.attendance = attendance;
@@ -96,25 +101,55 @@ class PayRulesImpl implements PayRules {
         Set<PersonRef> persons = new LinkedHashSet<>(asked);
         Set<UUID> teacherIds = idsOf(persons, Kind.TEACHER);
         Set<UUID> managerIds = idsOf(persons, Kind.MANAGER);
+        Set<UUID> staffIds = idsOf(persons, Kind.STAFF);
 
         Set<UUID> knownTeachers = people.existingTeachers(teacherIds);
         Map<UUID, RecordedSalary> ownSalary = people.teacherSalariesOn(knownTeachers, date);
 
+        // a Manager's or staff member's salary is their own history, whatever their designation (FR-005, amended)
         Map<UUID, ManagerDates> managers = people.managers(managerIds);
         Set<UUID> employedManagers = managers.entrySet().stream()
-                .filter(e -> employedOn(e.getValue(), date))
+                .filter(e -> employedOn(e.getValue().joiningDate(), e.getValue().exitDate(), date))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
-        Map<UUID, UUID> designationOf = people.managerDesignationsOn(employedManagers, date);
-        Map<UUID, DesignationSalary> salaryOfDesignation = designationSalariesOn(designationOf.values(), date);
+        Map<UUID, PersonSalary> managerSalary = personSalaries.inEffect(PersonSalary.Kind.MANAGER, employedManagers, date);
+
+        Map<UUID, StaffUser> staff = people.staff(staffIds);
+        Map<UUID, StaffEmployment> staffDatesById = staffDatesOf(staff.keySet());
+        Set<UUID> employedStaff = staff.keySet().stream()
+                .filter(id -> {
+                    StaffEmployment dates = staffDatesById.get(id);
+                    return dates == null || employedOn(dates.getJoiningDate(), dates.getExitDate(), date);
+                })
+                .collect(Collectors.toSet());
+        Map<UUID, PersonSalary> staffSalary = personSalaries.inEffect(PersonSalary.Kind.STAFF, employedStaff, date);
 
         Map<PersonRef, SalaryInEffect> result = new LinkedHashMap<>();
         for (PersonRef person : persons) {
-            result.put(person, person.kind() == Kind.TEACHER
-                    ? teacherSalary(person.id(), knownTeachers, ownSalary)
-                    : managerSalary(person.id(), employedManagers, designationOf, salaryOfDesignation));
+            result.put(person, switch (person.kind()) {
+                case TEACHER -> teacherSalary(person.id(), knownTeachers, ownSalary);
+                case MANAGER -> personSalary(person.id(), employedManagers, managerSalary);
+                case STAFF -> personSalary(person.id(), employedStaff, staffSalary);
+            });
         }
         return result;
+    }
+
+    private Map<UUID, StaffEmployment> staffDatesOf(Collection<UUID> userIds) {
+        return userIds.isEmpty()
+                ? Map.of()
+                : staffDates.findAllById(userIds).stream()
+                        .collect(Collectors.toMap(StaffEmployment::getUserId, d -> d));
+    }
+
+    private static SalaryInEffect personSalary(UUID id, Set<UUID> employed, Map<UUID, PersonSalary> salaryOf) {
+        if (!employed.contains(id)) {
+            return new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED);
+        }
+        PersonSalary row = salaryOf.get(id);
+        return row == null
+                ? new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY)
+                : new SalaryInEffect.Found(row.getAmount(), row.effectiveOn(), Source.PERSON_RECORD);
     }
 
     private static SalaryInEffect teacherSalary(
@@ -129,39 +164,8 @@ class PayRulesImpl implements PayRules {
                 : new SalaryInEffect.Found(own.amount(), own.effectiveOn(), Source.TEACHER_RECORD);
     }
 
-    private static SalaryInEffect managerSalary(
-            UUID id,
-            Set<UUID> employed,
-            Map<UUID, UUID> designationOf,
-            Map<UUID, DesignationSalary> salaryOfDesignation) {
-        if (!employed.contains(id)) {
-            return new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED);
-        }
-        UUID designation = designationOf.get(id);
-        if (designation == null) {
-            return new SalaryInEffect.NoSalary(Reason.NO_DESIGNATION);
-        }
-        DesignationSalary row = salaryOfDesignation.get(designation);
-        return row == null
-                ? new SalaryInEffect.NoSalary(Reason.DESIGNATION_HAS_NO_SALARY)
-                : new SalaryInEffect.Found(row.getAmount(), row.effectiveOn(), Source.DESIGNATION);
-    }
-
-    private static boolean employedOn(ManagerDates dates, LocalDate date) {
-        return (dates.joiningDate() == null || !date.isBefore(dates.joiningDate()))
-                && (dates.exitDate() == null || !date.isAfter(dates.exitDate()));
-    }
-
-    private Map<UUID, DesignationSalary> designationSalariesOn(Collection<UUID> designationIds, LocalDate date) {
-        Set<UUID> ids = new HashSet<>(designationIds);
-        if (ids.isEmpty()) {
-            return Map.of();
-        }
-        Map<UUID, List<DesignationSalary>> byDesignation = salaries.findCandidates(ids, date).stream()
-                .collect(Collectors.groupingBy(DesignationSalary::getDesignationId));
-        Map<UUID, DesignationSalary> result = new HashMap<>();
-        byDesignation.forEach((id, rows) -> SalaryResolver.inEffect(rows, date).ifPresent(r -> result.put(id, r)));
-        return result;
+    private static boolean employedOn(LocalDate joining, LocalDate exit, LocalDate date) {
+        return (joining == null || !date.isBefore(joining)) && (exit == null || !date.isAfter(exit));
     }
 
     // ---------------------------------------------------------- loss of pay
@@ -185,7 +189,7 @@ class PayRulesImpl implements PayRules {
 
     /** The School whose calendar a person's day follows: a Teacher's placement on the date, otherwise the default. */
     private UUID schoolOn(PersonRef person, LocalDate date) {
-        if (person.kind() == Kind.MANAGER) {
+        if (person.kind() != Kind.TEACHER) {
             return null;
         }
         return people.placements(List.of(person.id()), date, date).stream()
@@ -225,11 +229,14 @@ class PayRulesImpl implements PayRules {
         Set<PersonRef> persons = new LinkedHashSet<>(asked);
         Set<UUID> teacherIds = idsOf(persons, Kind.TEACHER);
         Set<UUID> managerIds = idsOf(persons, Kind.MANAGER);
+        Set<UUID> staffIds = idsOf(persons, Kind.STAFF);
 
         Set<UUID> knownTeachers = people.existingTeachers(teacherIds);
         Map<UUID, List<Placement>> placements =
                 people.placements(knownTeachers, first, last).stream().collect(Collectors.groupingBy(Placement::teacherId));
         Map<UUID, ManagerDates> managers = people.managers(managerIds);
+        Map<UUID, StaffUser> staff = people.staff(staffIds);
+        Map<UUID, StaffEmployment> staffDatesById = staffDatesOf(staff.keySet());
 
         // one calendar read for every School any person was placed in, and the default calendar (null key)
         Set<UUID> schools = new HashSet<>();
@@ -248,10 +255,19 @@ class PayRulesImpl implements PayRules {
                 employment = placements.getOrDefault(person.id(), List.of()).stream()
                         .map(p -> new Employment(p.schoolId(), p.from(), p.to()))
                         .toList();
-            } else {
+            } else if (person.kind() == Kind.MANAGER) {
                 ManagerDates dates = managers.get(person.id());
                 known = dates != null;
                 employment = known ? List.of(new Employment(null, dates.joiningDate(), dates.exitDate())) : List.of();
+            } else {
+                known = staff.containsKey(person.id());
+                StaffEmployment dates = staffDatesById.get(person.id());
+                employment = !known
+                        ? List.of()
+                        : List.of(new Employment(
+                                null,
+                                dates == null ? null : dates.getJoiningDate(),
+                                dates == null ? null : dates.getExitDate()));
             }
             PayableDaysCalculator.Result r = PayableDaysCalculator.compute(month, employment, workingDays);
             int workingInMonth = monthWorkingDays.getOrDefault(r.lastSchoolId(), monthWorkingDays.get(null));
@@ -271,9 +287,10 @@ class PayRulesImpl implements PayRules {
 
     @Override
     public UnpaidDays unpaidDays(PersonRef person, YearMonth month) {
-        if (person.kind() == Kind.MANAGER) {
-            // answering "no unpaid days" would silently pay in full (SC-007); spec 032 gives Managers attendance
-            return new UnpaidDays.Unavailable(MANAGER_ATTENDANCE_NOT_RECORDED);
+        if (person.kind() != Kind.TEACHER) {
+            // answering "no unpaid days" would silently pay in full (SC-007); spec 032 gives Managers attendance,
+            // and staff have none yet
+            return new UnpaidDays.Unavailable(notRecorded(person.kind()));
         }
         return unpaid(person, month, compute(List.of(person), month).get(person));
     }
@@ -303,8 +320,8 @@ class PayRulesImpl implements PayRules {
 
     @Override
     public TotalLossOfPay totalLossOfPay(PersonRef person, YearMonth month) {
-        if (person.kind() == Kind.MANAGER) {
-            return new TotalLossOfPay.Cannot(MANAGER_ATTENDANCE_NOT_RECORDED);
+        if (person.kind() != Kind.TEACHER) {
+            return new TotalLossOfPay.Cannot(notRecorded(person.kind()));
         }
         Computed computed = compute(List.of(person), month).get(person);
         UnpaidDays unpaid = unpaid(person, month, computed);
@@ -338,6 +355,10 @@ class PayRulesImpl implements PayRules {
     }
 
     // ---------------------------------------------------------------- helpers
+
+    private static String notRecorded(Kind kind) {
+        return kind == Kind.MANAGER ? MANAGER_ATTENDANCE_NOT_RECORDED : STAFF_ATTENDANCE_NOT_RECORDED;
+    }
 
     private static Set<UUID> idsOf(Collection<PersonRef> persons, Kind kind) {
         return persons.stream()

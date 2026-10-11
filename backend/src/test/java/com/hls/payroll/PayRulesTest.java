@@ -89,6 +89,23 @@ class PayRulesTest extends PayrollTestBase {
                 Timestamp.from(Instant.now()));
     }
 
+    private void personSalaryInThePast(String kind, UUID personId, String amount, LocalDate effectiveOn) {
+        jdbc.update(
+                "insert into person_salary (id, person_kind, person_id, amount, effective_on, note, recorded_by, recorded_at)"
+                        + " values (?, ?, ?, ?::numeric, ?, null, ?, ?)",
+                UUID.randomUUID(),
+                kind,
+                personId,
+                amount,
+                effectiveOn,
+                UUID.randomUUID(),
+                Timestamp.from(Instant.now()));
+    }
+
+    private static PersonRef staffRef(UUID userId) {
+        return new PersonRef(Kind.STAFF, userId);
+    }
+
     private List<LocalDate> workingDays(UUID schoolIdOrNull) {
         return workingCalendar.workingDays(schoolIdOrNull, month.atDay(1), month.atEndOfMonth());
     }
@@ -241,22 +258,22 @@ class PayRulesTest extends PayrollTestBase {
     // ----------------------------------------------------------------- Manager
 
     @Test
-    void aManagerSalaryIsTheirDesignationsAndTheirMonthStartsAtJoining() {
+    void aManagerIsPaidTheirOwnSalaryAndTheirMonthStartsAtJoining() {
         String admin = signInAs(Role.ADMIN).token();
         UUID designation = designation(admin, "MANAGER");
-        designationSalaryInThePast(designation, "40000", LocalDate.now().minusDays(400));
         ManagerCtx manager = newManager(admin);
         assertThat(designate(admin, manager.managerId(), designation, LocalDate.now().minusDays(300)).status())
                 .isEqualTo(200);
         LocalDate joining = month.atDay(10);
         assertThat(employment(admin, manager.managerId(), uniqueEmployeeId(), joining, null).status())
                 .isEqualTo(200);
+        personSalaryInThePast("MANAGER", manager.managerId(), "40000", LocalDate.now().minusDays(400));
         PersonRef person = managerRef(manager.managerId());
 
         SalaryInEffect found = payRules.salaryOn(person, month.atDay(20));
         assertThat(found).isInstanceOf(SalaryInEffect.Found.class);
         assertThat(((SalaryInEffect.Found) found).monthly()).isEqualByComparingTo("40000");
-        assertThat(((SalaryInEffect.Found) found).source()).isEqualTo(SalaryInEffect.Source.DESIGNATION);
+        assertThat(((SalaryInEffect.Found) found).source()).isEqualTo(SalaryInEffect.Source.PERSON_RECORD);
         assertThat(payRules.salaryOn(person, month.atDay(9))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
 
         PayableDays payable = payRules.payableDays(person, month);
@@ -269,18 +286,48 @@ class PayRulesTest extends PayrollTestBase {
     }
 
     @Test
-    void aManagerWithNoDesignationOrNoSalaryGetsAStatedReasonNeverZero() {
+    void twoManagersOnOneDesignationAreEachPaidTheirOwnSalaryAndADesignationDefaultChangesNothing() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID designation = designation(admin, "MANAGER");
+        designationSalaryInThePast(designation, "30000", LocalDate.now().minusDays(400)); // a suggested default only
+        ManagerCtx first = newManager(admin);
+        ManagerCtx second = newManager(admin);
+        ManagerCtx third = newManager(admin);
+        for (ManagerCtx m : List.of(first, second, third)) {
+            assertThat(designate(admin, m.managerId(), designation, LocalDate.now().minusDays(300)).status())
+                    .isEqualTo(200);
+        }
+        personSalaryInThePast("MANAGER", first.managerId(), "50000", LocalDate.now().minusDays(400));
+        personSalaryInThePast("MANAGER", second.managerId(), "65000", LocalDate.now().minusDays(400));
+        // the third has no salary of their own: the designation's default is not a fallback
+        LocalDate date = month.atDay(15);
+
+        assertThat(((SalaryInEffect.Found) payRules.salaryOn(managerRef(first.managerId()), date)).monthly())
+                .isEqualByComparingTo("50000");
+        assertThat(((SalaryInEffect.Found) payRules.salaryOn(managerRef(second.managerId()), date)).monthly())
+                .isEqualByComparingTo("65000");
+        assertThat(payRules.salaryOn(managerRef(third.managerId()), date))
+                .isEqualTo(new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY));
+
+        // a newer default for the designation, and a raise for the first Manager only, move nobody else
+        designationSalaryInThePast(designation, "99000", LocalDate.now().minusDays(100));
+        personSalaryInThePast("MANAGER", first.managerId(), "58000", LocalDate.now().minusDays(100));
+        assertThat(((SalaryInEffect.Found) payRules.salaryOn(managerRef(first.managerId()), date)).monthly())
+                .isEqualByComparingTo("58000");
+        assertThat(((SalaryInEffect.Found) payRules.salaryOn(managerRef(second.managerId()), date)).monthly())
+                .isEqualByComparingTo("65000");
+        assertThat(payRules.salaryOn(managerRef(third.managerId()), date))
+                .isEqualTo(new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY));
+    }
+
+    @Test
+    void aManagerWithNoSalaryOfTheirOwnGetsAStatedReasonNeverZero() {
         String admin = signInAs(Role.ADMIN).token();
         ManagerCtx none = newManager(admin);
         assertThat(payRules.salaryOn(managerRef(none.managerId()), month.atDay(15)))
-                .isEqualTo(new SalaryInEffect.NoSalary(Reason.NO_DESIGNATION));
-
-        UUID unpriced = designation(admin, "MANAGER");
-        ManagerCtx priceless = newManager(admin);
-        assertThat(designate(admin, priceless.managerId(), unpriced, LocalDate.now().minusDays(300)).status())
-                .isEqualTo(200);
-        assertThat(payRules.salaryOn(managerRef(priceless.managerId()), month.atDay(15)))
-                .isEqualTo(new SalaryInEffect.NoSalary(Reason.DESIGNATION_HAS_NO_SALARY));
+                .isEqualTo(new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY));
+        assertThat(payRules.lossOfPayValueOn(managerRef(none.managerId()), month.atDay(15)))
+                .isInstanceOf(LossOfPayValue.NoSalary.class);
     }
 
     @Test
@@ -294,6 +341,57 @@ class PayRulesTest extends PayrollTestBase {
         assertThat(payRules.totalLossOfPay(person, month)).isInstanceOf(TotalLossOfPay.Cannot.class);
     }
 
+    // ------------------------------------------------------------------- staff
+
+    @Test
+    void aStaffMemberIsPaidTheirOwnSalaryBetweenTheirJoiningAndExitDates() {
+        Signed signed = signInAs(Role.ADMIN);
+        String admin = signed.token();
+        UUID userId = signed.userId();
+        LocalDate joining = month.atDay(6);
+        LocalDate exit = month.atDay(24);
+        Resp dates = put(
+                BASE + "/people/STAFF/" + userId + "/employment",
+                admin,
+                Map.of("joiningDate", joining.toString(), "exitDate", exit.toString()));
+        assertThat(dates.status()).as(dates.body()).isEqualTo(200);
+        personSalaryInThePast("STAFF", userId, "90000", LocalDate.now().minusDays(400));
+        PersonRef person = staffRef(userId);
+
+        SalaryInEffect found = payRules.salaryOn(person, month.atDay(15));
+        assertThat(((SalaryInEffect.Found) found).monthly()).isEqualByComparingTo("90000");
+        assertThat(((SalaryInEffect.Found) found).source()).isEqualTo(SalaryInEffect.Source.PERSON_RECORD);
+        assertThat(payRules.salaryOn(person, joining.minusDays(1))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
+        assertThat(payRules.salaryOn(person, exit.plusDays(1))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
+
+        PayableDays payable = payRules.payableDays(person, month);
+        assertThat(payable.dates())
+                .containsExactlyElementsOf(workingDays(null).stream()
+                        .filter(d -> !d.isBefore(joining) && !d.isAfter(exit))
+                        .toList());
+        assertThat(((LossOfPayValue.Found) payRules.lossOfPayValueOn(person, month.atDay(15))).fullDay())
+                .isEqualByComparingTo(perDay("90000", workingDays(null).size()));
+    }
+
+    @Test
+    void aStaffMemberWithNoSalaryOrNoAttendanceGetsStatedReasonsNeverZero() {
+        Signed signed = signInAs(Role.DIRECTOR);
+        PersonRef person = staffRef(signed.userId());
+        assertThat(payRules.salaryOn(person, month.atDay(15)))
+                .isEqualTo(new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY));
+        assertThat(payRules.unpaidDays(person, month)).isEqualTo(new UnpaidDays.Unavailable("Staff attendance is not recorded yet"));
+        assertThat(payRules.totalLossOfPay(person, month)).isInstanceOf(TotalLossOfPay.Cannot.class);
+    }
+
+    @Test
+    void aUserWhoIsNotStaffIsNotPaidAsStaff() {
+        // a Teacher's login is not a payroll person of kind STAFF
+        Signed teacherLogin = signInAs(Role.TEACHER);
+        assertThat(payRules.salaryOn(staffRef(teacherLogin.userId()), month.atDay(15)))
+                .isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
+        assertThat(payRules.payableDays(staffRef(teacherLogin.userId()), month).dates()).isEmpty();
+    }
+
     // ----------------------------------------------------- repeatable and bulk
 
     @Test
@@ -303,16 +401,18 @@ class PayRulesTest extends PayrollTestBase {
         UUID withSalary = teacherAt(admin, site.schoolId(), LocalDate.now().minusDays(200));
         teacherSalary(admin, withSalary, "28000", LocalDate.now().minusDays(300));
         UUID withoutSalary = teacherAt(admin, site.schoolId(), LocalDate.now().minusDays(200));
-        UUID designation = designation(admin, "MANAGER");
-        designationSalaryInThePast(designation, "50000", LocalDate.now().minusDays(400));
         ManagerCtx manager = newManager(admin);
-        designate(admin, manager.managerId(), designation, LocalDate.now().minusDays(300));
+        personSalaryInThePast("MANAGER", manager.managerId(), "50000", LocalDate.now().minusDays(400));
+        Signed staff = signInAs(Role.ADMIN);
+        personSalaryInThePast("STAFF", staff.userId(), "75000", LocalDate.now().minusDays(400));
         List<PersonRef> people = List.of(
                 teacherRef(withSalary),
                 teacherRef(withoutSalary),
                 managerRef(manager.managerId()),
+                staffRef(staff.userId()),
                 teacherRef(UUID.randomUUID()),
-                managerRef(UUID.randomUUID()));
+                managerRef(UUID.randomUUID()),
+                staffRef(UUID.randomUUID()));
         LocalDate date = month.atDay(15);
 
         Map<PersonRef, SalaryInEffect> bulk = payRules.salariesOn(people, date);
@@ -322,13 +422,14 @@ class PayRulesTest extends PayrollTestBase {
             assertThat(payRules.salaryOn(person, date)).isEqualTo(payRules.salaryOn(person, date));
         }
         // a person who does not exist is "not employed", never a salary of zero
-        assertThat(bulk.get(people.get(3))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
-        assertThat(bulk.get(people.get(4))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
+        for (int unknown : new int[] {4, 5, 6}) {
+            assertThat(bulk.get(people.get(unknown))).isEqualTo(new SalaryInEffect.NoSalary(Reason.NOT_EMPLOYED));
+        }
 
         Map<PersonRef, PayableDays> payableBulk = payRules.payableDays(people, month);
         for (PersonRef person : people) {
             assertThat(payRules.payableDays(person, month)).as(person.toString()).isEqualTo(payableBulk.get(person));
         }
-        assertThat(payableBulk.get(people.get(3)).dates()).isEmpty();
+        assertThat(payableBulk.get(people.get(4)).dates()).isEmpty();
     }
 }

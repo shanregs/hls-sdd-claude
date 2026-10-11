@@ -26,6 +26,9 @@ public interface TeacherDirectory {
 
     Map<UUID, TeacherInfo> teacherInfo(Collection<UUID> teacherIds);
 
+    /** Every Teacher, whatever their status, ordered by name (spec 013a lists them with their salary). */
+    List<TeacherInfo> allTeachers();
+
     Optional<TeacherInfo> teacherOfUser(UUID userId);
 
     /** ACTIVE placements of the given Teachers overlapping {@code from..to} inclusive. */

@@ -79,6 +79,14 @@ class TeacherDirectoryImpl implements TeacherDirectory {
     }
 
     @Override
+    public List<TeacherInfo> allTeachers() {
+        return teachers.findAll().stream()
+                .map(TeacherDirectoryImpl::toInfo)
+                .sorted(java.util.Comparator.comparing(t -> t.name().toLowerCase(java.util.Locale.ROOT)))
+                .toList();
+    }
+
+    @Override
     public Optional<TeacherInfo> teacherOfUser(UUID userId) {
         return teachers.findByUserId(userId).map(TeacherDirectoryImpl::toInfo);
     }

@@ -125,6 +125,20 @@ public class ManagerEmploymentService {
         return result;
     }
 
+    @Transactional(readOnly = true)
+    public Map<UUID, List<UUID>> holdersByDesignation(Collection<UUID> designationIds) {
+        LocalDate today = businessDate.today();
+        Map<UUID, List<ManagerDesignation>> byManager = designationRows.findAll().stream()
+                .collect(Collectors.groupingBy(ManagerDesignation::getManagerId));
+        Map<UUID, List<UUID>> holders = new HashMap<>();
+        byManager.forEach((managerId, rows) -> inEffectOn(rows, today).ifPresent(r -> {
+            if (designationIds == null || designationIds.isEmpty() || designationIds.contains(r.getDesignationId())) {
+                holders.computeIfAbsent(r.getDesignationId(), k -> new java.util.ArrayList<>()).add(managerId);
+            }
+        }));
+        return holders;
+    }
+
     /** Managers whose designation today is the key, over every Manager. */
     Map<UUID, Long> holdersToday() {
         LocalDate today = businessDate.today();

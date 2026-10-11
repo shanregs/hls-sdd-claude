@@ -16,7 +16,9 @@ public interface PayRules {
 
     enum Kind {
         TEACHER,
-        MANAGER
+        MANAGER,
+        /** Anyone else with a login who is paid: a user holding the Admin, Director or System role; the id is the user id. */
+        STAFF
     }
 
     record PersonRef(Kind kind, UUID id) {}
