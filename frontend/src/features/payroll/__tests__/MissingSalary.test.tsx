@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RouteGuard } from "../../../app/RouteGuard";
@@ -26,6 +27,10 @@ function json(body: unknown) {
   return { ok: true, status: 200, json: async () => body } as Response;
 }
 
+const NOTE = "People holding this designation with no salary of their own";
+const DEFAULT_NOTE =
+  "A suggested default only: it is offered when a person's salary is entered, and nobody is paid it.";
+
 const ROWS = [
   {
     designationId: "m1",
@@ -33,11 +38,8 @@ const ROWS = [
     kind: "MANAGER",
     retired: false,
     inEffect: null,
-    missingSalary: {
-      flag: true,
-      people: 1,
-      note: "Managers holding this designation have no salary.",
-    },
+    missingSalary: { flag: true, people: 1, note: NOTE },
+    defaultNote: DEFAULT_NOTE,
   },
   {
     designationId: "t1",
@@ -45,13 +47,8 @@ const ROWS = [
     kind: "TEACHER",
     retired: false,
     inEffect: { amount: "30000.00", effectiveOn: "2026-10-01" },
-    missingSalary: {
-      flag: true,
-      people: 4,
-      note: "Teachers with no salary of their own",
-    },
-    teacherDefaultNote:
-      "Only the default offered when a Teacher's salary is set.",
+    missingSalary: { flag: true, people: 4, note: NOTE },
+    defaultNote: DEFAULT_NOTE,
   },
   {
     designationId: "t2",
@@ -59,13 +56,8 @@ const ROWS = [
     kind: "TEACHER",
     retired: false,
     inEffect: { amount: "18000.00", effectiveOn: "2026-10-01" },
-    missingSalary: {
-      flag: false,
-      people: 0,
-      note: "Teachers with no salary of their own",
-    },
-    teacherDefaultNote:
-      "Only the default offered when a Teacher's salary is set.",
+    missingSalary: { flag: false, people: 0, note: NOTE },
+    defaultNote: DEFAULT_NOTE,
   },
 ];
 
@@ -88,7 +80,11 @@ function renderList() {
 
 beforeEach(() => {
   authFetch.mockReset();
-  authFetch.mockResolvedValue(json(ROWS));
+  authFetch.mockImplementation(async (url: string) =>
+    url.includes("/people")
+      ? json({ content: [], page: 0, size: 25, totalElements: 0 })
+      : json(ROWS),
+  );
   navigation = [
     {
       section: "OPERATIONS",
@@ -103,26 +99,29 @@ beforeEach(() => {
   ];
 });
 
-describe("Missing-salary flag (spec 013a US4)", () => {
-  it("shows the flag with the number of people for each flagged designation", async () => {
+describe("Missing-salary flag on the designation defaults (spec 013a US4)", () => {
+  it("shows the flag with the number of people who hold each designation without a salary of their own", async () => {
+    const user = userEvent.setup();
     renderList();
+    await user.click(
+      await screen.findByRole("tab", { name: "Designation defaults" }),
+    );
     await screen.findByText("Zone Coordinator");
     expect(screen.getByText("1 person")).toBeInTheDocument();
     expect(screen.getByText("4 people")).toBeInTheDocument();
     expect(screen.getByText("None")).toBeInTheDocument(); // the designation that leaves nobody without a salary
   });
 
-  it("shows the Teacher note on Teacher designations and counts the flagged ones in the filter label", async () => {
+  it("counts the flagged designations in the filter label", async () => {
+    const user = userEvent.setup();
     renderList();
+    await user.click(
+      await screen.findByRole("tab", { name: "Designation defaults" }),
+    );
     await screen.findByText("Senior Teacher");
     expect(
-      screen.getAllByText(
-        /Only the default offered when a Teacher's salary is set/,
-      ),
-    ).toHaveLength(2);
-    expect(
       screen.getByLabelText(
-        /only designations leaving people without a salary \(2\)/i,
+        /only designations held by people without a salary \(2\)/i,
       ),
     ).toBeInTheDocument();
   });

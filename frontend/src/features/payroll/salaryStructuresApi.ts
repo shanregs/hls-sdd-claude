@@ -32,8 +32,8 @@ export interface SalaryListEntry {
   /** Null when no salary is on or before today: the screen says "no salary yet". */
   inEffect: InEffect | null;
   missingSalary: MissingSalary;
-  /** Present on a Teacher designation only. */
-  teacherDefaultNote?: string;
+  /** Says the amount is only a suggested default, never anyone's pay. */
+  defaultNote: string;
 }
 
 export interface Actor {
@@ -58,7 +58,7 @@ export interface DesignationSalaryDetail {
   retired: boolean;
   inEffect: InEffect | null;
   missingSalary: MissingSalary;
-  teacherDefaultNote?: string;
+  defaultNote: string;
   history: SalaryRow[];
 }
 
@@ -153,4 +153,122 @@ export function recordPolicy(
   body: PolicyInput,
 ): Promise<ApiResult<PolicyVersion>> {
   return sendJson(authFetch, "POST", `${BASE}/policy`, body);
+}
+
+// ---------------------------------------------------------------- people (amendment 2026-10-11)
+
+export type PersonKind = "TEACHER" | "MANAGER" | "STAFF";
+
+export const PERSON_KIND_LABELS: Record<PersonKind, string> = {
+  TEACHER: "Teacher",
+  MANAGER: "Manager",
+  STAFF: "Staff",
+};
+
+export interface PersonRow {
+  kind: PersonKind;
+  personId: string;
+  name: string;
+  /** The designation name, or null (staff have none). */
+  designation: string | null;
+  /** Null when the person has no salary: the screen says "no salary yet". */
+  inEffect: InEffect | null;
+  joiningDate: string | null;
+  exitDate: string | null;
+  active: boolean;
+  /** False for a Teacher: their salary is changed on the Teachers screen. */
+  salaryEditable: boolean;
+  roles: string[];
+}
+
+export interface PersonPage {
+  content: PersonRow[];
+  page: number;
+  size: number;
+  totalElements: number;
+}
+
+export interface PersonSalaryRow {
+  id: string;
+  amount: string;
+  effectiveOn: string;
+  note: string | null;
+  recordedBy: Actor;
+  recordedAt: string;
+}
+
+export interface PersonDetail {
+  person: PersonRow;
+  /** The person's designation's suggested default, offered when entering their salary. */
+  suggestedDefault: InEffect | null;
+  history: PersonSalaryRow[];
+}
+
+export interface PeopleQuery {
+  kind: PersonKind | "";
+  q: string;
+  withoutSalary: boolean;
+  page: number;
+  size: number;
+}
+
+export function listPeople(
+  authFetch: AuthFetch,
+  query: PeopleQuery,
+): Promise<ApiResult<PersonPage>> {
+  const params = new URLSearchParams();
+  if (query.kind) params.set("kind", query.kind);
+  if (query.q.trim()) params.set("q", query.q.trim());
+  if (query.withoutSalary) params.set("withoutSalary", "true");
+  params.set("page", String(query.page));
+  params.set("size", String(query.size));
+  return getJson(
+    authFetch,
+    `${BASE}/people?${params.toString()}`,
+    "Could not load the people.",
+  );
+}
+
+export function getPerson(
+  authFetch: AuthFetch,
+  kind: PersonKind,
+  personId: string,
+): Promise<ApiResult<PersonDetail>> {
+  return getJson(
+    authFetch,
+    `${BASE}/people/${kind}/${personId}`,
+    "Could not load this person's salary.",
+  );
+}
+
+export function recordPersonSalary(
+  authFetch: AuthFetch,
+  kind: PersonKind,
+  personId: string,
+  body: { amount: string; effectiveOn: string; note: string | null },
+): Promise<ApiResult<PersonSalaryRow>> {
+  return sendJson(
+    authFetch,
+    "POST",
+    `${BASE}/people/${kind}/${personId}/salaries`,
+    body,
+  );
+}
+
+export interface StaffDates {
+  joiningDate: string | null;
+  exitDate: string | null;
+}
+
+export function setStaffEmployment(
+  authFetch: AuthFetch,
+  personId: string,
+  body: StaffDates,
+): Promise<ApiResult<StaffDates>> {
+  return sendJson(
+    authFetch,
+    "PUT",
+    `${BASE}/people/STAFF/${personId}/employment`,
+    body,
+  );
 }
