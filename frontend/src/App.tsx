@@ -15,6 +15,9 @@ import { DashboardRouter } from "./dashboards/DashboardRouter";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
+import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage";
+import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
+import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -243,6 +246,30 @@ export function App() {
           element={
             <RouteGuard>
               <LeaveManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/salary-structures"
+          element={
+            <RouteGuard>
+              <SalaryStructuresPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/salary-structures/policy"
+          element={
+            <RouteGuard>
+              <PayPolicyPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/salary-structures/:designationId"
+          element={
+            <RouteGuard>
+              <DesignationSalaryPage />
             </RouteGuard>
           }
         />
