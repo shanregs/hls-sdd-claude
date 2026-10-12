@@ -7,7 +7,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.Test;
 
-/** Spec 025 plan.md, Principle VII: tasks reads other modules through their api packages; only notification reads tasks. */
+/** Spec 025 plan.md, Principle VII: tasks reads other modules through their api packages; only notification and Manager attendance (planned activities) read tasks. */
 class TasksModuleRulesTest {
 
     private static final JavaClasses MAIN = new ClassFileImporter()
@@ -42,9 +42,10 @@ class TasksModuleRulesTest {
 
     @Test
     void onlyNotificationAndTheTasksModuleUseTheTasksApi() {
+        // Manager attendance (spec 032) reads tasks as planned activities through TaskActivities (contract C1).
         noClasses()
                 .that()
-                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..")
+                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAPackage("com.hls.tasks..")

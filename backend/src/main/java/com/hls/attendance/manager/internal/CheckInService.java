@@ -7,14 +7,18 @@ import com.hls.attendance.manager.internal.ManagerDay.DayType;
 import com.hls.attendance.manager.internal.ManagerDay.Location;
 import com.hls.attendance.manager.internal.ManagerDayHistory.Action;
 import com.hls.school.api.ConflictException;
+import com.hls.attendance.manager.internal.PlannedActivities.Planned;
 import com.hls.school.api.InvalidInputException;
+import com.hls.school.api.NotFoundException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -46,7 +50,7 @@ public class CheckInService {
             ManagerDayView day,
             ManagerDayView.Leave leave,
             List<LocalDate> missingCheckOutDates,
-            List<Object> plannedActivities) {}
+            List<Planned> plannedActivities) {}
 
     private final ManagerContext context;
     private final ManagerMonthGuard guard;
@@ -58,6 +62,7 @@ public class CheckInService {
     private final ManagerAttendanceAudit audit;
     private final Clock clock;
     private final JdbcTemplate jdbc;
+    private final PlannedActivities planned;
 
     public CheckInService(
             ManagerContext context,
@@ -69,7 +74,8 @@ public class CheckInService {
             WorkingCalendar workingCalendar,
             ManagerAttendanceAudit audit,
             Clock clock,
-            JdbcTemplate jdbc) {
+            JdbcTemplate jdbc,
+            PlannedActivities planned) {
         this.context = context;
         this.guard = guard;
         this.days = days;
@@ -80,6 +86,7 @@ public class CheckInService {
         this.audit = audit;
         this.clock = clock;
         this.jdbc = jdbc;
+        this.planned = planned;
     }
 
     @Transactional(readOnly = true)
@@ -104,11 +111,12 @@ public class CheckInService {
                 view,
                 view == null ? null : view.leave(),
                 missing,
-                List.of());
+                planned.forDay(userId, today));
     }
 
     @Transactional
-    public ManagerDayView checkIn(UUID userId, String dayType, LocationInput where) {
+    public ManagerDayView checkIn(
+            UUID userId, String dayType, String purposeText, List<ActivityLink> requested, LocationInput where) {
         DayType type = parseType(dayType);
         Location location = location(where, "check in");
         Acting manager = context.resolve(userId);
@@ -127,7 +135,17 @@ public class CheckInService {
             throw new InvalidInputException("You are on approved leave for the whole of today, so you cannot check in.");
         }
         boolean late = localTime(now).isAfter(settings().getLateAfter());
-        row.checkIn(type, null, false, now, location, late);
+        String purpose = null;
+        Set<ActivityLink> links = new LinkedHashSet<>();
+        if (type == DayType.FIELD) {
+            if (requested != null) {
+                links.addAll(requested);
+            }
+            purpose = requireFieldBasis(purposeText, links.size());
+            requireOwnActivities(userId, today, links);
+        }
+        row.checkIn(type, purpose, purpose != null && links.isEmpty(), now, location, late);
+        row.replaceActivities(links);
         ManagerDay saved = days.saveAndFlush(row);
         history.save(new ManagerDayHistory(saved.getId(), userId, now, Action.CHECK_IN, null, null, checkInJson(saved)));
         audit.changed(userId, ManagerAttendanceAudit.DAY, saved.getId(), "checkIn", null, type + " at " + now);
@@ -211,6 +229,37 @@ public class CheckInService {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /**
+     * The Field-day rule (also used by corrections): a trimmed purpose of at most 500 characters or at least one linked
+     * activity. Returns the trimmed purpose, or null when there is none.
+     */
+    public static String requireFieldBasis(String purposeText, int linkCount) {
+        String purpose = purposeText == null ? "" : purposeText.trim();
+        if (purpose.length() > MAX_TEXT) {
+            throw new InvalidInputException("The purpose can be at most " + MAX_TEXT + " characters.");
+        }
+        if (purpose.isEmpty() && linkCount == 0) {
+            throw new InvalidInputException("A Field day needs a purpose or a linked planned activity.");
+        }
+        return purpose.isEmpty() ? null : purpose;
+    }
+
+    /** Every link must be one of the user's planned activities dated that day; anything else reads as not found. */
+    private void requireOwnActivities(UUID userId, LocalDate date, Set<ActivityLink> links) {
+        if (links.isEmpty()) {
+            return;
+        }
+        Set<ActivityLink> available = new java.util.HashSet<>();
+        for (Planned p : planned.forDay(userId, date)) {
+            available.add(new ActivityLink(p.kind(), p.id()));
+        }
+        for (ActivityLink link : links) {
+            if (link.getKind() == null || link.getActivityId() == null || !available.contains(link)) {
+                throw new NotFoundException("That planned activity was not found for you on this day.");
+            }
+        }
+    }
 
     /** Serializes writes to one Manager-day so two simultaneous check-ins record exactly one. */
     private void lock(UUID managerId, LocalDate date) {

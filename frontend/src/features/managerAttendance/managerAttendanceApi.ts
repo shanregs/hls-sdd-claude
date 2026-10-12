@@ -22,6 +22,14 @@ export interface ActivityRef {
   id: string;
 }
 
+export interface PlannedActivity {
+  kind: string;
+  id: string;
+  date: string;
+  place: string | null;
+  status: string | null;
+}
+
 export interface DayLeave {
   fraction: number;
   unpaid: boolean;
@@ -48,7 +56,7 @@ export interface TodayStatus {
   day: ManagerDay | null;
   leave: DayLeave | null;
   missingCheckOutDates: string[];
-  plannedActivities: unknown[];
+  plannedActivities: PlannedActivity[];
 }
 
 export interface CheckInBody extends ManagerLocation {
