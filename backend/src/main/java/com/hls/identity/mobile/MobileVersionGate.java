@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Supplier;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -18,9 +19,10 @@ public class MobileVersionGate extends OncePerRequestFilter {
 
     static final String APP_CONFIG_PATH = "/api/v1/mobile/app-config";
 
-    private final AppVersion minimumVersion;
+    private final Supplier<AppVersion> minimumVersion;
 
-    public MobileVersionGate(AppVersion minimumVersion) {
+    /** @param minimumVersion read on every request, so an edit to System Settings applies at once (spec 011). */
+    public MobileVersionGate(Supplier<AppVersion> minimumVersion) {
         this.minimumVersion = minimumVersion;
     }
 
@@ -31,22 +33,22 @@ public class MobileVersionGate extends OncePerRequestFilter {
         if (attribute instanceof ClientContext context
                 && context.isAndroid()
                 && !APP_CONFIG_PATH.equals(request.getRequestURI())
-                && isBelowMinimum(context.appVersion())) {
+                && isBelowMinimum(context.appVersion(), minimumVersion.get())) {
             response.setStatus(426);
             response.setContentType("application/json");
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             response.getWriter()
                     .write("{\"code\":\"APP_UPDATE_REQUIRED\","
                             + "\"message\":\"Please update the HLS app to continue.\","
-                            + "\"minimumVersion\":\"" + minimumVersion + "\"}");
+                            + "\"minimumVersion\":\"" + minimumVersion.get() + "\"}");
             return;
         }
         chain.doFilter(request, response);
     }
 
-    private boolean isBelowMinimum(String appVersion) {
+    private boolean isBelowMinimum(String appVersion, AppVersion minimum) {
         try {
-            return AppVersion.parse(appVersion).compareTo(minimumVersion) < 0;
+            return AppVersion.parse(appVersion).compareTo(minimum) < 0;
         } catch (IllegalArgumentException e) {
             // The parser only yields well-formed versions; an unreadable one is treated as too old.
             return true;

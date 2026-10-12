@@ -335,7 +335,7 @@ kept intentionally lightweight for v1.
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
   | User Management                 | ✓     | —        | —        | —       | ✓      |
   | Role & Permissions              | ✓     | ✓        | —        | —       | ✓      |
-  | System & Security Settings      | —     | —        | —        | —       | ✓      |
+  | System & Security Settings      | ✓     | —        | —        | —       | ✓      |
   | Audit Logs / Activity / Logins  | ✓     | —        | —        | —       | ✓      |
 
   Default action grants:

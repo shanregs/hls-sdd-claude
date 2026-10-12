@@ -73,11 +73,11 @@ class AdminPasswordResetIntegrationTest extends UserManagementTestBase {
 
         Resp tooShort = post(path, adminToken, Map.of("newPassword", "short"));
         assertThat(tooShort.status()).isEqualTo(400);
-        assertThat(tooShort.body()).contains(PasswordPolicy.VIOLATION_MESSAGE);
+        assertThat(tooShort.body()).contains(PasswordPolicy.violationMessage(10));
 
         Resp equalsPhone = post(path, adminToken, Map.of("newPassword", user.get("phone")));
         assertThat(equalsPhone.status()).isEqualTo(400);
-        assertThat(equalsPhone.body()).contains(PasswordPolicy.VIOLATION_MESSAGE);
+        assertThat(equalsPhone.body()).contains(PasswordPolicy.violationMessage(10));
 
         assertThat(loginStatus((String) user.get("phone"), PASSWORD)).isEqualTo(200);
     }

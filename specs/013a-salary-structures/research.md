@@ -170,7 +170,7 @@ Let `W(m, cal)` be the working days of month `m` on calendar `cal` (weekly offs 
 
 - **Decision**: HLS has no pay scale, so the salary of a Manager or staff member is their own, in `person_salary`
   (`MANAGER` keyed by Manager id, `STAFF` keyed by user account), and a Teacher's stays in spec 005's history. The
-  designation's amount is a suggested default only. Staff are users holding the Admin, Director or System role
+  designation's amount is a suggested default only. Staff are users holding the Admin or Director role (a System account is a technical account with no salary)
   (`RoleAssignmentRepository.userIdsWithRole`), so no new master-data record is needed; their joining and exit dates are
   in `staff_employment`.
 - **Rationale**: pay is agreed per person at recruitment; keying it to the designation made two people on one

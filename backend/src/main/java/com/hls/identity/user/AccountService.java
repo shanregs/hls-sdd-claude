@@ -42,6 +42,7 @@ public class AccountService {
     private final SessionRepository sessions;
     private final ApplicationEventPublisher events;
     private final Clock clock;
+    private final com.hls.identity.policy.RuntimeSettings settings;
 
     public AccountService(
             AppUserRepository users,
@@ -49,7 +50,9 @@ public class AccountService {
             PasswordEncoder passwordEncoder,
             SessionRepository sessions,
             ApplicationEventPublisher events,
-            Clock clock) {
+            Clock clock,
+            com.hls.identity.policy.RuntimeSettings settings) {
+        this.settings = settings;
         this.users = users;
         this.userAdminService = userAdminService;
         this.passwordEncoder = passwordEncoder;
@@ -128,8 +131,9 @@ public class AccountService {
                 || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new InvalidAccountInputException("Your current password is incorrect.");
         }
-        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone())) {
-            throw new InvalidAccountInputException(PasswordPolicy.VIOLATION_MESSAGE);
+        int minLength = settings.passwordMinLength();
+        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone(), minLength)) {
+            throw new InvalidAccountInputException(PasswordPolicy.violationMessage(minLength));
         }
         if (newPassword.equals(currentPassword)) {
             throw new InvalidAccountInputException("Choose a password different from your current one.");

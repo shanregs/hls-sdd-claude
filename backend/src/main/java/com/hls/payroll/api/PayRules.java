@@ -17,7 +17,7 @@ public interface PayRules {
     enum Kind {
         TEACHER,
         MANAGER,
-        /** Anyone else with a login who is paid: a user holding the Admin, Director or System role; the id is the user id. */
+        /** Anyone else with a login who is paid: a user holding the Admin or Director role; the id is the user id. A System account has no salary and is not a payroll person. */
         STAFF
     }
 

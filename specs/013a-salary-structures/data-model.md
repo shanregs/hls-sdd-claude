@@ -80,7 +80,7 @@ A person's own fixed monthly salary from an effective date. Managers and staff o
 | recorded_at | TIMESTAMPTZ NOT NULL | breaks ties on the same `effective_on` |
 
 - Index `(person_kind, person_id, effective_on DESC, recorded_at DESC)`; the same `BEFORE UPDATE OR DELETE` trigger.
-- Staff are users holding the Admin, Director or System role; one person with several roles has one history.
+- Staff are users holding the Admin or Director role (a System account has no salary and is not a payroll person); one person with several roles has one history.
 
 ## staff_employment (amendment 2026-10-11)
 

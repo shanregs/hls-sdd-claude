@@ -51,7 +51,7 @@ public class AuthController {
     private final AppUserRepository appUserRepository;
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final boolean cookieSecure;
-    private final long renewalTtlDays;
+    private final com.hls.identity.policy.RuntimeSettings settings;
 
     public AuthController(
             PasswordAuthService passwordAuthService,
@@ -62,7 +62,7 @@ public class AuthController {
             AppUserRepository appUserRepository,
             RoleAssignmentRepository roleAssignmentRepository,
             @Value("${hls.security.cookie.secure:true}") boolean cookieSecure,
-            @Value("${hls.session.renewal-ttl-days:14}") long renewalTtlDays) {
+            com.hls.identity.policy.RuntimeSettings settings) {
         this.passwordAuthService = passwordAuthService;
         this.passwordResetService = passwordResetService;
         this.sessionService = sessionService;
@@ -71,7 +71,7 @@ public class AuthController {
         this.appUserRepository = appUserRepository;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.cookieSecure = cookieSecure;
-        this.renewalTtlDays = renewalTtlDays;
+        this.settings = settings;
     }
 
     @PostMapping("/api/v1/auth/login")
@@ -141,7 +141,7 @@ public class AuthController {
                         result.roles().stream().map(Role::name).toList()),
                 created.plainRenewalCredential(),
                 cookieSecure,
-                renewalTtlDays);
+                settings.renewalTtlDays());
     }
 
     @PostMapping("/api/v1/auth/logout")
@@ -222,7 +222,7 @@ public class AuthController {
                                 roles.stream().map(Role::name).toList()),
                         result.plainRenewalCredential(),
                         cookieSecure,
-                        renewalTtlDays);
+                        settings.renewalTtlDays());
             }
         }
         throw new IllegalStateException("Unreachable");
@@ -246,7 +246,7 @@ public class AuthController {
         return switch (outcome) {
             case SUCCESS -> ResponseEntity.ok().build();
             case PASSWORD_POLICY_VIOLATION -> ResponseEntity.status(400)
-                    .body(new ErrorResponse(PasswordPolicy.VIOLATION_MESSAGE));
+                    .body(new ErrorResponse(PasswordPolicy.violationMessage(settings.passwordMinLength())));
             case INVALID_OR_EXPIRED_TOKEN -> ResponseEntity.status(400)
                     .body(new ErrorResponse("This reset link has expired. Please request a new one."));
         };

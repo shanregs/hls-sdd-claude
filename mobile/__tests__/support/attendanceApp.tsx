@@ -24,8 +24,8 @@ export interface OpenedApp {
   attendance: AttendanceFake;
 }
 
-/** Signs in with a stored session, then opens a screen from the drawer by its menu label. */
-export async function openAttendanceScreen(menuLabel: string, setup: AppSetup = {}): Promise<OpenedApp> {
+/** Signs in with a stored session, then opens a screen from the drawer by its menu label (null stays on Home). */
+export async function openAttendanceScreen(menuLabel: string | null, setup: AppSetup = {}): Promise<OpenedApp> {
   resetServerClock();
   const today = setup.today ?? "2026-10-05";
   const serverTime = new Date(`${today}T04:00:00Z`);
@@ -45,7 +45,7 @@ export async function openAttendanceScreen(menuLabel: string, setup: AppSetup = 
 
   await render(<App />);
   await screen.findByText("Welcome, Tara");
-  await chooseMenuItem(menuLabel);
+  if (menuLabel !== null) await chooseMenuItem(menuLabel);
   return { server, attendance };
 }
 

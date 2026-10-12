@@ -10,7 +10,7 @@ export interface OpenedLeaveApp extends OpenedApp {
 }
 
 /** Signs in with a stored session, installs the attendance and leave routes, and opens a screen from the drawer. */
-export async function openLeaveScreen(menuLabel: string, setup: LeaveSetup = {}): Promise<OpenedLeaveApp> {
+export async function openLeaveScreen(menuLabel: string | null, setup: LeaveSetup = {}): Promise<OpenedLeaveApp> {
   let leave: LeaveFake | undefined;
   const opened = await openAttendanceScreen(menuLabel, {
     ...setup,
