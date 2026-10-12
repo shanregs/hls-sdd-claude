@@ -341,13 +341,13 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
 
 | Role     | Menu (section → item) | Default actions | Data scope |
 | -------- | --------------------- | --------------- | ---------- |
-| Admin    | OPERATIONS → Manager Attendance (grid, missed, on leave today, corrections, lock); OPERATIONS → Manager Leave (decisions) | View, Create (corrections), Edit (corrections), Approve (leave and regularization), Process (lock and reopen), Export | Org-wide |
+| Admin    | OPERATIONS → Manager Attendance (grid, missed, on leave today, corrections, lock); OPERATIONS → Manager Leave (decisions) | View, Create (corrections), Edit (corrections), Approve (leave and regularization), Process (lock and reopen) | Org-wide |
 | Director | OPERATIONS → Manager Attendance; OPERATIONS → Manager Leave | View, Create, Edit, Approve; no lock by default | Org-wide |
 | Manager (Zone Manager) | MY ATTENDANCE → Check-in and My Month; MY ATTENDANCE → My Leave | View, Create (check-in, check-out, leave and regularization requests), Delete (cancel own pending request) | Own |
 | Teacher  | none | none | None |
 | System   | none (System MUST NOT see business data) | none | None |
 
-**New permission keys**: `MANAGER_ATTENDANCE` (View, Create, Edit, Process, Export; the all-Managers grid, corrections,
+**New permission keys**: `MANAGER_ATTENDANCE` (View, Create, Edit, Process; the all-Managers grid, corrections,
 lock), `MANAGER_LEAVE` (View, Approve; decisions on Managers' leave and regularization), `MY_MANAGER_ATTENDANCE` (View,
 Create, Delete; a Manager's own check-in, month and requests). Seeded as above; Teacher and System are not eligible. Only
 Admin, Director and System edit the matrix. The constitution's Default role access matrix gets a Manager Attendance row
