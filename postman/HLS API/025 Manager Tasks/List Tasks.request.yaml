@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Tasks
+description: "view is today, upcoming, overdue, awaiting (completed, waiting for verification), done (verified) or all; optional type, status and (Admin and Director only) assigneeUserId. A Manager always sees only their own tasks. Each row carries overdue, daysOverdue and escalated. Needs TASKS.VIEW."
+url: "{{baseUrl}}/api/v1/tasks?view=today"
+method: GET
+order: 1000

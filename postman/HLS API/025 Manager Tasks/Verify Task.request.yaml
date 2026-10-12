@@ -1,0 +1,11 @@
+$kind: http-request
+name: Verify Task
+description: "Confirms a Completed task (Completed to Verified). The assignee can never verify their own task; a Manager has no Approve and gets 403. Needs TASKS.APPROVE. POST /api/v1/tasks/{id}/send-back with {\"reason\"} returns it to In progress; POST /api/v1/tasks/{id}/cancel with {\"reason\"} (Admin and Director, TASKS.EDIT) cancels an open task."
+url: "{{baseUrl}}/api/v1/tasks/{{taskId}}/verify"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{}"
+order: 8000

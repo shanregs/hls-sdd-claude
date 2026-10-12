@@ -1,0 +1,14 @@
+$kind: http-request
+name: Complete Task
+description: "The assignee completes an Acknowledged or In progress task with a note of at least 10 characters as evidence (files go to POST /api/v1/tasks/{id}/evidence as multipart 'file', at most 5). An overdue task needs an overdue reason first (400 otherwise). Needs TASKS.EDIT."
+url: "{{baseUrl}}/api/v1/tasks/{{taskId}}/complete"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Met the Principal and agreed the Teacher's timetable"
+    }
+order: 6000

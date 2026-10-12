@@ -19,6 +19,8 @@ import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage"
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
+import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
+import { TasksPage } from "./features/tasks/TasksPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -247,6 +249,22 @@ export function App() {
           element={
             <RouteGuard>
               <LeaveManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/tasks"
+          element={
+            <RouteGuard>
+              <TasksPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/tasks/:id"
+          element={
+            <RouteGuard>
+              <TaskDetailPage />
             </RouteGuard>
           }
         />
