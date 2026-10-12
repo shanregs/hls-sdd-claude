@@ -18,7 +18,7 @@ person is recruited. This replaces the earlier rule that a Manager is paid their
 
 - Q: Whose salary does payroll use? → A: Every person's own. A Teacher's is the salary on their record (spec 005, which spec 016's accepted offer already writes). A Manager's and any other staff member's is recorded in this spec as a dated, append-only history of their own. A designation's amount is never used as anyone's pay.
 - Q: What is a designation's amount for, then? → A: Only a suggested default shown when a person's salary is entered, so a recruiter starts from a typical figure. It can be left unset.
-- Q: Who counts as "staff" for pay, given Admin and Director have no Manager or Teacher record? → A: Anyone with a login who holds the Admin, Director or System role; they are identified by their user account. Their joining and exit dates are kept in this spec (a Manager's come from spec 005a, a Teacher's from placements).
+- Q: Who counts as "staff" for pay, given Admin and Director have no Manager or Teacher record? → A: Anyone with a login who holds the Admin or Director role; they are identified by their user account. A System account is a technical account with no salary and is not a payroll person (corrected 2026-10-11). Their joining and exit dates are kept in this spec (a Manager's come from spec 005a, a Teacher's from placements).
 - Q: May a screen show an individual person's pay? → A: Yes, but only the People list and a person's salary history under OPERATIONS → Salary Structures, to Admin and Director (the `SALARY_STRUCTURES` holders). No other screen, role or profile shows it. This replaces the earlier "no screen shows an individual's pay" rule (old FR-016).
 - Q: Where is a Teacher's salary entered? → A: Where it is today, on the Teachers screen (spec 005, `TEACHER_SALARY`). The People list shows a Teacher's salary in effect read-only and links there, so there is one place to change it.
 - Q: What does "no salary" mean for a Manager or staff member? → A: Nothing recorded on or before the date: it is reported as such and never as zero (as for a Teacher).
@@ -269,7 +269,7 @@ date and see them paid from that date.
 - **FR-017**: The system MUST make the answers of FR-008 to FR-012 and FR-018 available to the payroll run as one public
   interface, so payroll and reports never read the underlying tables or reimplement the rules.
 - **FR-019**: The system MUST identify staff other than Managers and Teachers by their user account (a user holding the
-  Admin, Director or System role), record their joining and exit dates, and treat them as payable only between those
+  Admin or Director role; a System account has no salary and is not one), record their joining and exit dates, and treat them as payable only between those
   dates; a user with several roles is one person with one salary history.
 - **FR-020**: The system MUST show, when a person's salary is entered, the suggested default of their designation if it
   has one, MUST NOT save it as the person's salary unless the user enters it, and MUST NOT change anyone's pay when a

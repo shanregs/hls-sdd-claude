@@ -264,6 +264,27 @@ class PersonSalaryApiTest extends PayrollTestBase {
         assertThat(dateEntries.get(0)).containsEntry("field", "joiningDate").containsEntry("afterValue", "2026-01-05");
     }
 
+    @Test
+    void aSystemAccountHasNoSalaryAndIsNotAPayrollPerson() {
+        String admin = signInAs(Role.ADMIN).token();
+        Signed system = signInAs(Role.SYSTEM);
+
+        // it cannot be given a salary or dates, and it is not listed
+        assertThat(recordFor(admin, "STAFF", system.userId(), "30000", firstOfMonth(), null).status()).isEqualTo(404);
+        assertThat(detail(admin, "STAFF", system.userId()).status()).isEqualTo(404);
+        assertThat(put(BASE + "/people/STAFF/" + system.userId() + "/employment", admin, Map.of("joiningDate", "2026-01-01"))
+                        .status())
+                .isEqualTo(404);
+        Resp list = get(BASE + "/people?kind=STAFF&q=" + system.phone() + "&size=50", admin);
+        assertThat(list.status()).isEqualTo(200);
+        assertThat(content(list)).isEmpty();
+
+        // an Admin who also holds the System role is still staff, with one history
+        Signed both = signInAs(Role.ADMIN, Role.SYSTEM);
+        assertThat(recordFor(admin, "STAFF", both.userId(), "30000", firstOfMonth(), null).status()).isEqualTo(201);
+        assertThat(rowOf(admin, "kind=STAFF", both.userId()).get("roles")).isEqualTo(List.of("ADMIN"));
+    }
+
     private void assertRefused(Resp resp, String problem) {
         assertThat(resp.status()).as(resp.body()).isEqualTo(400);
         assertThat(resp.body()).contains(problem);

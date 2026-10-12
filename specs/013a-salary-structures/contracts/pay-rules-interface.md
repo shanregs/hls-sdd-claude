@@ -7,7 +7,7 @@ its reason (FR-008, FR-009, SC-007). No method returns zero to mean "missing". B
 ```java
 public interface PayRules {
 
-    enum Kind { TEACHER, MANAGER, STAFF }   // STAFF = a user holding Admin, Director or System; id = user id
+    enum Kind { TEACHER, MANAGER, STAFF }   // STAFF = a user holding Admin or Director (a System account is not paid); id = user id
     record PersonRef(Kind kind, UUID id) {}
 
     /** FR-008: the monthly salary in effect on a date. */
