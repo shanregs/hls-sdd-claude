@@ -45,7 +45,7 @@ rules apply to it, and it changes nobody's pay.
 | A Teacher with no recorded salary is `NoSalary`, never the designation's amount, never zero | Pass | `PayRulesTest.aTeacherWithNoRecordedSalary...` |
 | A Manager is paid their **own** salary (not the designation's); the joining date starts the month; with none recorded the reason is `PERSON_HAS_NO_RECORDED_SALARY`, never zero | Pass | `PayRulesTest` |
 | Two Managers on one designation get different salaries; a new designation default or one Manager's raise changes nobody else's answer | Pass | `PayRulesTest.twoManagersOnOneDesignation...` |
-| A staff member (Admin, Director, System by user account) is paid their own salary between their joining and exit dates; a user who is not staff is `NOT_EMPLOYED` | Pass | `PayRulesTest` (staff cases) |
+| A staff member (Admin or Director, by user account) is paid their own salary between their joining and exit dates; a user who is not staff is `NOT_EMPLOYED` | Pass | `PayRulesTest` (staff cases) |
 | A Manager's and a staff member's unpaid days are `Unavailable`; the total is `Cannot` | Pass | `PayRulesTest.aManagersUnpaidDays...`, `aStaffMemberWithNoSalaryOrNoAttendance...` |
 | A raise mid-month values each unpaid day at its own day's salary | Pass | `LossOfPayCalculatorTest`, `PayRulesTest.aMidMonthRaise...` |
 | Same inputs give the same answer; the bulk forms equal the single forms | Pass | `PayRulesTest.theSameInputsGiveTheSameAnswer...` |
@@ -92,7 +92,7 @@ rules apply to it, and it changes nobody's pay.
   section 4 notes). The seeded absent code `A` is in the LEAVE category, so an absence is a LEAVE-category mark that no
   leave request backs. A hand-entered `L` mark with no request is therefore also treated as an absence.
 - The demo-data seeder (`PayrollDevSeeder`) now seeds suggested defaults and the salaries of Manoj, Asha and Divya, and
-  leaves the System user and the Teachers without one. `DevSeedTest` starts it and the live API returns the seeded
+  leaves the Teachers without one (a System account is not paid and is not listed). `DevSeedTest` starts it and the live API returns the seeded
   People list; nobody has looked at it in the browser.
 - **Existing installations have no Manager or staff salaries** until they are entered through the People tab; payroll
   reports each such person as having no salary, never zero.

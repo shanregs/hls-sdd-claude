@@ -26,7 +26,7 @@ interface PersonDirectory {
 
     record TeacherSummary(UUID id, String name, String status) {}
 
-    /** A user who is paid but is neither a Manager nor a Teacher: holds the Admin, Director or System role. */
+    /** A user who is paid but is neither a Manager nor a Teacher: holds the Admin or Director role. */
     record StaffUser(UUID id, String name, boolean active, List<String> roles) {}
 
     /** An ACTIVE placement of a Teacher; {@code to} is inclusive and null while open-ended. */
@@ -71,7 +71,7 @@ interface PersonDirectory {
     /** The staff users that exist among the given ids. */
     Map<UUID, StaffUser> staff(Collection<UUID> userIds);
 
-    /** Every staff user (Admin, Director or System role), by name. */
+    /** Every staff user (Admin or Director role), by name. */
     List<StaffUser> allStaff();
 
     /** ACTIVE placements overlapping {@code from..to}, oldest first. */

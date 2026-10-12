@@ -32,8 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 class PersonDirectoryImpl implements PersonDirectory {
 
-    /** The roles whose holders are paid without being a Manager or a Teacher. */
-    static final Set<Role> STAFF_ROLES = EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.SYSTEM);
+    /**
+     * The roles whose holders are paid without being a Manager or a Teacher. A System account is a technical account
+     * with no salary, so it is not a payroll person (spec 032 clarification, 2026-10-11).
+     */
+    static final Set<Role> STAFF_ROLES = EnumSet.of(Role.ADMIN, Role.DIRECTOR);
 
     private final DesignationDirectory designations;
     private final ManagerQueries managers;

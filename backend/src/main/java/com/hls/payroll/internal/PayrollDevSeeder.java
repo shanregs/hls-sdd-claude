@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Dev-only demo data (inert unless {@code hls.seed.demo-data=true}, idempotent): suggested defaults for most of the
  * seeded designations, and each person's own salary for some of the demo people so the People list shows both people
- * with a salary and people without one (the System user and the Teachers without one). It seeds no Teacher's own salary
+ * with a salary and people without one (the Teachers without one). It seeds no Teacher's own salary
  * beyond what spec 005's seeder already does.
  */
 @Component
@@ -95,7 +95,7 @@ class PayrollDevSeeder implements ApplicationRunner {
         }
     }
 
-    /** Own salaries for the demo Manager and the Admin and Director; the System user is left without one on purpose. */
+    /** Own salaries for the demo Manager and the Admin and Director; a System account is not paid and gets none. */
     private int seedPeople(AppUser admin, LocalDate from) {
         int added = 0;
         for (var manager : people.allManagers()) {

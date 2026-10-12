@@ -11,7 +11,7 @@ read. Nothing here computes a payslip.
 
 - **Salary**: an append-only list of fixed monthly salaries **per person** (amended 2026-10-11: HLS has no fixed pay
   scale, so people on one designation are paid differently), each with an effective date, note, who and when. A
-  Teacher's is spec 005's record; a Manager's and a staff member's (Admin, Director, System, by user account) is
+  Teacher's is spec 005's record; a Manager's and a staff member's (Admin or Director, by user account) is
   `person_salary`. A designation keeps only a suggested default (`designation_salary`) shown when a salary is entered.
   The salary in effect on a date is the latest row on or before it, ties broken by the row recorded last.
 - **Pay policy**: append-only dated versions holding the loss-of-pay divisor rule, the half-day fraction, the
