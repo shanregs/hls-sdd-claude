@@ -121,6 +121,150 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const PLANNED = [
+  {
+    kind: "SCHOOL_VISIT",
+    id: "v1",
+    date: "2026-10-12",
+    place: "St Mary School",
+    status: "PLANNED",
+  },
+  {
+    kind: "FOLLOW_UP",
+    id: "t1",
+    date: "2026-10-12",
+    place: null,
+    status: "OPEN",
+  },
+];
+
+function withPlanned() {
+  authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (init?.method === "POST") {
+      return String(url).endsWith("/check-in")
+        ? json({ ...CHECKED_IN, dayType: "FIELD" }, 201)
+        : json(CHECKED_IN);
+    }
+    return json({ ...TODAY, plannedActivities: PLANNED });
+  });
+}
+
+function posted() {
+  return authFetch.mock.calls.find((c) => c[1]?.method === "POST");
+}
+
+describe("Manager field day (spec 032 US2)", () => {
+  it("shows the purpose and the activities only for Field", async () => {
+    withPlanned();
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole("button", { name: "Check in" });
+    expect(screen.queryByLabelText("Purpose")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Field" }));
+    expect(screen.getByLabelText("Purpose")).toBeInTheDocument();
+    expect(screen.getByText("0/500")).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /school visit: St Mary School/i }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Office" }));
+    expect(screen.queryByLabelText("Purpose")).not.toBeInTheDocument();
+  });
+
+  it("refuses a Field check-in with neither purpose nor link, before sending", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("radio", { name: "Field" }));
+    await user.click(screen.getByRole("button", { name: "Check in" }));
+    expect(
+      await screen.findByText(/Write a purpose or link a planned activity/),
+    ).toBeInTheDocument();
+    expect(posted()).toBeUndefined();
+  });
+
+  it("counts characters and refuses a purpose over 500", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("radio", { name: "Field" }));
+    await user.click(screen.getByLabelText("Purpose"));
+    await user.paste("x".repeat(501));
+    expect(screen.getByText(/501\/500/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Check in" }));
+    expect(
+      await screen.findByText(/at most 500 characters/),
+    ).toBeInTheDocument();
+    expect(posted()).toBeUndefined();
+  });
+
+  it("sends the trimmed purpose and the linked activities", async () => {
+    withPlanned();
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("radio", { name: "Field" }));
+    await user.click(screen.getByLabelText("Purpose"));
+    await user.paste(" Visit to St Mary ");
+    await user.click(screen.getByRole("checkbox", { name: /school visit/i }));
+    await user.click(screen.getByRole("button", { name: "Check in" }));
+    await waitFor(() => expect(posted()).toBeDefined());
+    expect(JSON.parse(posted()?.[1].body as string)).toMatchObject({
+      dayType: "FIELD",
+      purpose: "Visit to St Mary",
+      activities: [{ kind: "SCHOOL_VISIT", id: "v1" }],
+    });
+  });
+
+  it("accepts a link alone and sends no purpose", async () => {
+    withPlanned();
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("radio", { name: "Field" }));
+    await user.click(screen.getByRole("checkbox", { name: /follow up/i }));
+    await user.click(screen.getByRole("button", { name: "Check in" }));
+    await waitFor(() => expect(posted()).toBeDefined());
+    expect(JSON.parse(posted()?.[1].body as string)).toMatchObject({
+      purpose: null,
+      activities: [{ kind: "FOLLOW_UP", id: "t1" }],
+    });
+  });
+
+  it("shows the purpose and the not-linked flag once checked in", async () => {
+    authFetch.mockImplementation(async () =>
+      json({
+        ...TODAY,
+        day: {
+          ...CHECKED_IN,
+          dayType: "FIELD",
+          purpose: "Visit to St Mary",
+          flags: ["UNLINKED"],
+        },
+      }),
+    );
+    renderPage();
+    expect(
+      await screen.findByText("Purpose: Visit to St Mary"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Not linked to a planned activity"),
+    ).toBeInTheDocument();
+  });
+
+  it.each(["light", "dark"] as const)(
+    "has no accessibility violations on the Field state in the %s theme",
+    async (mode) => {
+      withPlanned();
+      const user = userEvent.setup();
+      const { container } = renderPage(mode);
+      await user.click(await screen.findByRole("radio", { name: "Field" }));
+      await user.click(screen.getByRole("button", { name: "Check in" }));
+      await screen.findByText(/Write a purpose or link/);
+      const results = await axe(container, {
+        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
+      });
+      expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    },
+    30_000,
+  );
+});
+
 describe("Manager check-in (spec 032 US1)", () => {
   it("shows the Manager the page and the check-in button", async () => {
     renderPage();
@@ -145,6 +289,7 @@ describe("Manager check-in (spec 032 US1)", () => {
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole("radio", { name: "Field" }));
+    await user.type(screen.getByLabelText("Purpose"), "Visit");
     await user.click(screen.getByRole("button", { name: "Check in" }));
     await waitFor(() =>
       expect(authFetch).toHaveBeenCalledWith(

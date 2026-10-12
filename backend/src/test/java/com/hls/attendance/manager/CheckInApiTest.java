@@ -238,7 +238,7 @@ class CheckInApiTest extends ManagerAttendanceTestBase {
         ManagerCtx manager = joinedManager(admin);
 
         Resp before = get(ME + "/today", manager.token());
-        checkIn(manager.token(), "FIELD");
+        checkIn(manager.token(), "OFFICE");
         Resp after = get(ME + "/today", manager.token());
 
         assertThat(before.status()).isEqualTo(200);

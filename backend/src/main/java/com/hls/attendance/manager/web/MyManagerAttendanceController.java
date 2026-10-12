@@ -1,5 +1,6 @@
 package com.hls.attendance.manager.web;
 
+import com.hls.attendance.manager.internal.ActivityLink;
 import com.hls.attendance.manager.internal.CheckInPhotoService;
 import com.hls.attendance.manager.internal.CheckInService;
 import com.hls.attendance.manager.internal.CheckInService.LocationInput;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
@@ -40,7 +42,15 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/manager-attendance/me")
 public class MyManagerAttendanceController {
 
-    public record CheckInRequest(String dayType, BigDecimal latitude, BigDecimal longitude, BigDecimal accuracyMeters) {}
+    public record ActivityRef(String kind, UUID id) {}
+
+    public record CheckInRequest(
+            String dayType,
+            String purpose,
+            List<ActivityRef> activities,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            BigDecimal accuracyMeters) {}
 
     public record CheckOutRequest(BigDecimal latitude, BigDecimal longitude, BigDecimal accuracyMeters) {}
 
@@ -66,7 +76,13 @@ public class MyManagerAttendanceController {
     public ResponseEntity<ManagerDayView> checkIn(@RequestBody CheckInRequest body, @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.CREATE);
         LocationInput where = new LocationInput(body.latitude(), body.longitude(), body.accuracyMeters());
-        return ResponseEntity.status(201).body(checkIns.checkIn(CallerContext.userId(jwt), body.dayType(), where));
+        return ResponseEntity.status(201).body(checkIns.checkIn(CallerContext.userId(jwt), body.dayType(), body.purpose(), links(body.activities()), where));
+    }
+
+    private static List<ActivityLink> links(List<ActivityRef> refs) {
+        return refs == null
+                ? List.of()
+                : refs.stream().map(r -> new ActivityLink(r.kind(), r.id())).toList();
     }
 
     @PostMapping("/check-out")

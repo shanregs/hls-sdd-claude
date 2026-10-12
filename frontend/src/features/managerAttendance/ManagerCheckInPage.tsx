@@ -3,10 +3,12 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   FormControl,
   FormControlLabel,
+  FormGroup,
   FormLabel,
   Paper,
   Radio,
@@ -29,6 +31,7 @@ import {
   type TodayStatus,
 } from "./managerAttendanceApi";
 
+const MAX_PURPOSE = 500;
 const ROUTE = "/manager-attendance/me";
 
 export const LOCATION_BLOCKED =
@@ -85,6 +88,9 @@ export function ManagerCheckInPage() {
   const [dayType, setDayType] = useState<DayType>("OFFICE");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [purpose, setPurpose] = useState("");
+  const [linked, setLinked] = useState<Set<string>>(new Set());
+  const [purposeTouched, setPurposeTouched] = useState(false);
   const [completeTime, setCompleteTime] = useState("18:00");
   const [completeReason, setCompleteReason] = useState("");
 
@@ -120,11 +126,46 @@ export function ManagerCheckInPage() {
     }
   };
 
-  const doCheckIn = () =>
-    run(async (where) => {
-      const result = await checkIn(authFetch, { dayType, ...where });
+  const planned = state.kind === "ready" ? state.today.plannedActivities : [];
+  const activityKey = (a: { kind: string; id: string }) => `${a.kind}:${a.id}`;
+  const purposeError =
+    dayType !== "FIELD"
+      ? null
+      : purpose.length > MAX_PURPOSE
+        ? `The purpose can be at most ${MAX_PURPOSE} characters.`
+        : purpose.trim() === "" && linked.size === 0
+          ? "Write a purpose or link a planned activity."
+          : null;
+
+  const toggleLink = (key: string) =>
+    setLinked((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const doCheckIn = () => {
+    if (purposeError) {
+      setPurposeTouched(true);
+      return Promise.resolve();
+    }
+    return run(async (where) => {
+      const body =
+        dayType === "FIELD"
+          ? {
+              dayType,
+              purpose: purpose.trim() === "" ? null : purpose.trim(),
+              activities: planned
+                .filter((a) => linked.has(activityKey(a)))
+                .map((a) => ({ kind: a.kind, id: a.id })),
+              ...where,
+            }
+          : { dayType, ...where };
+      const result = await checkIn(authFetch, body);
       return result.ok ? null : result.reason;
     });
+  };
 
   const doCheckOut = () =>
     run(async (where) => {
@@ -220,12 +261,16 @@ export function ManagerCheckInPage() {
               Checked in at {timeOf(day.checkInAt)} (
               {day.dayType === "FIELD" ? "Field" : "Office"})
             </Typography>
+            {day.purpose && <Typography>Purpose: {day.purpose}</Typography>}
             {checkedOut && (
               <Typography>Checked out at {timeOf(day.checkOutAt)}</Typography>
             )}
             <Stack direction="row" spacing={1}>
               {day.late && <Chip size="small" color="warning" label="Late" />}
               {day.hasPhoto && <Chip size="small" label="Photo added" />}
+              {day.flags.includes("UNLINKED") && (
+                <Chip size="small" label="Not linked to a planned activity" />
+              )}
             </Stack>
           </Stack>
         )}
@@ -252,6 +297,46 @@ export function ManagerCheckInPage() {
                 />
               </RadioGroup>
             </FormControl>
+            {dayType === "FIELD" && (
+              <>
+                <TextField
+                  label="Purpose"
+                  multiline
+                  minRows={2}
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  onBlur={() => setPurposeTouched(true)}
+                  error={purposeTouched && purposeError !== null}
+                  helperText={
+                    (purposeTouched && purposeError ? `${purposeError} ` : "") +
+                    `${purpose.length}/${MAX_PURPOSE}`
+                  }
+                />
+                {planned.length > 0 && (
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">
+                      Planned activities today
+                    </FormLabel>
+                    <FormGroup>
+                      {planned.map((a) => (
+                        <FormControlLabel
+                          key={activityKey(a)}
+                          control={
+                            <Checkbox
+                              checked={linked.has(activityKey(a))}
+                              onChange={() => toggleLink(activityKey(a))}
+                            />
+                          }
+                          label={`${a.kind.replace(/_/g, " ").toLowerCase()}${
+                            a.place ? `: ${a.place}` : ""
+                          }`}
+                        />
+                      ))}
+                    </FormGroup>
+                  </FormControl>
+                )}
+              </>
+            )}
             <Button variant="contained" onClick={doCheckIn} disabled={busy}>
               Check in
             </Button>

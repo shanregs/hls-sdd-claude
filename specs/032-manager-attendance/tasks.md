@@ -97,12 +97,12 @@ location are refused.
 
 ### Tests for User Story 2 (write first, they must fail)
 
-- [ ] T025 [P] [US2] `backend/src/test/java/com/hls/attendance/manager/FieldDayTest.java`: a Field check-in with neither a purpose nor a linked activity is 400 with the reason and a purpose of 501 characters is 400; a Field check-in with a purpose only is recorded, counted as a field day and flagged `unlinked`; a Field check-in linking a drive, a marketing visit or a task of the Manager dated that day is recorded with the links and is not flagged; a link to an activity that is another user's, another date's or unknown is refused; an Office check-in ignores a purpose and links; `GET /me/today` lists today's planned activities; the correction path cannot turn a Field day into one with neither
+- [X] T025 [P] [US2] `backend/src/test/java/com/hls/attendance/manager/FieldDayTest.java`: a Field check-in with neither a purpose nor a linked activity is 400 with the reason and a purpose of 501 characters is 400; a Field check-in with a purpose only is recorded, counted as a field day and flagged `unlinked`; a Field check-in linking a drive, a marketing visit or a task of the Manager dated that day is recorded with the links and is not flagged; a link to an activity that is another user's, another date's or unknown is refused; an Office check-in ignores a purpose and links; `GET /me/today` lists today's planned activities; the correction path cannot turn a Field day into one with neither
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] In `CheckInService`, require for FIELD a non-empty trimmed purpose of at most 500 characters (plain text) or at least one linked activity; validate each link through a `PlannedActivities` port (`attendance/manager/internal/PlannedActivities.java` over `DriveActivities`, `MarketingActivities` and `TaskActivities`, matching the Manager's user and the day), store the links in `manager_day_activity`, and set `unlinked` when there is a purpose and no link; list today's activities for `GET /me/today`
-- [ ] T027 [P] [US2] In `ManagerCheckInPage.tsx` show, for the Field choice only, the purpose field with inline validation and a character count and the day's planned activities as checkboxes to link; extend `ManagerCheckIn.test.tsx` for it
+- [X] T026 [US2] In `CheckInService`, require for FIELD a non-empty trimmed purpose of at most 500 characters (plain text) or at least one linked activity; validate each link through a `PlannedActivities` port (`attendance/manager/internal/PlannedActivities.java` over `DriveActivities`, `MarketingActivities` and `TaskActivities`, matching the Manager's user and the day), store the links in `manager_day_activity`, and set `unlinked` when there is a purpose and no link; list today's activities for `GET /me/today`
+- [X] T027 [P] [US2] In `ManagerCheckInPage.tsx` show, for the Field choice only, the purpose field with inline validation and a character count and the day's planned activities as checkboxes to link; extend `ManagerCheckIn.test.tsx` for it
 
 **Checkpoint**: US2 works; quickstart section 2 passes.
 

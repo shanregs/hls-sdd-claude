@@ -2,6 +2,7 @@ package com.hls.attendance.manager.internal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import java.util.Objects;
 import java.util.UUID;
 
 /** A planned activity (contract C1) linked to a Field day, named by its kind and id. */
@@ -33,11 +34,13 @@ public class ActivityLink {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof ActivityLink link && kind.equals(link.kind) && activityId.equals(link.activityId);
+        return other instanceof ActivityLink link
+                && Objects.equals(kind, link.kind)
+                && Objects.equals(activityId, link.activityId);
     }
 
     @Override
     public int hashCode() {
-        return 31 * kind.hashCode() + activityId.hashCode();
+        return Objects.hash(kind, activityId);
     }
 }
