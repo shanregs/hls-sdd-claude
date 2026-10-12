@@ -32,6 +32,10 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.3 (PATCH, spec 011): the Default role access matrix row System & Security Settings gains Admin (View, Edit)
+    alongside System, since Admin holds full operational authority; Director stays off by default and may be granted
+    it. The `settings` module (Principle VII) keeps eleven runtime values and `identity` reads them through its own
+    `RuntimeSettings` interface. No principle changes.
   - 2.5.2 (PATCH, spec 013a): Principle VII's `payroll` entry now describes its first half (salary structures by
     person (Managers and staff; a Teacher's stays in spec 005), the suggested default per designation and the pay
     policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
@@ -329,7 +333,7 @@ kept intentionally lightweight for v1.
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
   | User Management                 | ✓     | —        | —        | —       | ✓      |
   | Role & Permissions              | ✓     | ✓        | —        | —       | ✓      |
-  | System & Security Settings      | —     | —        | —        | —       | ✓      |
+  | System & Security Settings      | ✓     | —        | —        | —       | ✓      |
   | Audit Logs / Activity / Logins  | ✓     | —        | —        | —       | ✓      |
 
   Default action grants:
@@ -371,4 +375,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.2 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11
+**Version**: 2.5.3 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11

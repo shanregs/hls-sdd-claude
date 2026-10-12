@@ -111,8 +111,8 @@ Every change shows in Change History with the actor, the setting, the old value 
 - A stored value is later outside a range tightened by a release: it is ignored, the next tier applies, and the
   screen shows it as the default (never a crash at sign-in).
 - A stored row holds text that is not a number (manual database edit): treated as not set; the default applies.
-- A save that sets a value equal to the default stores an explicit override (the value is then pinned even if the
-  deployment default changes) and shows as "changed".
+- A save that sets a value different from the current effective value stores an override; "default" on the screen means
+  the effective value equals the default tier, whether or not an override row exists.
 - The public app-config must stay reachable without sign-in and must never reveal any security setting.
 - The password minimum applies to new passwords only; existing passwords are not invalidated.
 - The dashboard is read-only and must still render if the audit lookup fails: the audit panel shows a message, the
@@ -136,7 +136,8 @@ Every change shows in Change History with the actor, the setting, the old value 
 - **FR-007**: OTP request throttling MUST read the resend cooldown, maximum consecutive requests and lockout hours
   from Security Settings (replacing `otp_policy_settings`, whose values are carried over).
 - **FR-008**: Newly issued renewal credentials, their cookies, and access tokens MUST use the session renewal days and
-  access-token seconds from Security Settings. Credentials and tokens already issued MUST be unaffected.
+  access-token seconds from Security Settings. Access tokens already issued keep their expiry; the renewal period is
+  checked at each renewal against the current value.
 - **FR-009**: The public app-config and the mobile version gate MUST read the three mobile settings from System
   Settings at request time.
 - **FR-010**: Every changed value MUST write a Change History entry (actor, entity type `SYSTEM_SETTING` or
