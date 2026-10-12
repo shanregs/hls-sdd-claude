@@ -47,7 +47,10 @@ public final class PermissionEligibility {
             PermissionModule.MARKETING,
             PermissionModule.MARKETING_SETTINGS,
             PermissionModule.SALARY_STRUCTURES,
-            PermissionModule.TASKS);
+            PermissionModule.TASKS,
+            PermissionModule.MANAGER_ATTENDANCE,
+            PermissionModule.MANAGER_LEAVE,
+            PermissionModule.MY_MANAGER_ATTENDANCE);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -70,6 +73,15 @@ public final class PermissionEligibility {
             PermissionModule.SUBSTITUTION, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.MY_SUBSTITUTIONS, EnumSet.of(Role.TEACHER));
 
+    /**
+     * Manager attendance (spec 032): the grid, corrections, lock and leave decisions are for Admin and Director; a
+     * Manager has only their own check-in, month and requests. Kept apart from the maps above (Map.of holds ten pairs).
+     */
+    static final Map<PermissionModule, Set<Role>> MANAGER_ATTENDANCE_MODULES = Map.of(
+            PermissionModule.MANAGER_ATTENDANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.MANAGER_LEAVE, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.MY_MANAGER_ATTENDANCE, EnumSet.of(Role.MANAGER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -83,6 +95,10 @@ public final class PermissionEligibility {
         }
         Set<Role> substitutionOnly = SUBSTITUTION_MODULES.get(module);
         if (substitutionOnly != null && !substitutionOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> managerAttendanceOnly = MANAGER_ATTENDANCE_MODULES.get(module);
+        if (managerAttendanceOnly != null && !managerAttendanceOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

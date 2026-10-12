@@ -10,10 +10,17 @@ Every open point from the spec is settled here. No `NEEDS CLARIFICATION` remains
   event-driven notifications (`NotificationType`, `RecipientResolver.activeAdminsAndDirectors`); spec 009's leave types
   and `LeaveTypes.isLossOfPay`; the existing scheduler (`@Scheduled`, as `OfferExpiryJob` does); `ChangeRecorder` for
   audit.
-- **Does not exist**: the planned-activity interface (contract C1) of specs 016, 023, 024 and 025 (only 016 and 023 are
-  built, and neither exposes it). **Decision**: a Field day carries a `purpose` text now; the link table is added in the
-  spec that publishes the interface, and the spec's rule then becomes "link required unless flagged". Nothing here
-  blocks on it.
+- **T001 findings (2026-10-12, after specs 011, 017a and 025 merged)**: all of the above exist. The highest migration is
+  **V48**, so this spec uses **V49** (attendance) and **V50** (leave). `ManagerQueries` has `managerByUserId`,
+  `employment`, `allManagers`, `currentSchoolIds`. Spec 017a added Teacher absence events and amendment A2 to 008; they
+  concern Teachers and do not change this spec.
+- **The planned-activity interface (contract C1) now exists** for drives, marketing visits and tasks:
+  `recruitment.api.DriveActivities`, `recruitment.api.MarketingActivities` and `tasks.api.TaskActivities`, each
+  `plannedBetween(from, to, ownerUserId)` returning `(kind, id, ownerUserId, date, place, status)`. Training sessions
+  (spec 024) are not built, so that kind is absent. **Decision**: a Field day links to one or more of these (stored in
+  `manager_day_activity` as kind and id) or carries a purpose text; a purpose-only Field day is accepted and flagged
+  `unlinked` for the Director's review (spec FR-007). The Manager's `/me/today` also lists today's planned activities,
+  which is the "today's plan" of the deck.
 
 ## 2. Where it lives
 
@@ -54,10 +61,12 @@ default-calendar working days of the month inside `E(m)`. For each date `d` in `
 
 ## 4. Field days and activity links
 
-- **Decision**: a Field day needs a non-empty purpose (up to 500 characters) now. When the planned-activity interface
-  exists, a Field day may instead carry one or more links, and a purpose-only Field day is accepted and flagged "not
-  linked" (spec FR-007). The flag column (`unlinked`) is created now and is set only once the interface exists.
-- **Rationale**: the spec fixes both rules; building the flag now avoids a migration later.
+- **Decision**: a Field day needs a purpose (up to 500 characters) or at least one link to a planned activity of the
+  Manager for that day. A link names the activity by kind and id; the server checks through the C1 providers that the
+  activity exists and is the Manager's (owner user = the Manager's user) and dated that day. A Field day with a purpose
+  and no link is accepted and `unlinked` is set. Training sessions (spec 024) will add a kind when they exist.
+- **Rationale**: the interface now exists, so the link is built rather than deferred; the flag keeps the Director's
+  review.
 
 ## 5. Location, photo, and time
 
@@ -134,5 +143,5 @@ the writers inside the transaction (as spec 010 does) so a notification commits 
 
 ## 12. Deferred on purpose
 
-Planned-activity links (needs contract C1), geofence or distance checks, shifts and overtime, an export of the grid, the
+Training-session links (spec 024 is not built), geofence or distance checks, shifts and overtime, an export of the grid, the
 Android screens (033).

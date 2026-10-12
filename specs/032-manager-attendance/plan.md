@@ -38,8 +38,8 @@ check-in, no leave and "no joining date" in the figures; a lock is refused while
 **Primary Dependencies**: Spring Web, Spring Data JPA, Spring Security, Spring Modulith, Flyway, ArchUnit, Spring
 scheduling (already enabled). Frontend: React Router, MUI, the browser geolocation API. No new dependency.
 
-**Storage**: PostgreSQL through migrations (`V28` for attendance, `V29` for leave, numbers confirmed when written; `V27` is
-the highest today). Check-in photos use the shared `files` module (jpg or png, at most 10 MB). Details in
+**Storage**: PostgreSQL through migrations (`V49` for attendance, `V50` for leave; `V48` is the highest on main after specs
+011, 017a and 025). Check-in photos use the shared `files` module (jpg or png, at most 10 MB). Details in
 [data-model.md](./data-model.md).
 
 **Testing**: JUnit 5, Spring Boot Test, Testcontainers (`IntegrationTestBase`). The pure `ManagerMonthCalculator` is
@@ -148,8 +148,8 @@ backend/src/main/java/com/hls/
 └── organization/api/ManagerQueries.java        # + managerByUserId already exists; joining/exit dates via employment()
 
 backend/src/main/resources/db/migration/
-├── V28__create_manager_attendance.sql
-└── V29__create_manager_leave.sql
+├── V49__create_manager_attendance.sql
+└── V50__create_manager_leave.sql
 
 backend/src/test/java/com/hls/attendance/manager/   # calculator, check-in, field day, correction, regularization, lock,
                                                     #   alert job, read API, authorization, audit, module rules

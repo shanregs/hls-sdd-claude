@@ -1,6 +1,6 @@
 # Data Model: Manager Attendance and Field Days (spec 032)
 
-Tables in `attendance` (V28) and `leave` (V29). No foreign keys cross modules: manager and user ids are plain UUIDs
+Tables in `attendance` (V49) and `leave` (V50). No foreign keys cross modules: manager and user ids are plain UUIDs
 checked through `organization.api` and `identity`; file ids come from `files.api`.
 
 ## manager_day
@@ -14,7 +14,7 @@ One Manager's record for one date. Holds the attendance and, when leave is appro
 | day_date | DATE NOT NULL | business date; unique with `manager_id` |
 | day_type | VARCHAR(10) | `OFFICE` or `FIELD`; null for a leave-only row |
 | purpose | VARCHAR(500) | required for `FIELD` while no activity links exist |
-| unlinked | BOOLEAN NOT NULL DEFAULT FALSE | a Field day with no planned-activity link (set once the interface exists) |
+| unlinked | BOOLEAN NOT NULL DEFAULT FALSE | a Field day with a purpose and no planned-activity link |
 | check_in_at | TIMESTAMPTZ | server time |
 | check_in_lat, check_in_lng | NUMERIC(9,6) | required with a check-in; ranges checked |
 | check_in_accuracy_m | NUMERIC(8,2) | optional |
@@ -33,6 +33,12 @@ One Manager's record for one date. Holds the attendance and, when leave is appro
 - Unique `(manager_id, day_date)`; index `(day_date)` for the grid and the alert job.
 - A check-in requires day_type, a location and no existing check-in; a check-out requires a check-in.
 - Check constraints repeat the ranges (`leave_fraction IN (0.5, 1.0)`, latitude and longitude).
+
+## manager_day_activity
+
+A planned activity linked to a Field day (contract C1). `day_id` UUID NOT NULL, `kind` VARCHAR(40) NOT NULL (the
+`PlannedActivity.kind` of the provider), `activity_id` UUID NOT NULL; primary key `(day_id, kind, activity_id)`. Rows are
+replaced together with the day when it is corrected.
 
 ## manager_day_history
 
