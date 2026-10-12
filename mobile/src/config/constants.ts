@@ -13,5 +13,11 @@ export const DEFAULT_LOCATION_REUSE_SECONDS = 10;
 /** Refresh the access model when the app returns from the background after this long (FR-012). */
 export const ACCESS_MODEL_REFRESH_AFTER_BACKGROUND_MS = 5 * 60 * 1000;
 
+/** How often the bell asks for the unread count while the app is in the foreground (spec 010 FR-008, spec 021 FR-002). */
+export const NOTIFICATION_POLL_MS = 30_000;
+
+/** Notifications per page on the list (spec 021 FR-004). */
+export const NOTIFICATION_PAGE_SIZE = 25;
+
 /** Give up on a request after this long and treat it as "no connection". */
 export const REQUEST_TIMEOUT_MS = 20_000;

@@ -18,7 +18,11 @@ export const TEACHER_MODEL: AccessModel = {
     },
     {
       section: "ACCOUNT",
-      items: [item("My Profile", "/account/profile", ["VIEW", "EDIT"]), item("Settings", "/account/settings")],
+      items: [
+        item("My Profile", "/account/profile", ["VIEW", "EDIT"]),
+        item("Notifications", "/account/notifications", ["VIEW", "DELETE"]),
+        item("Settings", "/account/settings"),
+      ],
     },
   ],
   dataScope: { DASHBOARD: "OWN" },
@@ -45,7 +49,11 @@ export const MANAGER_MODEL: AccessModel = {
     },
     {
       section: "ACCOUNT",
-      items: [item("Profile", "/account/profile", ["VIEW", "EDIT"]), item("Settings", "/account/settings")],
+      items: [
+        item("Profile", "/account/profile", ["VIEW", "EDIT"]),
+        item("Notifications", "/account/notifications", ["VIEW", "DELETE"]),
+        item("Settings", "/account/settings"),
+      ],
     },
   ],
   dataScope: { DASHBOARD: "ASSIGNED" },
@@ -72,7 +80,11 @@ export const DIRECTOR_MODEL: AccessModel = {
     { section: "SYSTEM", items: [item("Role & Permissions", "/identity/permissions")] },
     {
       section: "ACCOUNT",
-      items: [item("Profile", "/account/profile", ["VIEW", "EDIT"]), item("Settings", "/account/settings")],
+      items: [
+        item("Profile", "/account/profile", ["VIEW", "EDIT"]),
+        item("Notifications", "/account/notifications", ["VIEW", "DELETE"]),
+        item("Settings", "/account/settings"),
+      ],
     },
   ],
   dataScope: { DASHBOARD: "ORG" },
