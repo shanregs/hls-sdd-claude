@@ -36,7 +36,7 @@ public class OtpController {
     private final PasswordResetService passwordResetService;
     private final LoginHistoryPublisher loginHistoryPublisher;
     private final boolean cookieSecure;
-    private final long renewalTtlDays;
+    private final com.hls.identity.policy.RuntimeSettings settings;
 
     public OtpController(
             OtpService otpService,
@@ -46,7 +46,7 @@ public class OtpController {
             PasswordResetService passwordResetService,
             LoginHistoryPublisher loginHistoryPublisher,
             @Value("${hls.security.cookie.secure:true}") boolean cookieSecure,
-            @Value("${hls.session.renewal-ttl-days:14}") long renewalTtlDays) {
+            com.hls.identity.policy.RuntimeSettings settings) {
         this.otpService = otpService;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.sessionService = sessionService;
@@ -54,7 +54,7 @@ public class OtpController {
         this.passwordResetService = passwordResetService;
         this.loginHistoryPublisher = loginHistoryPublisher;
         this.cookieSecure = cookieSecure;
-        this.renewalTtlDays = renewalTtlDays;
+        this.settings = settings;
     }
 
     @PostMapping("/api/v1/auth/otp/request")
@@ -163,7 +163,7 @@ public class OtpController {
                         user.getId(), user.getDisplayName(), roles.stream().map(Role::name).toList()),
                 created.plainRenewalCredential(),
                 cookieSecure,
-                renewalTtlDays);
+                settings.renewalTtlDays());
     }
 
     private static String userAgent(HttpServletRequest request) {

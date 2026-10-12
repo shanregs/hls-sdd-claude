@@ -16,8 +16,12 @@ public final class PermissionEligibility {
     static final Set<Role> MATRIX_MANAGER_ROLES = EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.SYSTEM);
 
     /** Capabilities only the matrix-manager roles may hold: the matrix itself and every user's sessions. */
-    static final Set<PermissionModule> MATRIX_MANAGER_ONLY_MODULES =
-            EnumSet.of(PermissionModule.IDENTITY_PERMISSIONS, PermissionModule.SESSION_MANAGEMENT);
+    static final Set<PermissionModule> MATRIX_MANAGER_ONLY_MODULES = EnumSet.of(
+            PermissionModule.IDENTITY_PERMISSIONS,
+            PermissionModule.SESSION_MANAGEMENT,
+            PermissionModule.SYSTEM_DASHBOARD,
+            PermissionModule.SYSTEM_SETTINGS,
+            PermissionModule.SECURITY_SETTINGS);
 
     /** Teacher and school business data, which System must never see (Constitution Principle III). */
     static final Set<PermissionModule> BUSINESS_MODULES = EnumSet.of(

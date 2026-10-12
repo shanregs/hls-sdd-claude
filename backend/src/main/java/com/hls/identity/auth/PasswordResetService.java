@@ -42,6 +42,7 @@ public class PasswordResetService {
     private final LoginHistoryPublisher loginHistoryPublisher;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
+    private final com.hls.identity.policy.RuntimeSettings settings;
     private final ConcurrentHashMap<String, ResetTokenEntry> resetTokens = new ConcurrentHashMap<>();
 
     public PasswordResetService(
@@ -52,7 +53,9 @@ public class PasswordResetService {
             PasswordEncoder passwordEncoder,
             LoginHistoryPublisher loginHistoryPublisher,
             ApplicationEventPublisher eventPublisher,
-            Clock clock) {
+            Clock clock,
+            com.hls.identity.policy.RuntimeSettings settings) {
+        this.settings = settings;
         this.identifierResolver = identifierResolver;
         this.appUserRepository = appUserRepository;
         this.sessionRepository = sessionRepository;
@@ -97,7 +100,7 @@ public class PasswordResetService {
         if (user == null) {
             return CompleteOutcome.INVALID_OR_EXPIRED_TOKEN;
         }
-        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone())) {
+        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone(), settings.passwordMinLength())) {
             return CompleteOutcome.PASSWORD_POLICY_VIOLATION;
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));

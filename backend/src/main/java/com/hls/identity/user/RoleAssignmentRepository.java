@@ -20,5 +20,7 @@ public interface RoleAssignmentRepository extends JpaRepository<RoleAssignment, 
     @Query("select ra.userId from RoleAssignment ra where ra.role = :role")
     List<UUID> userIdsWithRole(@Param("role") Role role);
 
+    long countByRole(Role role);
+
     void deleteByUserIdAndRole(UUID userId, Role role);
 }

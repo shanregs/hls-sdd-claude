@@ -100,11 +100,27 @@ public class PermissionMatrixService {
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
+        seedSystemSettings();
         for (Role role : USER_MANAGER_ROLES) {
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.VIEW, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.CREATE, true);
             seed(role, PermissionModule.USER_MANAGEMENT, PermissionAction.EDIT, true);
         }
+    }
+
+    /**
+     * System settings defaults (spec 011): System keeps the dashboard and both settings screens; Admin holds the two
+     * settings screens; Director has none by default (Constitution Principle II) but may be granted them.
+     */
+    private void seedSystemSettings() {
+        seed(Role.SYSTEM, PermissionModule.SYSTEM_DASHBOARD, PermissionAction.VIEW, true);
+        for (PermissionModule module : List.of(PermissionModule.SYSTEM_SETTINGS, PermissionModule.SECURITY_SETTINGS)) {
+            for (Role role : List.of(Role.SYSTEM, Role.ADMIN)) {
+                seed(role, module, PermissionAction.VIEW, true);
+                seed(role, module, PermissionAction.EDIT, true);
+            }
+        }
+        grants.invalidateAround();
     }
 
     /** Master-data defaults (spec 005, data-model.md): see the grants table there. */

@@ -21,16 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
  * Password sign-in for any role, identified by phone number or username (User Story 1,
  * Constitution v2.3.0). Every failure path — wrong password, unregistered identifier, an account
  * with no password set — returns the identical generic failure, never revealing which case
- * occurred (FR-008). Lockout after 5 consecutive failures (FR-012, User Story 4) is fixed
- * deployment configuration, not database-configurable (research.md §17 draws this distinction for
- * the newer OTP throttle only).
+ * occurred (FR-008). Lockout after the configured number of consecutive failures (FR-012, User Story 4)
+ * reads Security Settings (spec 011).
  */
 @Service
 public class PasswordAuthService {
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(30);
-
+    private final com.hls.identity.policy.RuntimeSettings settings;
     private final IdentifierResolver identifierResolver;
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,7 +41,9 @@ public class PasswordAuthService {
             PasswordEncoder passwordEncoder,
             AppUserRepository appUserRepository,
             ApplicationEventPublisher eventPublisher,
-            Clock clock) {
+            Clock clock,
+            com.hls.identity.policy.RuntimeSettings settings) {
+        this.settings = settings;
         this.identifierResolver = identifierResolver;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
@@ -78,8 +77,8 @@ public class PasswordAuthService {
         if (user.getPasswordHash() == null || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
             int attempts = user.getFailedAttemptCount() + 1;
             user.setFailedAttemptCount(attempts);
-            if (attempts >= MAX_FAILED_ATTEMPTS) {
-                Instant lockUntil = now.plus(LOCKOUT_DURATION);
+            if (attempts >= settings.maxFailedAttempts()) {
+                Instant lockUntil = now.plus(Duration.ofMinutes(settings.lockoutMinutes()));
                 user.setLockUntil(lockUntil);
                 appUserRepository.save(user);
                 eventPublisher.publishEvent(
