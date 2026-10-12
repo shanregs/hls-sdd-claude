@@ -32,7 +32,12 @@ public interface LeaveAttendance {
      * replacing a mark that is absent or the Teacher's own. All or nothing: any problem throws and
      * nothing changes.
      */
-    void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days);
+    default void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days) {
+        apply(requestId, approverUserId, teacherId, days, false);
+    }
+
+    /** As {@link #apply(UUID, UUID, UUID, List)}; {@code lossOfPay} flags the written days as unpaid (amendment A2). */
+    void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days, boolean lossOfPay);
 
     /**
      * Removes the marks the request made and nobody has changed since. Refuses (throws) when any of

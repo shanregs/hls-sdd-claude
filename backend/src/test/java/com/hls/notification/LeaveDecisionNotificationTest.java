@@ -135,11 +135,13 @@ class LeaveDecisionNotificationTest extends LeaveTestBase {
         LocalDate mon = monday();
         String id = apply(w.teacherA(), mon, mon.plusDays(1));
         jdbc.update("update teacher set user_id = null where id = ?", w.teacherA().teacherId());
-        Integer before = jdbc.queryForObject("select count(*) from notification", Integer.class);
+        String leaveTypes = "('LEAVE_DECIDED', 'LEAVE_REQUESTED', 'LEAVE_CANCELLED')";
+        Integer before = jdbc.queryForObject("select count(*) from notification where type in " + leaveTypes, Integer.class);
 
         Resp approved = post(SUP + "/" + id + "/approve", w.managerA().token(), Map.of("version", 0));
 
         assertThat(approved.status()).as(approved.body()).isEqualTo(200);
-        assertThat(jdbc.queryForObject("select count(*) from notification", Integer.class)).isEqualTo(before);
+        assertThat(jdbc.queryForObject("select count(*) from notification where type in " + leaveTypes, Integer.class))
+                .isEqualTo(before);
     }
 }

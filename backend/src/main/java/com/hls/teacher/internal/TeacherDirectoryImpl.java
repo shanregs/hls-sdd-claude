@@ -87,6 +87,12 @@ class TeacherDirectoryImpl implements TeacherDirectory {
     }
 
     @Override
+    public List<TeacherInfo> activeTeachers() {
+        List<UUID> ids = teachers.findIdsByStatus(TeacherStatus.ACTIVE);
+        return ids.isEmpty() ? List.of() : teachers.findAllById(ids).stream().map(TeacherDirectoryImpl::toInfo).toList();
+    }
+
+    @Override
     public Optional<TeacherInfo> teacherOfUser(UUID userId) {
         return teachers.findByUserId(userId).map(TeacherDirectoryImpl::toInfo);
     }

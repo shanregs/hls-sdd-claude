@@ -17,6 +17,12 @@ public interface AttendanceReadApi {
     /** The Teacher's marks in the month, oldest date first. */
     List<MarkView> marksOf(UUID teacherId, YearMonth month);
 
+    /**
+     * The given Teachers who have a leave-category mark (an absence or approved leave) on the date. One query; a Teacher
+     * the module does not know is simply not in the result (spec 017a availability).
+     */
+    java.util.Set<UUID> teachersAwayOn(java.util.Collection<UUID> teacherIds, java.time.LocalDate date);
+
     /** True while the Teacher-month is locked; a reopened month is not locked. */
     boolean isLocked(UUID teacherId, YearMonth month);
 }

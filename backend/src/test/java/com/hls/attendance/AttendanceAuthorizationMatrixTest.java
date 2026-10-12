@@ -83,6 +83,11 @@ class AttendanceAuthorizationMatrixTest extends AttendanceTestBase {
         list.add(ep("mark history", HttpMethod.GET, A + "/teachers/" + teacher + "/marks/" + past + "/history", SUPERVISORS));
         // Admin may clear (ATTENDANCE.DELETE) and a Manager may (TEACHER_ATTENDANCE.EDIT); a Director corrects by marking over.
         list.add(ep("clear mark", HttpMethod.DELETE, A + "/teachers/" + teacher + "/marks/" + past, EnumSet.of(Role.ADMIN, Role.MANAGER)));
+        // Principal confirmation (amendment A2): the same supervisors as marking.
+        list.add(ep("principal confirmation", HttpMethod.PUT, A + "/teachers/" + teacher + "/marks/" + past + "/principal-confirmation",
+                () -> Map.of("confirmed", true), SUPERVISORS));
+        list.add(ep("clear principal confirmation", HttpMethod.DELETE,
+                A + "/teachers/" + teacher + "/marks/" + past + "/principal-confirmation", SUPERVISORS));
         list.add(ep("manager grid", HttpMethod.GET, A + "/teacher-grid?month=" + month, EnumSet.of(Role.MANAGER)));
         // Admin and Director.
         list.add(ep("org grid", HttpMethod.GET, A + "/grid?month=" + month, ADMIN_DIRECTOR));

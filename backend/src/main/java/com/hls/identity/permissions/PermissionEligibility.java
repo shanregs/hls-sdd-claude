@@ -37,6 +37,8 @@ public final class PermissionEligibility {
             PermissionModule.ATTENDANCE_SETUP,
             PermissionModule.LEAVE_MANAGEMENT,
             PermissionModule.MY_LEAVE,
+            PermissionModule.SUBSTITUTION,
+            PermissionModule.MY_SUBSTITUTIONS,
             PermissionModule.NOTIFICATIONS,
             PermissionModule.SCHOOL_CONTRACTS,
             PermissionModule.RECRUITMENT,
@@ -62,6 +64,11 @@ public final class PermissionEligibility {
             PermissionModule.MARKETING_SETTINGS, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
             PermissionModule.SALARY_STRUCTURES, EnumSet.of(Role.ADMIN, Role.DIRECTOR));
 
+    /** Substitution (spec 017a): staff roles run it, only a Teacher has "my" view of it. Kept apart from the map above. */
+    static final Map<PermissionModule, Set<Role>> SUBSTITUTION_MODULES = Map.of(
+            PermissionModule.SUBSTITUTION, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.MY_SUBSTITUTIONS, EnumSet.of(Role.TEACHER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -71,6 +78,10 @@ public final class PermissionEligibility {
         }
         Set<Role> only = ROLE_RESTRICTED_MODULES.get(module);
         if (only != null && !only.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> substitutionOnly = SUBSTITUTION_MODULES.get(module);
+        if (substitutionOnly != null && !substitutionOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

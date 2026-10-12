@@ -2,6 +2,9 @@ package com.hls.attendance.internal;
 
 import com.hls.attendance.api.AttendanceMarkChanged;
 import com.hls.attendance.api.MarkView;
+import com.hls.attendance.api.TeacherAbsenceRecorded;
+import com.hls.attendance.api.TeacherAbsenceWithdrawn;
+import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.school.api.ConflictException;
@@ -44,6 +47,7 @@ public class MarkService {
     private final Clock clock;
     private final ApplicationEventPublisher events;
     private final AppUserRepository users;
+    private final WorkingCalendar workingCalendar;
 
     public MarkService(
             AttendanceMarkRepository marks,
@@ -56,7 +60,8 @@ public class MarkService {
             MarkViewFactory views,
             Clock clock,
             ApplicationEventPublisher events,
-            AppUserRepository users) {
+            AppUserRepository users,
+            WorkingCalendar workingCalendar) {
         this.marks = marks;
         this.history = history;
         this.codes = codes;
@@ -68,6 +73,7 @@ public class MarkService {
         this.clock = clock;
         this.events = events;
         this.users = users;
+        this.workingCalendar = workingCalendar;
     }
 
     @Transactional
@@ -157,8 +163,10 @@ public class MarkService {
         }
 
         String before = existing == null ? null : describe(existing);
+        boolean wasLeave = existing != null && isLeave(existing);
         AttendanceMark mark = existing != null ? existing : new AttendanceMark(teacherId, date);
         mark.set(code.getId(), value, placement.schoolId(), cleanNote, actorUserId, kind, clock.instant());
+        mark.setLossOfPay(code.getCategory() == StatusCategory.LEAVE);
         AttendanceMark saved = marks.saveAndFlush(mark);
         history.save(new MarkHistoryEntry(
                 teacherId,
@@ -175,6 +183,9 @@ public class MarkService {
         if (notify && kind == SetByKind.SUPERVISOR) {
             publishChanged(actorUserId, teacherId, date);
         }
+        if (notify) {
+            publishAbsence(saved, code, TeacherAbsenceRecorded.ABSENT, wasLeave, actorUserId);
+        }
         return views.of(saved);
     }
 
@@ -186,6 +197,19 @@ public class MarkService {
     @Transactional
     public void setLeaveMark(
             UUID approverUserId, UUID teacherId, LocalDate date, UUID schoolId, BigDecimal dayValue, UUID leaveRequestId) {
+        setLeaveMark(approverUserId, teacherId, date, schoolId, dayValue, leaveRequestId, false);
+    }
+
+    /** As above; {@code lossOfPay} marks the day unpaid when the leave is of the Loss-of-Pay type (amendment A2). */
+    @Transactional
+    public void setLeaveMark(
+            UUID approverUserId,
+            UUID teacherId,
+            LocalDate date,
+            UUID schoolId,
+            BigDecimal dayValue,
+            UUID leaveRequestId,
+            boolean lossOfPay) {
         if (schoolId == null) {
             throw new InvalidInputException("A Leave mark needs a School.");
         }
@@ -201,6 +225,7 @@ public class MarkService {
         String note = "Leave request " + leaveRequestId;
         mark.set(code.getId(), value, schoolId, note, approverUserId, SetByKind.SUPERVISOR, clock.instant());
         mark.markFromLeave(leaveRequestId);
+        mark.setLossOfPay(lossOfPay);
         AttendanceMark saved = marks.saveAndFlush(mark);
         history.save(new MarkHistoryEntry(
                 teacherId,
@@ -221,6 +246,7 @@ public class MarkService {
                 "mark",
                 before,
                 code.getShortCode() + " " + value.toPlainString() + " (leave request " + leaveRequestId + ")");
+        publishAbsence(saved, code, TeacherAbsenceRecorded.LEAVE, true, approverUserId);
     }
 
     /** Removes a mark that approved leave made (spec 009 revoke or cancel); the caller holds the locks. */
@@ -251,6 +277,7 @@ public class MarkService {
                 null);
         marks.delete(existing);
         marks.flush();
+        events.publishEvent(new TeacherAbsenceWithdrawn(existing.getTeacherId(), existing.getMarkDate(), actorUserId));
     }
 
     /**
@@ -354,9 +381,41 @@ public class MarkService {
         history.save(new MarkHistoryEntry(
                 teacherId, date, MarkAction.CLEARED, null, null, existing.getSchoolId(), null, actorUserId, SetByKind.SUPERVISOR, clock.instant()));
         audit.changed(actorUserId, AttendanceAudit.MARK, teacherId + ":" + date, "mark", describe(existing), null);
+        boolean wasLeave = isLeave(existing);
         marks.delete(existing);
         marks.flush();
         publishChanged(actorUserId, teacherId, date);
+        if (wasLeave) {
+            events.publishEvent(new TeacherAbsenceWithdrawn(teacherId, date, actorUserId));
+        }
+    }
+
+    private boolean isLeave(AttendanceMark mark) {
+        return codes.require(mark.getStatusCodeId()).getCategory() == StatusCategory.LEAVE;
+    }
+
+    /**
+     * Amendment A2: tells the world a class may be uncovered (a leave-category day on a working day), or that a day that
+     * was no longer is. Published inside this transaction, so a refused change publishes nothing.
+     */
+    private void publishAbsence(AttendanceMark mark, StatusCode code, String kind, boolean wasLeave, UUID actorUserId) {
+        boolean absent = code.getCategory() == StatusCategory.LEAVE
+                && mark.getSchoolId() != null
+                && workingCalendar
+                        .workingDays(mark.getSchoolId(), mark.getMarkDate(), mark.getMarkDate())
+                        .contains(mark.getMarkDate());
+        if (absent) {
+            events.publishEvent(new TeacherAbsenceRecorded(
+                    mark.getTeacherId(),
+                    mark.getSchoolId(),
+                    mark.getMarkDate(),
+                    mark.getDayValue(),
+                    kind,
+                    mark.isLossOfPay(),
+                    actorUserId));
+        } else if (wasLeave) {
+            events.publishEvent(new TeacherAbsenceWithdrawn(mark.getTeacherId(), mark.getMarkDate(), actorUserId));
+        }
     }
 
     /** Tells the notification module inside this transaction, so a refused change leaves no notification. */

@@ -29,6 +29,9 @@ public interface TeacherDirectory {
     /** Every Teacher, whatever their status, ordered by name (spec 013a lists them with their salary). */
     List<TeacherInfo> allTeachers();
 
+    /** Every Teacher whose status is ACTIVE (trained, not exited), placed or not; used to find substitutes (spec 017a). */
+    List<TeacherInfo> activeTeachers();
+
     Optional<TeacherInfo> teacherOfUser(UUID userId);
 
     /** ACTIVE placements of the given Teachers overlapping {@code from..to} inclusive. */

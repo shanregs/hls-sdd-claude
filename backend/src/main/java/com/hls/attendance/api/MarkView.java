@@ -22,4 +22,11 @@ public record MarkView(
         Instant setAt,
         String note,
         Long version,
-        UUID leaveRequestId) {}
+        UUID leaveRequestId,
+        boolean lossOfPay,
+        PrincipalConfirmation principalConfirmation) {
+
+    /** The optional Principal confirmation of the day (amendment A2); null in the view when none is recorded. */
+    public record PrincipalConfirmation(
+            boolean confirmed, String principalName, String note, UUID recordedBy, String recordedByName, Instant recordedAt) {}
+}
