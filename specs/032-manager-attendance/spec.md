@@ -278,7 +278,7 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
 - **FR-006**: The system MUST record the day type chosen at check-in as Office or Field; a Leave day comes only from
   approved leave (FR-010), never from a check-in.
 - **FR-007**: The system MUST require a Field day to carry a purpose text or a link to at least one planned activity,
-  and once the planned-activity links exist MUST accept a purpose-only Field day but flag it for review. (The link part is deferred until the planned-activity interface exists; until then a purpose text is required.)
+  and once the planned-activity links exist MUST accept a purpose-only Field day but flag it for review. (A purpose-only Field day is accepted and flagged for review; training-session links wait for spec 024.)
 - **FR-008**: The system MUST let a Manager request leave with a leave type, a first and last date and a reason, and a
   half day at either end.
 - **FR-009**: The system MUST let an Admin or Director approve a Manager's request or reject it with a reason, and MUST
@@ -389,8 +389,9 @@ when this spec merges.
   Teachers, so Manager leave is a separate request flow in this spec that reads the same types.
 - The default calendar of spec 008 (weekly offs and non-working dates) gives a Manager's working days; a Manager's
   joining and exit dates come from spec 005a, and a day outside them is not a working day for that Manager.
-- Planned-activity links to visits (023), drives (016), sessions (024) and tasks (025) arrive through a shared interface
-  (contract C1) that does not exist yet; until it does, a Field day is accepted with a purpose text alone.
+- Planned-activity links to visits (023), drives (016) and tasks (025) come from the shared planned-activity interface
+  (contract C1), which now exists for those three; training sessions (024) are not built, so that kind is absent until it
+  is. A Field day links to them or carries a purpose text.
 - Spec 013a is amended by this spec in two ways: `PayRules` returns a Manager's unpaid days and total loss of pay from
   this module instead of "not available", and it returns an Admin's or Director's unpaid days as an explicit "none".
   The earlier 013a rule that System accounts are paid staff is withdrawn: System accounts have no salary.

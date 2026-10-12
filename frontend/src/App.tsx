@@ -19,6 +19,8 @@ import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage"
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
+import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
+import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
@@ -276,6 +278,22 @@ export function App() {
           element={
             <RouteGuard>
               <LeaveManagementPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/system/settings"
+          element={
+            <RouteGuard>
+              <SystemSettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/system/security"
+          element={
+            <RouteGuard>
+              <SecuritySettingsPage />
             </RouteGuard>
           }
         />

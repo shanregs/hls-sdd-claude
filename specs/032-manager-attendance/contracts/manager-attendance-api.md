@@ -13,7 +13,7 @@ Permissions: `MY` = `MY_MANAGER_ATTENDANCE` (Manager, own data only); `ATT` = `M
 
 | Method | Path | Action | Purpose |
 | --- | --- | --- | --- |
-| GET | `/me/today` | VIEW | today's status: the record so far (if any), whether today is a working day, the cut-off and late times, and any leave covering today |
+| GET | `/me/today` | VIEW | today's status: the record so far (if any), whether today is a working day, the cut-off and late times, any leave covering today, and today's planned activities (drives, marketing visits, tasks) that can be linked |
 | POST | `/me/check-in` | CREATE | check in; body below |
 | POST | `/me/check-out` | CREATE | check out today's record; body below |
 | POST | `/me/days/{date}/complete-check-out` | CREATE | complete the Manager's own missing check-out of a past day: `{ "time": "18:05", "reason": "Forgot to tap out" }`; 400 without a reason, a time not on that day or in the future; 409 in a locked month |
@@ -24,11 +24,12 @@ Permissions: `MY` = `MY_MANAGER_ATTENDANCE` (Manager, own data only); `ATT` = `M
 | DELETE | `/me/regularizations/{id}` | DELETE | cancel a pending request |
 
 ```json
-{ "dayType": "FIELD", "purpose": "Visit to St Mary's School", "latitude": 12.971599, "longitude": 77.594566, "accuracyMeters": 18.5 }
+{ "dayType": "FIELD", "purpose": "Visit to St Mary's School", "activities": [ { "kind": "VISIT", "id": "uuid" } ],
+  "latitude": 12.971599, "longitude": 77.594566, "accuracyMeters": 18.5 }
 ```
 
 Check-in refused with 400 and the reason: no location, a latitude or longitude out of range, a day type other than
-`OFFICE` or `FIELD`, a Field day with no purpose, no joining date recorded (spec 005a), approved full-day leave that day,
+`OFFICE` or `FIELD`, a Field day with neither a purpose nor a linked activity, an activity that is not the Manager's or not dated that day (404), no joining date recorded (spec 005a), approved full-day leave that day,
 a joining date after the day, or an exit date before it; 409 for a second check-in or a locked month. On approved
 half-day leave one check-in is accepted. Response `201`:
 

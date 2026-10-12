@@ -99,6 +99,7 @@ public class PermissionMatrixService {
         seedRecruitment();
         seedMarketing();
         seedTasks();
+        seedManagerAttendance();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -223,6 +224,27 @@ public class PermissionMatrixService {
     }
 
     /** Manager task defaults (spec 025): Admin and Director run and verify tasks; a Manager acts on their own. */
+    /**
+     * Manager attendance defaults (spec 032): Admin holds every action, the Director everything but the lock (Process),
+     * both decide Managers' leave; a Manager has their own check-in, month and requests. Teacher and System have none.
+     */
+    private void seedManagerAttendance() {
+        for (PermissionAction action : PermissionModule.MANAGER_ATTENDANCE.actions()) {
+            seed(Role.ADMIN, PermissionModule.MANAGER_ATTENDANCE, action, true);
+            if (action != PermissionAction.PROCESS) {
+                seed(Role.DIRECTOR, PermissionModule.MANAGER_ATTENDANCE, action, true);
+            }
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            seed(role, PermissionModule.MANAGER_LEAVE, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.MANAGER_LEAVE, PermissionAction.APPROVE, true);
+        }
+        for (PermissionAction action : PermissionModule.MY_MANAGER_ATTENDANCE.actions()) {
+            seed(Role.MANAGER, PermissionModule.MY_MANAGER_ATTENDANCE, action, true);
+        }
+        grants.invalidateAround();
+    }
+
     private void seedTasks() {
         for (PermissionAction action : PermissionModule.TASKS.actions()) {
             seed(Role.ADMIN, PermissionModule.TASKS, action, true);
