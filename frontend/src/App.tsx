@@ -23,6 +23,8 @@ import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
+import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
+import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -306,10 +308,26 @@ export function App() {
           }
         />
         <Route
+          path="/system/settings"
+          element={
+            <RouteGuard>
+              <SystemSettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/operations/tasks/:id"
           element={
             <RouteGuard>
               <TaskDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/system/security"
+          element={
+            <RouteGuard>
+              <SecuritySettingsPage />
             </RouteGuard>
           }
         />
