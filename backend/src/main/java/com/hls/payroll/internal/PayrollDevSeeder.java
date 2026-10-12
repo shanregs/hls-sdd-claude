@@ -18,12 +18,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Dev-only demo data (inert unless {@code hls.seed.demo-data=true}, idempotent): a salary for most of the seeded
- * designations so the Salary Structures list shows values, and none for "Senior Zone Manager" so the missing-salary flag
- * shows once a Manager holds it. It seeds no Teacher's own salary beyond what spec 005's seeder already does.
+ * Dev-only demo data (inert unless {@code hls.seed.demo-data=true}, idempotent): suggested defaults for most of the
+ * seeded designations, and each person's own salary for some of the demo people so the People list shows both people
+ * with a salary and people without one (the System user and the Teachers without one). It seeds no Teacher's own salary
+ * beyond what spec 005's seeder already does.
  */
 @Component
-@Order(26)
+@Order(46)
 @ConditionalOnProperty(name = "hls.seed.demo-data", havingValue = "true")
 class PayrollDevSeeder implements ApplicationRunner {
 
@@ -31,6 +32,9 @@ class PayrollDevSeeder implements ApplicationRunner {
 
     private final DesignationDirectory designations;
     private final DesignationSalaryRepository salaries;
+    private final PersonSalaryRepository personSalaries;
+    private final StaffEmploymentRepository staffDates;
+    private final PersonDirectory people;
     private final AppUserRepository users;
     private final WorkingCalendar calendar;
     private final Clock clock;
@@ -38,11 +42,17 @@ class PayrollDevSeeder implements ApplicationRunner {
     PayrollDevSeeder(
             DesignationDirectory designations,
             DesignationSalaryRepository salaries,
+            PersonSalaryRepository personSalaries,
+            StaffEmploymentRepository staffDates,
+            PersonDirectory people,
             AppUserRepository users,
             WorkingCalendar calendar,
             Clock clock) {
         this.designations = designations;
         this.salaries = salaries;
+        this.personSalaries = personSalaries;
+        this.staffDates = staffDates;
+        this.people = people;
         this.users = users;
         this.calendar = calendar;
         this.clock = clock;
@@ -79,8 +89,44 @@ class PayrollDevSeeder implements ApplicationRunner {
                     clock.instant()));
             added++;
         }
+        added += seedPeople(admin, from);
         if (added > 0) {
             log.info("[DEV SEED] Salary structures demo data ready: {} added.", added);
         }
+    }
+
+    /** Own salaries for the demo Manager and the Admin and Director; the System user is left without one on purpose. */
+    private int seedPeople(AppUser admin, LocalDate from) {
+        int added = 0;
+        for (var manager : people.allManagers()) {
+            if (manager.name().startsWith("Manoj") && addSalary(admin, PersonSalary.Kind.MANAGER, manager.id(), "55000", from)) {
+                added++;
+            }
+        }
+        Object[][] staff = {{"9800000001", "90000"}, {"9800000002", "120000"}};
+        for (Object[] row : staff) {
+            AppUser user = users.findByPhone((String) row[0]).orElse(null);
+            if (user == null) {
+                continue;
+            }
+            if (staffDates.findById(user.getId()).isEmpty()) {
+                staffDates.save(new StaffEmployment(user.getId(), from, null, admin.getId(), clock.instant()));
+            }
+            if (addSalary(admin, PersonSalary.Kind.STAFF, user.getId(), (String) row[1], from)) {
+                added++;
+            }
+        }
+        return added;
+    }
+
+    private boolean addSalary(AppUser admin, PersonSalary.Kind kind, java.util.UUID personId, String amount, LocalDate from) {
+        if (!personSalaries
+                .findByPersonKindAndPersonIdOrderByEffectiveOnDescRecordedAtDesc(kind, personId)
+                .isEmpty()) {
+            return false;
+        }
+        personSalaries.save(new PersonSalary(
+                kind, personId, new BigDecimal(amount).setScale(2), from, "Demo data", admin.getId(), clock.instant()));
+        return true;
     }
 }

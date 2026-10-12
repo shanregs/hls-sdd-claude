@@ -6,6 +6,7 @@ import com.hls.identity.user.Role;
 import com.hls.support.PayrollTestBase;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,14 @@ class MissingSalaryReportTest extends PayrollTestBase {
         return (Map<String, Object>) entry.get("missingSalary");
     }
 
+    private void giveManagerAnOwnSalary(String admin, UUID manager) {
+        Resp resp = post(
+                BASE + "/people/MANAGER/" + manager + "/salaries",
+                admin,
+                Map.of("amount", "45000", "effectiveOn", firstOfMonth().toString()));
+        assertThat(resp.status()).as(resp.body()).isEqualTo(201);
+    }
+
     private void giveTeacherAnOwnSalary(String admin, UUID teacher) {
         Resp resp = post(
                 "/api/v1/teachers/" + teacher + "/salary",
@@ -27,20 +36,26 @@ class MissingSalaryReportTest extends PayrollTestBase {
     }
 
     @Test
-    void aManagerDesignationWithManagersAndNoSalaryIsFlaggedAndTheFlagClearsOnceASalaryIsRecorded() {
+    void aManagerDesignationIsFlaggedForManagersWithoutTheirOwnSalaryAndOnlyTheirOwnSalaryClearsIt() {
         String admin = signInAs(Role.ADMIN).token();
         UUID designation = designation(admin, "MANAGER");
+        List<UUID> managers = new java.util.ArrayList<>();
         for (int i = 0; i < 2; i++) {
             ManagerCtx manager = newManager(admin);
+            managers.add(manager.managerId());
             assertThat(designate(admin, manager.managerId(), designation, LocalDate.now().minusDays(100)).status())
                     .isEqualTo(200);
         }
-        Map<String, Object> flagged = missing(entryOf(admin, designation));
-        assertThat(flagged).containsEntry("flag", true).containsEntry("people", 2);
+        assertThat(missing(entryOf(admin, designation))).containsEntry("flag", true).containsEntry("people", 2);
 
+        // the designation's amount is only a suggestion: it does not clear the gap
         recordSalaryOk(admin, designation, "40000", firstOfMonth());
-        Map<String, Object> cleared = missing(entryOf(admin, designation));
-        assertThat(cleared).containsEntry("flag", false).containsEntry("people", 0);
+        assertThat(missing(entryOf(admin, designation))).containsEntry("flag", true).containsEntry("people", 2);
+
+        giveManagerAnOwnSalary(admin, managers.get(0));
+        assertThat(missing(entryOf(admin, designation))).containsEntry("flag", true).containsEntry("people", 1);
+        giveManagerAnOwnSalary(admin, managers.get(1));
+        assertThat(missing(entryOf(admin, designation))).containsEntry("flag", false).containsEntry("people", 0);
     }
 
     @Test

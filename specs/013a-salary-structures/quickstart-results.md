@@ -1,10 +1,15 @@
 # Quickstart results: Salary Structures and Pay Policy (spec 013a)
 
-Run on 2026-10-11 against the implementation on this branch. **Every step below was checked by an automated test
+Run on 2026-10-11 against the implementation on this branch, **including the same-day amendment that makes every
+person's salary their own** (section 7). Sections 1 to 6 were first run before it; where the amendment changed a result,
+the row says so and the tests named are the current ones. **Every step below was checked by an automated test
 (Testcontainers PostgreSQL, Vitest); nobody has yet clicked through the screens in a browser**, so the two timings of
 SC-005 and the manual keyboard and phone-width checks of T049 are still open (see "Not done").
 
-## 1. Salary history (US1, SC-001)
+## 1. Designation defaults and salary history (US1, SC-001)
+
+Since the amendment a designation's amount is only a **suggested default**; the same history, append-only and audit
+rules apply to it, and it changes nobody's pay.
 
 | Step | Outcome | Evidence |
 | --- | --- | --- |
@@ -38,8 +43,10 @@ SC-005 and the manual keyboard and phone-width checks of T049 are still open (se
 | A transfer between Schools with different weekly offs (no day twice or lost) | Pass | `PayableDaysCalculatorTest`, `PayRulesCalendarTest` |
 | An exit mid-month; a holiday month; a month with no working days (`NoWorkingDays`, no division) | Pass | `PayableDaysCalculatorTest`, `PayRulesCalendarTest` |
 | A Teacher with no recorded salary is `NoSalary`, never the designation's amount, never zero | Pass | `PayRulesTest.aTeacherWithNoRecordedSalary...` |
-| A Manager: designation salary, joining date starts the month, no designation / no salary give stated reasons | Pass | `PayRulesTest` |
-| A Manager's unpaid days are `Unavailable`; the total is `Cannot` | Pass | `PayRulesTest.aManagersUnpaidDays...` |
+| A Manager is paid their **own** salary (not the designation's); the joining date starts the month; with none recorded the reason is `PERSON_HAS_NO_RECORDED_SALARY`, never zero | Pass | `PayRulesTest` |
+| Two Managers on one designation get different salaries; a new designation default or one Manager's raise changes nobody else's answer | Pass | `PayRulesTest.twoManagersOnOneDesignation...` |
+| A staff member (Admin, Director, System by user account) is paid their own salary between their joining and exit dates; a user who is not staff is `NOT_EMPLOYED` | Pass | `PayRulesTest` (staff cases) |
+| A Manager's and a staff member's unpaid days are `Unavailable`; the total is `Cannot` | Pass | `PayRulesTest.aManagersUnpaidDays...`, `aStaffMemberWithNoSalaryOrNoAttendance...` |
 | A raise mid-month values each unpaid day at its own day's salary | Pass | `LossOfPayCalculatorTest`, `PayRulesTest.aMidMonthRaise...` |
 | Same inputs give the same answer; the bulk forms equal the single forms | Pass | `PayRulesTest.theSameInputsGiveTheSameAnswer...` |
 | Bulk forms run in a fixed number of queries for 300 people; 300 salaries in under 2 s | Pass | `PayRulesBulkTest` |
@@ -50,14 +57,29 @@ SC-005 and the manual keyboard and phone-width checks of T049 are still open (se
 | --- | --- | --- |
 | Zone Manager, Teacher and System get 403 on all five endpoints and no menu item; Admin and Director succeed | Pass | `SalaryStructuresAuthorizationTest`, `PermissionEligibilityTest` (the matrix refuses a grant to them; there is no Edit) |
 | A deep link shows "Not authorized" and fetches nothing | Pass (component level) | Vitest `SalaryStructures.test.tsx`, `PayPolicy.test.tsx`, `MissingSalary.test.tsx`. **Not clicked in a real browser.** |
-| No endpoint or screen model returns a person's pay; `TeacherView` has no salary member | Pass | `PayRulesBoundaryTest` |
+| Only the People endpoints return an individual's pay (to `SALARY_STRUCTURES` holders); the designation and policy responses never carry a person; `TeacherView` has no salary member | Pass | `PayRulesBoundaryTest`, `SalaryStructuresAuthorizationTest` (all nine endpoints) |
 
 ## 6. Gaps before payroll (US4, SC-006)
 
 | Step | Outcome | Evidence |
 | --- | --- | --- |
-| A Manager designation with Managers and no salary is flagged with the count; recording a salary clears it | Pass | `MissingSalaryReportTest` |
-| A Teacher designation counts Teachers with no salary of their own, whatever the designation's amount; carries the "only a default" note | Pass | `MissingSalaryReportTest`, `SalaryStructureApiTest.theTeacherNoteIsOnTeacherDesignationsOnly` |
+| A designation is flagged with the number of its holders (Managers or Teachers) who have no salary of their own; the designation's amount never clears it, only the person's own salary does | Pass | `MissingSalaryReportTest` |
+| Every designation says its amount is only a suggested default | Pass | `SalaryStructureApiTest.everyDesignationSaysItsAmountIsOnlyASuggestedDefault` |
+
+## 7. Each person's own salary (amendment 2026-10-11, US5)
+
+| Step | Outcome | Evidence |
+| --- | --- | --- |
+| Two Managers on one designation: record 50,000 and 65,000; each has their own, neither affects the other or the designation | Pass | `PersonSalaryApiTest.twoManagersOnOneDesignationKeepDifferentSalaries` |
+| A raise is a new row, the earlier row is unchanged, the last recorded wins a tie, history newest first | Pass | `PersonSalaryApiTest.aRaiseIsANewRow...` |
+| A staff member (Director, Admin) gets a salary and joining / exit dates; an exit before the joining date is refused | Pass | `PersonSalaryApiTest.aStaffMemberGets...` |
+| Zero, negative, 100.123, over the maximum, no amount, no date, a date before this month, a note over 500 characters: each refused with the problem named, nothing stored, no audit entry | Pass | `PersonSalaryApiTest.everyBadSalary...`, `PayrollValidationTest` |
+| A Teacher is refused (changed on the Teachers screen); unknown people are 404; dates are for staff only | Pass | `PersonSalaryApiTest.aTeachersSalaryIsNotWrittenHere...` |
+| The People list: Teachers read-only with their own salary; filters by kind, name and "without a salary"; pages | Pass | `PersonSalaryApiTest.theListShowsTeachersReadOnly...` |
+| The designation's default is offered as a suggestion and never saved as the person's salary | Pass | `PersonSalaryApiTest.theDesignationDefaultIsOffered...`, Vitest `PersonSalary.test.tsx` |
+| Every recorded salary and changed date is audited (`PERSON_SALARY`, `STAFF_EMPLOYMENT`) | Pass | `PersonSalaryApiTest.everyRecordedSalary...` |
+| `person_salary` rows cannot be updated or deleted; invalid rows are refused by the database | Pass | `PayrollAppendOnlyTest.aPersonSalaryRow...` |
+| The People tab, a person's page, the form with the suggestion, staff dates, per-role visibility and axe in light and dark | Pass (component level) | Vitest `People.test.tsx`, `PersonSalary.test.tsx`; **not clicked in a real browser** |
 
 ## Not done
 
@@ -69,8 +91,11 @@ SC-005 and the manual keyboard and phone-width checks of T049 are still open (se
 - **Amendment A2 to spec 008 is not built**, so unpaid days come from the status-code category fallback (research.md,
   section 4 notes). The seeded absent code `A` is in the LEAVE category, so an absence is a LEAVE-category mark that no
   leave request backs. A hand-entered `L` mark with no request is therefore also treated as an absence.
-- The brief demo-data seeder (`PayrollDevSeeder`) was added; it has been started by `DevSeedTest` but nobody has looked at
-  the seeded list in the browser.
+- The demo-data seeder (`PayrollDevSeeder`) now seeds suggested defaults and the salaries of Manoj, Asha and Divya, and
+  leaves the System user and the Teachers without one. `DevSeedTest` starts it and the live API returns the seeded
+  People list; nobody has looked at it in the browser.
+- **Existing installations have no Manager or staff salaries** until they are entered through the People tab; payroll
+  reports each such person as having no salary, never zero.
 
 ## Financial review of the formulas (T051, Constitution Principle IX)
 
@@ -78,8 +103,9 @@ A desk check of research.md section 4 against decisions D2, D12 and D13 of `docs
 author's own check; the constitution asks for a financial review before 013b, which still needs a person who owns the
 pay rules to sign off.**
 
-- **D12, fixed monthly salary, versioned by effective date, no components**: `designation_salary` and the Teacher's own
-  history are append-only dated rows; the one in effect on a date is the latest on or before it (`SalaryResolver`). Agrees.
+- **D12 (amended 2026-10-11), fixed monthly salary per person, versioned by effective date, no components**: a
+  Teacher's own history (spec 005) and `person_salary` (Managers and staff) are dated rows; the one in effect on a date is
+  the latest on or before it (`SalaryResolver`). `designation_salary` is a suggestion only and is never read as pay. Agrees.
 - **D12, loss of pay = salary ÷ the month's working days, per unpaid day**: `LossOfPayCalculator.fullDay`, with the
   salary in effect on the unpaid day and the working days of that day's month on that day's School calendar. Agrees.
   Rounding is applied once, to the month total, to a whole rupee by the policy's rule (clarification 1).

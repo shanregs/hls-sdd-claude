@@ -141,7 +141,7 @@ export function DesignationSalaryPage() {
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="h6" component="h2" gutterBottom>
-          Salary in effect today
+          Suggested default in effect today
         </Typography>
         {detail.inEffect ? (
           <Typography>
@@ -149,23 +149,17 @@ export function DesignationSalaryPage() {
             {formatDate(detail.inEffect.effectiveOn)}
           </Typography>
         ) : (
-          <Typography color="text.secondary">No salary yet</Typography>
+          <Typography color="text.secondary">No default yet</Typography>
         )}
-        {detail.teacherDefaultNote && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {detail.teacherDefaultNote} A Teacher is paid the salary on their
-            own record, never this amount.
-          </Typography>
-        )}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {detail.defaultNote} Everyone is paid their own salary, set on the
+          People tab.
+        </Typography>
         {detail.missingSalary.flag && (
           <Alert severity="warning" sx={{ mt: 2 }}>
             {detail.missingSalary.people}{" "}
-            {detail.missingSalary.people === 1 ? "person has" : "people have"}{" "}
-            no salary
-            {detail.missingSalary.note
-              ? `: ${detail.missingSalary.note.toLowerCase()}`
-              : ""}
-            .
+            {detail.missingSalary.people === 1 ? "person holds" : "people hold"}{" "}
+            this designation without a salary of their own.
           </Alert>
         )}
       </Paper>
@@ -175,7 +169,7 @@ export function DesignationSalaryPage() {
           variant="outlined"
           component="form"
           noValidate
-          aria-label="Record a salary"
+          aria-label="Record a suggested default"
           sx={{ p: 2, mb: 2 }}
           onSubmit={(e) => {
             e.preventDefault();
@@ -183,11 +177,12 @@ export function DesignationSalaryPage() {
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>
-            Record a salary
+            Record a suggested default
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            The new salary applies from its date. Earlier rows are kept as they
-            are, and a mistake is fixed by recording a new row.
+            The new default applies from its date. Earlier rows are kept as they
+            are, and a mistake is fixed by recording a new row. It changes
+            nobody&apos;s pay.
           </Typography>
           {serverError && (
             <Alert severity="error" role="alert" sx={{ mb: 2 }}>
@@ -196,13 +191,13 @@ export function DesignationSalaryPage() {
           )}
           {saved && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              The salary was recorded.
+              The default was recorded.
             </Alert>
           )}
           <Stack spacing={2}>
             <TextField
               required
-              label="Monthly salary (₹)"
+              label="Suggested monthly salary (₹)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               error={Boolean(show("amount"))}
@@ -238,7 +233,7 @@ export function DesignationSalaryPage() {
             />
             <Box>
               <Button type="submit" variant="contained" disabled={saving}>
-                Record salary
+                Record default
               </Button>
             </Box>
           </Stack>
@@ -250,7 +245,7 @@ export function DesignationSalaryPage() {
       </Typography>
       <Paper variant="outlined">
         <TableContainer>
-          <Table size="small" aria-label="Salary history, newest first">
+          <Table size="small" aria-label="Default history, newest first">
             <TableHead>
               <TableRow>
                 <TableCell>Salary</TableCell>

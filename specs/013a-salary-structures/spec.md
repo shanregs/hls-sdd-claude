@@ -4,11 +4,24 @@
 
 **Created**: 2026-10-06
 
-**Status**: Draft
+**Status**: Amended 2026-10-11 (every person has their own salary; see Clarifications)
 
-**Input**: User description: "013a-salary-structures: The salary structure and pay policy that the monthly payroll (spec 013b) will use. A fixed monthly salary for each designation (spec 005a) with an effective date, versioned and never overwritten; a Manager's salary is the structure of their designation, a Teacher's is the salary on their record; loss of pay for each unpaid day is the monthly salary divided by the month's working days; pro-rata rules for joining, transfer and exit (a Teacher is paid only for days placed in a School, training is unpaid); the pay month is the calendar month. Admin and Director keep it under OPERATIONS → Salary Structures. Module `payroll`. Full source: docs/spec-inputs/013a-salary-structures.md."
+**Input**: User description: "013a-salary-structures: The salary structure and pay policy that the monthly payroll (spec 013b) will use. A fixed monthly salary for each person (Teacher, Manager, Admin, Director and other staff) with an effective date, versioned and never overwritten, because people on the same designation are paid differently; a designation carries only a suggested default amount (spec 005a); loss of pay for each unpaid day is the monthly salary divided by the month's working days; pro-rata rules for joining, transfer and exit (a Teacher is paid only for days placed in a School, training is unpaid); the pay month is the calendar month. Admin and Director keep it under OPERATIONS → Salary Structures. Module `payroll`. Full source: docs/spec-inputs/013a-salary-structures.md."
 
 ## Clarifications
+
+### Session 2026-10-11 (amendment: salary belongs to the person, not the designation)
+
+HLS has no fixed pay scale. People on the same designation are paid different amounts, and the amount is agreed when a
+person is recruited. This replaces the earlier rule that a Manager is paid their designation's salary (decision D12 of
+`docs/spec-roadmap.md` is amended: a fixed monthly salary **per person**, versioned by effective date).
+
+- Q: Whose salary does payroll use? → A: Every person's own. A Teacher's is the salary on their record (spec 005, which spec 016's accepted offer already writes). A Manager's and any other staff member's is recorded in this spec as a dated, append-only history of their own. A designation's amount is never used as anyone's pay.
+- Q: What is a designation's amount for, then? → A: Only a suggested default shown when a person's salary is entered, so a recruiter starts from a typical figure. It can be left unset.
+- Q: Who counts as "staff" for pay, given Admin and Director have no Manager or Teacher record? → A: Anyone with a login who holds the Admin, Director or System role; they are identified by their user account. Their joining and exit dates are kept in this spec (a Manager's come from spec 005a, a Teacher's from placements).
+- Q: May a screen show an individual person's pay? → A: Yes, but only the People list and a person's salary history under OPERATIONS → Salary Structures, to Admin and Director (the `SALARY_STRUCTURES` holders). No other screen, role or profile shows it. This replaces the earlier "no screen shows an individual's pay" rule (old FR-016).
+- Q: Where is a Teacher's salary entered? → A: Where it is today, on the Teachers screen (spec 005, `TEACHER_SALARY`). The People list shows a Teacher's salary in effect read-only and links there, so there is one place to change it.
+- Q: What does "no salary" mean for a Manager or staff member? → A: Nothing recorded on or before the date: it is reported as such and never as zero (as for a Teacher).
 
 ### Session 2026-10-08
 
@@ -20,10 +33,11 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Record the Salary of a Designation (Priority: P1) 🎯 MVP
+### User Story 1 - Record a Suggested Salary for a Designation (Priority: P2)
 
-An Admin or Director opens Salary Structures, sees every designation (spec 005a) with the monthly salary in effect today,
-and records a new salary for one of them with an effective date. The earlier salary is not changed: both stay in that
+An Admin or Director opens Salary Structures → Designation defaults, sees every designation (spec 005a) with its suggested
+monthly salary in effect today, and records a new suggested salary for one of them with an effective date. It is only
+the starting figure offered when a person's own salary is entered; nobody is paid it. The earlier salary is not changed: both stay in that
 designation's history, and the new one applies from its date. There are no pay components; a salary is one fixed
 monthly amount in rupees.
 
@@ -91,10 +105,10 @@ hand-computed figures.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Manager with a designation that has a salary, **When** their salary on a date is asked for, **Then** it
-   is the salary of their designation in effect on that date.
+1. **Given** a Manager or other staff member with a recorded salary, **When** their salary on a date is asked for,
+   **Then** it is their own salary in effect on that date, whatever their designation or the designation's default.
 2. **Given** a Teacher, **When** their salary on a date is asked for, **Then** it is the salary on their own record
-   (spec 005 salary history) in effect on that date; the designation's salary is never used for a Teacher's pay.
+   (spec 005 salary history) in effect on that date; a designation's amount is never used for anyone's pay.
 3. **Given** a month with 26 working days and a salary of ₹26,000, **When** the value of one day of loss of pay is asked
    for, **Then** it is ₹1,000, and ₹500 for a half day.
 4. **Given** a Teacher whose first School assignment starts on the 11th, **When** the payable days of that month are
@@ -105,10 +119,10 @@ hand-computed figures.
    none lost between the two.
 6. **Given** a Teacher who has exited or is between Schools, **When** the payable days are asked for, **Then** days
    after the exit date or with no current School are not payable.
-7. **Given** a Manager who joined mid-month or exits mid-month, **When** the payable days are asked for, **Then** the
-   working days on the default calendar from the joining date, or up to the exit date, are payable.
-8. **Given** a person with no salary in effect (no designation, no salary yet for it, or none on the Teacher's
-   record), **When** the salary is asked for, **Then** the answer says so explicitly; it is never zero.
+7. **Given** a Manager or other staff member who joined mid-month or exits mid-month, **When** the payable days are asked
+   for, **Then** the working days on the default calendar from the joining date, or up to the exit date, are payable.
+8. **Given** a person with no salary in effect (nothing recorded for them on or before the date), **When** the salary is
+   asked for, **Then** the answer says so explicitly; it is never zero.
 9. **Given** a month with no working days, **When** the value of a day of loss of pay is asked for, **Then** the
    answer says the month has no working days; it never divides by zero.
 10. **Given** a Manager, **When** the unpaid days of a month are asked for before spec 032 is built, **Then** the
@@ -118,9 +132,10 @@ hand-computed figures.
 
 ### User Story 4 - See What Is in Effect and Why It Changed (Priority: P2)
 
-An Admin or Director opens a designation to see its full history (each salary, its effective date, who recorded it and
-when, and any note), and the history of the pay policy. Every change appears in the audit log with the prior and new
-value. A designation that has Managers or Teachers without a salary is flagged so the gap is found before payroll.
+An Admin or Director opens a person to see their full salary history (each salary, its effective date, who recorded it and
+when, and any note), a designation to see its suggested-default history, and the history of the pay policy. Every change
+appears in the audit log with the prior and new value. People without a salary are flagged, and so are the designations
+that have such people, so the gap is found before payroll.
 
 **Why this priority**: History is what makes past months reproducible and a change explainable. It is valuable but
 the structures work without the screen.
@@ -134,10 +149,46 @@ who and when; find the matching audit entries; see the flag on a designation tha
    first, with the amount, effective date, who recorded it, when, and the note.
 2. **Given** any change to a salary or the policy, **When** the audit log is opened, **Then** it shows who, when, and
    the prior and new values.
-3. **Given** a designation that Managers use but that has no salary in effect today, **When** the list is opened,
-   **Then** it is flagged with the number of people affected.
-4. **Given** a Teacher designation, **When** its row is opened, **Then** a note says the amount is only the default
-   offered when a Teacher's salary is set; the Teacher's own recorded salary is what is paid.
+3. **Given** a designation held by Managers or Teachers who have no salary of their own in effect today, **When** the
+   list is opened, **Then** it is flagged with the number of people affected.
+4. **Given** any designation, **When** its row is opened, **Then** a note says the amount is only a suggested default
+   for entering a person's salary; each person's own salary is what is paid.
+
+---
+
+### User Story 5 - Record Each Person's Own Salary (Priority: P1) 🎯 MVP
+
+When a Manager, Admin, Director or other staff member is recruited, an Admin or Director records that person's own
+monthly salary with an effective date, starting from the designation's suggested default if there is one. Two people on
+the same designation can have different salaries. A later raise or correction is a new row with its date; earlier rows
+stay. A Teacher's salary is entered where it is today (the Teachers screen) and shown here read-only. The People list
+shows everyone with their salary in effect and flags the people who have none.
+
+**Why this priority**: Pay differs person to person, so the person's own salary is the only thing payroll can use.
+Without it nobody but a Teacher can be paid.
+
+**Independent Test**: Record ₹50,000 for one Manager and ₹65,000 for another on the same designation, and see each
+person's own salary in effect, the first Manager's unchanged by the second; record a staff member's salary and joining
+date and see them paid from that date.
+
+**Acceptance Scenarios**:
+
+1. **Given** two Managers on one designation, **When** an Admin records ₹50,000 for one and ₹65,000 for the other,
+   **Then** each person's salary in effect is their own, and neither affects the other or the designation.
+2. **Given** a person with a salary, **When** a new one is recorded with a later effective date, **Then** both rows are
+   kept, the earlier unchanged, and the salary on any date is the latest on or before it (the one recorded last on a tie).
+3. **Given** a designation with a suggested default, **When** the salary form for a person on it opens, **Then** the
+   default is shown as a suggestion and is not saved unless the Admin enters it as that person's salary.
+4. **Given** an Admin, a Director or other staff member, **When** their salary and joining date are recorded, **Then**
+   payroll can ask for their salary and payable days like anyone else's; their exit date ends their pay.
+5. **Given** the People list, **When** it is filtered to people without a salary, **Then** it shows every Manager,
+   Teacher and staff member with no salary in effect today.
+6. **Given** a Teacher, **When** they appear in the People list, **Then** their salary in effect is shown read-only with a
+   link to the Teachers screen, where it is changed; this spec never writes a Teacher's salary.
+7. **Given** a Zone Manager, Teacher or System user, **When** they try the People list or a person's salary, **Then**
+   it is refused on the server and not shown in any menu.
+8. **Given** the form, **When** the amount is zero, negative, has more than two decimals or exceeds ₹9,999,999.99, or the
+   date is missing or earlier than the first day of the current month, **Then** it is refused and the problem is named.
 
 ---
 
@@ -147,11 +198,15 @@ who and when; find the matching audit entries; see the flag on a designation tha
   counted by working days; payroll receives the salary on each date, not one figure per month.
 - Two people record a salary for the same designation at the same moment: both are kept; the later recorded is in effect
   for that date.
-- A designation is retired: its salary history stays and is still used for Managers who hold it; it cannot be newly
-  chosen for people (spec 005a).
-- A designation belongs to Teachers or to Managers, never both (spec 005a), so a salary row is for one kind of person.
-- A Teacher has a salary on their record but no designation, or a designation with no salary: the Teacher's own recorded
-  salary is used; the missing designation salary only affects the default shown.
+- A designation is retired: its suggested-default history stays and it can still be given a new default; it cannot be
+  newly chosen for people (spec 005a).
+- A designation belongs to Teachers or to Managers, never both (spec 005a), so a suggested default is for one kind of person.
+- A person has no designation, or a designation with no default: their own recorded salary is used regardless; the
+  missing default only means no suggestion is shown.
+- Two people on one designation have different salaries: each is paid their own; changing the designation's default
+  changes nobody's pay.
+- A person holds more than one role (for example Admin and Director): they are one person with one salary history,
+  keyed by their user account.
 - The effective date of a salary is before the person's joining or first assignment: it is accepted (it is a rate, not a
   payment); nothing is paid for days before joining.
 - A School's working calendar changes after a month is computed: the answers for a month follow the calendar in force
@@ -165,25 +220,27 @@ who and when; find the matching audit entries; see the flag on a designation tha
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST let an Admin or Director record a fixed monthly salary in rupees for a designation with an
-  effective date, a note (optional), and record who entered it and when.
-- **FR-002**: The system MUST keep every salary row for a designation; a row MUST NOT be edited or deleted, and a change
-  is a new row.
-- **FR-003**: The system MUST determine the salary of a designation on a date as the latest row with an effective date on
-  or before it, and where several rows share that date, the one recorded last.
+- **FR-001**: The system MUST let an Admin or Director record a fixed monthly salary in rupees for a **person** (a
+  Manager or a staff member identified by their user account) with an effective date, a note (optional), and record who
+  entered it and when. It MUST also let them record a suggested default amount for a designation in the same way.
+- **FR-002**: The system MUST keep every salary row, for a person or a designation; a row MUST NOT be edited or deleted,
+  and a change is a new row.
+- **FR-003**: The system MUST determine the salary of a person (or the default of a designation) on a date as the latest
+  row with an effective date on or before it, and where several rows share that date, the one recorded last.
 - **FR-004**: The system MUST refuse a salary that is zero or negative, has more than two decimals, has no effective
   date, or has an effective date earlier than the first day of the current month.
-- **FR-005**: The system MUST apply a designation's salary to a Manager only; a Teacher's salary MUST come from the
-  Teacher's own salary history, and the designation's salary MUST be offered only as the default when a Teacher's salary
-  is set. A Teacher with no salary on their own record has no salary in effect, even if their designation has one.
+- **FR-005**: The system MUST take every person's salary from their own history: a Teacher's from the Teacher's own
+  salary history (spec 005), a Manager's or staff member's from the history recorded in this spec. A designation's amount
+  MUST NOT be used as anyone's pay and MUST be offered only as the suggested default when a salary is entered. A person
+  with no salary of their own has no salary in effect, even if their designation has a default.
 - **FR-006**: The system MUST keep the pay policy as dated versions that are never overwritten, holding: the value of a
   day of loss of pay (the monthly salary divided by the working days of that month), the fraction a half day counts
   (one half), the rounding of amounts (the nearest rupee), and the payroll month (the calendar month).
 - **FR-007**: The system MUST refuse a policy value outside its range, MUST refuse a policy version whose effective date
   is missing or earlier than the first day of the current month, and MUST use, for any date, the policy version in
   effect on that date.
-- **FR-008**: The system MUST answer, for a person and a date, the monthly salary in effect, or state that there is none;
-  it MUST NOT answer zero for a missing salary.
+- **FR-008**: The system MUST answer, for a person (Teacher, Manager or staff member) and a date, the monthly salary in
+  effect, or state that there is none; it MUST NOT answer zero for a missing salary.
 - **FR-009**: The system MUST answer, for a person and a month, the value of one day and of a half day of loss of pay,
   computed from the salary in effect and the working days of the month, and MUST state when the month has no working
   days. The value of a day and of a half day MUST be kept at full precision (not rounded); rounding per the pay policy
@@ -191,7 +248,7 @@ who and when; find the matching audit entries; see the flag on a designation tha
   valued at the salary in effect on that day, divided by the month's working days.
 - **FR-010**: The system MUST answer, for a person and a month, the payable working days: for a Teacher, only days placed
   in a School (from the first School assignment, with training unpaid, ending at transfer or exit) counted on that
-  School's working calendar; for a Manager, the days from the joining date to the exit date (if any) on the default
+  School's working calendar; for a Manager or staff member, the days from the joining date to the exit date (if any) on the default
   calendar.
 - **FR-011**: The system MUST count each day once when a person changes School within a month, so no day is paid twice or
   lost.
@@ -199,30 +256,43 @@ who and when; find the matching audit entries; see the flag on a designation tha
   of Loss-of-Pay leave; a half day counts as half; a Manager's missed check-in raises an alert but is not unpaid by
   itself. Until Manager attendance exists (spec 032), a Manager's unpaid days are reported as not available, with a
   stated reason; they are never reported as none.
-- **FR-013**: The system MUST show Admin and Director, under OPERATIONS → Salary Structures, each designation with the
-  salary in effect, a flag where people hold a designation that has no salary, each designation's full history, and the
-  pay policy with its history.
+- **FR-013**: The system MUST show Admin and Director, under OPERATIONS → Salary Structures, every Manager, Teacher and
+  staff member with their salary in effect and a flag for those with none, each person's full salary history, each
+  designation with its suggested default and a flag where people hold it without a salary of their own, and the pay
+  policy with its history.
 - **FR-014**: The system MUST audit every salary and policy change with who, when, and the prior and new values.
 - **FR-015**: The system MUST hide Salary Structures from a Zone Manager, Teacher and System, and MUST refuse their
   requests for it on the server, not only in the menu.
 - **FR-016**: The system MUST keep all salary and policy data out of other roles' screens and out of the Teacher's
-  profile; no screen of this spec shows an individual person's pay.
+  profile. An individual person's pay is shown only in the People list and a person's salary history, only to holders of
+  `SALARY_STRUCTURES` (Admin and Director by default); no other screen, role or response carries it.
 - **FR-017**: The system MUST make the answers of FR-008 to FR-012 and FR-018 available to the payroll run as one public
   interface, so payroll and reports never read the underlying tables or reimplement the rules.
+- **FR-019**: The system MUST identify staff other than Managers and Teachers by their user account (a user holding the
+  Admin, Director or System role), record their joining and exit dates, and treat them as payable only between those
+  dates; a user with several roles is one person with one salary history.
+- **FR-020**: The system MUST show, when a person's salary is entered, the suggested default of their designation if it
+  has one, MUST NOT save it as the person's salary unless the user enters it, and MUST NOT change anyone's pay when a
+  designation's default changes.
+- **FR-021**: The system MUST NOT write a Teacher's salary; it MUST show a Teacher's salary in effect read-only and
+  point to the Teachers screen where it is changed (spec 005).
 - **FR-018**: The system MUST answer, for a person and a month, the total loss of pay: each unpaid day valued at the
   salary in effect on that day, summed and rounded once by the pay policy. If any unpaid day has no salary, or its month
   has no working days, the answer MUST say so and give no figure.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Salary Structure Row**: a monthly salary in rupees for one designation, with an effective date, a note, who recorded
-  it and when. Append-only. Many rows per designation form its history.
+- **Person Salary Row**: a monthly salary in rupees for one Manager or staff member, with an effective date, a note, who
+  recorded it and when. Append-only. Many rows per person form their history. (A Teacher's rows are spec 005's.)
+- **Staff Employment**: a staff member's joining and exit dates, kept per user account; changes are audited.
+- **Designation Default Row**: a suggested monthly salary for one designation, with an effective date, a note, who
+  recorded it and when. Append-only. Never used as pay.
 - **Pay Policy Version**: the loss-of-pay, half-day, rounding and payroll-month rules with an effective date, who
   recorded it and when. Append-only.
 - **Designation** (spec 005a): the named job title a structure belongs to; applies to Teachers or Managers; may be
   retired.
-- **Salary in Effect** (derived): the monthly salary of a person on a date, from the designation (Manager) or the
-  person's own record (Teacher), or "none".
+- **Salary in Effect** (derived): the monthly salary of a person on a date, from their own history (Teacher: spec 005;
+  Manager and staff: this spec), or "none".
 - **Payable Days** (derived): the working days of a month for which a person is paid, after joining, assignment,
   transfer and exit rules.
 
@@ -238,7 +308,8 @@ who and when; find the matching audit entries; see the flag on a designation tha
 
 **New permission keys**: `SALARY_STRUCTURES` (`VIEW`, `CREATE`; structures and the pay policy; there is no `EDIT` because rows are append-only). Seeded to Admin
 and Director only; a Zone Manager is deliberately left out because salary rates are payroll data and these screens are
-organization-wide with no per-Zone scope. Manager, Teacher and System are not eligible; only Admin and Director can hold
+organization-wide with no per-Zone scope. The People list and a person's salary history are under the same module, so
+only Admin and Director can see an individual's pay. Manager, Teacher and System are not eligible; only Admin and Director can hold
 this module. Only Admin,
 Director and System edit the matrix. The constitution's Default role access matrix gets a Salary Structures row when
 this spec merges.
@@ -255,11 +326,13 @@ this spec merges.
   mid-month joiner, a mid-month transfer between two Schools with different calendars, an exit, and a month with
   holidays, with no day counted twice or lost.
 - **SC-004**: A Zone Manager, Teacher and System user get no menu item and a refusal on every request to this
-  module, proved by a test for each endpoint; no screen outside Salary Structures shows a designation's salary rate.
-- **SC-005**: An Admin can record a designation's salary in under 1 minute and find the salary in effect on any date from
-  its history in under 30 seconds.
-- **SC-006**: Before payroll, an Admin can see in one screen every designation that people hold but that has no salary
-  in effect.
+  module, proved by a test for each endpoint; no screen outside Salary Structures shows any salary, and the People list is reachable only by Admin and Director.
+- **SC-005**: An Admin can record a person's salary in under 1 minute and find the salary in effect on any date from
+  their history in under 30 seconds.
+- **SC-006**: Before payroll, an Admin can see in one screen every Manager, Teacher and staff member who has no salary in
+  effect, and every designation that such people hold.
+- **SC-008**: Two people on one designation with different recorded salaries always get their own salary from every
+  question payroll asks; changing a designation's default or one person's salary changes no one else's answer.
 - **SC-007**: A missing salary, a missing designation or a month with no working days never produces a zero or an error
   page: each produces a stated reason that payroll can show.
 
@@ -273,17 +346,20 @@ this spec merges.
   (leave, including the Loss-of-Pay type to be added by amendment A3), spec 012 (the first School assignment is a
   Teacher's reporting date), spec 003 (audit) and spec 016 (the accepted offer's package becomes the Teacher's first
   salary entry at the first assignment) are implemented and merged.
-- Decisions D2, D12 and D13 of `docs/spec-roadmap.md` fix the rules: a fixed monthly salary per designation with no
-  pay components, loss of pay as salary divided by the month's working days, and pay only for days placed in a School.
+- Decisions D2, D12 (amended 2026-10-11) and D13 of `docs/spec-roadmap.md` fix the rules: a fixed monthly salary **per
+  person** with no pay components, loss of pay as salary divided by the month's working days, and pay only for days
+  placed in a School.
 - Defaults chosen where the input left a point open, settled in the clarifications above: amounts round to the nearest
   rupee, once, on the month's total; a mid-month change applies from its effective date by working days; an effective
   date cannot be earlier than the first day of the current month, so no arrears arise here; a Manager's unpaid days are
   an absence with no approved leave and Loss-of-Pay leave, and a missed check-in alone is not unpaid; the Teacher's own
   salary is always the amount paid.
-- A Manager's salary is the salary of the designation they hold on the date. If spec 005a keeps only the current
-  designation, a mid-month change of designation is valued at the current one, and this limit is stated in 005a's clarify.
+- A Manager's salary is their own, whatever designation they hold, so a change of designation never changes their pay.
+  A Manager's joining and exit dates come from spec 005a; a staff member's are kept here.
+- An existing installation has no Manager or staff salaries yet; they are entered through the People list, and payroll
+  reports each person without one as having no salary until they are.
 - Statutory deductions (PF, ESI, TDS), bonuses and arrears are not in the Director deck and are out of scope here.
-- Out of scope: the payroll run, payslips and payment status (013b), incentives (030), reimbursements (015), any
-  individual's pay shown on a screen, and changes to the offer form of spec 016 (this spec only exposes the designation
-  default so that a later change can show it).
+- Out of scope: the payroll run, payslips and payment status (013b), incentives (030), reimbursements (015), a
+  person's pay shown to anyone but Admin and Director, a recruitment offer for Managers and staff (their salary is
+  entered here), and changes to the offer form of spec 016.
 - Amounts are Indian Rupees and dates are shown as DD/MM/YYYY (Constitution, Additional Constraints).

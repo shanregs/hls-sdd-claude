@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Person Salary
+description: "One person (kind TEACHER, MANAGER or STAFF; personId is the Teacher id, Manager id or the user id for staff): the salary in effect, the suggested default of their designation, and for a Manager or staff member the full history, newest first. 404 for an unknown person. Needs SALARY_STRUCTURES.VIEW."
+url: "{{baseUrl}}/api/v1/salary-structures/people/MANAGER/{{managerId}}"
+method: GET
+order: 7000

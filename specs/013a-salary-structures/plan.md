@@ -9,9 +9,11 @@
 Adds the `payroll` bounded context (Constitution Principle VII) with its first half: the rules payroll (013b) will
 read. Nothing here computes a payslip.
 
-- **Salary structure**: an append-only list of fixed monthly salaries per designation (spec 005a), each with an
-  effective date, note, who and when. The salary in effect on a date is the latest row on or before it, ties broken by
-  the row recorded last.
+- **Salary**: an append-only list of fixed monthly salaries **per person** (amended 2026-10-11: HLS has no fixed pay
+  scale, so people on one designation are paid differently), each with an effective date, note, who and when. A
+  Teacher's is spec 005's record; a Manager's and a staff member's (Admin, Director, System, by user account) is
+  `person_salary`. A designation keeps only a suggested default (`designation_salary`) shown when a salary is entered.
+  The salary in effect on a date is the latest row on or before it, ties broken by the row recorded last.
 - **Pay policy**: append-only dated versions holding the loss-of-pay divisor rule, the half-day fraction, the
   rounding rule and the payroll month. Version 1 is seeded by the migration (calendar month, working-day divisor,
   half = 0.5, nearest rupee).
@@ -19,8 +21,9 @@ read. Nothing here computes a payslip.
   effect for a person on a date, the loss-of-pay value of a day, the payable days of a month, and the unpaid days
   of a month. Every answer is a sealed result that carries a stated reason when it cannot be given (never zero,
   never a divide by zero).
-- **Screens**: OPERATIONS → Salary Structures for Admin and Director (designation list with the salary in effect and a
-  "people without a salary" flag, per-designation history and record form, pay policy and its history).
+- **Screens**: OPERATIONS → Salary Structures for Admin and Director: a People list (everyone with their salary in
+  effect, a "no salary" filter), a person's history and record form (Teachers read-only, linking to the Teachers
+  screen), the designation defaults, and the pay policy with its history.
 - **Clarified rules (spec session 2026-10-08)**: rounding only on the monthly total; a mid-month salary change values
   each unpaid day at the salary of that day; a Teacher without a record salary has "no salary", never the designation's;
   `SALARY_STRUCTURES` has `VIEW` and `CREATE` only; a policy version cannot start before the first day of the current

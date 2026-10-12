@@ -1,6 +1,6 @@
 $kind: http-request
 name: Record Designation Salary
-description: "Appends a salary from an effective date; earlier rows are never changed, and two rows on one date go to the one recorded last. Answers 201. Refused with 400 and the problem named: amount missing, zero, negative, more than two decimals or above 9,999,999.99; effectiveOn missing or before the first day of the current month; note over 500 characters. 404 for an unknown designation; a retired designation is accepted. Each recorded salary writes one DESIGNATION_SALARY entry in Change History. Needs SALARY_STRUCTURES.CREATE."
+description: "Appends a suggested default salary for the designation from an effective date; it changes nobody's pay; earlier rows are never changed, and two rows on one date go to the one recorded last. Answers 201. Refused with 400 and the problem named: amount missing, zero, negative, more than two decimals or above 9,999,999.99; effectiveOn missing or before the first day of the current month; note over 500 characters. 404 for an unknown designation; a retired designation is accepted. Each recorded salary writes one DESIGNATION_SALARY entry in Change History. Needs SALARY_STRUCTURES.CREATE."
 url: "{{baseUrl}}/api/v1/salary-structures/designations/{{designationId}}/salaries"
 method: POST
 headers:

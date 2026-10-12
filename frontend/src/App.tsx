@@ -17,6 +17,7 @@ import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
 import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage";
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
+import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
@@ -262,6 +263,14 @@ export function App() {
           element={
             <RouteGuard>
               <PayPolicyPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/salary-structures/people/:kind/:personId"
+          element={
+            <RouteGuard>
+              <PersonSalaryPage />
             </RouteGuard>
           }
         />

@@ -7,16 +7,15 @@ import java.time.LocalDate;
 public sealed interface SalaryInEffect {
 
     enum Source {
-        /** A Manager's salary: the structure of their designation. */
-        DESIGNATION,
         /** A Teacher's salary: the amount on their own record (spec 005). */
-        TEACHER_RECORD
+        TEACHER_RECORD,
+        /** A Manager's or staff member's salary: the history recorded for that person in spec 013a. */
+        PERSON_RECORD
     }
 
     enum Reason {
-        NO_DESIGNATION("The Manager has no designation on this date."),
-        DESIGNATION_HAS_NO_SALARY("The designation has no salary recorded on or before this date."),
         TEACHER_HAS_NO_RECORDED_SALARY("The Teacher has no salary recorded on their own record."),
+        PERSON_HAS_NO_RECORDED_SALARY("No salary has been recorded for this person on or before this date."),
         NOT_EMPLOYED("The person is not employed on this date.");
 
         private final String message;

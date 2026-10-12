@@ -49,6 +49,41 @@ class PayrollAppendOnlyTest extends MasterDataTestBase {
     }
 
     @Test
+    void aPersonSalaryRowCannotBeUpdatedOrDeletedAndInvalidRowsAreRefused() {
+        UUID id = UUID.randomUUID();
+        jdbc.update(
+                "insert into person_salary (id, person_kind, person_id, amount, effective_on, note, recorded_by, recorded_at)"
+                        + " values (?, 'MANAGER', ?, 50000, current_date, null, ?, now())",
+                id,
+                UUID.randomUUID(),
+                UUID.randomUUID());
+        assertThatThrownBy(() -> jdbc.update("update person_salary set amount = 1 where id = ?", id))
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("append-only");
+        assertThatThrownBy(() -> jdbc.update("delete from person_salary where id = ?", id))
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("append-only");
+        for (String bad : new String[] {"0", "-5", "10000000"}) {
+            assertThatThrownBy(() -> jdbc.update(
+                            "insert into person_salary (id, person_kind, person_id, amount, effective_on, recorded_by,"
+                                    + " recorded_at) values (?, 'STAFF', ?, ?::numeric, current_date, ?, now())",
+                            UUID.randomUUID(),
+                            UUID.randomUUID(),
+                            bad,
+                            UUID.randomUUID()))
+                    .as("amount " + bad)
+                    .isInstanceOf(DataAccessException.class);
+        }
+        assertThatThrownBy(() -> jdbc.update(
+                        "insert into person_salary (id, person_kind, person_id, amount, effective_on, recorded_by,"
+                                + " recorded_at) values (?, 'TEACHER', ?, 1000, current_date, ?, now())",
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        UUID.randomUUID()))
+                .isInstanceOf(DataAccessException.class);
+    }
+
+    @Test
     void aPolicyRowCannotBeUpdatedOrDeleted() {
         assertThatThrownBy(() -> jdbc.update("update pay_policy set half_day_fraction = 0.25"))
                 .isInstanceOf(DataAccessException.class)

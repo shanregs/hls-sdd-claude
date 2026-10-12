@@ -137,14 +137,15 @@ class SalaryStructureApiTest extends PayrollTestBase {
     }
 
     @Test
-    void theTeacherNoteIsOnTeacherDesignationsOnly() {
+    void everyDesignationSaysItsAmountIsOnlyASuggestedDefault() {
         String admin = signInAs(Role.ADMIN).token();
         UUID teacher = designation(admin, "TEACHER");
         UUID manager = designation(admin, "MANAGER");
-        assertThat(entryOf(admin, teacher)).containsKey("teacherDefaultNote");
-        assertThat(entryOf(admin, manager)).doesNotContainKey("teacherDefaultNote");
-        assertThat(get(BASE + "/designations/" + teacher, admin).map()).containsKey("teacherDefaultNote");
-        assertThat(get(BASE + "/designations/" + manager, admin).map()).doesNotContainKey("teacherDefaultNote");
+        for (UUID id : List.of(teacher, manager)) {
+            assertThat(entryOf(admin, id).get("defaultNote").toString()).contains("suggested default");
+            assertThat(get(BASE + "/designations/" + id, admin).map().get("defaultNote").toString())
+                    .contains("suggested default");
+        }
     }
 
     @Test

@@ -44,6 +44,8 @@ function grantFor(actions: string[]) {
 }
 
 const DESIGNATION_ID = "d-1";
+const DEFAULT_NOTE =
+  "A suggested default only: it is offered when a person's salary is entered, and nobody is paid it.";
 
 const LIST = [
   {
@@ -53,6 +55,7 @@ const LIST = [
     retired: false,
     inEffect: { amount: "125000.00", effectiveOn: "2026-11-01" },
     missingSalary: { flag: false, people: 0, note: null },
+    defaultNote: DEFAULT_NOTE,
   },
   {
     designationId: "d-2",
@@ -63,10 +66,9 @@ const LIST = [
     missingSalary: {
       flag: true,
       people: 3,
-      note: "Teachers with no salary of their own",
+      note: "People holding this designation with no salary of their own",
     },
-    teacherDefaultNote:
-      "Only the default offered when a Teacher's salary is set.",
+    defaultNote: DEFAULT_NOTE,
   },
 ];
 
@@ -77,6 +79,7 @@ const DETAIL = {
   retired: false,
   inEffect: { amount: "125000.00", effectiveOn: "2026-11-01" },
   missingSalary: { flag: false, people: 0, note: null },
+  defaultNote: DEFAULT_NOTE,
   history: [
     {
       id: "r2",
@@ -99,15 +102,22 @@ const DETAIL = {
   ],
 };
 
+const NO_PEOPLE = { content: [], page: 0, size: 25, totalElements: 0 };
+
 function json(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
-function mockApi(write: Response = json({ id: "r3" }, 201)) {
+/** The People tab opens first, so every test also needs an answer for it. */
+function mockApi(
+  write: Response = json({ id: "r3" }, 201),
+  list: Response = json(LIST),
+) {
   authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
     if (init?.method) return write;
+    if (url.includes("/people")) return json(NO_PEOPLE);
     if (url.includes("/designations/")) return json(DETAIL);
-    return json(LIST);
+    return list;
   });
 }
 
@@ -138,38 +148,61 @@ function renderAt(path: string, mode: ThemeMode = "light") {
   );
 }
 
+async function openDefaultsTab() {
+  const user = userEvent.setup();
+  await user.click(
+    await screen.findByRole("tab", { name: "Designation defaults" }),
+  );
+  return user;
+}
+
 beforeEach(() => {
   authFetch.mockReset();
   grantFor(["VIEW", "CREATE"]);
   mockApi();
 });
 
-describe("Salary Structures list (spec 013a US1, US4)", () => {
-  it("shows each designation with the salary in effect in rupees and the date as DD/MM/YYYY", async () => {
+describe("Salary Structures page tabs", () => {
+  it("opens on the People tab and offers the designation defaults on the second", async () => {
     renderAt("/operations/salary-structures");
+    expect(
+      await screen.findByRole("tab", { name: "People", selected: true }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Designation defaults" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Pay policy" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Designation defaults tab (spec 013a US1, US4)", () => {
+  it("shows each designation with its suggested default in rupees and the date as DD/MM/YYYY", async () => {
+    renderAt("/operations/salary-structures");
+    await openDefaultsTab();
     expect(await screen.findByText("Principal")).toBeInTheDocument();
     expect(screen.getByText(/₹1,25,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/from 01\/11\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/only suggestions/i)).toBeInTheDocument();
   });
 
-  it("says no salary yet, shows the flag with the number of people and the Teacher note", async () => {
+  it("says no default yet and shows the flag with the number of people who hold it without a salary", async () => {
     renderAt("/operations/salary-structures");
+    await openDefaultsTab();
     await screen.findByText("Primary Teacher");
-    expect(screen.getByText("No salary yet")).toBeInTheDocument();
+    expect(screen.getByText("No default yet")).toBeInTheDocument();
     expect(screen.getByText("3 people")).toBeInTheDocument();
     expect(
-      screen.getByText("Teachers with no salary of their own"),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(
-        /Only the default offered when a Teacher's salary is set/,
+        "People holding this designation with no salary of their own",
       ),
     ).toBeInTheDocument();
   });
 
-  it("filters to the designations that leave people without a salary", async () => {
-    const user = userEvent.setup();
+  it("filters to the designations held by people without a salary", async () => {
     renderAt("/operations/salary-structures");
+    const user = await openDefaultsTab();
     await screen.findByText("Principal");
     await user.click(screen.getByLabelText(/only designations/i));
     expect(screen.queryByText("Principal")).not.toBeInTheDocument();
@@ -177,16 +210,18 @@ describe("Salary Structures list (spec 013a US1, US4)", () => {
   });
 
   it("shows an error state when the list cannot be loaded", async () => {
-    authFetch.mockResolvedValue(json({ reason: "Could not load" }, 500));
+    mockApi(json({}), json({ reason: "Could not load" }, 500));
     renderAt("/operations/salary-structures");
+    await openDefaultsTab();
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not load",
     );
   });
 
   it("shows an empty state when there are no designations", async () => {
-    authFetch.mockResolvedValue(json([]));
+    mockApi(json({}), json([]));
     renderAt("/operations/salary-structures");
+    await openDefaultsTab();
     expect(await screen.findByText("No designations yet.")).toBeInTheDocument();
   });
 
@@ -194,6 +229,7 @@ describe("Salary Structures list (spec 013a US1, US4)", () => {
     "has no accessibility violations in %s mode",
     async (mode) => {
       const { container } = renderAt("/operations/salary-structures", mode);
+      await openDefaultsTab();
       await screen.findByText("Principal");
       const results = await axe(container, {
         runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
@@ -204,13 +240,24 @@ describe("Salary Structures list (spec 013a US1, US4)", () => {
   );
 });
 
-describe("Designation salary page (spec 013a US1)", () => {
+describe("Designation default page (spec 013a US1)", () => {
   const PATH = `/operations/salary-structures/${DESIGNATION_ID}`;
+
+  it("says the amount is only a suggested default", async () => {
+    renderAt(PATH);
+    await screen.findByRole("heading", { name: "Principal" });
+    expect(
+      screen.getByRole("heading", {
+        name: "Suggested default in effect today",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/nobody is paid it/i)).toBeInTheDocument();
+  });
 
   it("shows the history newest first with who, when and the note", async () => {
     renderAt(PATH);
     await screen.findByRole("heading", { name: "Principal" });
-    const table = screen.getByRole("table", { name: /salary history/i });
+    const table = screen.getByRole("table", { name: /default history/i });
     const rows = within(table).getAllByRole("row");
     expect(rows[1]).toHaveTextContent("₹1,25,000.00");
     expect(rows[1]).toHaveTextContent("01/11/2026");
@@ -225,47 +272,39 @@ describe("Designation salary page (spec 013a US1)", () => {
     await screen.findByRole("heading", { name: "Principal" });
     authFetch.mockClear();
 
-    await user.type(screen.getByLabelText(/monthly salary/i), "100.123");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
+    await user.type(
+      screen.getByLabelText(/suggested monthly salary/i),
+      "100.123",
+    );
+    await user.click(screen.getByRole("button", { name: "Record default" }));
     expect(
       screen.getByText("The amount can have at most two decimal places."),
     ).toBeInTheDocument();
 
-    const amount = screen.getByLabelText(/monthly salary/i);
+    const amount = screen.getByLabelText(/suggested monthly salary/i);
     await user.clear(amount);
     await user.type(amount, "0");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
+    await user.click(screen.getByRole("button", { name: "Record default" }));
     expect(
       screen.getByText("The amount must be more than zero."),
     ).toBeInTheDocument();
 
     await user.clear(amount);
     await user.type(amount, "10000000");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
+    await user.click(screen.getByRole("button", { name: "Record default" }));
     expect(screen.getByText(/at most 9,999,999\.99/)).toBeInTheDocument();
     expect(authFetch).not.toHaveBeenCalled();
   });
 
-  it("refuses a date before the first day of this month", async () => {
+  it("records a valid default and reloads the history", async () => {
     const user = userEvent.setup();
     renderAt(PATH);
     await screen.findByRole("heading", { name: "Principal" });
-    await user.type(screen.getByLabelText(/monthly salary/i), "30000");
-    const date = screen.getByLabelText(/effective from/i);
-    await user.clear(date);
-    await user.type(date, "2020-01-01");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
-    expect(
-      screen.getByText(/cannot be before the first day of this month/i),
-    ).toBeInTheDocument();
-  });
-
-  it("records a valid salary and reloads the history", async () => {
-    const user = userEvent.setup();
-    renderAt(PATH);
-    await screen.findByRole("heading", { name: "Principal" });
-    await user.type(screen.getByLabelText(/monthly salary/i), "130000");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
+    await user.type(
+      screen.getByLabelText(/suggested monthly salary/i),
+      "130000",
+    );
+    await user.click(screen.getByRole("button", { name: "Record default" }));
 
     await waitFor(() =>
       expect(authFetch).toHaveBeenCalledWith(
@@ -282,7 +321,7 @@ describe("Designation salary page (spec 013a US1)", () => {
       note: null,
     });
     expect(
-      await screen.findByText("The salary was recorded."),
+      await screen.findByText("The default was recorded."),
     ).toBeInTheDocument();
   });
 
@@ -291,8 +330,11 @@ describe("Designation salary page (spec 013a US1)", () => {
     mockApi(json({ reason: "That designation does not exist." }, 404));
     renderAt(PATH);
     await screen.findByRole("heading", { name: "Principal" });
-    await user.type(screen.getByLabelText(/monthly salary/i), "30000");
-    await user.click(screen.getByRole("button", { name: "Record salary" }));
+    await user.type(
+      screen.getByLabelText(/suggested monthly salary/i),
+      "30000",
+    );
+    await user.click(screen.getByRole("button", { name: "Record default" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "That designation does not exist.",
     );
@@ -317,7 +359,9 @@ describe("per-role visibility (SC-004)", () => {
     grantFor(["VIEW"]);
     renderAt(`/operations/salary-structures/${DESIGNATION_ID}`);
     await screen.findByRole("heading", { name: "Principal" });
-    expect(screen.queryByText("Record a salary")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Record a suggested default"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("History")).toBeInTheDocument();
   });
 

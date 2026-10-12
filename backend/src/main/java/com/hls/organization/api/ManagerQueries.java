@@ -39,4 +39,10 @@ public interface ManagerQueries {
 
     /** For each given designation, how many Managers hold it today (absent key means none). */
     Map<UUID, Long> holderCountsByDesignation(Collection<UUID> designationIds);
+
+    /** For each given designation, the ids of the Managers who hold it today (absent key means none). One query. */
+    Map<UUID, java.util.List<UUID>> holdersByDesignation(Collection<UUID> designationIds);
+
+    /** Every Manager, active or not, ordered by name (spec 013a lists them with their salary). */
+    java.util.List<ManagerRef> allManagers();
 }
