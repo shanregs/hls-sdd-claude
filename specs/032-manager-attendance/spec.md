@@ -109,8 +109,9 @@ count as paid; a third working day with no check-in and no leave shows as an unp
    having no leave; the Manager is told.
 5. **Given** a Manager's own request, **When** a Manager tries to approve it, **Then** it is refused; a Manager never
    decides leave, their own or anyone's.
-6. **Given** a Director's request or an Admin's request, **When** it is decided, **Then** the other of the two decides it
-   (an Admin decides a Director's leave; a Director decides an Admin's), and nobody decides their own.
+6. **Given** a user who holds both the Manager role and the Admin or Director role, **When** they try to decide their
+   own leave request, **Then** it is refused; nobody ever decides their own request. (Leave is for Managers only: an
+   Admin or Director has no attendance or leave here.)
 7. **Given** a Manager with approved full-day leave on a day, **When** they try to check in that day, **Then** it is
    refused with the leave shown; the approver can revoke the leave first if the Manager is in fact working.
    **Given** approved half-day leave on a day, **When** the Manager checks in, **Then** it is accepted and the day counts
@@ -146,7 +147,7 @@ each of the three and the day on the Director's list of missed check-ins; check 
 
 ### User Story 5 - See and Correct the Month (Priority: P1)
 
-A Manager sees their own month and today's plan. An Admin or Director sees all Managers by month, the missed check-ins,
+A Manager sees their own month and today's status. An Admin or Director sees all Managers by month, the missed check-ins,
 and who is on leave today, and can correct a Manager's day with a reason.
 
 **Why this priority**: The Director needs the picture across Managers, and a wrong day (a forgotten check-in, a wrong
@@ -158,7 +159,8 @@ Zone, correct one Manager's forgotten check-in with a reason, and see the correc
 **Acceptance Scenarios**:
 
 1. **Given** a Manager, **When** they open their month, **Then** each day shows its status (worked, field, leave,
-   absent, weekly off, holiday, missed, no check-out), the times and the field-day links, and today's plan is shown.
+   absent, weekly off, holiday, missed, no check-out), the times and the field-day links, and today's status is shown (whether today is a working day, the check-in and
+   check-out so far, the cut-off time, and any leave covering today).
 2. **Given** an Admin or Director, **When** they open the grid, **Then** every Manager is listed by month with a status
    for each day, filterable by Zone, with the list of missed check-ins and the Managers on leave today.
 3. **Given** a day with no record or a wrong record, **When** an Admin or Director corrects it with a reason, **Then**
@@ -247,7 +249,7 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   refused with the month named.
 - A Manager's joining date is mid-month: days before it are not working days; their leave or check-in on those days is
   refused.
-- A Manager moves Zone: their attendance stays theirs; the Zone filter in the grid uses the Zones they hold on that day.
+- A Manager moves Zone: their attendance stays theirs; the Zone filter in the grid uses the Zones they hold now.
 - A Manager is deactivated mid-month: days after the exit date (spec 005a) are not working days for them.
 - A holiday is added to the calendar after a Manager was already marked absent for that day: the day stops being a
   working day and stops being unpaid.
@@ -276,12 +278,11 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
 - **FR-006**: The system MUST record the day type chosen at check-in as Office or Field; a Leave day comes only from
   approved leave (FR-010), never from a check-in.
 - **FR-007**: The system MUST require a Field day to carry a purpose text or a link to at least one planned activity,
-  and once the planned-activity links exist MUST accept a purpose-only Field day but flag it for review.
+  and once the planned-activity links exist MUST accept a purpose-only Field day but flag it for review. (The link part is deferred until the planned-activity interface exists; until then a purpose text is required.)
 - **FR-008**: The system MUST let a Manager request leave with a leave type, a first and last date and a reason, and a
   half day at either end.
 - **FR-009**: The system MUST let an Admin or Director approve a Manager's request or reject it with a reason, and MUST
-  let them revoke an approved request with a reason; an Admin decides a Director's request and a Director an Admin's;
-  no one decides their own.
+  let them revoke an approved request with a reason; no one decides their own request, and a Manager never decides any.
 - **FR-010**: The system MUST mark every working day of an approved request as Leave, MUST NOT count weekly offs or
   holidays inside the range, and MUST refuse a check-in on an approved full-day leave day; on an approved half-day leave day it MUST allow one
   check-in, and the day counts as half leave plus half worked (the leave half unpaid only for the Loss-of-Pay type).
@@ -293,7 +294,8 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   checked in by a cut-off time, with no approved leave, and MUST show the day on the Director's missed check-in list.
 - **FR-014**: The system MUST keep the cut-off time and the late time as settings that an Admin or Director changes,
   audited, applying to later days.
-- **FR-015**: The system MUST show a Manager their own month and today's plan, and MUST show an Admin or Director the
+- **FR-015**: The system MUST show a Manager their own month and today's status (whether today is a working day, the check-in and
+  check-out so far, the cut-off time and any leave covering today), and MUST show an Admin or Director the
   grid of all Managers by month with a Zone filter, the missed check-ins and the Managers on leave today.
 - **FR-016**: The system MUST let an Admin or Director correct a Manager's day with a reason, keeping the original and
   the correction in the day's history with who and when.
@@ -303,9 +305,6 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
 - **FR-018**: The system MUST let an Admin lock a Manager's month, or all Managers' months, once the month has ended,
   freezing the figures payroll reads; MUST refuse the lock while any leave or forgotten-check-in request touching that
   month is pending, listing them; MUST refuse changes to a locked month; and MUST let an Admin reopen with a reason.
-- **FR-024**: The system MUST refuse a check-in and a leave request from a Manager whose joining date (spec 005a) is not
-  recorded, saying why, and MUST report such a Manager's month as "no joining date" in the interface of FR-019, never
-  as unpaid days.
 - **FR-019**: The system MUST provide payroll and reports one public interface answering, for a Manager and a month: the
   working days, the days worked, the leave days (paid and unpaid), the unpaid days, the field days and whether the month
   is locked; days outside the Manager's employment (spec 005a) are not working days; and a month with no data MUST be
@@ -321,6 +320,9 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   013a pays from their own salary) it MUST report in `PayRules` that they have **no unpaid days** by rule, as a stated
   answer (they are paid in full from joining to exit), never as "not available"; a System account is not a payroll
   person and has no salary, attendance or unpaid days.
+- **FR-024**: The system MUST refuse a check-in and a leave request from a Manager whose joining date (spec 005a) is not
+  recorded, saying why, and MUST report such a Manager's month as "no joining date" in the interface of FR-019, never
+  as unpaid days.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -329,7 +331,7 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   corrected or missing a check-out. At most one per Manager per date.
 - **Manager Leave Request**: a Manager's request with a leave type, dates, half days, a reason, its status (pending,
   approved, rejected, revoked), who decided and why.
-- **Regularization Request**: a Manager's request to add a forgotten past check-in, with a reason, a proposed time and
+- **Forgotten Check-in Request** (called a regularization request in the design documents): a Manager's request to add a forgotten past check-in, with a reason, a proposed time and
   day type, its status and who decided.
 - **Day History Entry**: an original value, a correction, who made it and when, with the reason.
 - **Manager Month**: a Manager's month with its status (open or locked), the lock and reopen events and the frozen

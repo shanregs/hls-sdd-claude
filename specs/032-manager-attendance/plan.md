@@ -158,7 +158,7 @@ backend/src/test/java/com/hls/payroll/              # PayRules with Manager and 
 
 frontend/src/features/managerAttendance/
 ├── managerAttendanceApi.ts
-├── ManagerCheckInPage.tsx          # check-in and check-out with the browser location, today's plan
+├── ManagerCheckInPage.tsx          # check-in and check-out with the browser location, today's status
 ├── MyManagerMonthPage.tsx          # the Manager's own month
 ├── MyManagerLeavePage.tsx          # request and track leave, ask for a forgotten check-in
 ├── ManagerAttendanceGridPage.tsx   # Admin/Director grid, missed, on leave today, settings, lock

@@ -35,5 +35,5 @@
   to exit with an explicit "none" for unpaid days; System accounts have no salary and are not payroll people.
 - Defaults taken from `docs/spec-inputs/032-manager-attendance.md` and recorded in Assumptions: cut-off 10:30, late time
   09:30, photo optional via the `files` module, a purpose-only Field day accepted and flagged once links exist, a past
-  check-in needs approval, an Admin decides a Director's leave and a Director an Admin's, locking is per Manager or all.
+  check-in needs approval, nobody decides their own request, locking is per Manager or all.
 - Spec 032 places "Manager" in the leave flow only; Teacher leave (spec 009) is unchanged.

@@ -13,9 +13,10 @@ Permissions: `MY` = `MY_MANAGER_ATTENDANCE` (Manager, own data only); `ATT` = `M
 
 | Method | Path | Action | Purpose |
 | --- | --- | --- | --- |
-| GET | `/me/today` | VIEW | today's record (if any), whether today is a working day, the cut-off and late times, and whether leave covers today |
+| GET | `/me/today` | VIEW | today's status: the record so far (if any), whether today is a working day, the cut-off and late times, and any leave covering today |
 | POST | `/me/check-in` | CREATE | check in; body below |
 | POST | `/me/check-out` | CREATE | check out today's record; body below |
+| POST | `/me/days/{date}/complete-check-out` | CREATE | complete the Manager's own missing check-out of a past day: `{ "time": "18:05", "reason": "Forgot to tap out" }`; 400 without a reason, a time not on that day or in the future; 409 in a locked month |
 | POST | `/me/days/{date}/photo` | CREATE | attach a photo (multipart `file`, jpg or png) to the Manager's own check-in of that date |
 | GET | `/me/months/{yyyy-MM}` | VIEW | each day with its status, times, purpose, flags and leave, plus the month figures |
 | GET | `/me/regularizations` | VIEW | the Manager's forgotten check-in requests |
@@ -87,9 +88,9 @@ The lock of all Managers locks each that is lockable and returns the ones refuse
 | POST | `/regularizations/{id}/approve` | APPROVE | approve; the day becomes worked, marked "added later" |
 | POST | `/regularizations/{id}/reject` | APPROVE | reject with a `reason` |
 
-A decision is refused with 403 when the decider is the requester, and with 403 when a Director's request is decided by
-a Director (an Admin decides it) or an Admin's by an Admin (a Director decides it). A decision that would write a day
-into a locked month is refused with 409 and changes nothing.
+A decision is refused with 403 when the decider is the requester (a user who is both a Manager and an Admin or
+Director cannot decide their own request). A decision that would write a day into a locked month is refused with 409 and
+changes nothing.
 
 ## Audit
 

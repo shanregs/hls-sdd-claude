@@ -107,7 +107,7 @@ per Manager per day.
 | reason | VARCHAR(500) NOT NULL | |
 | status | VARCHAR(10) NOT NULL | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `REVOKED` |
 | requested_at | TIMESTAMPTZ NOT NULL | |
-| decided_by, decided_at, decision_reason | | decider never the requester; an Admin decides a Director's request and a Director an Admin's; a reason on rejection and on revoke |
+| decided_by, decided_at, decision_reason | | decider never the requester (Admin or Director only); a reason on rejection and on revoke |
 | version | BIGINT NOT NULL | |
 
 ## Derived (never stored, except frozen at lock)
