@@ -97,6 +97,7 @@ public class PermissionMatrixService {
         seedSalaryStructures();
         seedRecruitment();
         seedMarketing();
+        seedTasks();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -190,6 +191,18 @@ public class PermissionMatrixService {
                     List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
                 seed(role, PermissionModule.DESIGNATIONS, action, true);
             }
+        }
+        grants.invalidateAround();
+    }
+
+    /** Manager task defaults (spec 025): Admin and Director run and verify tasks; a Manager acts on their own. */
+    private void seedTasks() {
+        for (PermissionAction action : PermissionModule.TASKS.actions()) {
+            seed(Role.ADMIN, PermissionModule.TASKS, action, true);
+            seed(Role.DIRECTOR, PermissionModule.TASKS, action, true);
+        }
+        for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+            seed(Role.MANAGER, PermissionModule.TASKS, action, true);
         }
         grants.invalidateAround();
     }

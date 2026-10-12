@@ -52,7 +52,8 @@ public enum PermissionModule {
     INDUCTION(VIEW, CREATE, EDIT),
     MARKETING(VIEW, CREATE, EDIT, APPROVE),
     MARKETING_SETTINGS(VIEW, EDIT),
-    SALARY_STRUCTURES(VIEW, CREATE);
+    SALARY_STRUCTURES(VIEW, CREATE),
+    TASKS(VIEW, CREATE, EDIT, APPROVE);
 
     private final Set<PermissionAction> actions;
 

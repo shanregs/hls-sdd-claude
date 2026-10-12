@@ -32,6 +32,11 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.3 (PATCH, spec 025): the Default role access matrix gains a Manager Tasks row. Admin and Director create, edit
+    (reassign, move the due date, cancel), act on and verify tasks (View, Create, Edit, Approve); the Manager sees and
+    acts on only the tasks assigned to them (View, Create for self, Edit) and can never be granted Approve; Teacher and
+    System have no access. Principle VII gains the `tasks` module (task lifecycle, the C2 creation interface and the C1
+    planned-activity feed); only `notification` reads its api package. No principle changes.
   - 2.5.2 (PATCH, spec 013a): Principle VII's `payroll` entry now describes its first half (salary structures by
     person (Managers and staff; a Teacher's stays in spec 005), the suggested default per designation and the pay
     policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
@@ -316,6 +321,7 @@ kept intentionally lightweight for v1.
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
   | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
+  | Manager Tasks                   | View, Create, Edit, Approve | View, Create, Edit, Approve | Own tasks (View, Create for self, Edit to act on them; never Approve) | — | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |
@@ -371,4 +377,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.2 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11
+**Version**: 2.5.3 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11
