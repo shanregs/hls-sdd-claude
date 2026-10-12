@@ -68,6 +68,34 @@ public final class MessageFactory {
                 "/marketing/prospects/" + prospectId);
     }
 
+    public static Text substituteNeeded(String teacherName, String schoolName, LocalDate day, UUID requirementId) {
+        return new Text(
+                "Substitute needed",
+                teacherName + " is away on " + date(day) + " and " + schoolName + " needs a substitute.",
+                "/operations/substitutions/" + requirementId);
+    }
+
+    public static Text substituteAssigned(String schoolName, LocalDate day) {
+        return new Text(
+                "You are covering a class",
+                "You were assigned to cover a class at " + schoolName + " on " + date(day) + ".",
+                "/my-substitutions");
+    }
+
+    public static Text substituteEnded(String schoolName, LocalDate day, String why) {
+        return new Text(
+                "Your cover was cancelled",
+                "Your cover at " + schoolName + " on " + date(day) + " is no longer needed" + because(why) + ".",
+                "/my-substitutions");
+    }
+
+    public static Text schoolInformed(String schoolName, LocalDate day, UUID requirementId) {
+        return new Text(
+                "School informed",
+                schoolName + " was informed about the cover on " + date(day) + ".",
+                "/operations/substitutions/" + requirementId);
+    }
+
     public static Text monthLocked(YearMonth month) {
         return new Text(
                 "Your attendance month was locked",

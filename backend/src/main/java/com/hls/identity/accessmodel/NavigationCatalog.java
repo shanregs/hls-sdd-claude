@@ -174,6 +174,22 @@ public final class NavigationCatalog {
                     33,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
+                    "Substitutions",
+                    "/operations/substitutions",
+                    PermissionModule.SUBSTITUTION,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    35,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
+            new NavItem(
+                    "My Substitutions",
+                    "/my-substitutions",
+                    PermissionModule.MY_SUBSTITUTIONS,
+                    PermissionAction.VIEW,
+                    "MY ATTENDANCE",
+                    37,
+                    EnumSet.of(Role.TEACHER)),
+            new NavItem(
                     "School Contracts",
                     "/operations/school-contracts",
                     PermissionModule.SCHOOL_CONTRACTS,

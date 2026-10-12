@@ -33,7 +33,8 @@ public class AuditVisibility {
             Map.entry("ATTENDANCE_EXPORT", PermissionModule.ATTENDANCE),
             Map.entry("ATTENDANCE_CODE", PermissionModule.ATTENDANCE_SETUP),
             Map.entry("ATTENDANCE_CALENDAR", PermissionModule.ATTENDANCE_SETUP),
-            Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT));
+            Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT),
+            Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION));
 
     private final PermissionMatrixService permissionMatrixService;
 

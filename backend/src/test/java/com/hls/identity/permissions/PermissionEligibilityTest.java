@@ -214,6 +214,25 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void substitutionIsForStaffAndMySubstitutionsForTeachersAloneAndSystemHasNeither() {
+        assertThat(PermissionModule.SUBSTITUTION.actions())
+                .containsExactlyInAnyOrder(PermissionAction.VIEW, PermissionAction.EDIT);
+        assertThat(PermissionModule.MY_SUBSTITUTIONS.actions()).containsExactly(PermissionAction.VIEW);
+        for (Role role : Role.values()) {
+            boolean staff = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
+            for (PermissionAction action : PermissionModule.SUBSTITUTION.actions()) {
+                assertThat(PermissionEligibility.isEligible(role, PermissionModule.SUBSTITUTION, action))
+                        .as("SUBSTITUTION " + role + " " + action)
+                        .isEqualTo(staff);
+                assertThat(matrix.isGranted(role, PermissionModule.SUBSTITUTION, action)).isEqualTo(staff);
+            }
+            assertThat(matrix.isGranted(role, PermissionModule.MY_SUBSTITUTIONS, PermissionAction.VIEW))
+                    .as("MY_SUBSTITUTIONS " + role)
+                    .isEqualTo(role == Role.TEACHER);
+        }
+    }
+
+    @Test
     void theMatrixRefusesToGrantSalaryStructuresToZoneManagerTeacherOrSystem() {
         String admin = signInAs(Role.ADMIN).token();
         for (Role role : List.of(Role.MANAGER, Role.TEACHER, Role.SYSTEM)) {
@@ -244,6 +263,8 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 PermissionModule.SCHOOL_CONTRACTS,
                 PermissionModule.DESIGNATIONS,
                 PermissionModule.SALARY_STRUCTURES,
+                PermissionModule.SUBSTITUTION,
+                PermissionModule.MY_SUBSTITUTIONS,
                 PermissionModule.RECRUITMENT,
                 PermissionModule.OFFERS,
                 PermissionModule.INDUCTION,

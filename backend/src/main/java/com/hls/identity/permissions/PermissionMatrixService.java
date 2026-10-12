@@ -91,6 +91,7 @@ public class PermissionMatrixService {
         seedMasterData();
         seedAttendance();
         seedLeave();
+        seedSubstitution();
         seedNotifications();
         seedSchoolContracts();
         seedDesignations();
@@ -172,6 +173,16 @@ public class PermissionMatrixService {
                 List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.DELETE)) {
             seed(Role.TEACHER, PermissionModule.MY_LEAVE, action, true);
         }
+    }
+
+    /** Substitution defaults (spec 017a): staff run the workflow, the Teacher reads their own assignments. */
+    private void seedSubstitution() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            seed(role, PermissionModule.SUBSTITUTION, PermissionAction.VIEW, true);
+            seed(role, PermissionModule.SUBSTITUTION, PermissionAction.EDIT, true);
+        }
+        seed(Role.TEACHER, PermissionModule.MY_SUBSTITUTIONS, PermissionAction.VIEW, true);
+        grants.invalidateAround();
     }
 
     /** Notification defaults (spec 010): every business role reads and deletes its own; never System. */
