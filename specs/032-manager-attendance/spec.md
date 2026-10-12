@@ -13,6 +13,11 @@
 ### Session 2026-10-11
 
 - Q: Do Admin, Director and System staff have attendance tracked? → A: No. Attendance is tracked for Managers only. An Admin or Director is paid in full from their joining date to their exit date, with no per-day deduction, and their unpaid days are reported as explicitly **none** (not "not available"). Any deduction for them is decided outside the system.
+- Q: If a Manager checks in but never checks out, is the day still a worked, paid day? → A: Yes. The day counts as worked and paid and is only flagged "no check-out" until it is completed; a missing check-out never causes a deduction.
+- Q: How far back may a Manager ask to add a forgotten check-in? → A: Any past day, as long as that day's month is not locked; there is no other time limit.
+- Q: On a day of approved half-day leave, can the Manager check in for the other half, and how is the day counted? → A: Yes. One check-in is allowed on a half-day leave day, and the day counts as half leave plus half worked; the leave half is unpaid only if the leave type is Loss-of-Pay, otherwise the whole day is paid. A full-day leave still refuses a check-in.
+- Q: What happens to a Manager with no joining date recorded? → A: They cannot check in or request leave until a joining date exists (spec 005a), and the month figures for them report "no joining date" instead of unpaid days; no day is counted against them until it is recorded.
+- Q: Can a month be locked while leave or forgotten-check-in requests for it are still pending? → A: No. The lock is refused until every such request is decided, and the refusal lists the pending requests.
 - Q: Are System accounts paid? → A: No. A System account is a technical account with no salary; it is not a payroll person at all (this also corrects spec 013a, which listed System users as staff).
 
 ## User Scenarios & Testing *(mandatory)*
@@ -38,7 +43,8 @@ without a location and see both refused.
 2. **Given** a Manager who has checked in, **When** they check out, **Then** the check-out time and location are added to
    the same day; the day shows the hours between the two.
 3. **Given** a Manager who checked in and did not check out, **When** the day has ended, **Then** the day is flagged
-   "no check-out", and the Manager (or an Admin or Director) can complete it with a check-out time and a reason.
+   "no check-out" but still counts as a worked, paid day, and the Manager (or an Admin or Director) can complete it with
+   a check-out time and a reason.
 4. **Given** a check-in or check-out with no location, **When** it is sent, **Then** it is refused and the reason says a
    location is required.
 5. **Given** a Manager who already checked in today, **When** they try to check in again, **Then** it is refused; the
@@ -105,8 +111,10 @@ count as paid; a third working day with no check-in and no leave shows as an unp
    decides leave, their own or anyone's.
 6. **Given** a Director's request or an Admin's request, **When** it is decided, **Then** the other of the two decides it
    (an Admin decides a Director's leave; a Director decides an Admin's), and nobody decides their own.
-7. **Given** a Manager with approved leave on a day, **When** they try to check in that day, **Then** it is refused with
-   the leave shown; the approver can revoke the leave first if the Manager is in fact working.
+7. **Given** a Manager with approved full-day leave on a day, **When** they try to check in that day, **Then** it is
+   refused with the leave shown; the approver can revoke the leave first if the Manager is in fact working.
+   **Given** approved half-day leave on a day, **When** the Manager checks in, **Then** it is accepted and the day counts
+   as half leave plus half worked.
 8. **Given** a leave type that is the Loss-of-Pay type, **When** it is approved, **Then** its days are unpaid days for
    payroll; any other approved type is paid.
 
@@ -156,9 +164,10 @@ Zone, correct one Manager's forgotten check-in with a reason, and see the correc
 3. **Given** a day with no record or a wrong record, **When** an Admin or Director corrects it with a reason, **Then**
    the day shows the corrected value, the original and the correction stay in the day's history with who and when, and
    the Manager is told.
-4. **Given** a past day, **When** a Manager asks to add a check-in they forgot, **Then** the request goes to an Admin or
-   Director with a reason and a proposed time and day type; if approved the day is recorded as worked and marked
-   "added later", if rejected the reason is shown.
+4. **Given** a past day in a month that is not locked, **When** a Manager asks to add a check-in they forgot, **Then**
+   the request goes to an Admin or Director with a reason and a proposed time and day type; if approved the day is
+   recorded as worked and marked "added later", if rejected the reason is shown; a day in a locked month is refused
+   until an Admin reopens the month.
 5. **Given** a Zone Manager, **When** they open another Manager's attendance, **Then** it is refused: a Manager sees only
    their own.
 
@@ -184,6 +193,9 @@ a reason and see them allowed again, with both actions audited.
 3. **Given** a locked month, **When** an Admin reopens it with a reason, **Then** the days can be changed again, and the
    reopen is audited with the reason; a lock again freezes the new figures.
 4. **Given** a month that has not ended, **When** a lock is tried, **Then** it is refused.
+5. **Given** a leave request or a forgotten-check-in request for the month that is still pending, **When** an Admin
+   tries to lock it, **Then** the lock is refused and the reason lists the pending requests; once each is decided the
+   lock is allowed.
 
 ---
 
@@ -216,6 +228,9 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
    the type is Loss-of-Pay.
 7. **Given** a Manager with no data for a month (not yet joined, or the module just installed), **When** the figures are
    asked for, **Then** the answer says so; a month with no information is never reported as having no unpaid days.
+8. **Given** a Manager with no joining date recorded, **When** the figures are asked for, **Then** the answer says "no
+   joining date" and gives no unpaid days; when they try to check in or request leave, it is refused and the reason
+   says the joining date must be recorded first.
 
 ---
 
@@ -252,7 +267,8 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
 - **FR-002**: The system MUST refuse a check-in or check-out that has no location, and a second check-in on the same
   day.
 - **FR-003**: The system MUST let a Manager check out once, adding the time and the location to that day's record, and
-  MUST flag a day that ended with a check-in and no check-out.
+  MUST flag a day that ended with a check-in and no check-out; such a day MUST still count as worked and paid, and a
+  missing check-out MUST NOT cause a deduction or block the lock of the month.
 - **FR-004**: The system MUST let the Manager, an Admin or a Director complete a missing check-out with a time and a
   reason, audited.
 - **FR-005**: The system MUST treat working days as the default calendar of spec 008 (weekly offs and non-working
@@ -267,7 +283,8 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   let them revoke an approved request with a reason; an Admin decides a Director's request and a Director an Admin's;
   no one decides their own.
 - **FR-010**: The system MUST mark every working day of an approved request as Leave, MUST NOT count weekly offs or
-  holidays inside the range, and MUST refuse a check-in on an approved leave day.
+  holidays inside the range, and MUST refuse a check-in on an approved full-day leave day; on an approved half-day leave day it MUST allow one
+  check-in, and the day counts as half leave plus half worked (the leave half unpaid only for the Loss-of-Pay type).
 - **FR-011**: The system MUST use the leave types of spec 009 (including the Loss-of-Pay type) for a Manager's leave,
   and MUST treat approved Loss-of-Pay leave as unpaid and any other approved leave as paid.
 - **FR-012**: The system MUST treat a working day inside a Manager's employment with no check-in and no approved leave
@@ -280,10 +297,15 @@ Loss-of-Pay leave, a day with no check-in and no leave, a holiday) the answers e
   grid of all Managers by month with a Zone filter, the missed check-ins and the Managers on leave today.
 - **FR-016**: The system MUST let an Admin or Director correct a Manager's day with a reason, keeping the original and
   the correction in the day's history with who and when.
-- **FR-017**: The system MUST let a Manager ask for a forgotten past check-in with a reason, a proposed time and a day
-  type, MUST send it to an Admin or Director, and MUST record the day as "added later" only when approved.
+- **FR-017**: The system MUST let a Manager ask for a forgotten check-in on any past day whose month is not locked,
+  with a reason, a proposed time and a day type, MUST refuse a request for a day in a locked month, MUST send it to an
+  Admin or Director, and MUST record the day as "added later" only when approved.
 - **FR-018**: The system MUST let an Admin lock a Manager's month, or all Managers' months, once the month has ended,
-  freezing the figures payroll reads; MUST refuse changes to a locked month; and MUST let an Admin reopen with a reason.
+  freezing the figures payroll reads; MUST refuse the lock while any leave or forgotten-check-in request touching that
+  month is pending, listing them; MUST refuse changes to a locked month; and MUST let an Admin reopen with a reason.
+- **FR-024**: The system MUST refuse a check-in and a leave request from a Manager whose joining date (spec 005a) is not
+  recorded, saying why, and MUST report such a Manager's month as "no joining date" in the interface of FR-019, never
+  as unpaid days.
 - **FR-019**: The system MUST provide payroll and reports one public interface answering, for a Manager and a month: the
   working days, the days worked, the leave days (paid and unpaid), the unpaid days, the field days and whether the month
   is locked; days outside the Manager's employment (spec 005a) are not working days; and a month with no data MUST be
