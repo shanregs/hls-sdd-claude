@@ -46,7 +46,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void managerSeesDashboardMasterDataOperationsAccount() {
         assertThat(sectionsFor(Role.MANAGER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "ACCOUNT");
     }
 
     @Test
