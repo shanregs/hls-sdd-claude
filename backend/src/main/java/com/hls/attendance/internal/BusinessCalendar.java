@@ -25,6 +25,10 @@ public class BusinessCalendar {
         this.zone = ZoneId.of(zoneId);
     }
 
+    public ZoneId zone() {
+        return zone;
+    }
+
     public LocalDate today() {
         return LocalDate.now(clock.withZone(zone));
     }
