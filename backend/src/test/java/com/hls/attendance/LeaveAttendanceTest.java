@@ -177,17 +177,22 @@ class LeaveAttendanceTest extends AttendanceTestBase {
         World w = newWorld();
         UUID teacher = w.teacherA().teacherId();
         UUID request = UUID.randomUUID();
-        LocalDate mon = monday();
-        List<LeaveDay> days = leave.workingDays(teacher, mon, mon.plusDays(1));
+        LocalDate candidate = monday();
+        // The locked month must also hold the Thursday, or the second apply lands in an unlocked month and nothing is refused.
+        if (!YearMonth.from(candidate.plusDays(3)).equals(YearMonth.from(candidate))) {
+            candidate = candidate.minusDays(7);
+        }
+        final LocalDate monday = candidate;
+        List<LeaveDay> days = leave.workingDays(teacher, monday, monday.plusDays(1));
         leave.apply(request, UUID.randomUUID(), teacher, days);
 
-        lockMonth(teacher, YearMonth.from(mon));
+        lockMonth(teacher, YearMonth.from(monday));
 
         assertThatThrownBy(() -> leave.remove(request, UUID.randomUUID()))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("month locked");
-        assertThat(markRow(teacher, mon)).isNotNull();
-        assertThatThrownBy(() -> leave.apply(UUID.randomUUID(), UUID.randomUUID(), teacher, leave.workingDays(teacher, mon.plusDays(2), mon.plusDays(3))))
+        assertThat(markRow(teacher, monday)).isNotNull();
+        assertThatThrownBy(() -> leave.apply(UUID.randomUUID(), UUID.randomUUID(), teacher, leave.workingDays(teacher, monday.plusDays(2), monday.plusDays(3))))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("month locked");
     }
