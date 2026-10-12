@@ -14,4 +14,6 @@ public interface LoginHistoryEntryRepository
         extends JpaRepository<LoginHistoryEntry, UUID>, JpaSpecificationExecutor<LoginHistoryEntry> {
 
     Optional<LoginHistoryEntry> findBySourceEventId(UUID sourceEventId);
+
+    long countByEventTypeAndOccurredAtAfter(String eventType, java.time.Instant since);
 }

@@ -34,6 +34,7 @@ public class UserAdminService {
     private final SessionService sessionService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
+    private final com.hls.identity.policy.RuntimeSettings settings;
 
     public UserAdminService(
             AppUserRepository appUserRepository,
@@ -43,7 +44,9 @@ public class UserAdminService {
             PasswordEncoder passwordEncoder,
             SessionService sessionService,
             ApplicationEventPublisher eventPublisher,
-            Clock clock) {
+            Clock clock,
+            com.hls.identity.policy.RuntimeSettings settings) {
+        this.settings = settings;
         this.appUserRepository = appUserRepository;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.lastAdminGuard = lastAdminGuard;
@@ -226,8 +229,9 @@ public class UserAdminService {
     @Transactional
     public void adminResetPassword(UUID actorUserId, UUID targetUserId, String newPassword) {
         AppUser user = requireUser(targetUserId);
-        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone())) {
-            throw new PasswordPolicyViolationException();
+        int minLength = settings.passwordMinLength();
+        if (PasswordPolicy.isViolatedBy(newPassword, user.getPhone(), minLength)) {
+            throw new PasswordPolicyViolationException(minLength);
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setFailedAttemptCount(0);
@@ -267,8 +271,8 @@ public class UserAdminService {
     }
 
     public static class PasswordPolicyViolationException extends RuntimeException {
-        public PasswordPolicyViolationException() {
-            super(PasswordPolicy.VIOLATION_MESSAGE);
+        public PasswordPolicyViolationException(int minLength) {
+            super(PasswordPolicy.violationMessage(minLength));
         }
     }
 

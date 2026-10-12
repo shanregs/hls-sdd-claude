@@ -4,7 +4,8 @@ import com.hls.identity.clientcontext.ApiAccessFilter;
 import com.hls.identity.clientcontext.ApiAccessPublisher;
 import com.hls.identity.clientcontext.ClientContextFilter;
 import com.hls.identity.clientcontext.ClientContextParser;
-import org.springframework.beans.factory.annotation.Value;
+import com.hls.identity.policy.RuntimeSettings;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,9 +41,9 @@ public class MobileFilterConfig {
     }
 
     @Bean
-    FilterRegistrationBean<MobileVersionGate> mobileVersionGateRegistration(
-            @Value("${hls.mobile.min-app-version:0.0.0}") String minimumVersion) {
-        var registration = new FilterRegistrationBean<>(new MobileVersionGate(AppVersion.parse(minimumVersion)));
+    FilterRegistrationBean<MobileVersionGate> mobileVersionGateRegistration(ObjectProvider<RuntimeSettings> settings) {
+        var registration = new FilterRegistrationBean<>(
+                new MobileVersionGate(() -> AppVersion.parse(settings.getObject().minAppVersion())));
         registration.addUrlPatterns("/*");
         registration.setOrder(VERSION_GATE_ORDER);
         return registration;

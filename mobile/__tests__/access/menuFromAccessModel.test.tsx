@@ -26,6 +26,7 @@ describe("buildMenu (spec FR-009 to FR-011)", () => {
       "Apply Leave",
       "My Leave History",
       "My Profile",
+      "Notifications",
     ]);
     expect(labels(MANAGER_MODEL)).toEqual([
       "Dashboard",
@@ -33,8 +34,9 @@ describe("buildMenu (spec FR-009 to FR-011)", () => {
       "Teacher Attendance",
       "Leave Management",
       "Profile",
+      "Notifications",
     ]);
-    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Leave Management", "Profile"]);
+    expect(labels(DIRECTOR_MODEL)).toEqual(["Dashboard", "Holiday Calendar", "Leave Management", "Profile", "Notifications"]);
   });
 
   it("drops sections left empty by the filter", () => {
@@ -99,15 +101,16 @@ describe("the drawer shows exactly the server navigation", () => {
         "Apply Leave",
         "My Leave History",
         "My Profile",
+        "Notifications",
         "Log out",
       ],
     ],
     [
       "Manager",
       MANAGER_MODEL,
-      ["Dashboard", "Holiday Calendar", "Teacher Attendance", "Leave Management", "Profile", "Log out"],
+      ["Dashboard", "Holiday Calendar", "Teacher Attendance", "Leave Management", "Profile", "Notifications", "Log out"],
     ],
-    ["Director", DIRECTOR_MODEL, ["Dashboard", "Holiday Calendar", "Leave Management", "Profile", "Log out"]],
+    ["Director", DIRECTOR_MODEL, ["Dashboard", "Holiday Calendar", "Leave Management", "Profile", "Notifications", "Log out"]],
     [
       "Admin plus Teacher",
       ADMIN_TEACHER_MODEL,
@@ -118,7 +121,7 @@ describe("the drawer shows exactly the server navigation", () => {
 
     const items = screen
       .getAllByLabelText(
-        /^(Dashboard|Profile|My Profile|Log out|My Attendance|Attendance History|Teacher Attendance|Holiday Calendar|Apply Leave|My Leave History|Leave Management)$/,
+        /^(Dashboard|Profile|My Profile|Log out|My Attendance|Attendance History|Teacher Attendance|Holiday Calendar|Apply Leave|My Leave History|Leave Management|Notifications)$/,
       )
       .map((n) => n.props.accessibilityLabel);
     expect([...new Set(items)]).toEqual(expected);
