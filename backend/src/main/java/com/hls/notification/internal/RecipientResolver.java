@@ -44,6 +44,13 @@ public class RecipientResolver {
         return Optional.ofNullable(info).map(TeacherInfo::userId);
     }
 
+    /** Every active Director: who an escalated task goes to (spec 025). */
+    public Set<UUID> activeDirectors() {
+        Set<UUID> ids = new LinkedHashSet<>(roles.userIdsWithRole(Role.DIRECTOR));
+        ids.removeIf(id -> !users.findById(id).filter(AppUser::isActive).isPresent());
+        return ids;
+    }
+
     /** Every active Admin and Director. */
     public Set<UUID> activeAdminsAndDirectors() {
         Set<UUID> ids = new LinkedHashSet<>();
