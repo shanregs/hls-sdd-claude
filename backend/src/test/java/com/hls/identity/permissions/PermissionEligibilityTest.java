@@ -246,6 +246,71 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void managerAttendanceModulesApplyToTheirRolesOnlyWithTheSeededDefaults() {
+        for (Role role : Role.values()) {
+            boolean staff = role == Role.ADMIN || role == Role.DIRECTOR;
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.MANAGER_ATTENDANCE))
+                    .as("MANAGER_ATTENDANCE " + role)
+                    .isEqualTo(staff
+                            ? java.util.EnumSet.of(
+                                    PermissionAction.VIEW,
+                                    PermissionAction.CREATE,
+                                    PermissionAction.EDIT,
+                                    PermissionAction.PROCESS)
+                            : java.util.EnumSet.noneOf(PermissionAction.class));
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.MANAGER_LEAVE))
+                    .as("MANAGER_LEAVE " + role)
+                    .isEqualTo(staff
+                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.APPROVE)
+                            : java.util.EnumSet.noneOf(PermissionAction.class));
+            assertThat(PermissionEligibility.actionsFor(role, PermissionModule.MY_MANAGER_ATTENDANCE))
+                    .as("MY_MANAGER_ATTENDANCE " + role)
+                    .isEqualTo(role == Role.MANAGER
+                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.DELETE)
+                            : java.util.EnumSet.noneOf(PermissionAction.class));
+        }
+        // seeded: Admin everything, Director everything but the lock, Manager their own
+        for (PermissionAction action : PermissionModule.MANAGER_ATTENDANCE.actions()) {
+            assertThat(matrix.isGranted(Role.ADMIN, PermissionModule.MANAGER_ATTENDANCE, action)).as("Admin " + action).isTrue();
+            assertThat(matrix.isGranted(Role.DIRECTOR, PermissionModule.MANAGER_ATTENDANCE, action))
+                    .as("Director " + action)
+                    .isEqualTo(action != PermissionAction.PROCESS);
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            assertThat(matrix.isGranted(role, PermissionModule.MANAGER_LEAVE, PermissionAction.APPROVE)).isTrue();
+        }
+        for (PermissionAction action : PermissionModule.MY_MANAGER_ATTENDANCE.actions()) {
+            assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.MY_MANAGER_ATTENDANCE, action)).isTrue();
+        }
+        for (Role role : List.of(Role.TEACHER, Role.SYSTEM)) {
+            for (PermissionModule module : List.of(
+                    PermissionModule.MANAGER_ATTENDANCE, PermissionModule.MANAGER_LEAVE, PermissionModule.MY_MANAGER_ATTENDANCE)) {
+                for (PermissionAction action : module.actions()) {
+                    assertThat(matrix.isGranted(role, module, action)).as(role + " " + module + " " + action).isFalse();
+                }
+            }
+        }
+    }
+
+    @Test
+    void theMatrixRefusesToGrantManagerAttendanceToTheWrongRoles() {
+        String admin = signInAs(Role.ADMIN).token();
+        for (String path : List.of(
+                "/TEACHER/MANAGER_ATTENDANCE/VIEW",
+                "/SYSTEM/MANAGER_LEAVE/VIEW",
+                "/MANAGER/MANAGER_ATTENDANCE/VIEW",
+                "/ADMIN/MY_MANAGER_ATTENDANCE/VIEW",
+                "/TEACHER/MY_MANAGER_ATTENDANCE/VIEW")) {
+            Resp refused = put(MATRIX + path, admin, Map.of("granted", true));
+            assertThat(refused.status()).as(path).isEqualTo(409);
+            assertThat(refused.body()).contains("does not apply");
+        }
+        // no Export or Delete on the grid module, and no Edit on the leave decisions
+        assertThat(put(MATRIX + "/ADMIN/MANAGER_ATTENDANCE/EXPORT", admin, Map.of("granted", true)).status()).isEqualTo(409);
+        assertThat(put(MATRIX + "/ADMIN/MANAGER_LEAVE/EDIT", admin, Map.of("granted", true)).status()).isEqualTo(409);
+    }
+
+    @Test
     void systemHasNoBusinessDataModulesButKeepsTheHolidayCalendarAndAudit() {
         for (PermissionModule business : List.of(
                 PermissionModule.ZONES,
