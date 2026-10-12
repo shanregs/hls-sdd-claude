@@ -55,6 +55,25 @@ public class AttendanceMark {
     @Column(name = "leave_request_id")
     private UUID leaveRequestId;
 
+    /** Amendment A2: true when the day is unpaid (an absence with no approved leave, or a Loss-of-Pay leave day). */
+    @Column(name = "loss_of_pay", nullable = false)
+    private boolean lossOfPay;
+
+    @Column(name = "principal_confirmed")
+    private Boolean principalConfirmed;
+
+    @Column(name = "principal_name")
+    private String principalName;
+
+    @Column(name = "principal_note")
+    private String principalNote;
+
+    @Column(name = "principal_recorded_by")
+    private UUID principalRecordedBy;
+
+    @Column(name = "principal_recorded_at")
+    private Instant principalRecordedAt;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -76,6 +95,9 @@ public class AttendanceMark {
             UUID setByUserId,
             SetByKind kind,
             Instant now) {
+        if (this.statusCodeId != null && !this.statusCodeId.equals(statusCodeId)) {
+            clearPrincipalConfirmation();
+        }
         this.statusCodeId = statusCodeId;
         this.dayValue = dayValue;
         this.schoolId = schoolId;
@@ -89,6 +111,51 @@ public class AttendanceMark {
     /** Tags the mark just set as made by approved leave; call after {@link #set}. */
     public void markFromLeave(UUID requestId) {
         this.leaveRequestId = requestId;
+    }
+
+    public boolean isLossOfPay() {
+        return lossOfPay;
+    }
+
+    public void setLossOfPay(boolean lossOfPay) {
+        this.lossOfPay = lossOfPay;
+    }
+
+    /** Records the optional Principal confirmation of the day (amendment A2, decision D7). */
+    public void confirmByPrincipal(boolean confirmed, String name, String note, UUID recordedBy, Instant now) {
+        this.principalConfirmed = confirmed;
+        this.principalName = name;
+        this.principalNote = note;
+        this.principalRecordedBy = recordedBy;
+        this.principalRecordedAt = now;
+    }
+
+    public void clearPrincipalConfirmation() {
+        this.principalConfirmed = null;
+        this.principalName = null;
+        this.principalNote = null;
+        this.principalRecordedBy = null;
+        this.principalRecordedAt = null;
+    }
+
+    public Boolean getPrincipalConfirmed() {
+        return principalConfirmed;
+    }
+
+    public String getPrincipalName() {
+        return principalName;
+    }
+
+    public String getPrincipalNote() {
+        return principalNote;
+    }
+
+    public UUID getPrincipalRecordedBy() {
+        return principalRecordedBy;
+    }
+
+    public Instant getPrincipalRecordedAt() {
+        return principalRecordedAt;
     }
 
     public UUID getLeaveRequestId() {
