@@ -19,8 +19,8 @@ import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage"
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
-import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
-import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
+import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
+import { TasksPage } from "./features/tasks/TasksPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -280,18 +280,18 @@ export function App() {
           }
         />
         <Route
-          path="/system/settings"
+          path="/operations/tasks"
           element={
             <RouteGuard>
-              <SystemSettingsPage />
+              <TasksPage />
             </RouteGuard>
           }
         />
         <Route
-          path="/system/security"
+          path="/operations/tasks/:id"
           element={
             <RouteGuard>
-              <SecuritySettingsPage />
+              <TaskDetailPage />
             </RouteGuard>
           }
         />

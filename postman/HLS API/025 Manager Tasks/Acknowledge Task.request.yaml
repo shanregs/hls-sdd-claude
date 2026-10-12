@@ -1,0 +1,11 @@
+$kind: http-request
+name: Acknowledge Task
+description: "The assignee acknowledges an Assigned task. 409 from any other status; 403 for anyone but the assignee. Needs TASKS.EDIT. Then POST /api/v1/tasks/{id}/start."
+url: "{{baseUrl}}/api/v1/tasks/{{taskId}}/acknowledge"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{}"
+order: 5000

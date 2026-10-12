@@ -1,0 +1,15 @@
+$kind: http-request
+name: Record Overdue Reason
+description: "The assignee says why an overdue task is late (at least 5 characters) and may give a follow-up date, which creates a linked Follow-up task for the same Manager. 409 when the task is not overdue. Needs TASKS.EDIT."
+url: "{{baseUrl}}/api/v1/tasks/{{taskId}}/overdue-reason"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "The Principal was away",
+      "followUpOn": "2026-11-10"
+    }
+order: 7000

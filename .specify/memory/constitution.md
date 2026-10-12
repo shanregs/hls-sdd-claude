@@ -32,10 +32,11 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
-  - 2.5.3 (PATCH, spec 011): the Default role access matrix row System & Security Settings gains Admin (View, Edit)
-    alongside System, since Admin holds full operational authority; Director stays off by default and may be granted
-    it. The `settings` module (Principle VII) keeps eleven runtime values and `identity` reads them through its own
-    `RuntimeSettings` interface. No principle changes.
+  - 2.5.3 (PATCH, spec 025): the Default role access matrix gains a Manager Tasks row. Admin and Director create, edit
+    (reassign, move the due date, cancel), act on and verify tasks (View, Create, Edit, Approve); the Manager sees and
+    acts on only the tasks assigned to them (View, Create for self, Edit) and can never be granted Approve; Teacher and
+    System have no access. Principle VII gains the `tasks` module (task lifecycle, the C2 creation interface and the C1
+    planned-activity feed); only `notification` reads its api package. No principle changes.
   - 2.5.2 (PATCH, spec 013a): Principle VII's `payroll` entry now describes its first half (salary structures by
     person (Managers and staff; a Teacher's stays in spec 005), the suggested default per designation and the pay
     policy, and the one public `PayRules` interface that the monthly payroll of spec 013b reads;
@@ -320,7 +321,7 @@ kept intentionally lightweight for v1.
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
   | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
-  | Substitutions (requirements, assign, cover, School informed) | View, Edit | View, Edit | View, Edit (their Schools) | My Substitutions: View (own) | — |
+  | Manager Tasks                   | View, Create, Edit, Approve | View, Create, Edit, Approve | Own tasks (View, Create for self, Edit to act on them; never Approve) | — | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |

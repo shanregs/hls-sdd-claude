@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Task
+description: "The task with its history, evidence files, follow-up links and the actions the caller may take now. 404 for a task that is not the Manager's own. Needs TASKS.VIEW."
+url: "{{baseUrl}}/api/v1/tasks/{{taskId}}"
+method: GET
+order: 4000

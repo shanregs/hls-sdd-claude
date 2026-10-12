@@ -1,0 +1,3 @@
+$kind: collection
+description: "Manager tasks (spec 025): create, list (today, upcoming, overdue, awaiting verification, done), acknowledge, start, complete with evidence, overdue reason with follow-up, verify, send back, cancel. Needs the TASKS module: Admin and Director View, Create, Edit, Approve; a Manager View, Create (for self) and Edit (acts on own tasks); Teacher and System get 403 on every endpoint. A Manager asking for another Manager's task gets 404. Collection variables: taskId, managerUserId."
+order: 25000

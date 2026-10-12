@@ -46,7 +46,8 @@ public final class PermissionEligibility {
             PermissionModule.INDUCTION,
             PermissionModule.MARKETING,
             PermissionModule.MARKETING_SETTINGS,
-            PermissionModule.SALARY_STRUCTURES);
+            PermissionModule.SALARY_STRUCTURES,
+            PermissionModule.TASKS);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -86,6 +87,15 @@ public final class PermissionEligibility {
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        // Manager tasks (spec 025): staff roles only; a Manager acts on their own tasks and never approves.
+        if (module == PermissionModule.TASKS) {
+            if (role == Role.MANAGER) {
+                return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+            }
+            if (role != Role.ADMIN && role != Role.DIRECTOR) {
+                return EnumSet.noneOf(PermissionAction.class);
+            }
         }
         // A Zone Manager may be allowed to read the designation list, never to change it (spec 005a FR-011).
         if (role == Role.MANAGER && module == PermissionModule.DESIGNATIONS) {

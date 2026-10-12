@@ -1,0 +1,19 @@
+$kind: http-request
+name: Create Task
+description: "Admin and Director create a task for any active Manager; a Manager only for themselves. type is SCHOOL_VISIT, FOLLOW_UP, CONTENT_SUBMISSION, RECRUITMENT, TRAINING, TEACHER_ASSIGNMENT, OBSERVATION, PRINCIPAL_FEEDBACK or SUBSTITUTE_ARRANGEMENT. Title 3 to 120 characters; dueOn not in the past; escalateAfterDays 1 to 30 (default 3). Answers 201 with the task detail and tells the Manager. 400 names the problem; 403 for a Manager assigning to someone else. Needs TASKS.CREATE."
+url: "{{baseUrl}}/api/v1/tasks"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "type": "SCHOOL_VISIT",
+      "title": "Visit Green Valley School",
+      "description": "Meet the Principal about the new Teacher",
+      "assigneeUserId": "{{managerUserId}}",
+      "dueOn": "2026-11-05",
+      "escalateAfterDays": 3
+    }
+order: 3000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Task Counts
+description: "Counts for the caller's scope: today, upcoming, overdue, awaiting, escalated, done. Needs TASKS.VIEW."
+url: "{{baseUrl}}/api/v1/tasks/summary"
+method: GET
+order: 2000

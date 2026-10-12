@@ -68,32 +68,25 @@ public final class MessageFactory {
                 "/marketing/prospects/" + prospectId);
     }
 
-    public static Text substituteNeeded(String teacherName, String schoolName, LocalDate day, UUID requirementId) {
+    public static Text taskAssigned(String title, LocalDate dueOn, UUID taskId) {
         return new Text(
-                "Substitute needed",
-                teacherName + " is away on " + date(day) + " and " + schoolName + " needs a substitute.",
-                "/operations/substitutions/" + requirementId);
+                shorten("New task: " + title, MAX_TITLE),
+                shorten("You were given the task \"" + title + "\", due " + date(dueOn) + ".", MAX_MESSAGE),
+                "/operations/tasks/" + taskId);
     }
 
-    public static Text substituteAssigned(String schoolName, LocalDate day) {
+    public static Text taskOverdue(String title, LocalDate dueOn, UUID taskId) {
         return new Text(
-                "You are covering a class",
-                "You were assigned to cover a class at " + schoolName + " on " + date(day) + ".",
-                "/my-substitutions");
+                shorten("Task overdue: " + title, MAX_TITLE),
+                shorten("\"" + title + "\" was due on " + date(dueOn) + ". Record why it is late and finish it.", MAX_MESSAGE),
+                "/operations/tasks/" + taskId);
     }
 
-    public static Text substituteEnded(String schoolName, LocalDate day, String why) {
+    public static Text taskEscalated(String title, String managerName, LocalDate dueOn, int daysOverdue, UUID taskId) {
         return new Text(
-                "Your cover was cancelled",
-                "Your cover at " + schoolName + " on " + date(day) + " is no longer needed" + because(why) + ".",
-                "/my-substitutions");
-    }
-
-    public static Text schoolInformed(String schoolName, LocalDate day, UUID requirementId) {
-        return new Text(
-                "School informed",
-                schoolName + " was informed about the cover on " + date(day) + ".",
-                "/operations/substitutions/" + requirementId);
+                shorten("Task escalated: " + title, MAX_TITLE),
+                shorten(managerName + "'s task \"" + title + "\" was due on " + date(dueOn) + " and is " + daysOverdue + " days overdue.", MAX_MESSAGE),
+                "/operations/tasks/" + taskId);
     }
 
     public static Text monthLocked(YearMonth month) {
