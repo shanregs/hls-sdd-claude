@@ -316,6 +316,7 @@ kept intentionally lightweight for v1.
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
   | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
+  | Substitutions (requirements, assign, cover, School informed) | View, Edit | View, Edit | View, Edit (their Schools) | My Substitutions: View (own) | — |
   | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |

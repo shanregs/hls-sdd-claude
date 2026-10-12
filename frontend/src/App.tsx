@@ -32,6 +32,9 @@ import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
 import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
 import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "./features/attendance/AttendanceGridPage";
+import { MySubstitutionsPage } from "./features/substitution/MySubstitutionsPage";
+import { SubstitutionDetailPage } from "./features/substitution/SubstitutionDetailPage";
+import { SubstitutionsPage } from "./features/substitution/SubstitutionsPage";
 import { ApplyLeavePage } from "./features/leave/ApplyLeavePage";
 import { MyLeaveHistoryPage } from "./features/leave/MyLeaveHistoryPage";
 import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
@@ -239,6 +242,30 @@ export function App() {
           element={
             <RouteGuard>
               <ApplyLeavePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/substitutions"
+          element={
+            <RouteGuard>
+              <SubstitutionsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/substitutions/:id"
+          element={
+            <RouteGuard>
+              <SubstitutionDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-substitutions"
+          element={
+            <RouteGuard>
+              <MySubstitutionsPage />
             </RouteGuard>
           }
         />
