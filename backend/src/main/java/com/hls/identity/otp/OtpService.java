@@ -1,7 +1,6 @@
 package com.hls.identity.otp;
 
-import com.hls.cache.SnapshotCache;
-import com.hls.cache.SnapshotCaches;
+import com.hls.identity.policy.RuntimeSettings;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.IdentifierResolver;
 import io.github.bucket4j.Bandwidth;
@@ -42,8 +41,8 @@ public class OtpService {
     private final SmsGateway smsGateway;
     private final EmailGateway emailGateway;
     private final IdentifierResolver identifierResolver;
-    /** The single policy row (cooldown and lockout), read on every code request, so kept in memory. */
-    private final SnapshotCache<OtpPolicySettings> policy;
+    /** Cooldown and lockout come from Security Settings (spec 011), read on every code request. */
+    private final RuntimeSettings settings;
     private final OtpRequestThrottle throttle;
     private final Clock clock;
     private final ConcurrentMap<String, Bucket> buckets = new ConcurrentHashMap<>();
@@ -54,18 +53,15 @@ public class OtpService {
             SmsGateway smsGateway,
             EmailGateway emailGateway,
             IdentifierResolver identifierResolver,
-            OtpPolicySettingsRepository policyRepository,
+            RuntimeSettings settings,
             OtpRequestThrottle throttle,
-            Clock clock,
-            SnapshotCaches caches) {
+            Clock clock) {
         this.repository = repository;
         this.hasher = hasher;
         this.smsGateway = smsGateway;
         this.emailGateway = emailGateway;
         this.identifierResolver = identifierResolver;
-        this.policy = caches.create("otpPolicy", () -> policyRepository
-                .findById(OtpPolicySettings.SINGLETON_ID)
-                .orElseThrow(() -> new IllegalStateException("otp_policy_settings row is missing")));
+        this.settings = settings;
         this.throttle = throttle;
         this.clock = clock;
     }
@@ -86,7 +82,7 @@ public class OtpService {
         // FR-028/FR-029: resend cooldown and the longer consecutive-requests lockout, both
         // DB-configurable (research.md §17). Checked before the per-minute bucket below, since
         // they're independent, coarser guards.
-        OtpRequestThrottle.Decision decision = throttle.evaluate(key, policy.get(), now);
+        OtpRequestThrottle.Decision decision = throttle.evaluate(key, OtpPolicySettings.from(settings), now);
         if (decision.type() == OtpRequestThrottle.Decision.Type.TOO_SOON) {
             return RequestResult.of(RequestOutcome.RESEND_TOO_SOON, decision.retryAfter());
         }
@@ -130,11 +126,6 @@ public class OtpService {
             return RequestResult.of(RequestOutcome.DELIVERY_FAILED, Duration.ZERO);
         }
         return RequestResult.of(RequestOutcome.SENT_OR_IGNORED, Duration.ZERO);
-    }
-
-    /** The settings editor (spec 011) must call this after changing the policy row. */
-    public void policyChanged() {
-        policy.invalidateAround();
     }
 
     @Transactional

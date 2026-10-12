@@ -36,9 +36,17 @@ class OtpServiceDeliveryFailureTest {
         AppUser activeUser = new AppUser("Teacher OTP", "9876500099", null, null);
         when(identifierResolver.resolve("9876500099"))
                 .thenReturn(new IdentifierResolver.Resolution(Optional.of(activeUser), "9876500099"));
-        OtpPolicySettingsRepository policyRepository = mock(OtpPolicySettingsRepository.class);
-        when(policyRepository.findById(OtpPolicySettings.SINGLETON_ID))
-                .thenReturn(Optional.of(new OtpPolicySettings(0, 1000, 4)));
+        com.hls.identity.policy.RuntimeSettings settings = new com.hls.identity.policy.DefaultRuntimeSettings() {
+            @Override
+            public int otpResendCooldownSeconds() {
+                return 0;
+            }
+
+            @Override
+            public int otpMaxConsecutiveRequests() {
+                return 1000;
+            }
+        };
         Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
         OtpService otpService = new OtpService(
@@ -47,10 +55,9 @@ class OtpServiceDeliveryFailureTest {
                 failingSmsGateway,
                 unusedEmailGateway,
                 identifierResolver,
-                policyRepository,
+                settings,
                 new OtpRequestThrottle(),
-                clock,
-                new com.hls.cache.SnapshotCaches(clock, false, 60));
+                clock);
 
         OtpService.RequestResult first = otpService.request("9876500099", OtpChannel.SMS, OtpPurpose.SIGN_IN);
         assertThat(first.outcome()).isEqualTo(OtpService.RequestOutcome.DELIVERY_FAILED);

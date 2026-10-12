@@ -25,19 +25,19 @@ public class SessionService {
     private final RenewalCredentialRepository renewalCredentialRepository;
     private final RenewalCredentialHasher hasher;
     private final Clock clock;
-    private final Duration renewalTtl;
+    private final com.hls.identity.policy.RuntimeSettings settings;
 
     public SessionService(
             SessionRepository sessionRepository,
             RenewalCredentialRepository renewalCredentialRepository,
             RenewalCredentialHasher hasher,
             Clock clock,
-            @Value("${hls.session.renewal-ttl-days:14}") long renewalTtlDays) {
+            com.hls.identity.policy.RuntimeSettings settings) {
         this.sessionRepository = sessionRepository;
         this.renewalCredentialRepository = renewalCredentialRepository;
         this.hasher = hasher;
         this.clock = clock;
-        this.renewalTtl = Duration.ofDays(renewalTtlDays);
+        this.settings = settings;
     }
 
     /**
@@ -101,7 +101,7 @@ public class SessionService {
             revokeChain(credential);
             return RenewResult.reuseDetected(userId);
         }
-        if (now.isAfter(session.getSignedInAt().plus(renewalTtl))) {
+        if (now.isAfter(session.getSignedInAt().plus(Duration.ofDays(settings.renewalTtlDays())))) {
             return RenewResult.expired();
         }
 

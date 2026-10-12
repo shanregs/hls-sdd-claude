@@ -23,15 +23,15 @@ import org.springframework.stereotype.Component;
 public class JwtTokenProvider {
 
     private final SecretKey key;
-    private final long accessTokenTtlSeconds;
+    private final com.hls.identity.policy.RuntimeSettings settings;
     private final Clock clock;
 
     public JwtTokenProvider(
             @Value("${hls.security.jwt.secret}") String base64Secret,
-            @Value("${hls.security.jwt.access-token-ttl-seconds:900}") long accessTokenTtlSeconds,
+            com.hls.identity.policy.RuntimeSettings settings,
             Clock clock) {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret));
-        this.accessTokenTtlSeconds = accessTokenTtlSeconds;
+        this.settings = settings;
         this.clock = clock;
     }
 
@@ -42,13 +42,13 @@ public class JwtTokenProvider {
                 .claim("sid", sessionId.toString())
                 .claim("roles", roles.stream().map(Role::name).toList())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(accessTokenTtlSeconds, ChronoUnit.SECONDS)))
+                .expiration(Date.from(now.plus(settings.accessTokenTtlSeconds(), ChronoUnit.SECONDS)))
                 .signWith(key)
                 .compact();
     }
 
     public long getAccessTokenTtlSeconds() {
-        return accessTokenTtlSeconds;
+        return settings.accessTokenTtlSeconds();
     }
 
     /** The same key Spring Security's {@code JwtDecoder} bean validates tokens with. */

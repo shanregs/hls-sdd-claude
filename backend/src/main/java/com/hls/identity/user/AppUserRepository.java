@@ -16,6 +16,11 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
 
     Optional<AppUser> findByEmail(String email);
 
+    long countByActive(boolean active);
+
+    /** Accounts locked at {@code now} (their lock time is still ahead). */
+    long countByLockUntilAfter(java.time.Instant now);
+
     /**
      * Free-text search over display name or phone, with optional role/status filters (FR-002).
      * Pass {@code term = ""} for no text filter; {@code filterRole = false} / {@code filterActive =
