@@ -107,14 +107,14 @@ class LeaveAttendanceImpl implements LeaveAttendance {
 
     @Override
     @Transactional
-    public void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days) {
+    public void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days, boolean lossOfPay) {
         acquireLocks(teacherId, days.stream().map(d -> YearMonth.from(d.date())).collect(Collectors.toSet()));
         List<String> problems = problems(teacherId, days);
         if (!problems.isEmpty()) {
             throw new ConflictException("Leave cannot be applied: " + String.join("; ", problems) + ".");
         }
         for (LeaveDay day : days.stream().sorted(Comparator.comparing(LeaveDay::date)).toList()) {
-            markService.setLeaveMark(approverUserId, teacherId, day.date(), day.schoolId(), day.value(), requestId);
+            markService.setLeaveMark(approverUserId, teacherId, day.date(), day.schoolId(), day.value(), requestId, lossOfPay);
         }
     }
 

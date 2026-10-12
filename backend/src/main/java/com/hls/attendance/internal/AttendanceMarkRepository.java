@@ -18,5 +18,13 @@ public interface AttendanceMarkRepository extends JpaRepository<AttendanceMark, 
     List<AttendanceMark> findByTeacherIdInAndMarkDateBetween(
             Collection<UUID> teacherIds, LocalDate from, LocalDate to);
 
+    @org.springframework.data.jpa.repository.Query(
+            "select m from AttendanceMark m where m.teacherId in :teacherIds and m.markDate between :from and :to"
+                    + " and m.lossOfPay = true")
+    List<AttendanceMark> findLossOfPayDays(
+            @org.springframework.data.repository.query.Param("teacherIds") Collection<UUID> teacherIds,
+            @org.springframework.data.repository.query.Param("from") LocalDate from,
+            @org.springframework.data.repository.query.Param("to") LocalDate to);
+
     boolean existsByStatusCodeId(UUID statusCodeId);
 }

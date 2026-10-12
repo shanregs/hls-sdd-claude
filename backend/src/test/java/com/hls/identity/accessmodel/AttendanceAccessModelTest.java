@@ -81,7 +81,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
     void teacherSeesOwnAttendanceOnly() {
         var response = accessModelFor(Role.TEACHER);
 
-        assertThat(labels(response, "MY ATTENDANCE")).containsExactly("My Attendance", "Attendance History");
+        assertThat(labels(response, "MY ATTENDANCE")).containsExactly("My Attendance", "Attendance History", "My Substitutions");
         assertThat(labels(response, "OPERATIONS")).isEmpty();
         assertThat(actionsOf(response, "My Attendance")).containsExactly("VIEW", "CREATE", "EDIT");
         assertThat(response.dataScope()).containsEntry("MY_ATTENDANCE", "OWN");

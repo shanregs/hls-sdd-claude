@@ -1,6 +1,7 @@
 package com.hls.leave.internal;
 
 import com.hls.attendance.api.LeaveAttendance;
+import com.hls.leave.api.LeaveTypes;
 import com.hls.identity.user.Role;
 import com.hls.leave.api.LeaveDecided;
 import com.hls.leave.api.LeaveDecided.Decision;
@@ -42,6 +43,7 @@ public class LeaveDecisionService {
     private final LeaveRequestRepository requests;
     private final LeaveScope scope;
     private final LeaveAttendance attendance;
+    private final LeaveTypes leaveTypes;
     private final LeaveViewFactory views;
     private final LeaveAudit audit;
     private final Clock clock;
@@ -51,6 +53,7 @@ public class LeaveDecisionService {
             LeaveRequestRepository requests,
             LeaveScope scope,
             LeaveAttendance attendance,
+            LeaveTypes leaveTypes,
             LeaveViewFactory views,
             LeaveAudit audit,
             Clock clock,
@@ -58,6 +61,7 @@ public class LeaveDecisionService {
         this.requests = requests;
         this.scope = scope;
         this.attendance = attendance;
+        this.leaveTypes = leaveTypes;
         this.views = views;
         this.audit = audit;
         this.clock = clock;
@@ -132,7 +136,8 @@ public class LeaveDecisionService {
         if (overlaps) {
             throw new ConflictException("This request now overlaps another live leave request of the Teacher.");
         }
-        attendance.apply(request.getId(), actor, request.getTeacherId(), counted.days());
+        attendance.apply(
+                request.getId(), actor, request.getTeacherId(), counted.days(), leaveTypes.isLossOfPay(request.getId()));
 
         LeaveStatus before = request.getStatus();
         request.approve(actor, cleanNote, counted.total(), clock.instant());

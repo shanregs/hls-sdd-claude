@@ -26,11 +26,34 @@ class AttendanceReadApiImpl implements AttendanceReadApi {
     private final TeacherMonthViewService views;
     private final TeacherMonthLock monthLock;
     private final TeacherDirectory teachers;
+    private final AttendanceMarkRepository marks;
+    private final StatusCodeCatalog codes;
 
-    AttendanceReadApiImpl(TeacherMonthViewService views, TeacherMonthLock monthLock, TeacherDirectory teachers) {
+    AttendanceReadApiImpl(
+            TeacherMonthViewService views,
+            TeacherMonthLock monthLock,
+            TeacherDirectory teachers,
+            AttendanceMarkRepository marks,
+            StatusCodeCatalog codes) {
         this.views = views;
         this.monthLock = monthLock;
         this.teachers = teachers;
+        this.marks = marks;
+        this.codes = codes;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Set<UUID> teachersAwayOn(java.util.Collection<UUID> teacherIds, java.time.LocalDate date) {
+        if (teacherIds.isEmpty()) {
+            return java.util.Set.of();
+        }
+        return marks.findByTeacherIdInAndMarkDateBetween(teacherIds, date, date).stream()
+                .filter(m -> codes.find(m.getStatusCodeId())
+                        .map(c -> c.getCategory() == StatusCategory.LEAVE)
+                        .orElse(false))
+                .map(AttendanceMark::getTeacherId)
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     @Override

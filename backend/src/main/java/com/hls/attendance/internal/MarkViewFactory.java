@@ -46,7 +46,11 @@ public class MarkViewFactory {
                 .stream()
                 .collect(Collectors.toMap(SchoolDirectory.SchoolInfo::id, SchoolDirectory.SchoolInfo::name));
         Map<UUID, String> userNames = users
-                .findAllById(marks.stream().map(AttendanceMark::getSetByUserId).distinct().toList())
+                .findAllById(marks.stream()
+                        .flatMap(m -> java.util.stream.Stream.of(m.getSetByUserId(), m.getPrincipalRecordedBy()))
+                        .filter(java.util.Objects::nonNull)
+                        .distinct()
+                        .toList())
                 .stream()
                 .collect(Collectors.toMap(AppUser::getId, AppUser::getDisplayName));
         return marks.stream()
@@ -66,8 +70,23 @@ public class MarkViewFactory {
                             m.getSetAt(),
                             m.getNote(),
                             m.getVersion(),
-                            m.getLeaveRequestId());
+                            m.getLeaveRequestId(),
+                            m.isLossOfPay(),
+                            principal(m, userNames));
                 })
                 .toList();
+    }
+
+    private static MarkView.PrincipalConfirmation principal(AttendanceMark m, Map<UUID, String> userNames) {
+        if (m.getPrincipalConfirmed() == null) {
+            return null;
+        }
+        return new MarkView.PrincipalConfirmation(
+                m.getPrincipalConfirmed(),
+                m.getPrincipalName(),
+                m.getPrincipalNote(),
+                m.getPrincipalRecordedBy(),
+                userNames.getOrDefault(m.getPrincipalRecordedBy(), "Unknown user"),
+                m.getPrincipalRecordedAt());
     }
 }
