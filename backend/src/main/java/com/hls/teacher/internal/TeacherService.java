@@ -216,14 +216,20 @@ public class TeacherService {
 
     @Transactional(readOnly = true)
     public List<AccountCandidate> accountCandidates() {
-        return userAdminService
-                .search("", Role.TEACHER, true, org.springframework.data.domain.PageRequest.of(0, 500))
-                .getContent()
-                .stream()
-                .filter(u -> teacherRepository.findByUserId(u.user().getId()).isEmpty())
-                .map(u -> new AccountCandidate(u.user().getId(), u.user().getDisplayName(), u.user().getPhone()))
-                .sorted(java.util.Comparator.comparing(c -> c.displayName().toLowerCase(java.util.Locale.ROOT)))
-                .toList();
+        List<AccountCandidate> candidates = new java.util.ArrayList<>();
+        org.springframework.data.domain.Page<?> page;
+        int number = 0;
+        do {
+            var found = userAdminService.search(
+                    "", Role.TEACHER, true, org.springframework.data.domain.PageRequest.of(number++, 500));
+            found.getContent().stream()
+                    .filter(u -> teacherRepository.findByUserId(u.user().getId()).isEmpty())
+                    .map(u -> new AccountCandidate(u.user().getId(), u.user().getDisplayName(), u.user().getPhone()))
+                    .forEach(candidates::add);
+            page = found;
+        } while (page.hasNext());
+        candidates.sort(java.util.Comparator.comparing(c -> c.displayName().toLowerCase(java.util.Locale.ROOT)));
+        return candidates;
     }
 
     // ----------------------------------------------------------------- commands
