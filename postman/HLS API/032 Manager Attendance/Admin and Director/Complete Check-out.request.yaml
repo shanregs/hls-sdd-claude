@@ -1,0 +1,15 @@
+$kind: http-request
+name: Complete Check-out
+description: "Add a missing check-out time with a reason. 409 in a locked month. Needs MANAGER_ATTENDANCE.EDIT."
+url: "{{baseUrl}}/api/v1/manager-attendance/managers/{{managerId}}/days/{{date}}/complete-check-out"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "time": "18:00",
+      "reason": "Left a note"
+    }
+order: 7000

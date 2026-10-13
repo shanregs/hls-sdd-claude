@@ -1,0 +1,6 @@
+$kind: http-request
+name: Open My Photo
+description: "The Manager's own check-in photo, sent as an attachment. 404 when there is none. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/days/{{date}}/photo"
+method: GET
+order: 6000

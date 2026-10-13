@@ -1,0 +1,15 @@
+$kind: http-request
+name: Complete My Check-out
+description: "Add the time you left on a past day that has a check-in but no check-out, with a reason. 400 for a missing reason or a time before the check-in; 409 in a locked month. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/days/{{date}}/complete-check-out"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "time": "18:05",
+      "reason": "Left from the school and forgot to tap out"
+    }
+order: 4000

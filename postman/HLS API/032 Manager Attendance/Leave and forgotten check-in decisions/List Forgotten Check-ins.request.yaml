@@ -1,0 +1,10 @@
+$kind: http-request
+name: List Forgotten Check-ins
+description: "Forgotten check-in requests. Optional status and managerId. Saves the first as regularizationId. Needs MANAGER_LEAVE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/regularizations?status=PENDING"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (Array.isArray(b) && b.length) { pm.collectionVariables.set("regularizationId", b[0].id); }
+    language: text/javascript
+order: 5000

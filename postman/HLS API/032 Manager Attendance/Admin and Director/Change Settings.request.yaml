@@ -1,0 +1,16 @@
+$kind: http-request
+name: Change Settings
+description: "Change the times. The late time must be before the cut-off (400); a stale version is 409. Each change is audited. Needs MANAGER_ATTENDANCE.EDIT."
+url: "{{baseUrl}}/api/v1/manager-attendance/settings"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "missedCutoff": "10:30",
+      "lateAfter": "09:30",
+      "version": 0
+    }
+order: 11000

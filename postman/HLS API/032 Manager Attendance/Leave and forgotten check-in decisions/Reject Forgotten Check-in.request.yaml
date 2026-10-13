@@ -1,0 +1,14 @@
+$kind: http-request
+name: Reject Forgotten Check-in
+description: "Reject with a required reason. 400 without one; 403 for the requester. Needs MANAGER_LEAVE.APPROVE."
+url: "{{baseUrl}}/api/v1/manager-attendance/regularizations/{{regularizationId}}/reject"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "No such visit"
+    }
+order: 7000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Today
+description: "Today for the signed-in Manager: whether it is a working day, the record so far, leave, days with no check-out to complete, and the planned activities. 403 for a user with no Manager record. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/today"
+method: GET
+order: 1000

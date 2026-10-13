@@ -237,13 +237,13 @@ three, and the day on the missed list; check in later and see the day leave the 
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T066 [P] `attendance/manager/internal/ManagerAttendanceDevSeeder.java` (dev profile only): for the demo Manager a few past days (a worked day, a field day with a purpose, a leave day, an absence) so the month and the grid show values; do not seed any other module's data
-- [ ] T067 [P] Add a "032 Manager Attendance" folder under `postman/HLS API/` with every endpoint of contracts/manager-attendance-api.md and the refusals described, and list it in `postman/README.md`
-- [ ] T068 [P] Update `docs/spec-roadmap.md` (the 032 row status and the 013a note that Manager unpaid days are now answered) and `.specify/memory/constitution.md` (Manager Attendance rows in the Default role access matrix with a patch entry in the Sync Impact Report)
-- [ ] T069 Run `ManagerAttendanceModuleRulesTest`, `LeaveModuleRulesTest`, `AttendanceModuleRulesTest`, `PayrollModuleRulesTest` and `ApplicationModulesTest` (Spring Modulith verification) and fix any boundary violation; confirm the existing attendance, leave and payroll tests still pass unchanged
-- [ ] T070 [P] Accessibility pass on the five screens: keyboard order, a label on every form field, error text announced, WCAG 2.2 AA contrast in light and dark themes, no horizontal scroll at phone width, the location-blocked message readable
-- [ ] T071 Run the full quickstart.md walkthrough and record each step's outcome in `specs/032-manager-attendance/quickstart-results.md`; also time a check-in (under 30 seconds) and a check-out (under 20 seconds), SC-001
-- [ ] T072 Financial review of the unpaid-day rules in research.md section 3 against decisions D7, D12 and D15 of `docs/spec-roadmap.md` (Constitution Principle IX, Development Workflow item 5); note the outcome in `quickstart-results.md`
+- [X] T066 [P] `attendance/manager/internal/ManagerAttendanceDevSeeder.java` (dev profile only): for the demo Manager a few past days (a worked day, a field day with a purpose, a leave day, an absence) so the month and the grid show values; do not seed any other module's data
+- [X] T067 [P] Add a "032 Manager Attendance" folder under `postman/HLS API/` with every endpoint of contracts/manager-attendance-api.md and the refusals described, and list it in `postman/README.md`
+- [X] T068 [P] Update `docs/spec-roadmap.md` (the 032 row status and the 013a note that Manager unpaid days are now answered) and `.specify/memory/constitution.md` (Manager Attendance rows in the Default role access matrix with a patch entry in the Sync Impact Report)
+- [X] T069 Run `ManagerAttendanceModuleRulesTest`, `LeaveModuleRulesTest`, `AttendanceModuleRulesTest`, `PayrollModuleRulesTest` and `ApplicationModulesTest` (Spring Modulith verification) and fix any boundary violation; confirm the existing attendance, leave and payroll tests still pass unchanged
+- [X] T070 [P] Accessibility pass on the five screens: keyboard order, a label on every form field, error text announced, WCAG 2.2 AA contrast in light and dark themes, no horizontal scroll at phone width, the location-blocked message readable
+- [X] T071 Run the full quickstart.md walkthrough and record each step's outcome in `specs/032-manager-attendance/quickstart-results.md`; also time a check-in (under 30 seconds) and a check-out (under 20 seconds), SC-001
+- [X] T072 Financial review of the unpaid-day rules in research.md section 3 against decisions D7, D12 and D15 of `docs/spec-roadmap.md` (Constitution Principle IX, Development Workflow item 5); note the outcome in `quickstart-results.md`
 
 ---
 

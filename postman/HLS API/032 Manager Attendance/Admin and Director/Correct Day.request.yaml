@@ -1,0 +1,18 @@
+$kind: http-request
+name: Correct Day
+description: "Correct a day: any of dayType, purpose, checkInTime, checkOutTime, or clear (true removes the check-in and check-out), with a required reason of at most 500 characters. The original stays in the history. 400 for a missing reason, nothing to change, a Field day with no basis, a check-out before the check-in, or a future day; 409 in a locked month. Needs MANAGER_ATTENDANCE.EDIT."
+url: "{{baseUrl}}/api/v1/manager-attendance/managers/{{managerId}}/days/{{date}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "It was a field day",
+      "dayType": "FIELD",
+      "purpose": "School visit",
+      "checkInTime": "08:45",
+      "checkOutTime": "18:10"
+    }
+order: 6000

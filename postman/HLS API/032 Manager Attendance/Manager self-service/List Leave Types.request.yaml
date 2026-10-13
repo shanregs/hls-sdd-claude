@@ -1,0 +1,10 @@
+$kind: http-request
+name: List Leave Types
+description: "The active leave types of spec 009, with which one is Loss of Pay. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/leave/types"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (Array.isArray(b) && b.length) { pm.collectionVariables.set("leaveTypeId", b[0].id); }
+    language: text/javascript
+order: 11000

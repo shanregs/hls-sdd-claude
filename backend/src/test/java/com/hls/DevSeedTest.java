@@ -58,4 +58,28 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(page.status()).isEqualTo(200);
         assertThat(((Number) page.map().get("total")).intValue()).isGreaterThanOrEqualTo(12);
     }
+
+    @Test
+    void managerAttendanceDemoDataGivesManojAMonthWithWorkedFieldLeaveAndAbsentDays() {
+        Signed manoj = signIn(null, "9800000003", "Password123!");
+        Signed director = signIn(null, "9800000002", "Password123!");
+        java.time.YearMonth month = java.time.YearMonth.from(java.time.LocalDate.now());
+
+        // the window of eight working days can straddle two months, so look at both
+        java.util.List<java.util.Map<String, Object>> days = new java.util.ArrayList<>();
+        for (java.time.YearMonth m : new java.time.YearMonth[] {month.minusMonths(1), month}) {
+            Resp resp = get("/api/v1/manager-attendance/me/months/" + m, manoj.token());
+            assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+            @SuppressWarnings("unchecked")
+            java.util.List<java.util.Map<String, Object>> found =
+                    (java.util.List<java.util.Map<String, Object>>) resp.map().get("days");
+            days.addAll(found);
+        }
+        java.util.List<Object> statuses = days.stream().map(d -> d.get("status")).toList();
+        assertThat(statuses).contains("WORKED", "FIELD", "LEAVE", "ABSENT", "NO_CHECK_OUT");
+
+        // the leave went through the real service, so the Director has a pending request to decide
+        assertThat(get("/api/v1/manager-attendance/leave?status=PENDING", director.token()).body()).contains("Manoj Manager");
+        assertThat(get("/api/v1/manager-attendance/leave?status=APPROVED", director.token()).body()).contains("Family function");
+    }
 }

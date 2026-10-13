@@ -165,7 +165,7 @@ export function MyManagerLeavePage() {
                 </MenuItem>
               ))}
             </TextField>
-            <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
                 label="First day"
                 type="date"
@@ -181,7 +181,7 @@ export function MyManagerLeavePage() {
                 slotProps={{ inputLabel: { shrink: true } }}
               />
             </Stack>
-            <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={0}>
               <FormControlLabel
                 control={
                   <Checkbox

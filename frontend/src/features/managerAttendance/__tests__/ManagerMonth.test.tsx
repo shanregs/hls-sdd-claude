@@ -299,3 +299,25 @@ describe("My month (spec 032 US5)", () => {
     30_000,
   );
 });
+
+describe("My month keyboard order and errors (spec 032 T070)", () => {
+  it("moves through the request form in reading order and announces its error", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const day = await screen.findByLabelText("Day");
+    day.focus();
+    const names: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      await user.tab();
+      const el = document.activeElement as HTMLInputElement;
+      names.push(el.labels?.[0]?.textContent ?? el.textContent ?? "");
+    }
+    expect(names.join("|")).toMatch(
+      /Time you arrived.*Office.*Reason.*Send request/,
+    );
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Choose the day you forgot/,
+    );
+  });
+});

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Add Photo
+description: "Attach the optional check-in photo (multipart field file: jpg or png). 400 for another file type; 409 in a locked month. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/days/{{date}}/photo"
+method: POST
+body:
+  type: form-data
+  content:
+    - key: file
+      type: file
+      value: ""
+order: 5000

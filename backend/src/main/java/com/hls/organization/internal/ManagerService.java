@@ -81,14 +81,19 @@ public class ManagerService implements ManagerQueries {
     @Transactional(readOnly = true)
     public List<Candidate> candidates() {
         Set<UUID> taken = managerRepository.findAll().stream().map(Manager::getUserId).collect(Collectors.toSet());
-        return userAdminService
-                .search("", Role.MANAGER, true, org.springframework.data.domain.PageRequest.of(0, 500))
-                .getContent()
-                .stream()
-                .filter(u -> !taken.contains(u.user().getId()))
-                .map(u -> new Candidate(u.user().getId(), u.user().getDisplayName(), u.user().getPhone()))
-                .sorted(Comparator.comparing(c -> c.displayName().toLowerCase(Locale.ROOT)))
-                .toList();
+        // every page: a cap on the first page would hide candidates once there are many Manager users
+        List<Candidate> candidates = new java.util.ArrayList<>();
+        org.springframework.data.domain.Page<UserWithRoles> page;
+        int number = 0;
+        do {
+            page = userAdminService.search("", Role.MANAGER, true, org.springframework.data.domain.PageRequest.of(number++, 500));
+            page.getContent().stream()
+                    .filter(u -> !taken.contains(u.user().getId()))
+                    .map(u -> new Candidate(u.user().getId(), u.user().getDisplayName(), u.user().getPhone()))
+                    .forEach(candidates::add);
+        } while (page.hasNext());
+        candidates.sort(Comparator.comparing(c -> c.displayName().toLowerCase(Locale.ROOT)));
+        return candidates;
     }
 
     @Transactional(readOnly = true)

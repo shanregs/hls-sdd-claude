@@ -1,0 +1,12 @@
+$kind: http-request
+name: Approve Leave
+description: "Approve; the leave days are written onto the Manager's records (half days and Loss of Pay as asked). 403 when the decider is the requester; 409 when it is not pending, or when a day is in a locked month, already has leave, or already has a check-in for a full day. Needs MANAGER_LEAVE.APPROVE."
+url: "{{baseUrl}}/api/v1/manager-attendance/leave/{{managerLeaveId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 2000

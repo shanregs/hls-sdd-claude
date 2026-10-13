@@ -1,0 +1,6 @@
+$kind: http-request
+name: Managers On Leave
+description: "Managers on approved leave on a date (default today), with the fraction of the day and whether it is unpaid. Needs MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/on-leave"
+method: GET
+order: 3000

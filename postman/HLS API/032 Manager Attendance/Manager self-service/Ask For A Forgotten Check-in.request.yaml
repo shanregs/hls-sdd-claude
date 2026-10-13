@@ -1,0 +1,22 @@
+$kind: http-request
+name: Ask For A Forgotten Check-in
+description: "Ask for a past day to be added. Refused with 400 for a future day or time, a day that already has a check-in, a pending request for the same date, a Field day with no purpose, or a missing reason; 409 in a locked month. Saves regularizationId. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/regularizations"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "date": "2026-11-02",
+      "proposedTime": "09:15",
+      "dayType": "OFFICE",
+      "purpose": null,
+      "reason": "Phone was off"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { pm.collectionVariables.set("regularizationId", pm.response.json().id); }
+    language: text/javascript
+order: 9000

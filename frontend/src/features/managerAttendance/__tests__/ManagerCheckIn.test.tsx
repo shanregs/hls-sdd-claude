@@ -381,3 +381,23 @@ describe("Manager check-in (spec 032 US1)", () => {
     30_000,
   );
 });
+
+describe("Location blocked (spec 032 T070)", () => {
+  it.each(["light", "dark"] as const)(
+    "shows a readable, announced message with no accessibility violations in the %s theme",
+    async (mode) => {
+      mockGeolocation("blocked");
+      const user = userEvent.setup();
+      const { container } = renderPage(mode);
+      await user.click(await screen.findByRole("button", { name: "Check in" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /Your location is blocked/,
+      );
+      const results = await axe(container, {
+        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
+      });
+      expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    },
+    30_000,
+  );
+});
