@@ -7,6 +7,6 @@ public sealed interface UnpaidDays {
 
     record Found(List<UnpaidDay> days) implements UnpaidDays {}
 
-    /** For example a Manager, whose attendance is not recorded yet (spec 032). Callers must not read this as zero. */
+    /** For example a Manager with no joining date (spec 032). Callers must show the reason and not read this as zero. */
     record Unavailable(String reason) implements UnpaidDays {}
 }

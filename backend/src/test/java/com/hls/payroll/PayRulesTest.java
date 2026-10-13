@@ -330,15 +330,137 @@ class PayRulesTest extends PayrollTestBase {
                 .isInstanceOf(LossOfPayValue.NoSalary.class);
     }
 
-    @Test
-    void aManagersUnpaidDaysAreUnavailableNotZero() {
-        String admin = signInAs(Role.ADMIN).token();
+    /** A check-in for a Manager on a date, written directly. */
+    private void managerCheckIn(UUID managerId, LocalDate date) {
+        jdbc.update(
+                "insert into manager_day (id, manager_id, day_date, day_type, check_in_at, check_in_lat, check_in_lng, version)"
+                        + " values (?, ?, ?, 'OFFICE', ?, 12.97, 77.59, 0)",
+                UUID.randomUUID(),
+                managerId,
+                date,
+                Timestamp.from(date.atTime(9, 0).atZone(java.time.ZoneId.of("Asia/Kolkata")).toInstant()));
+    }
+
+    private void managerLeave(UUID managerId, LocalDate date, String fraction, boolean unpaid) {
+        jdbc.update(
+                "insert into manager_day (id, manager_id, day_date, leave_request_id, leave_fraction, leave_unpaid, version)"
+                        + " values (?, ?, ?, ?, ?::numeric, ?, 0)",
+                UUID.randomUUID(),
+                managerId,
+                date,
+                UUID.randomUUID(),
+                fraction,
+                unpaid);
+    }
+
+    /** A Manager who joined well before the month with a recorded salary. */
+    private ManagerCtx paidManager(String admin, String salary) {
         ManagerCtx manager = newManager(admin);
+        assertThat(employment(admin, manager.managerId(), uniqueEmployeeId(), month.atDay(1).minusMonths(3), null).status())
+                .isEqualTo(200);
+        if (salary != null) {
+            personSalaryInThePast("MANAGER", manager.managerId(), salary, LocalDate.now().minusDays(400));
+        }
+        return manager;
+    }
+
+    @Test
+    void aManagersUnpaidDaysAreTheirAbsencesAndLossOfPayLeaveWithEachDaysFraction() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = paidManager(admin, "30000");
+        List<LocalDate> working = workingDays(null);
+        for (int i = 0; i < working.size(); i++) {
+            if (i > 3) {
+                managerCheckIn(manager.managerId(), working.get(i));
+            }
+        }
+        // 0: no check-in and no leave; 1: Loss-of-Pay leave; 2: paid leave; 3: paid half day with no check-in
+        managerLeave(manager.managerId(), working.get(1), "1.0", true);
+        managerLeave(manager.managerId(), working.get(2), "1.0", false);
+        managerLeave(manager.managerId(), working.get(3), "0.5", false);
         PersonRef person = managerRef(manager.managerId());
-        assertThat(payRules.unpaidDays(person, month)).isInstanceOf(UnpaidDays.Unavailable.class);
-        assertThat(((UnpaidDays.Unavailable) payRules.unpaidDays(person, month)).reason())
-                .isEqualTo("Manager attendance is not recorded yet");
-        assertThat(payRules.totalLossOfPay(person, month)).isInstanceOf(TotalLossOfPay.Cannot.class);
+
+        List<com.hls.payroll.api.UnpaidDay> days = ((UnpaidDays.Found) payRules.unpaidDays(person, month)).days();
+
+        assertThat(days).extracting(com.hls.payroll.api.UnpaidDay::date).containsExactly(working.get(0), working.get(1), working.get(3));
+        assertThat(days.get(0).dayValue()).isEqualByComparingTo("1");
+        assertThat(days.get(1).dayValue()).isEqualByComparingTo("1");
+        assertThat(days.get(2).dayValue()).isEqualByComparingTo("0.5");
+    }
+
+    @Test
+    void aManagersTotalLossOfPayIsEachUnpaidDayAtThatDaysSalaryRoundedOnce() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = paidManager(admin, "30000");
+        personSalaryInThePast("MANAGER", manager.managerId(), "36000", month.atDay(16));
+        List<LocalDate> working = workingDays(null);
+        LocalDate before = working.stream().filter(d -> d.getDayOfMonth() < 16).findFirst().orElseThrow();
+        LocalDate after = working.stream().filter(d -> d.getDayOfMonth() >= 16).reduce((a, b) -> b).orElseThrow();
+        for (LocalDate d : working) {
+            if (!d.equals(before) && !d.equals(after)) {
+                managerCheckIn(manager.managerId(), d);
+            }
+        }
+        PersonRef person = managerRef(manager.managerId());
+
+        TotalLossOfPay.Found total = (TotalLossOfPay.Found) payRules.totalLossOfPay(person, month);
+
+        BigDecimal expected = perDay("30000", working.size()).add(perDay("36000", working.size()));
+        assertThat(total.unrounded()).isEqualByComparingTo(expected);
+        assertThat(total.rounded()).isEqualByComparingTo(expected.setScale(0, RoundingMode.HALF_UP));
+        assertThat(total.days()).extracting(TotalLossOfPay.UnpaidDayValue::date).containsExactly(before, after);
+        assertThat(total.days().get(0).salary()).isEqualByComparingTo("30000");
+        assertThat(total.days().get(1).salary()).isEqualByComparingTo("36000");
+    }
+
+    @Test
+    void aManagerWithNoAbsenceHasNoUnpaidDaysAndNothingDeducted() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = paidManager(admin, "30000");
+        workingDays(null).forEach(d -> managerCheckIn(manager.managerId(), d));
+        PersonRef person = managerRef(manager.managerId());
+
+        assertThat(((UnpaidDays.Found) payRules.unpaidDays(person, month)).days()).isEmpty();
+        TotalLossOfPay.Found total = (TotalLossOfPay.Found) payRules.totalLossOfPay(person, month);
+        assertThat(total.rounded()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void aManagerWithAnUnpaidDayAndNoSalaryGetsCannotNeverZero() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = paidManager(admin, null);
+        PersonRef person = managerRef(manager.managerId());
+
+        assertThat(((UnpaidDays.Found) payRules.unpaidDays(person, month)).days()).isNotEmpty();
+        TotalLossOfPay total = payRules.totalLossOfPay(person, month);
+        assertThat(total).isInstanceOf(TotalLossOfPay.Cannot.class);
+        assertThat(((TotalLossOfPay.Cannot) total).reason()).contains("salary");
+    }
+
+    @Test
+    void aManagerWithNoJoiningDateOrNoRecordGetsAStatedReasonNotZero() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx none = newManager(admin);
+
+        UnpaidDays noJoining = payRules.unpaidDays(managerRef(none.managerId()), month);
+        assertThat(noJoining).isInstanceOf(UnpaidDays.Unavailable.class);
+        assertThat(((UnpaidDays.Unavailable) noJoining).reason()).contains("joining date");
+        assertThat(payRules.totalLossOfPay(managerRef(none.managerId()), month)).isInstanceOf(TotalLossOfPay.Cannot.class);
+
+        UnpaidDays unknown = payRules.unpaidDays(managerRef(UUID.randomUUID()), month);
+        assertThat(unknown).isEqualTo(new UnpaidDays.Unavailable("The Manager is not known."));
+        assertThat(payRules.totalLossOfPay(managerRef(UUID.randomUUID()), month))
+                .isEqualTo(new TotalLossOfPay.Cannot("The Manager is not known."));
+    }
+
+    @Test
+    void theOldManagerAttendanceNotRecordedAnswerIsGone() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = paidManager(admin, "30000");
+        PersonRef person = managerRef(manager.managerId());
+
+        assertThat(payRules.unpaidDays(person, month)).isInstanceOf(UnpaidDays.Found.class);
+        assertThat(String.valueOf(payRules.totalLossOfPay(person, month))).doesNotContain("not recorded yet");
     }
 
     // ------------------------------------------------------------------- staff
@@ -374,13 +496,16 @@ class PayRulesTest extends PayrollTestBase {
     }
 
     @Test
-    void aStaffMemberWithNoSalaryOrNoAttendanceGetsStatedReasonsNeverZero() {
+    void aStaffMemberWithNoSalaryGetsAStatedReasonButHasNoUnpaidDaysByRule() {
         Signed signed = signInAs(Role.DIRECTOR);
         PersonRef person = staffRef(signed.userId());
         assertThat(payRules.salaryOn(person, month.atDay(15)))
                 .isEqualTo(new SalaryInEffect.NoSalary(Reason.PERSON_HAS_NO_RECORDED_SALARY));
-        assertThat(payRules.unpaidDays(person, month)).isEqualTo(new UnpaidDays.Unavailable("Staff attendance is not recorded yet"));
-        assertThat(payRules.totalLossOfPay(person, month)).isInstanceOf(TotalLossOfPay.Cannot.class);
+        // an Admin or Director has no attendance: "no unpaid days" is the rule, not a missing answer
+        assertThat(payRules.unpaidDays(person, month)).isEqualTo(new UnpaidDays.Found(List.of()));
+        TotalLossOfPay.Found total = (TotalLossOfPay.Found) payRules.totalLossOfPay(person, month);
+        assertThat(total.rounded()).isEqualByComparingTo("0");
+        assertThat(total.days()).isEmpty();
     }
 
     @Test

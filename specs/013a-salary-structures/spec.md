@@ -125,8 +125,8 @@ hand-computed figures.
    asked for, **Then** the answer says so explicitly; it is never zero.
 9. **Given** a month with no working days, **When** the value of a day of loss of pay is asked for, **Then** the
    answer says the month has no working days; it never divides by zero.
-10. **Given** a Manager, **When** the unpaid days of a month are asked for before spec 032 is built, **Then** the
-    answer says Manager attendance is not recorded yet; it never says there are no unpaid days.
+10. **Given** a Manager, **When** the unpaid days of a month are asked for, **Then** the days come from spec 032 attendance (a
+    Manager with no joining date gets a stated reason); it never says there are no unpaid days for a month that cannot be known.
 
 ---
 
@@ -254,8 +254,8 @@ date and see them paid from that date.
   lost.
 - **FR-012**: The system MUST treat the unpaid days that payroll deducts as: an absence with no approved leave and a day
   of Loss-of-Pay leave; a half day counts as half; a Manager's missed check-in raises an alert but is not unpaid by
-  itself. Until Manager attendance exists (spec 032), a Manager's unpaid days are reported as not available, with a
-  stated reason; they are never reported as none.
+  itself. A Manager's unpaid days come from spec 032 Manager attendance; a Manager whose month cannot be worked out (no joining date) is reported as not available, with a
+  stated reason, never as none. An Admin or Director has no attendance, so their unpaid days are none by rule.
 - **FR-013**: The system MUST show Admin and Director, under OPERATIONS → Salary Structures, every Manager, Teacher and
   staff member with their salary in effect and a flag for those with none, each person's full salary history, each
   designation with its suggested default and a flag where people hold it without a salary of their own, and the pay

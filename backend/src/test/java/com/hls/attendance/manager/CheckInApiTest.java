@@ -128,12 +128,8 @@ class CheckInApiTest extends ManagerAttendanceTestBase {
     void aCheckInOnAHolidayIsAcceptedAndRecorded() {
         String admin = signInAs(Role.ADMIN).token();
         ManagerCtx manager = joinedManager(admin);
-        int inserted = jdbc.update(
-                "insert into attendance_non_working_date (id, on_date, description, created_by) values (?, ?, 'Test holiday', ?)"
-                        + " on conflict (on_date) do nothing",
-                UUID.randomUUID(),
-                today(),
-                UUID.randomUUID());
+        // through the API, which also refreshes the calendar's cached holidays; a raw insert is not seen once the cache is warm
+        addHoliday(admin, today());
         try {
             Resp resp = checkIn(manager.token(), "OFFICE");
 
@@ -141,9 +137,7 @@ class CheckInApiTest extends ManagerAttendanceTestBase {
             Resp status = get(ME + "/today", manager.token());
             assertThat(status.map()).containsEntry("workingDay", false);
         } finally {
-            if (inserted > 0) {
-                jdbc.update("delete from attendance_non_working_date where on_date = ? and description = 'Test holiday'", today());
-            }
+            removeHoliday(admin, today());
         }
     }
 
