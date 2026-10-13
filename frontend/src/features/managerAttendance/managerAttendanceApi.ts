@@ -65,16 +65,79 @@ export interface CheckInBody extends ManagerLocation {
   activities?: ActivityRef[];
 }
 
+export interface Place {
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number | null;
+}
+
+export interface HistoryEntry {
+  id: string;
+  action: string;
+  changedBy: string;
+  changedByName: string;
+  changedAt: string;
+  reason: string | null;
+  beforeJson: string | null;
+  afterJson: string | null;
+}
+
+/** One date of a month. A date with no record has only `date` and `status` filled in. */
 export interface MonthDay {
   date: string;
   status: string;
-  [key: string]: unknown;
+  id: string | null;
+  dayType: DayType | null;
+  purpose: string | null;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  late: boolean;
+  hasPhoto: boolean;
+  leave: DayLeave | null;
+  flags: string[];
+  activities: ActivityRef[];
+  checkInPlace: Place | null;
+  checkOutPlace: Place | null;
+  /** Present only on an Admin or Director's view of one Manager. */
+  history: HistoryEntry[] | null;
+}
+
+export interface MonthFigures {
+  workingDays: number;
+  daysWorked: number;
+  leavePaid: number;
+  leaveUnpaid: number;
+  unpaid: number;
+  fieldDays: number;
+  pending: string[];
 }
 
 export interface MonthView {
   month: string;
+  managerId: string;
+  managerName: string;
+  locked: boolean;
+  figures: MonthFigures | null;
+  figuresUnavailable: string | null;
   days: MonthDay[];
-  [key: string]: unknown;
+}
+
+export interface GridRow {
+  managerId: string;
+  name: string;
+  employeeId: string | null;
+  locked: boolean;
+  figures: MonthFigures | null;
+  figuresUnavailable: string | null;
+  /** One status per date of the month, in date order. */
+  statuses: string[];
+}
+
+export interface Grid {
+  month: string;
+  firstDate: string;
+  daysInMonth: number;
+  managers: GridRow[];
 }
 
 export interface Regularization {
@@ -223,7 +286,7 @@ export const cancelLeave = (a: AuthFetch, id: string): Promise<ApiResult> =>
 export const getGrid = (
   a: AuthFetch,
   params: { month: string; zoneId?: string; q?: string },
-): Promise<ApiResult<unknown>> =>
+): Promise<ApiResult<Grid>> =>
   getJson(a, `${BASE}/grid?${queryString(params)}`, "Could not load the grid.");
 
 export const getMissed = (
