@@ -73,9 +73,14 @@ joined, already left) is simply not in the run and is not listed.
 **Rationale**: matches FR-002 and the 013a payable-days rule; the only silent-loss case is the missing joining date, which
 is handled on purpose and tested.
 
-**Open point to verify in the first task**: how `payableDays` answers for a Teacher with no joining date or an unknown
-placement; the test fixture list in the foundation slice includes it, and the answer decides whether a second explicit
-candidate case is needed.
+**Answer found in T001 (2026-10-13)**: a Manager with no joining date is **not** missing from the payable dates:
+`PayableDaysCalculator` treats a null joining date as an open start, so the Manager has every working date of the month,
+and the problem shows up where it should, in `UnpaidDays.Unavailable("... joining date has not been recorded ...")` and
+so in `TotalLossOfPay.Cannot`. The run therefore lists the Manager as "cannot be paid" with that reason through the
+normal path, and **no explicit extra candidate case is needed** (the plan's wording above is superseded). A Teacher has no
+joining date of their own: their placements are their employment, so a Teacher with no placement has no payable date
+and is not in the run (the spec 013a rule that a Teacher is paid only for the days placed in a School). A staff member with
+no employment record is payable all month (open dates). The foundation tests assert all three.
 
 ## 5. Freezing
 
@@ -216,7 +221,27 @@ month and the status and never an amount.
 is built from the stored line only. Reserved adjustment kinds are shown, disabled, with the spec that will create them.
 MUI v9 note from spec 032: `Stack` needs `sx` for gap, wrap and alignment.
 
-## 18. Things deliberately left out
+## 18. Findings during implementation
+
+- **Prerequisites (T001)**: `PayRules` (bulk `payableDays` and `salariesOn`, `unpaidDays`, `totalLossOfPay`, `policyOn`),
+  `PersonDirectory` (`allTeachers`, `allManagers`, `allStaff`), `AttendanceReadApi.isLocked`,
+  `ManagerAttendanceReadApi.months`, `FileStore` (pdf, 10 MB) and `RecipientResolver.activeAdminsAndDirectors` all exist
+  with the shapes the plan assumed. The highest migration on main is V52, so ours is V53.
+- **School working days (spec 037) are not adopted by payroll.** `PayRulesImpl` divides by the count of working dates of
+  the calendar, not by the figure entered on the School Working Days screen (a decimal, half days possible, which wins
+  over the calendar for the School). Spec 037 left payroll to adopt that figure "by a separate amendment". 013b keeps
+  the existing divisor, so the run will not follow a School's stored figure. This is a **financial review point** for the
+  payroll owner (quickstart.md, point 7) and not changed here.
+- **The reason a day is unpaid** is not carried by `payroll.api.UnpaidDay` (date and value only). The run shows a
+  reason per unpaid day from what it can tell: a Teacher's unpaid day with a leave request is Loss-of-Pay leave, one without
+  is an absence; a Manager's is "no check-in, or Loss-of-Pay leave" because `ManagerMonth` carries no per-date reason.
+  Carrying the Manager's per-date reason through the read API is left for a later amendment.
+- **jsonb** reorders object keys when it stores them; the content is unchanged and nothing reads the key order. The
+  fingerprint is taken from the text the calculator wrote, before storage.
+- **Exit date of a Manager** can only be recorded for an inactive Manager; staff exit dates are free. Tests use staff for
+  the exit fixture.
+
+## 19. Things deliberately left out
 
 Tax, provident fund, statutory deductions, bonuses, arrears (done through adjustments), a person's own pay view and
 mobile access, automatic scheduling, email or SMS, multi-level approval, and bank file generation.

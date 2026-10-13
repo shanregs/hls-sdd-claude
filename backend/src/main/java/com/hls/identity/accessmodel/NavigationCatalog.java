@@ -278,6 +278,14 @@ public final class NavigationCatalog {
                     38,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
+                    "Payroll",
+                    "/operations/payroll",
+                    PermissionModule.PAYROLL,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    40,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
                     "Manager Leave",
                     "/operations/manager-leave",
                     PermissionModule.MANAGER_LEAVE,

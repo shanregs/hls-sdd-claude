@@ -69,6 +69,9 @@ The payroll owner confirms, with the fixtures:
    Manager's lock-time working-day count differs. Confirm a warning (not a block) is right.
 5. **Adjustments and negative net**: a negative net blocks submission; confirm.
 6. **Supplementary run**: confirm the same month's policy and divisor are used, as stored at computation of that run.
+7. **School working days (spec 037)**: payroll divides by the calendar-derived working days, not by the stored School
+   figure of spec 037 (which may include half days and wins over the calendar for the School). Decide whether payroll
+   adopts the stored figure; if so it is an amendment to 013a's `PayRules`, not to the run.
 
 Results go in `quickstart-results.md` after implementation, with the "Not done" list stated honestly (manual browser
 walkthrough, screen-reader check, human timing of SC-005).

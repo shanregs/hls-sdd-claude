@@ -38,6 +38,10 @@ public class AuditVisibility {
             Map.entry("MANAGER_LEAVE", PermissionModule.MANAGER_LEAVE),
             Map.entry("MANAGER_MONTH", PermissionModule.MANAGER_ATTENDANCE),
             Map.entry("MANAGER_ATTENDANCE_SETTING", PermissionModule.MANAGER_ATTENDANCE),
+            Map.entry("PAYROLL_RUN", PermissionModule.PAYROLL),
+            Map.entry("PAYROLL_ADJUSTMENT", PermissionModule.PAYROLL),
+            Map.entry("PAYROLL_PAYMENT", PermissionModule.PAYROLL),
+            Map.entry("PAYROLL_EXPORT", PermissionModule.PAYROLL),
             Map.entry("SCHOOL_WORKING_DAYS", PermissionModule.SCHOOL_WORKING_DAYS),
             Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT),
             Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION));

@@ -6,6 +6,7 @@ import com.hls.attendance.api.ManagerMonth;
 import com.hls.attendance.api.MarkView;
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.leave.api.LeaveTypes;
+import com.hls.payroll.api.EarnedPay;
 import com.hls.payroll.api.LossOfPayValue;
 import com.hls.payroll.api.PayPolicyView;
 import com.hls.payroll.api.PayRules;
@@ -375,6 +376,49 @@ class PayRulesImpl implements PayRules {
         }
         BigDecimal unrounded = LossOfPayCalculator.sum(inputs);
         return new TotalLossOfPay.Found(LossOfPayCalculator.round(unrounded, policy.rounding()), unrounded, values);
+    }
+
+    // ------------------------------------------------------------- earned pay
+
+    @Override
+    public EarnedPay earnedPay(PersonRef person, YearMonth month) {
+        Computed computed = compute(List.of(person), month).get(person);
+        if (!computed.known()) {
+            return new EarnedPay.Cannot(unknownReason(person.kind()));
+        }
+        List<LocalDate> dates = computed.days().dates();
+        if (dates.isEmpty()) {
+            return new EarnedPay.Cannot("The person has no payable date in " + month + ".");
+        }
+        PayPolicyView policy = policyOfMonth(month);
+        List<EarnedPay.DayValue> values = new ArrayList<>();
+        BigDecimal unrounded = BigDecimal.ZERO.setScale(LossOfPayCalculator.SCALE);
+        for (LocalDate date : dates) {
+            // each payable date is valued at the salary in effect on that date, so a mid-month raise splits the month
+            SalaryInEffect salary = salaryOn(person, date);
+            if (salary instanceof SalaryInEffect.NoSalary none) {
+                return new EarnedPay.Cannot("No salary on " + DISPLAY.format(date) + ": " + none.reason().message());
+            }
+            BigDecimal monthly = ((SalaryInEffect.Found) salary).monthly();
+            // the divisor of a date is the one totalLossOfPay uses for the same date
+            int workingDays = computed.monthWorkingDaysBySchool()
+                    .getOrDefault(computed.schoolByDate().get(date), 0);
+            if (workingDays == 0) {
+                return new EarnedPay.Cannot("No working days in " + month + " to value " + DISPLAY.format(date) + ".");
+            }
+            BigDecimal amount = LossOfPayCalculator.fullDay(monthly, workingDays);
+            values.add(new EarnedPay.DayValue(date, monthly, workingDays, amount));
+            unrounded = unrounded.add(amount);
+        }
+        return new EarnedPay.Found(LossOfPayCalculator.round(unrounded, policy.rounding()), unrounded, values);
+    }
+
+    private static String unknownReason(Kind kind) {
+        return switch (kind) {
+            case TEACHER -> UNKNOWN_TEACHER;
+            case MANAGER -> UNKNOWN_MANAGER;
+            case STAFF -> "The staff member is not known.";
+        };
     }
 
     // ---------------------------------------------------------------- helpers
