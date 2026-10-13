@@ -1,6 +1,6 @@
 # Data Model: Manager Attendance and Field Days (spec 032)
 
-Tables in `attendance` (V49) and `leave` (V50). No foreign keys cross modules: manager and user ids are plain UUIDs
+Tables in `attendance` (V49) and `leave` (V51). No foreign keys cross modules: manager and user ids are plain UUIDs
 checked through `organization.api` and `identity`; file ids come from `files.api`.
 
 ## manager_day
@@ -101,7 +101,7 @@ One row. `missed_cutoff` TIME (default 10:30), `late_after` TIME (default 09:30)
 `manager_id`, `alert_date`, `created_at`; primary key `(manager_id, alert_date)`. Its only job is to make the alert once
 per Manager per day.
 
-## manager_leave_request (leave module, V29)
+## manager_leave_request (leave module, V51)
 
 | Column | Type | Rules |
 | --- | --- | --- |

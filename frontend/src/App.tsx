@@ -35,6 +35,8 @@ import { ApiAccessPage } from "./features/audit/ApiAccessPage";
 import { AttendanceSetupPage } from "./features/attendance/AttendanceSetupPage";
 import { ManagerAttendanceGridPage } from "./features/managerAttendance/ManagerAttendanceGridPage";
 import { ManagerCheckInPage } from "./features/managerAttendance/ManagerCheckInPage";
+import { ManagerLeaveDecisionsPage } from "./features/managerAttendance/ManagerLeaveDecisionsPage";
+import { MyManagerLeavePage } from "./features/managerAttendance/MyManagerLeavePage";
 import { MyManagerMonthPage } from "./features/managerAttendance/MyManagerMonthPage";
 import { MyAttendancePage } from "./features/attendance/MyAttendancePage";
 import { TeacherAttendancePage } from "./features/attendance/TeacherAttendancePage";
@@ -225,6 +227,22 @@ export function App() {
           element={
             <RouteGuard>
               <MyManagerMonthPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/manager-attendance/me/leave"
+          element={
+            <RouteGuard>
+              <MyManagerLeavePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/manager-leave"
+          element={
+            <RouteGuard>
+              <ManagerLeaveDecisionsPage />
             </RouteGuard>
           }
         />

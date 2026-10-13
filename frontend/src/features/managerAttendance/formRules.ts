@@ -94,3 +94,48 @@ export function validateCorrection(v: CorrectionValues): string | null {
   }
   return null;
 }
+
+export interface LeaveValues {
+  leaveTypeId: string;
+  firstDate: string;
+  lastDate: string;
+  firstHalf: boolean;
+  lastHalf: boolean;
+  reason: string;
+}
+
+export const EMPTY_LEAVE: LeaveValues = {
+  leaveTypeId: "",
+  firstDate: "",
+  lastDate: "",
+  firstHalf: false,
+  lastHalf: false,
+  reason: "",
+};
+
+/** The first problem with a leave request, or null. Days off are checked by the server, which knows the calendar. */
+export function validateLeave(v: LeaveValues): string | null {
+  if (!v.leaveTypeId) return "Choose a leave type.";
+  if (!v.firstDate) return "Choose the first day of leave.";
+  if (!v.lastDate) return "Choose the last day of leave.";
+  if (v.lastDate < v.firstDate) {
+    return "The last day cannot be before the first day.";
+  }
+  if (v.firstDate === v.lastDate && v.firstHalf && v.lastHalf) {
+    return "One day cannot be two half days. Choose one half day.";
+  }
+  if (v.reason.trim() === "") return "A reason is required.";
+  if (v.reason.length > MAX_REASON) {
+    return `The reason can be at most ${MAX_REASON} characters.`;
+  }
+  return null;
+}
+
+/** A reason asked for when rejecting or revoking. */
+export function validateDecisionReason(reason: string): string | null {
+  if (reason.trim() === "") return "A reason is required.";
+  if (reason.length > MAX_REASON) {
+    return `The reason can be at most ${MAX_REASON} characters.`;
+  }
+  return null;
+}

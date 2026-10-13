@@ -34,6 +34,8 @@ public class AuditVisibility {
             Map.entry("ATTENDANCE_CODE", PermissionModule.ATTENDANCE_SETUP),
             Map.entry("ATTENDANCE_CALENDAR", PermissionModule.ATTENDANCE_SETUP),
             Map.entry("MANAGER_DAY", PermissionModule.MANAGER_ATTENDANCE),
+            Map.entry("MANAGER_REGULARIZATION", PermissionModule.MANAGER_ATTENDANCE),
+            Map.entry("MANAGER_LEAVE", PermissionModule.MANAGER_LEAVE),
             Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT),
             Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION));
 

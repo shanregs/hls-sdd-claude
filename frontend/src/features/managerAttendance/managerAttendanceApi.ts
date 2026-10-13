@@ -142,6 +142,8 @@ export interface Grid {
 
 export interface Regularization {
   id: string;
+  managerId: string;
+  managerName: string | null;
   date: string;
   proposedTime: string;
   dayType: DayType;
@@ -181,6 +183,10 @@ export interface LeaveRequestBody {
 }
 
 export interface ManagerLeaveRequest extends LeaveRequestBody {
+  managerName: string | null;
+  leaveTypeName: string | null;
+  lossOfPay: boolean;
+  requestedAt: string;
   id: string;
   managerId: string;
   status: string;
