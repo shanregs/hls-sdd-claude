@@ -17,6 +17,14 @@ Decided by default while writing (no one was available to answer); each is also 
 - Q: Which values are valid? → A: From 0 up to the number of days in that calendar month, in steps of half a day.
 - Q: Who may see and change it? → A: Admin: View, Create, Edit, Delete. Director: View, Create, Edit (no Delete, as for other School master data). Manager, Teacher and System have no screen; Managers and Teachers see the figure only through the screens of the modules that use it.
 
+### Session 2026-10-13
+
+- Q: Should copying one year's figures to another year (User Story 5 / FR-027) be built in this delivery? → A: Yes, it is in scope for this delivery.
+- Q: Should the screen warn before changing a figure for a month payroll or attendance may have finalised? → A: Always show a fixed notice beside inline Save and on the delete confirmation ("Months already finalised in payroll or attendance keep the figure they used"); no live check of finalised months.
+- Q: How far into the past and future is a month accepted? → A: Current year minus 5 through current year plus 5, checked against today's date.
+- Q: What happens when someone edits or deletes a row that another person already deleted? → A: The action is refused, the user is told the row was deleted, and the row is removed from the grid; it is never recreated.
+- Q: After a row is deleted, where can a user still see its history? → A: A "Deleted rows" history view in the grid for the selected School and year, built from audit entries, available to users with View.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Keep a School's Monthly Working Days (Priority: P1) 🎯 MVP
@@ -90,16 +98,16 @@ Every creation, edit and deletion is recorded in the audit trail with who did it
 **Acceptance Scenarios**:
 
 1. **Given** a create, edit or delete, **When** it succeeds, **Then** exactly one audit entry is written with actor, role, time, School, month, old value and new value; a refused change writes none.
-2. **Given** a row, **When** the user opens its history, **Then** they see its changes newest first, including a deletion.
+2. **Given** a row, **When** the user opens its history, **Then** they see its changes newest first. **Given** deleted rows for a School and year, **When** the user opens the "Deleted rows" view, **Then** they see each deleted month with its last figure, who deleted it and when.
 3. **Given** the audit trail, **When** anyone tries to change an entry, **Then** it is refused (existing audit rules, spec 003).
 
 ---
 
-### User Story 5 - Fill a Year Quickly (Priority: P3, optional)
+### User Story 5 - Fill a Year Quickly (Priority: P3, in scope)
 
 When a School is set up, an Admin or Director can fill all twelve months of a year in one step by copying the figures of another year for that School, instead of twelve separate additions.
 
-**Why this priority**: A convenience; every figure can be entered one by one without it. It is included only because twelve rows per School per year is a lot of typing, and it may be left for a later release without affecting the rest.
+**Why this priority**: A convenience; every figure can still be entered one by one. It is delivered in this release because twelve rows per School per year is a lot of typing, but it is ordered after the P1 and P2 stories.
 
 **Independent Test**: Choose School A, copy 2026 to 2027, and see new rows with the same figures for months that had none, with months that already had a row left unchanged and reported.
 
@@ -120,6 +128,7 @@ When a School is set up, an Admin or Director can fill all twelve months of a ye
 - The same row is edited by two people at once: the later save is refused with a message that the row changed, showing the current figure.
 - A Manager's Zone or School assignment changes: no effect; this master is organization-wide data keyed only by School and month.
 - A Teacher moves between Schools in a month: not this feature's concern; consumers decide which School's figure applies to a person on a date.
+- A row is edited or deleted after another person already deleted it: the action is refused, the user is told the row was deleted, the row is removed from the grid, and nothing is recreated or audited.
 - A user filters to a year with no rows: the empty state is shown.
 
 ## Requirements *(mandatory)*
@@ -133,6 +142,7 @@ When a School is set up, an Admin or Director can fill all twelve months of a ye
 - **FR-003**: A figure MUST be at least 0 and at most the number of days in that calendar month (leap years respected), in whole or half days; anything else MUST be refused with the allowed range named.
 - **FR-004**: A figure MUST belong to an existing School; a figure for an unknown School MUST be refused.
 - **FR-005**: Rows MUST be kept when their School is deactivated, and a School that has rows MUST NOT be removable from the master data.
+- **FR-029**: A new figure (including one created by the year copy) MUST be for a year from the current year minus 5 through the current year plus 5, judged against today's date; any other year MUST be refused with the allowed years named.
 
 **Relationship to the working calendar and fallback**
 
@@ -157,19 +167,20 @@ When a School is set up, an Admin or Director can fill all twelve months of a ye
 - **FR-018**: Actions a user may not perform MUST be hidden, not disabled; the menu item MUST appear only to users with View; a deep link without View MUST show the not-authorized page.
 - **FR-019**: The grid MUST show loading, empty and error states, MUST keep a user's unsaved entry when a save fails, and MUST have no horizontal page scroll at phone width.
 - **FR-020**: Months MUST be shown by name and any date in DD/MM/YYYY, per the application's locale.
-- **FR-021**: A save of an edited row MUST fail with a clear message, and show the current figure, if someone else changed the row since it was loaded.
+- **FR-021**: A save of an edited row MUST fail with a clear message, and show the current figure, if someone else changed the row since it was loaded; if the row was deleted, the save or delete MUST be refused with a message saying so and MUST NOT recreate it.
+- **FR-028**: The inline edit (beside Save) and the delete confirmation MUST always show the notice "Months already finalised in payroll or attendance keep the figure they used." The screen MUST NOT query payroll or attendance to decide whether a month is finalised.
 
 **Audit, permissions and scope**
 
-- **FR-022**: Every create, edit and delete MUST be written to the audit trail (Principle I) with actor, role(s), time, School, month, and the old and new figure; a deleted row's last figure MUST be kept in its entry. Refused changes write nothing.
-- **FR-023**: A row's change history MUST be viewable from the grid by users with View.
+- **FR-022**: Every create, edit and delete MUST be written to the audit trail (Principle I) with actor, role(s), time, School, month, and the old and new figure; a deleted row's last figure MUST be kept in its entry. The central audit entry carries the actor, time, School, month and the old and new figure; the actor's role(s) at the time are kept in the feature's own change history (FR-023). Refused changes write nothing.
+- **FR-023**: A row's change history MUST be viewable from the grid by users with View. The grid MUST also offer a "Deleted rows" history view for the selected School and year, built from audit entries, showing for each deletion the month, the last figure, who deleted it and when.
 - **FR-024**: The backend MUST enforce the permission on every endpoint independently of the menu (Principle X) and MUST fail closed.
 - **FR-025**: The figures are organization-wide data: Admin and Director see all Schools, and no Zone or School scoping applies because Managers do not have the screen. If a Manager is later granted View, scoping to their assigned Schools MUST apply (Principle III).
 - **FR-026**: System MUST have no access to this screen or its data.
 
-**Optional**
+**Copy a year**
 
-- **FR-027** *(optional, P3)*: Users with Create MAY copy one year's figures for a School to another year; existing rows MUST NOT be overwritten, figures that do not fit the target month MUST be skipped and reported, and each created row MUST be audited.
+- **FR-027** *(P3, in scope)*: Users with Create MUST be able to copy one year's figures for a School to another year; existing rows MUST NOT be overwritten, figures that do not fit the target month MUST be skipped and reported, and each created row MUST be audited.
 
 ### Key Entities
 
@@ -195,7 +206,7 @@ When a School is set up, an Admin or Director can fill all twelve months of a ye
 ### Measurable Outcomes
 
 - **SC-001**: An Admin or Director can add the figure for one School and month in under 30 seconds from opening the screen.
-- **SC-002**: A full year for one School can be entered in under 3 minutes (under 1 minute with the optional copy, if delivered).
+- **SC-002**: A full year for one School can be entered in under 3 minutes (under 1 minute using the copy of a year).
 - **SC-003**: 100% of attempts to store a figure outside 0 to the days in the month, a non-half fraction, or a duplicate School and month are refused, with the reason named.
 - **SC-004**: 100% of creates, edits and deletes have an audit entry showing who, when, and the old and new figure; 0 refused changes have one.
 - **SC-005**: For every School and month, a consumer receives either the stored figure or the calendar-derived count, labelled; there is no School and month for which no answer exists.
@@ -213,8 +224,8 @@ When a School is set up, an Admin or Director can fill all twelve months of a ye
 - **Hard delete is allowed** for a row (Admin only), because the audit trail keeps the history and the fallback restores a defined answer; rows are not versioned like salaries (spec 013a) because the figure is a master value, not a pay agreement. *To confirm.*
 - **Spec number 037:** the Spec Kit sequence would give 033, but the roadmap reserves 033 to 036 (mobile and related specs). 037 is used to avoid a clash, and the roadmap gains a row for it. *To confirm.*
 - **Where it lives:** next to Schools in the School master data of spec 005, as an addition to it. Whether it is a sub-area of the school module or a module of its own is a planning decision.
-- **Range of months:** any month from the earliest year of operation to five years ahead is accepted; the exact limits are a planning detail.
+- **Range of months:** a month is accepted from the current year minus 5 through the current year plus 5 (FR-029). Rows already stored stay visible if they later fall outside the window.
 - **Consumers adopt later:** specs 013a/013b, 032 and 008 are amended separately to read the figure through the interface; this spec delivers the master, screen and interface only. Until then their present calculation continues unchanged.
-- **Optional items:** copy of a year (FR-027, User Story 5) may be deferred without affecting the rest. Import from a file, month-level bulk edit and notification on change are out of scope.
+- **Out of scope:** import from a file, month-level bulk edit and notification on change are out of scope.
 - **Mobile apps** do not show this screen; Managers see the figure only inside attendance and payroll results.
 - Depends on: spec 005 (Schools), 002 (navigation and permissions), 003 (audit), 008 (calendar fallback). Constitution v2.5.3.

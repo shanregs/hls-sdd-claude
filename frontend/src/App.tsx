@@ -15,6 +15,7 @@ import { DashboardRouter } from "./dashboards/DashboardRouter";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
+import { SchoolWorkingDaysPage } from "./features/schoolWorkingDays/SchoolWorkingDaysPage";
 import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage";
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
@@ -131,6 +132,14 @@ export function App() {
           element={
             <RouteGuard>
               <DesignationsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/school-working-days"
+          element={
+            <RouteGuard>
+              <SchoolWorkingDaysPage />
             </RouteGuard>
           }
         />

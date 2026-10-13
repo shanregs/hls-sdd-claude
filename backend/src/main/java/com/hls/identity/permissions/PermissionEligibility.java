@@ -50,7 +50,8 @@ public final class PermissionEligibility {
             PermissionModule.TASKS,
             PermissionModule.MANAGER_ATTENDANCE,
             PermissionModule.MANAGER_LEAVE,
-            PermissionModule.MY_MANAGER_ATTENDANCE);
+            PermissionModule.MY_MANAGER_ATTENDANCE,
+            PermissionModule.SCHOOL_WORKING_DAYS);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -82,6 +83,13 @@ public final class PermissionEligibility {
             PermissionModule.MANAGER_LEAVE, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
             PermissionModule.MY_MANAGER_ATTENDANCE, EnumSet.of(Role.MANAGER));
 
+    /**
+     * School working days (spec 037): Admin and Director maintain the monthly figures; a Manager may be granted View only
+     * (limited to their Schools). Kept apart from the maps above (they are full).
+     */
+    static final Map<PermissionModule, Set<Role>> SCHOOL_WORKING_DAYS_MODULES = Map.of(
+            PermissionModule.SCHOOL_WORKING_DAYS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -101,6 +109,10 @@ public final class PermissionEligibility {
         if (managerAttendanceOnly != null && !managerAttendanceOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
+        Set<Role> workingDaysOnly = SCHOOL_WORKING_DAYS_MODULES.get(module);
+        if (workingDaysOnly != null && !workingDaysOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
@@ -112,6 +124,10 @@ public final class PermissionEligibility {
             if (role != Role.ADMIN && role != Role.DIRECTOR) {
                 return EnumSet.noneOf(PermissionAction.class);
             }
+        }
+        // A Manager may be granted View of the School working days, never to change them (spec 037).
+        if (role == Role.MANAGER && module == PermissionModule.SCHOOL_WORKING_DAYS) {
+            return EnumSet.of(PermissionAction.VIEW);
         }
         // A Zone Manager may be allowed to read the designation list, never to change it (spec 005a FR-011).
         if (role == Role.MANAGER && module == PermissionModule.DESIGNATIONS) {
