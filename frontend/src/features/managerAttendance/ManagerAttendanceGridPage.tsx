@@ -23,9 +23,11 @@ import { shiftMonth } from "../attendance/monthUtils";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { todayIso } from "../teachers/formatters";
 import { listZones, type ZoneSummary } from "../zones/zonesApi";
+import { AttendanceSettingsForm } from "./AttendanceSettingsForm";
 import { ManagerDayDialog } from "./ManagerDayDialog";
 import { getGrid, type Grid, type GridRow } from "./managerAttendanceApi";
 import { figure, statusStyle } from "./statusDisplay";
+import { TodayPanels } from "./TodayPanels";
 
 const ROUTE = "/operations/manager-attendance";
 
@@ -98,6 +100,9 @@ export function ManagerAttendanceGridPage() {
       <Typography variant="h5" component="h1" gutterBottom>
         Manager attendance
       </Typography>
+
+      <TodayPanels />
+      {canEdit && <AttendanceSettingsForm />}
 
       <Stack
         direction="row"

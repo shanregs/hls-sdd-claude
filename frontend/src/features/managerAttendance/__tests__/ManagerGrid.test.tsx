@@ -130,11 +130,32 @@ const DETAIL = {
   ],
 };
 
+const SETTINGS = { missedCutoff: "10:30", lateAfter: "09:30", version: 4 };
+
 function respond(
-  overrides: { detail?: object; put?: Response; grid?: Response } = {},
+  overrides: {
+    detail?: object;
+    put?: Response;
+    grid?: Response;
+    missed?: Response;
+    onLeave?: Response;
+    settings?: Response;
+    savedSettings?: Response;
+  } = {},
 ) {
   authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
     const u = String(url);
+    if (u.includes("/manager-attendance/settings")) {
+      return init?.method === "PUT"
+        ? (overrides.savedSettings ?? json(SETTINGS))
+        : (overrides.settings ?? json(SETTINGS));
+    }
+    if (u.includes("/manager-attendance/missed")) {
+      return overrides.missed ?? json([]);
+    }
+    if (u.includes("/manager-attendance/on-leave")) {
+      return overrides.onLeave ?? json([]);
+    }
     if (init?.method === "PUT") return overrides.put ?? json(DETAIL.days[0]);
     if (u.includes("/api/v1/zones")) {
       return json({
@@ -395,4 +416,121 @@ describe("Manager attendance grid (spec 032 US5)", () => {
     },
     30_000,
   );
+});
+
+describe("Missed check-ins, who is on leave and the check-in times (spec 032 US4)", () => {
+  const puts = () =>
+    authFetch.mock.calls.filter(
+      (c) =>
+        c[1]?.method === "PUT" &&
+        String(c[0]).includes("/manager-attendance/settings"),
+    );
+
+  it("lists today's missed check-ins and the Managers on leave", async () => {
+    respond({
+      missed: json([
+        { managerId: "m1", name: "Asha Manager", employeeId: "E-1" },
+        { managerId: "m2", name: "Ravi Manager", employeeId: null },
+      ]),
+      onLeave: json([
+        { managerId: "m3", name: "Meena Manager", fraction: 0.5, unpaid: true },
+      ]),
+    });
+    renderPage();
+    const missed = await screen.findByRole("region", {
+      name: "Missed check-ins today",
+    });
+    expect(
+      await within(missed).findByText(/Asha Manager \(E-1\)/),
+    ).toBeInTheDocument();
+    expect(within(missed).getByText("Ravi Manager")).toBeInTheDocument();
+    const onLeave = screen.getByRole("region", { name: "On leave today" });
+    expect(
+      await within(onLeave).findByText("Meena Manager, half day, unpaid"),
+    ).toBeInTheDocument();
+  });
+
+  it("says so when nobody has missed a check-in or is on leave", async () => {
+    renderPage();
+    expect(
+      await screen.findByText("Nobody has missed a check-in."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Nobody is on leave today.")).toBeInTheDocument();
+  });
+
+  it("shows the server's refusal to list them", async () => {
+    respond({ missed: json({ reason: "You cannot see this." }, 403) });
+    renderPage();
+    expect(await screen.findByText("You cannot see this.")).toBeInTheDocument();
+  });
+
+  it("loads the times and saves a change with the version", async () => {
+    respond({
+      savedSettings: json({ ...SETTINGS, lateAfter: "09:45", version: 5 }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const late = await screen.findByLabelText("Late after");
+    await waitFor(() => expect(late).toHaveValue("09:30"));
+    expect(screen.getByLabelText("Missed cut-off")).toHaveValue("10:30");
+
+    await user.clear(late);
+    await user.type(late, "09:45");
+    await user.click(screen.getByRole("button", { name: "Save times" }));
+
+    await waitFor(() => expect(puts()).toHaveLength(1));
+    expect(JSON.parse(puts()[0][1].body as string)).toEqual({
+      missedCutoff: "10:30",
+      lateAfter: "09:45",
+      version: 4,
+    });
+    expect(
+      await screen.findByText("The times were saved."),
+    ).toBeInTheDocument();
+  });
+
+  it("refuses a late time that is not before the cut-off, before sending", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const late = await screen.findByLabelText("Late after");
+    await waitFor(() => expect(late).toHaveValue("09:30"));
+    await user.clear(late);
+    await user.type(late, "11:00");
+    await user.click(screen.getByRole("button", { name: "Save times" }));
+
+    expect(
+      await screen.findByText("The late time must be before the cut-off time."),
+    ).toBeInTheDocument();
+    expect(puts()).toHaveLength(0);
+  });
+
+  it("shows the server's refusal of stale settings", async () => {
+    respond({
+      savedSettings: json(
+        {
+          reason:
+            "The settings were changed by someone else. Reload and try again.",
+        },
+        409,
+      ),
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const late = await screen.findByLabelText("Late after");
+    await waitFor(() => expect(late).toHaveValue("09:30"));
+    await user.click(screen.getByRole("button", { name: "Save times" }));
+    expect(
+      await screen.findByText(/changed by someone else/),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the times form without EDIT", async () => {
+    navigation = nav(["VIEW"]);
+    renderPage();
+    await screen.findByText("Nobody has missed a check-in.");
+    expect(screen.queryByLabelText("Late after")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save times" }),
+    ).not.toBeInTheDocument();
+  });
 });
