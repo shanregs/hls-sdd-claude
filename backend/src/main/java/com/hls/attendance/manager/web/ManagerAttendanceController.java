@@ -7,6 +7,7 @@ import com.hls.attendance.manager.internal.CorrectionService;
 import com.hls.attendance.manager.internal.ManagerDayView;
 import com.hls.attendance.manager.internal.ManagerAttendanceSettingsService;
 import com.hls.attendance.manager.internal.ManagerGridService;
+import com.hls.attendance.manager.internal.ManagerMonthLockService;
 import com.hls.attendance.manager.internal.MissedCheckInService;
 import com.hls.attendance.manager.internal.RegularizationService;
 import com.hls.attendance.manager.internal.RegularizationService.RegularizationView;
@@ -32,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Admin and Director endpoints over Manager attendance (spec 032): the grid, a Manager's month, corrections, the
  * completion of a missing check-out, the opening of a check-in photo and the decisions on forgotten check-ins. The
- * lock arrives with a later story.
+ * month lock and reopen.
  */
 @RestController
 @RequestMapping("/api/v1/manager-attendance")
@@ -44,6 +45,7 @@ public class ManagerAttendanceController {
     private final ManagerGridService grid;
     private final CorrectionService corrections;
     private final RegularizationService regularizations;
+    private final ManagerMonthLockService monthLock;
     private final MissedCheckInService missed;
     private final ManagerAttendanceSettingsService settings;
     private final PermissionGuard guard;
@@ -55,6 +57,7 @@ public class ManagerAttendanceController {
             ManagerGridService grid,
             CorrectionService corrections,
             RegularizationService regularizations,
+            ManagerMonthLockService monthLock,
             MissedCheckInService missed,
             ManagerAttendanceSettingsService settings,
             PermissionGuard guard) {
@@ -63,6 +66,7 @@ public class ManagerAttendanceController {
         this.grid = grid;
         this.corrections = corrections;
         this.regularizations = regularizations;
+        this.monthLock = monthLock;
         this.missed = missed;
         this.settings = settings;
         this.context = context;
@@ -70,6 +74,39 @@ public class ManagerAttendanceController {
     }
 
     public record RejectRequest(String reason) {}
+
+    /** {@code managerId} empty locks every Manager that can be locked. */
+    public record LockRequest(UUID managerId) {}
+
+    public record ReopenRequest(UUID managerId, String reason) {}
+
+    @PostMapping("/months/{month}/lock")
+    public ResponseEntity<?> lock(
+            @PathVariable String month,
+            @RequestBody(required = false) LockRequest body,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.PROCESS);
+        UUID managerId = body == null ? null : body.managerId();
+        ManagerMonthLockService.LockResult result =
+                monthLock.lock(CallerContext.userId(jwt), ManagerGridService.parseMonth(month), managerId);
+        if (managerId != null && !result.refused().isEmpty()) {
+            ManagerMonthLockService.Refusal refusal = result.refused().get(0);
+            return ResponseEntity.status(409)
+                    .body(java.util.Map.of("reason", refusal.reason(), "pending", refusal.pending()));
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/months/{month}/reopen")
+    public ManagerMonthLockService.ReopenResult reopen(
+            @PathVariable String month, @RequestBody ReopenRequest body, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.PROCESS);
+        if (body.managerId() == null) {
+            throw new com.hls.school.api.InvalidInputException("Choose the Manager whose month is reopened.");
+        }
+        return monthLock.reopen(
+                CallerContext.userId(jwt), ManagerGridService.parseMonth(month), body.managerId(), body.reason());
+    }
 
     @GetMapping("/missed")
     public List<MissedCheckInService.Missed> missed(

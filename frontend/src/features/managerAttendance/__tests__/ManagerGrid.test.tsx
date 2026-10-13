@@ -141,6 +141,7 @@ function respond(
     onLeave?: Response;
     settings?: Response;
     savedSettings?: Response;
+    post?: Response;
   } = {},
 ) {
   authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
@@ -157,6 +158,7 @@ function respond(
       return overrides.onLeave ?? json([]);
     }
     if (init?.method === "PUT") return overrides.put ?? json(DETAIL.days[0]);
+    if (init?.method === "POST") return overrides.post ?? json({});
     if (u.includes("/api/v1/zones")) {
       return json({
         content: [{ id: "z1", name: "North" }],
@@ -531,6 +533,204 @@ describe("Missed check-ins, who is on leave and the check-in times (spec 032 US4
     expect(screen.queryByLabelText("Late after")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Save times" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("Manager month lock (spec 032 US6)", () => {
+  const previous = (() => {
+    const [y, m] = thisMonth.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
+
+  const posts = () =>
+    authFetch.mock.calls.filter((c) => c[1]?.method === "POST");
+  const bodyOf = (call: unknown[]) =>
+    JSON.parse((call[1] as RequestInit).body as string);
+
+  beforeEach(() => {
+    navigation = nav(["VIEW", "EDIT", "PROCESS"]);
+  });
+
+  async function goToPreviousMonth(user: ReturnType<typeof userEvent.setup>) {
+    await screen.findByRole("table", { name: "Manager attendance by day" });
+    await user.click(screen.getByRole("button", { name: "Previous month" }));
+    await waitFor(() =>
+      expect(gridCalls().some((u) => u.includes(`month=${previous}`))).toBe(
+        true,
+      ),
+    );
+  }
+
+  it("offers no lock for a month that has not ended", async () => {
+    renderPage();
+    await screen.findByRole("table", { name: "Manager attendance by day" });
+    expect(
+      screen.queryByRole("button", { name: "Lock month for payroll" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides the lock without PROCESS", async () => {
+    navigation = nav(["VIEW", "EDIT"]);
+    const user = userEvent.setup();
+    renderPage();
+    await goToPreviousMonth(user);
+    expect(
+      screen.queryByRole("button", { name: "Lock month for payroll" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("locks every Manager and lists the ones that were refused with what is waiting", async () => {
+    respond({
+      post: json({
+        month: previous,
+        locked: [{ managerId: "m1", name: "Asha Manager" }],
+        refused: [
+          {
+            managerId: "m2",
+            name: "Ravi Manager",
+            reason:
+              "1 request is still waiting for a decision. Decide them first.",
+            pending: [
+              {
+                kind: "LEAVE",
+                requestId: "l1",
+                managerId: "m2",
+                managerName: "Ravi Manager",
+                firstDate: `${previous}-03`,
+                lastDate: `${previous}-04`,
+              },
+            ],
+          },
+        ],
+        alreadyLocked: 2,
+      }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await goToPreviousMonth(user);
+    await user.click(
+      screen.getByRole("button", { name: "Lock month for payroll" }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Lock all" }));
+
+    expect(
+      await within(dialog).findByText(/1 Manager locked/),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/2 already locked/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Ravi Manager/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/still waiting for a decision/),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/^Leave,/)).toBeInTheDocument();
+    expect(String(posts()[0][0])).toMatch(
+      new RegExp(`/months/${previous}/lock$`),
+    );
+    expect(bodyOf(posts()[0])).toEqual({});
+  });
+
+  it("shows the server's refusal of a lock for all", async () => {
+    respond({ post: json({ reason: "The month has not ended yet." }, 409) });
+    const user = userEvent.setup();
+    renderPage();
+    await goToPreviousMonth(user);
+    await user.click(
+      screen.getByRole("button", { name: "Lock month for payroll" }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Lock all" }));
+    expect(
+      await within(dialog).findByText("The month has not ended yet."),
+    ).toBeInTheDocument();
+  });
+
+  async function openFirstDay(user: ReturnType<typeof userEvent.setup>) {
+    await goToPreviousMonth(user);
+    await user.click(
+      await screen.findByRole("button", {
+        name: `Asha Manager, ${previous}-01: Worked`,
+      }),
+    );
+    return screen.findByRole("dialog");
+  }
+
+  it("locks one Manager's month and shows what is waiting when it is refused", async () => {
+    respond({
+      post: json(
+        {
+          reason:
+            "1 request is still waiting for a decision. Decide them first.",
+          pending: [
+            {
+              kind: "FORGOTTEN_CHECK_IN",
+              requestId: "r1",
+              managerId: "m1",
+              managerName: "Asha Manager",
+              firstDate: `${previous}-02`,
+              lastDate: `${previous}-02`,
+            },
+          ],
+        },
+        409,
+      ),
+    });
+    const user = userEvent.setup();
+    renderPage();
+    const dialog = await openFirstDay(user);
+    await user.click(
+      await within(dialog).findByRole("button", { name: "Lock this month" }),
+    );
+    expect(
+      await within(dialog).findByText(/still waiting for a decision/),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/Forgotten check-in,/)).toBeInTheDocument();
+    expect(bodyOf(posts()[0])).toEqual({ managerId: "m1" });
+  });
+
+  it("requires a reason before reopening a locked month and sends it", async () => {
+    respond({ detail: { locked: true } });
+    const user = userEvent.setup();
+    renderPage();
+    const dialog = await openFirstDay(user);
+    await user.click(
+      await within(dialog).findByRole("button", { name: "Reopen month" }),
+    );
+    expect(
+      await within(dialog).findByText("A reason is required."),
+    ).toBeInTheDocument();
+    expect(posts()).toHaveLength(0);
+
+    await user.type(
+      within(dialog).getByLabelText("Reason for reopening"),
+      "A visit was missed",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Reopen month" }),
+    );
+    await waitFor(() => expect(posts()).toHaveLength(1));
+    expect(String(posts()[0][0])).toMatch(
+      new RegExp(`/months/${previous}/reopen$`),
+    );
+    expect(bodyOf(posts()[0])).toEqual({
+      managerId: "m1",
+      reason: "A visit was missed",
+    });
+  });
+
+  it("hides the lock and reopen actions in the day dialog without PROCESS", async () => {
+    navigation = nav(["VIEW", "EDIT"]);
+    respond({ detail: { locked: true } });
+    const user = userEvent.setup();
+    renderPage();
+    const dialog = await openFirstDay(user);
+    await within(dialog).findByText(/locked for payroll/);
+    expect(
+      within(dialog).queryByRole("button", { name: "Reopen month" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "Lock this month" }),
     ).not.toBeInTheDocument();
   });
 });

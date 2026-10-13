@@ -360,24 +360,73 @@ export const completeCheckOutFor = (
     body,
   );
 
-export const lockMonth = (
+/** A request still waiting for a decision that stops a month being locked. */
+export interface PendingRequest {
+  kind: string;
+  requestId: string;
+  managerId: string;
+  managerName: string | null;
+  firstDate: string;
+  lastDate: string;
+}
+
+export interface LockRefusal {
+  managerId: string;
+  name: string;
+  reason: string;
+  pending: PendingRequest[];
+}
+
+export interface LockResult {
+  month: string;
+  locked: { managerId: string; name: string }[];
+  refused: LockRefusal[];
+  alreadyLocked: number;
+}
+
+/** Locking one Manager that is refused comes back as a 409 that lists the waiting requests. */
+export type LockOutcome =
+  | { ok: true; data: LockResult }
+  | { ok: false; reason: string; status?: number; pending: PendingRequest[] };
+
+export async function lockMonth(
   a: AuthFetch,
   month: string,
   managerId?: string,
-): Promise<ApiResult<unknown>> =>
-  sendJson(
-    a,
-    "POST",
-    `${BASE}/months/${month}/lock`,
-    managerId ? { managerId } : {},
-  );
+): Promise<LockOutcome> {
+  try {
+    const response = await a(`${BASE}/months/${month}/lock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(managerId ? { managerId } : {}),
+    });
+    const body = (await response.json().catch(() => ({}))) as Partial<
+      LockResult & { reason: string; pending: PendingRequest[] }
+    >;
+    if (!response.ok) {
+      return {
+        ok: false,
+        reason: body.reason ?? "The month could not be locked.",
+        status: response.status,
+        pending: body.pending ?? [],
+      };
+    }
+    return { ok: true, data: body as LockResult };
+  } catch {
+    return {
+      ok: false,
+      reason: "The month could not be locked.",
+      pending: [],
+    };
+  }
+}
 
 export const reopenMonth = (
   a: AuthFetch,
   month: string,
   managerId: string,
   reason: string,
-): Promise<ApiResult<unknown>> =>
+): Promise<ApiResult<{ locked: boolean }>> =>
   sendJson(a, "POST", `${BASE}/months/${month}/reopen`, { managerId, reason });
 
 export const getSettings = (
