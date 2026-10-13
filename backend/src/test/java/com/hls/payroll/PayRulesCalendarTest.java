@@ -9,6 +9,7 @@ import com.hls.payroll.api.PayRules.Kind;
 import com.hls.payroll.api.PayRules.PersonRef;
 import com.hls.payroll.api.PayableDays;
 import com.hls.payroll.api.TotalLossOfPay;
+import com.hls.payroll.api.UnpaidDays;
 import com.hls.support.PayrollTestBase;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -138,6 +139,37 @@ class PayRulesCalendarTest extends PayrollTestBase {
         PayableDays payable = payRules.payableDays(new PersonRef(Kind.TEACHER, teacher), month);
         assertThat(payable.dates()).isNotEmpty().allMatch(d -> !d.isAfter(exit));
         assertThat(payable.dates()).contains(workingCalendar.workingDays(school, month.atDay(1), exit).getLast());
+    }
+
+    @Test
+    void aManagerWhoExitedMidMonthIsUnpaidOnlyUntilTheExitButValuedOverTheWholeMonth() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = newManager(admin);
+        LocalDate exit = month.atDay(20);
+        jdbc.update(
+                "update manager set joining_date = ?, exit_date = ? where id = ?",
+                month.atDay(1).minusMonths(3),
+                exit,
+                manager.managerId());
+        jdbc.update(
+                "insert into person_salary (id, person_kind, person_id, amount, effective_on, note, recorded_by, recorded_at)"
+                        + " values (?, 'MANAGER', ?, 30000::numeric, ?, null, ?, now())",
+                UUID.randomUUID(),
+                manager.managerId(),
+                LocalDate.now().minusDays(400),
+                UUID.randomUUID());
+        PersonRef person = new PersonRef(Kind.MANAGER, manager.managerId());
+        List<LocalDate> wholeMonth = workingCalendar.workingDays(null, month.atDay(1), month.atEndOfMonth());
+        List<LocalDate> untilExit = wholeMonth.stream().filter(d -> !d.isAfter(exit)).toList();
+
+        List<com.hls.payroll.api.UnpaidDay> days = ((UnpaidDays.Found) payRules.unpaidDays(person, month)).days();
+        TotalLossOfPay.Found total = (TotalLossOfPay.Found) payRules.totalLossOfPay(person, month);
+
+        assertThat(days).extracting(com.hls.payroll.api.UnpaidDay::date).containsExactlyElementsOf(untilExit);
+        BigDecimal expected = new BigDecimal("30000")
+                .divide(BigDecimal.valueOf(wholeMonth.size()), 10, RoundingMode.HALF_EVEN)
+                .multiply(BigDecimal.valueOf(untilExit.size()));
+        assertThat(total.unrounded()).isEqualByComparingTo(expected);
     }
 
     @Test

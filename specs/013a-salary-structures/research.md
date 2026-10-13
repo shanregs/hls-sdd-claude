@@ -118,10 +118,14 @@ Let `W(m, cal)` be the working days of month `m` on calendar `cal` (weekly offs 
 
 ## 5. Manager unpaid days
 
-- **Decision**: `U` for a Manager returns `Unavailable("Manager attendance is not recorded yet")` until spec 032
-  (Manager attendance and leave) provides marks. 013b must show the reason; it must not treat it as zero unpaid days.
-- **Rationale**: spec 013a defines the rule (FR-012), but no Manager attendance exists to apply it to. Answering
-  "no unpaid days" would silently pay in full; the spec's own principle (SC-007) forbids that.
+- **Decision**: `U` for a Manager is answered from spec 032's `attendance.api.ManagerAttendanceReadApi`: each date with
+  no check-in and no approved leave, and each day of Loss-of-Pay leave, as a full or half day. A Manager with no joining
+  date, or no such Manager, still returns `Unavailable` with a stated reason (not "none"). `U` for an Admin or Director
+  (staff) is `Found` with an empty list by rule: they have no attendance and are paid in full. This replaces the earlier
+  answer "Manager attendance is not recorded yet", which is no longer returned.
+- **Rationale**: spec 013a defined the rule (FR-012) before Manager attendance existed. Answering "no unpaid days" for
+  a missing record would silently pay in full; the spec's own principle (SC-007) still forbids that, so only a Manager
+  whose month can really be worked out, and staff by rule, get an answer.
 - **Alternatives**: define a stub marker table (premature, 032 owns the shape); return zero (silent wrong pay).
 
 ## 6. Append-only, and how it is enforced

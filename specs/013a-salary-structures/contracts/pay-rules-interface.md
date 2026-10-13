@@ -54,7 +54,7 @@ record Span(UUID schoolId /* null for a Manager */, LocalDate from, LocalDate to
 
 sealed interface UnpaidDays {
     record Found(List<UnpaidDay> days) implements UnpaidDays {}   // date, dayValue (1 or the half-day fraction)
-    record Unavailable(String reason) implements UnpaidDays {}    // e.g. Manager attendance not recorded yet
+    record Unavailable(String reason) implements UnpaidDays {}    // e.g. a Manager with no joining date (spec 032)
 }
 
 sealed interface TotalLossOfPay {
@@ -76,7 +76,7 @@ sealed interface TotalLossOfPay {
    salary in effect on that day (clarified). If any unpaid day has no salary, the whole answer is `Cannot`; it never
    pays a partial figure.
 7. A month with no working days gives `NoWorkingDays`; no division is attempted.
-8. `unpaidDays` for a Manager or a staff member is `Unavailable` until their attendance exists (spec 032); it never returns an empty `Found`.
+8. `unpaidDays` for a Manager comes from spec 032 (`ManagerAttendanceReadApi`): each unpaid date with 1 or the policy half-day fraction. A Manager with no joining date, or an unknown Manager, is `Unavailable` with a stated reason and never an empty `Found`. For a staff member (Admin or Director) it is `Found` with an empty list by rule, and `totalLossOfPay` is `Found` with zero.
 
 ## What this interface reads
 

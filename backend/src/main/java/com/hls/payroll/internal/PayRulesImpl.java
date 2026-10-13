@@ -1,6 +1,8 @@
 package com.hls.payroll.internal;
 
 import com.hls.attendance.api.AttendanceReadApi;
+import com.hls.attendance.api.ManagerAttendanceReadApi;
+import com.hls.attendance.api.ManagerMonth;
 import com.hls.attendance.api.MarkView;
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.leave.api.LeaveTypes;
@@ -51,9 +53,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 class PayRulesImpl implements PayRules {
 
-    static final String MANAGER_ATTENDANCE_NOT_RECORDED = "Manager attendance is not recorded yet";
-    static final String STAFF_ATTENDANCE_NOT_RECORDED = "Staff attendance is not recorded yet";
     static final String UNKNOWN_TEACHER = "The Teacher is not known.";
+    static final String UNKNOWN_MANAGER = "The Manager is not known.";
+    static final String MANAGER_NO_JOINING_DATE =
+            "The Manager's joining date has not been recorded, so the unpaid days cannot be worked out.";
 
     private static final DateTimeFormatter DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
 
@@ -69,6 +72,7 @@ class PayRulesImpl implements PayRules {
     private final PayPolicyService policies;
     private final PersonDirectory people;
     private final AttendanceReadApi attendance;
+    private final ManagerAttendanceReadApi managerAttendance;
     private final WorkingCalendar calendar;
     private final LeaveTypes leaveTypes;
 
@@ -78,6 +82,7 @@ class PayRulesImpl implements PayRules {
             PayPolicyService policies,
             PersonDirectory people,
             AttendanceReadApi attendance,
+            ManagerAttendanceReadApi managerAttendance,
             WorkingCalendar calendar,
             LeaveTypes leaveTypes) {
         this.personSalaries = personSalaries;
@@ -85,6 +90,7 @@ class PayRulesImpl implements PayRules {
         this.policies = policies;
         this.people = people;
         this.attendance = attendance;
+        this.managerAttendance = managerAttendance;
         this.calendar = calendar;
         this.leaveTypes = leaveTypes;
     }
@@ -287,15 +293,35 @@ class PayRulesImpl implements PayRules {
 
     @Override
     public UnpaidDays unpaidDays(PersonRef person, YearMonth month) {
-        if (person.kind() != Kind.TEACHER) {
-            // answering "no unpaid days" would silently pay in full (SC-007); spec 032 gives Managers attendance,
-            // and staff have none yet
-            return new UnpaidDays.Unavailable(notRecorded(person.kind()));
-        }
         return unpaid(person, month, compute(List.of(person), month).get(person));
     }
 
+    /**
+     * A Teacher's unpaid days come from their marks, a Manager's from spec 032's attendance, and Admins and
+     * Directors (staff) have none by rule: they are paid in full, which is a stated answer, not a missing one.
+     */
     private UnpaidDays unpaid(PersonRef person, YearMonth month, Computed computed) {
+        return switch (person.kind()) {
+            case TEACHER -> teacherUnpaid(person, month, computed);
+            case MANAGER -> managerUnpaid(person.id(), month);
+            case STAFF -> new UnpaidDays.Found(List.of());
+        };
+    }
+
+    private UnpaidDays managerUnpaid(UUID managerId, YearMonth month) {
+        return switch (managerAttendance.month(managerId, month)) {
+            case ManagerMonth.Found found -> {
+                BigDecimal half = policyOfMonth(month).halfDayFraction();
+                yield new UnpaidDays.Found(found.unpaidDays().stream()
+                        .map(d -> new UnpaidDay(d.date(), d.fraction().compareTo(BigDecimal.ONE) >= 0 ? BigDecimal.ONE : half))
+                        .toList());
+            }
+            case ManagerMonth.NoJoiningDate none -> new UnpaidDays.Unavailable(MANAGER_NO_JOINING_DATE);
+            case ManagerMonth.Unknown unknown -> new UnpaidDays.Unavailable(UNKNOWN_MANAGER);
+        };
+    }
+
+    private UnpaidDays teacherUnpaid(PersonRef person, YearMonth month, Computed computed) {
         if (!computed.known()) {
             return new UnpaidDays.Unavailable(UNKNOWN_TEACHER);
         }
@@ -320,9 +346,6 @@ class PayRulesImpl implements PayRules {
 
     @Override
     public TotalLossOfPay totalLossOfPay(PersonRef person, YearMonth month) {
-        if (person.kind() != Kind.TEACHER) {
-            return new TotalLossOfPay.Cannot(notRecorded(person.kind()));
-        }
         Computed computed = compute(List.of(person), month).get(person);
         UnpaidDays unpaid = unpaid(person, month, computed);
         if (unpaid instanceof UnpaidDays.Unavailable unavailable) {
@@ -355,10 +378,6 @@ class PayRulesImpl implements PayRules {
     }
 
     // ---------------------------------------------------------------- helpers
-
-    private static String notRecorded(Kind kind) {
-        return kind == Kind.MANAGER ? MANAGER_ATTENDANCE_NOT_RECORDED : STAFF_ATTENDANCE_NOT_RECORDED;
-    }
 
     private static Set<UUID> idsOf(Collection<PersonRef> persons, Kind kind) {
         return persons.stream()
