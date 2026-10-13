@@ -1,5 +1,6 @@
 package com.hls.notification.internal;
 
+import com.hls.attendance.api.ManagerCheckInMissed;
 import com.hls.attendance.api.ManagerDayCorrected;
 import com.hls.attendance.api.ManagerRegularizationDecided;
 import com.hls.attendance.api.ManagerRegularizationRequested;
@@ -50,6 +51,28 @@ public class ManagerAttendanceEventListener {
         MessageFactory.Text text = MessageFactory.managerRegularizationDecided(event.date(), approved, event.reason());
         managerUser(event.managerId(), null)
                 .ifPresent(user -> notifications.create(user, NotificationType.MANAGER_REGULARIZATION_DECIDED, text));
+    }
+
+    @EventListener
+    void onCheckInMissed(ManagerCheckInMissed event) {
+        ManagerRef manager = recipients.manager(event.managerId()).orElse(null);
+        if (manager == null) {
+            return;
+        }
+        UUID own = manager.userId();
+        if (own != null) {
+            notifications.create(
+                    own,
+                    NotificationType.MANAGER_CHECK_IN_MISSED,
+                    MessageFactory.managerCheckInMissed(manager.displayName(), event.date(), true));
+        }
+        // every active Admin and Director hears of it, the Manager once even when they hold one of those roles too
+        MessageFactory.Text forStaff = MessageFactory.managerCheckInMissed(manager.displayName(), event.date(), false);
+        for (UUID user : recipients.activeAdminsAndDirectors()) {
+            if (!user.equals(own)) {
+                notifications.create(user, NotificationType.MANAGER_CHECK_IN_MISSED, forStaff);
+            }
+        }
     }
 
     @EventListener

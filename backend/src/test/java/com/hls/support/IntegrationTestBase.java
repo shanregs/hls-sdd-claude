@@ -30,7 +30,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"hls.notification.retention.enabled=false", "hls.recruitment.offer-expiry.enabled=false",
             "hls.files.directory=${java.io.tmpdir}/hls-test-files",
-            "hls.marketing.overdue.enabled=false"})
+            "hls.marketing.overdue.enabled=false", "hls.attendance.manager.missed-check-in.enabled=false"})
 public abstract class IntegrationTestBase {
 
     public static final String PASSWORD = "correct-horse-5";

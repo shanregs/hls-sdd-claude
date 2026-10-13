@@ -138,6 +138,20 @@ public final class MessageFactory {
                 "/manager-attendance/me/month");
     }
 
+    /** The Manager is told to check in; the Admins and Directors are told who has not. */
+    public static Text managerCheckInMissed(String managerName, LocalDate day, boolean forManager) {
+        if (forManager) {
+            return new Text(
+                    "You have not checked in",
+                    "You have not checked in for " + date(day) + ". Check in now, or ask for leave.",
+                    "/manager-attendance/me");
+        }
+        return new Text(
+                shorten("Not checked in: " + managerName, MAX_TITLE),
+                shorten(managerName + " has not checked in for " + date(day) + ".", MAX_MESSAGE),
+                "/operations/manager-attendance");
+    }
+
     public static Text managerLeaveRequested(String managerName, LocalDate first, LocalDate last) {
         return new Text(
                 shorten("Leave request: " + managerName, MAX_TITLE),

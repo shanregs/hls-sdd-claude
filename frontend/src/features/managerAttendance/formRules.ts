@@ -139,3 +139,18 @@ export function validateDecisionReason(reason: string): string | null {
   }
   return null;
 }
+
+export interface SettingsValues {
+  missedCutoff: string;
+  lateAfter: string;
+}
+
+/** The first problem with the cut-off and late time, or null. The server checks the same rules again. */
+export function validateSettings(v: SettingsValues): string | null {
+  if (!v.missedCutoff) return "Enter the cut-off time.";
+  if (!v.lateAfter) return "Enter the late time.";
+  if (v.lateAfter >= v.missedCutoff) {
+    return "The late time must be before the cut-off time.";
+  }
+  return null;
+}

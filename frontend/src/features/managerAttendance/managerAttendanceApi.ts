@@ -295,10 +295,23 @@ export const getGrid = (
 ): Promise<ApiResult<Grid>> =>
   getJson(a, `${BASE}/grid?${queryString(params)}`, "Could not load the grid.");
 
+export interface MissedManager {
+  managerId: string;
+  name: string;
+  employeeId: string | null;
+}
+
+export interface OnLeaveManager {
+  managerId: string;
+  name: string;
+  fraction: number;
+  unpaid: boolean;
+}
+
 export const getMissed = (
   a: AuthFetch,
   date?: string,
-): Promise<ApiResult<unknown>> =>
+): Promise<ApiResult<MissedManager[]>> =>
   getJson(
     a,
     `${BASE}/missed?${queryString({ date })}`,
@@ -308,7 +321,7 @@ export const getMissed = (
 export const getOnLeave = (
   a: AuthFetch,
   date?: string,
-): Promise<ApiResult<unknown>> =>
+): Promise<ApiResult<OnLeaveManager[]>> =>
   getJson(
     a,
     `${BASE}/on-leave?${queryString({ date })}`,
