@@ -1,5 +1,6 @@
 package com.hls.attendance.manager.internal;
 
+import com.hls.attendance.api.ManagerDayCorrected;
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.attendance.internal.BusinessCalendar;
 import com.hls.attendance.manager.internal.ManagerContext.Acting;
@@ -20,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +65,7 @@ public class CheckInService {
     private final Clock clock;
     private final JdbcTemplate jdbc;
     private final PlannedActivities planned;
+    private final ApplicationEventPublisher events;
 
     public CheckInService(
             ManagerContext context,
@@ -75,7 +78,8 @@ public class CheckInService {
             ManagerAttendanceAudit audit,
             Clock clock,
             JdbcTemplate jdbc,
-            PlannedActivities planned) {
+            PlannedActivities planned,
+            ApplicationEventPublisher events) {
         this.context = context;
         this.guard = guard;
         this.days = days;
@@ -87,6 +91,7 @@ public class CheckInService {
         this.clock = clock;
         this.jdbc = jdbc;
         this.planned = planned;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -225,6 +230,10 @@ public class CheckInService {
                 "{\"checkOutAt\":\"" + at + "\"}"));
         audit.changed(
                 actorUserId, ManagerAttendanceAudit.DAY, saved.getId(), "completeCheckOut", null, at + " (" + cleanReason + ")");
+        UUID ownerUser = context.byManagerId(managerId).userId();
+        if (ownerUser != null && !ownerUser.equals(actorUserId)) {
+            events.publishEvent(new ManagerDayCorrected(managerId, date, actorUserId));
+        }
         return ManagerDayView.of(saved, today);
     }
 
@@ -246,7 +255,7 @@ public class CheckInService {
     }
 
     /** Every link must be one of the user's planned activities dated that day; anything else reads as not found. */
-    private void requireOwnActivities(UUID userId, LocalDate date, Set<ActivityLink> links) {
+    void requireOwnActivities(UUID userId, LocalDate date, Set<ActivityLink> links) {
         if (links.isEmpty()) {
             return;
         }
@@ -263,6 +272,11 @@ public class CheckInService {
 
     /** Serializes writes to one Manager-day so two simultaneous check-ins record exactly one. */
     private void lock(UUID managerId, LocalDate date) {
+        lockDay(jdbc, managerId, date);
+    }
+
+    /** The same lock for every writer of a Manager-day (check-in, correction, forgotten check-in). */
+    static void lockDay(JdbcTemplate jdbc, UUID managerId, LocalDate date) {
         jdbc.queryForList("select pg_advisory_xact_lock(hashtextextended(?, 0))", "manager-day:" + managerId + ":" + date);
     }
 
