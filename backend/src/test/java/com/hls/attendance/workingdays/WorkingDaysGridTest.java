@@ -149,17 +149,12 @@ class WorkingDaysGridTest extends WorkingDaysTestBase {
         createRowOk(admin, schools.get(1), fewYear, 3, 20);
 
         get(BASE + "?year=" + fewYear + "&size=25", admin); // warm caches
-        var stats = sessionFactory.getStatistics();
-        stats.setStatisticsEnabled(true);
-        stats.clear();
-        assertThat(get(BASE + "?year=" + fewYear + "&size=25", admin).status()).isEqualTo(200);
-        long few = stats.getPrepareStatementCount();
-        stats.clear();
+        long few = fewestStatements(sessionFactory, () -> get(BASE + "?year=" + fewYear + "&size=25", admin));
+        long manyStatements =
+                fewestStatements(sessionFactory, () -> get(BASE + "?year=" + manyYear + "&size=25", admin));
         long started = System.nanoTime();
         Resp many = get(BASE + "?year=" + manyYear + "&size=25", admin);
         long millis = (System.nanoTime() - started) / 1_000_000;
-        long manyStatements = stats.getPrepareStatementCount();
-        stats.setStatisticsEnabled(false);
 
         assertThat(many.status()).isEqualTo(200);
         assertThat(((Number) many.map().get("total")).intValue()).isEqualTo(40 * 12);

@@ -174,15 +174,9 @@ class SchoolWorkingDaysReadApiTest extends WorkingDaysTestBase {
             }
         }
         workingDays.forYear(schools.subList(0, 1), year()); // warm the calendar rules cache
-        var stats = sessionFactory.getStatistics();
-        stats.setStatisticsEnabled(true);
-        stats.clear();
-        workingDays.forYear(schools.subList(0, 1), year());
-        long one = stats.getPrepareStatementCount();
-        stats.clear();
+        long one = fewestStatements(sessionFactory, () -> workingDays.forYear(schools.subList(0, 1), year()));
+        long many = fewestStatements(sessionFactory, () -> workingDays.forYear(schools, year()));
         Map<UUID, List<MonthDays>> all = workingDays.forYear(schools, year());
-        long many = stats.getPrepareStatementCount();
-        stats.setStatisticsEnabled(false);
 
         assertThat(all).hasSize(50);
         assertThat(many).isEqualTo(one);

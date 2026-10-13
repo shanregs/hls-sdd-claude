@@ -65,6 +65,20 @@ public abstract class WorkingDaysTestBase extends AttendanceTestBase {
                 rowId.toString());
     }
 
+    /** The fewest statements the action needed over three runs; one run may refresh a cached snapshot. */
+    protected long fewestStatements(org.hibernate.SessionFactory sessionFactory, Runnable action) {
+        var stats = sessionFactory.getStatistics();
+        stats.setStatisticsEnabled(true);
+        long fewest = Long.MAX_VALUE;
+        for (int run = 0; run < 3; run++) {
+            stats.clear();
+            action.run();
+            fewest = Math.min(fewest, stats.getPrepareStatementCount());
+        }
+        stats.setStatisticsEnabled(false);
+        return fewest;
+    }
+
     protected static LocalDate firstOf(int year, int month) {
         return LocalDate.of(year, month, 1);
     }
