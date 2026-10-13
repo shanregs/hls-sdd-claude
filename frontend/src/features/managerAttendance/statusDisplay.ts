@@ -1,3 +1,5 @@
+import { formatDate } from "../teachers/formatters";
+
 /** How a Manager's day status is shown (spec 032 US5): a word and a short code, never colour alone. */
 export interface StatusStyle {
   label: string;
@@ -45,4 +47,24 @@ export function timeOf(iso: string | null): string {
 
 export function figure(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/** The colour of a request's status chip (leave and forgotten check-in requests). */
+export function requestColor(
+  status: string,
+): "default" | "success" | "error" | "warning" {
+  if (status === "APPROVED") return "success";
+  if (status === "REJECTED") return "error";
+  if (status === "REVOKED") return "warning";
+  return "default";
+}
+
+export function requestStatusText(status: string): string {
+  return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+export function dateRange(first: string, last: string): string {
+  return first === last
+    ? formatDate(first)
+    : `${formatDate(first)} to ${formatDate(last)}`;
 }

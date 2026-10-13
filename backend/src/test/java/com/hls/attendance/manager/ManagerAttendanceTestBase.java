@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** Helpers shared by the spec 032 integration tests: Managers with a joining date, day rows and the settings row. */
-abstract class ManagerAttendanceTestBase extends AttendanceTestBase {
+public abstract class ManagerAttendanceTestBase extends AttendanceTestBase {
 
     protected static final String ME = "/api/v1/manager-attendance/me";
     protected static final String ATT = "/api/v1/manager-attendance";

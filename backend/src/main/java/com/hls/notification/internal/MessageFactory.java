@@ -138,6 +138,37 @@ public final class MessageFactory {
                 "/manager-attendance/me/month");
     }
 
+    public static Text managerLeaveRequested(String managerName, LocalDate first, LocalDate last) {
+        return new Text(
+                shorten("Leave request: " + managerName, MAX_TITLE),
+                shorten(managerName + " asked for leave " + range(first, last) + ".", MAX_MESSAGE),
+                "/operations/manager-leave");
+    }
+
+    public static Text managerLeaveCancelled(String managerName, LocalDate first, LocalDate last) {
+        return new Text(
+                "Leave request withdrawn",
+                shorten(managerName + " cancelled their leave " + range(first, last) + ".", MAX_MESSAGE),
+                "/operations/manager-leave");
+    }
+
+    public static Text managerLeaveDecided(String decision, LocalDate first, LocalDate last, String reason) {
+        String title = switch (decision) {
+            case "APPROVED" -> "Your leave was approved";
+            case "REVOKED" -> "Your approved leave was revoked";
+            default -> "Your leave was rejected";
+        };
+        String verb = switch (decision) {
+            case "APPROVED" -> "was approved";
+            case "REVOKED" -> "was revoked";
+            default -> "was rejected";
+        };
+        return new Text(
+                title,
+                shorten("Your leave " + range(first, last) + " " + verb + ("APPROVED".equals(decision) ? "" : because(reason)) + ".", MAX_MESSAGE),
+                "/manager-attendance/me/leave");
+    }
+
     public static Text monthLocked(YearMonth month) {
         return new Text(
                 "Your attendance month was locked",
