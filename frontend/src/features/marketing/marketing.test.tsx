@@ -721,7 +721,12 @@ describe("ActivityDialog: planning for a prospect not yet on the list (spec 023 
   it("offers adding a prospect only to a role that may create prospects", async () => {
     grants["/marketing/calendar"] = ["VIEW", "CREATE"];
     grants["/marketing/prospects"] = ["VIEW"];
-    route({ "/activities": { content: [], drives: [] } });
+    // the dialog also searches prospects; an unlisted URL would answer {} (no content list) and crash its render,
+    // depending on whether that request resolved before the assertion
+    route({
+      "/activities": { content: [], drives: [] },
+      "/prospects": { content: [], page: 0, size: 50, totalElements: 0 },
+    });
 
     await openPlan();
 
