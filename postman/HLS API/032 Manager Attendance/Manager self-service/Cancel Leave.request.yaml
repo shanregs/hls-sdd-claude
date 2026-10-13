@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cancel Leave
+description: "Cancel a pending request. An approved request is revoked by the approver and answers 409; someone else's request is 404. Needs MY_MANAGER_ATTENDANCE.DELETE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/leave/{{managerLeaveId}}"
+method: DELETE
+order: 14000

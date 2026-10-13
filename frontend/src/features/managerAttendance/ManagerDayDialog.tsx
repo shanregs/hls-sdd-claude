@@ -338,7 +338,7 @@ function CorrectionForm({
               helperText={`${form.purpose.length}/${MAX_PURPOSE}`}
             />
           )}
-          <Stack direction="row" spacing={2}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="Check-in time"
               type="time"

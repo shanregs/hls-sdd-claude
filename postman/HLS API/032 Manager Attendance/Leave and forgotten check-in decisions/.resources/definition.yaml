@@ -1,0 +1,3 @@
+$kind: collection
+description: "Approve, reject or revoke Managers' leave and decide forgotten check-ins. Nobody decides their own request."
+order: 3000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Approve Forgotten Check-in
+description: "Approve; the day becomes worked and is marked added later. 403 for the requester; 409 when it is not pending or the month is locked. Needs MANAGER_LEAVE.APPROVE."
+url: "{{baseUrl}}/api/v1/manager-attendance/regularizations/{{regularizationId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 6000

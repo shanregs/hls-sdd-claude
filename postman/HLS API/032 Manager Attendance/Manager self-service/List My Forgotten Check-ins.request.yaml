@@ -1,0 +1,6 @@
+$kind: http-request
+name: List My Forgotten Check-ins
+description: "The Manager's forgotten check-in requests, newest first. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/regularizations"
+method: GET
+order: 8000

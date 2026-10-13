@@ -1,0 +1,6 @@
+$kind: http-request
+name: My Month
+description: "Each day of the month (YYYY-MM) with its status, times, purpose, flags and leave, plus the month figures; the figures are missing, with the reason, for a Manager with no joining date. 400 for a bad month. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/months/{{month}}"
+method: GET
+order: 7000

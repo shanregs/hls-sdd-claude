@@ -1,0 +1,14 @@
+$kind: http-request
+name: Revoke Leave
+description: "Revoke an approved request with a required reason; its days are removed. 409 when it is not approved or a day is in a locked month. Needs MANAGER_LEAVE.APPROVE."
+url: "{{baseUrl}}/api/v1/manager-attendance/leave/{{managerLeaveId}}/revoke"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Needed at work"
+    }
+order: 4000

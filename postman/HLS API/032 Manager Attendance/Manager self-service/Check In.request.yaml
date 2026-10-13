@@ -1,0 +1,19 @@
+$kind: http-request
+name: Check In
+description: "Check in with the device location. dayType is OFFICE or FIELD. A Field day needs a purpose or at least one linked planned activity (activities: kind and id). Answers 201 with the day. 400 for no location, a latitude or longitude out of range, a bad day type, a Field day with no basis, a joining date not recorded, or full-day leave; 409 for a second check-in or a locked month. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/check-in"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "dayType": "FIELD",
+      "purpose": "Review visit to Green Valley School",
+      "activities": [],
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "accuracyMeters": 18.5
+    }
+order: 2000

@@ -1,0 +1,10 @@
+$kind: http-request
+name: Grid
+description: "Every Manager's status for each day of the month with the month figures and the lock state. Optional zoneId (the Zones a Manager holds) and q (name or employee id). 400 for a bad month. Saves the first Manager as managerId. Needs MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/grid?month={{month}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: const b = pm.response.json(); if (b.managers && b.managers.length) { pm.collectionVariables.set("managerId", b.managers[0].managerId); }
+    language: text/javascript
+order: 1000

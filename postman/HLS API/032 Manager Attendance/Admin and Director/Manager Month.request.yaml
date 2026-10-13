@@ -1,0 +1,6 @@
+$kind: http-request
+name: Manager Month
+description: "One Manager's days in full, with locations and each day's history. 404 for an unknown Manager. Needs MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/managers/{{managerId}}/months/{{month}}"
+method: GET
+order: 4000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Lock Month
+description: "Lock one Manager's month (body managerId) or every Manager's (empty body). 409 while the month has not ended, or for one Manager while leave or forgotten check-in requests touching it are pending (the response lists them). Locking all returns locked, refused with the reason and what is waiting, and alreadyLocked. Needs MANAGER_ATTENDANCE.PROCESS (Admin only by default)."
+url: "{{baseUrl}}/api/v1/manager-attendance/months/{{month}}/lock"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "managerId": "{{managerId}}"
+    }
+order: 8000

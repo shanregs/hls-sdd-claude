@@ -1,0 +1,15 @@
+$kind: http-request
+name: Reopen Month
+description: "Reopen a locked month with a required reason; the frozen figures are cleared. 400 without a reason; 404 for an unknown Manager; 409 when the month is not locked. Needs MANAGER_ATTENDANCE.PROCESS."
+url: "{{baseUrl}}/api/v1/manager-attendance/months/{{month}}/reopen"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "managerId": "{{managerId}}",
+      "reason": "A visit was missed"
+    }
+order: 9000

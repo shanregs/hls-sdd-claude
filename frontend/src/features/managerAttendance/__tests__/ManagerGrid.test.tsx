@@ -734,3 +734,60 @@ describe("Manager month lock (spec 032 US6)", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("Accessibility of the day dialog (spec 032 T070)", () => {
+  beforeEach(() => {
+    navigation = nav(["VIEW", "EDIT", "PROCESS"]);
+  });
+
+  it.each<ThemeMode>(["light", "dark"])(
+    "has no violations with the day dialog and its correction error open in the %s theme",
+    async (mode) => {
+      const user = userEvent.setup();
+      renderPage(mode);
+      await user.click(
+        await screen.findByRole("button", {
+          name: `Asha Manager, ${thisMonth}-01: Worked`,
+        }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      await user.click(
+        await within(dialog).findByRole("button", { name: "Save correction" }),
+      );
+      await within(dialog).findByText("A reason is required.");
+      const results = await axe(dialog, {
+        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
+      });
+      expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    },
+    30_000,
+  );
+
+  it("reaches the controls of the correction form in a sensible keyboard order", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(
+      await screen.findByRole("button", {
+        name: `Asha Manager, ${thisMonth}-01: Worked`,
+      }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    const remove = await within(dialog).findByRole("checkbox", {
+      name: "Remove this day's check-in and check-out",
+    });
+    remove.focus();
+    const order: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      await user.tab();
+      const el = document.activeElement as HTMLElement;
+      order.push(
+        el.getAttribute("aria-label") ??
+          (el as HTMLInputElement).labels?.[0]?.textContent ??
+          el.textContent ??
+          "",
+      );
+    }
+    expect(order[0]).toMatch(/Office|Field/);
+    expect(order.join("|")).toMatch(/Check-in time.*Check-out time.*Reason/);
+  });
+});

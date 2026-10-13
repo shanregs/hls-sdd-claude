@@ -94,7 +94,7 @@ export function AttendanceSettingsForm() {
           </Alert>
         )}
         {done && <Alert severity="success">The times were saved.</Alert>}
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             label="Late after"
             type="time"

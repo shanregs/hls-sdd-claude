@@ -1,0 +1,6 @@
+$kind: http-request
+name: Missed Check-ins
+description: "Managers with no check-in and no leave on a working day past the cut-off. Optional date (default today); an earlier day counts in full, a future day is empty. Needs MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/missed"
+method: GET
+order: 2000

@@ -1,0 +1,23 @@
+$kind: http-request
+name: Request Leave
+description: "Request leave. firstHalf and lastHalf make the first or last day a half day. Refused with 400 for reversed dates, a range with no working day, a date before the joining date or after the exit date, no joining date, a missing reason, a half day on a day that is not a working day, or one day made of two half days; 409 for an overlap with another pending or approved request. Saves managerLeaveId. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/leave"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "leaveTypeId": "{{leaveTypeId}}",
+      "firstDate": "2026-11-10",
+      "lastDate": "2026-11-11",
+      "firstHalf": false,
+      "lastHalf": false,
+      "reason": "Family function"
+    }
+scripts:
+  - type: afterResponse
+    code: if (pm.response.code === 201) { pm.collectionVariables.set("managerLeaveId", pm.response.json().id); }
+    language: text/javascript
+order: 13000

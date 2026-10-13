@@ -1,0 +1,6 @@
+$kind: http-request
+name: My Leave
+description: "The Manager's leave requests, newest first. Needs MY_MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/leave"
+method: GET
+order: 12000

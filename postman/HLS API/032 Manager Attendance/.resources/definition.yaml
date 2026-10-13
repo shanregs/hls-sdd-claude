@@ -1,0 +1,3 @@
+$kind: collection
+description: "Manager attendance (spec 032): a Manager's check-in and check-out with a location, Office and Field days, the month and forgotten check-ins, Manager leave; Admin and Director: the grid, corrections, missed check-ins, the month lock, the check-in times and the decisions on leave and forgotten check-ins. Sign in as a Manager for Manager self-service and as an Admin or Director for the rest (only an Admin may lock or reopen a month). Teacher and System get 403 on every endpoint. Collection variables: month (YYYY-MM), date (YYYY-MM-DD), managerId, leaveTypeId, managerLeaveId, regularizationId."
+order: 32000

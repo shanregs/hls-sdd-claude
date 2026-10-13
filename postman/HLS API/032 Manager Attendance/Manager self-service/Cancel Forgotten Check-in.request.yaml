@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cancel Forgotten Check-in
+description: "Cancel a pending request. 404 for someone else's request; 409 when it is not pending. Needs MY_MANAGER_ATTENDANCE.DELETE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/regularizations/{{regularizationId}}"
+method: DELETE
+order: 10000

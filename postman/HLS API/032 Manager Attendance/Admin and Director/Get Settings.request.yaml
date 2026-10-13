@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Settings
+description: "The late time and the missed check-in cut-off as HH:mm, with the version. Needs MANAGER_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/manager-attendance/settings"
+method: GET
+order: 10000

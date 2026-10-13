@@ -1,0 +1,16 @@
+$kind: http-request
+name: Check Out
+description: "Check out with the device location. 400 without a location or without a check-in; 409 if already checked out. Needs MY_MANAGER_ATTENDANCE.CREATE."
+url: "{{baseUrl}}/api/v1/manager-attendance/me/check-out"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "accuracyMeters": 20
+    }
+order: 3000
