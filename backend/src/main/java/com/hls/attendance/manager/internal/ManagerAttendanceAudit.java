@@ -10,6 +10,7 @@ public class ManagerAttendanceAudit {
 
     public static final String DAY = "MANAGER_DAY";
     public static final String REGULARIZATION = "MANAGER_REGULARIZATION";
+    public static final String MONTH = "MANAGER_MONTH";
 
     private final ChangeRecorder recorder;
 

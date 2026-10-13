@@ -21,22 +21,27 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
-import { formatDate } from "../teachers/formatters";
+import { formatDate, todayIso } from "../teachers/formatters";
 import {
   MAX_PURPOSE,
   MAX_REASON,
   correctionFor,
   validateCorrection,
+  validateDecisionReason,
   type CorrectionValues,
 } from "./formRules";
 import {
   correctDay,
   getManagerMonth,
+  lockMonth,
+  reopenMonth,
+  type PendingRequest,
   type DayType,
   type MonthDay,
   type MonthView,
   type Place,
 } from "./managerAttendanceApi";
+import { PendingRequests } from "./PendingRequests";
 import { flagLabel, statusStyle, timeOf } from "./statusDisplay";
 
 function placeText(p: Place | null): string {
@@ -56,6 +61,8 @@ interface Props {
   /** The date to show first; empty to show the first date with a record. */
   initialDate: string;
   canEdit: boolean;
+  /** May lock and reopen the month (PROCESS). */
+  canProcess?: boolean;
   onClose: () => void;
   onChanged: () => void;
 }
@@ -67,6 +74,7 @@ export function ManagerDayDialog({
   month,
   initialDate,
   canEdit,
+  canProcess = false,
   onClose,
   onChanged,
 }: Props) {
@@ -157,6 +165,18 @@ export function ManagerDayDialog({
                   await load();
                   onChanged();
                   return null;
+                }}
+              />
+            )}
+
+            {canProcess && (
+              <MonthLockSection
+                locked={locked}
+                month={month}
+                managerId={managerId}
+                onChanged={async () => {
+                  await load();
+                  onChanged();
                 }}
               />
             )}
@@ -349,6 +369,112 @@ function CorrectionForm({
           Save correction
         </Button>
       </Box>
+    </Stack>
+  );
+}
+
+/** Lock or reopen this Manager's month (spec 032 US6). A lock is refused while requests are waiting, and says which. */
+function MonthLockSection({
+  locked,
+  month,
+  managerId,
+  onChanged,
+}: {
+  locked: boolean;
+  month: string;
+  managerId: string;
+  onChanged: () => Promise<void>;
+}) {
+  const { authFetch } = useAuth();
+  const [reason, setReason] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingRequest[]>([]);
+  // a month can be locked once it has ended
+  const ended = month < todayIso().slice(0, 7);
+  const reasonProblem = touched ? validateDecisionReason(reason) : null;
+
+  const lock = async () => {
+    setBusy(true);
+    setMessage(null);
+    setPending([]);
+    const outcome = await lockMonth(authFetch, month, managerId);
+    setBusy(false);
+    if (!outcome.ok) {
+      setMessage(outcome.reason);
+      setPending(outcome.pending);
+      return;
+    }
+    if (outcome.data.refused.length > 0) {
+      setMessage(outcome.data.refused[0].reason);
+      setPending(outcome.data.refused[0].pending);
+      return;
+    }
+    await onChanged();
+  };
+
+  const reopen = async () => {
+    setTouched(true);
+    setMessage(null);
+    if (validateDecisionReason(reason)) return;
+    setBusy(true);
+    const result = await reopenMonth(
+      authFetch,
+      month,
+      managerId,
+      reason.trim(),
+    );
+    setBusy(false);
+    if (!result.ok) {
+      setMessage(result.reason);
+      return;
+    }
+    setReason("");
+    setTouched(false);
+    await onChanged();
+  };
+
+  if (!locked && !ended) return null;
+  return (
+    <Stack spacing={1.5} component="section" aria-label="Month lock">
+      <Typography variant="subtitle2" component="h3">
+        Month lock
+      </Typography>
+      {message && (
+        <Alert severity="error" role="alert">
+          {message}
+          <PendingRequests items={pending} showManager={false} />
+        </Alert>
+      )}
+      {locked ? (
+        <>
+          <TextField
+            label="Reason for reopening"
+            multiline
+            minRows={2}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            error={reasonProblem !== null}
+            helperText={reasonProblem ?? `${reason.length}/${MAX_REASON}`}
+          />
+          <Box>
+            <Button disabled={busy} onClick={() => void reopen()}>
+              Reopen month
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <Box>
+          <Button
+            variant="outlined"
+            disabled={busy}
+            onClick={() => void lock()}
+          >
+            Lock this month
+          </Button>
+        </Box>
+      )}
     </Stack>
   );
 }

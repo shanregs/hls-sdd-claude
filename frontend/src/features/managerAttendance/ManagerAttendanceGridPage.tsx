@@ -23,6 +23,7 @@ import { shiftMonth } from "../attendance/monthUtils";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { todayIso } from "../teachers/formatters";
 import { listZones, type ZoneSummary } from "../zones/zonesApi";
+import { LockMonthDialog } from "./LockMonthDialog";
 import { ManagerDayDialog } from "./ManagerDayDialog";
 import { getGrid, type Grid, type GridRow } from "./managerAttendanceApi";
 import { figure, statusStyle } from "./statusDisplay";
@@ -45,7 +46,9 @@ function monthLabel(month: string): string {
 /** Every Manager's month for an Admin or Director (spec 032 US5), with a Zone filter, a name search and a day dialog. */
 export function ManagerAttendanceGridPage() {
   const { authFetch } = useAuth();
-  const canEdit = useGrantedActions(ROUTE).has("EDIT");
+  const granted = useGrantedActions(ROUTE);
+  const canEdit = granted.has("EDIT");
+  const canProcess = granted.has("PROCESS");
 
   const [month, setMonth] = useState(todayIso().slice(0, 7));
   const [zoneId, setZoneId] = useState("");
@@ -54,6 +57,7 @@ export function ManagerAttendanceGridPage() {
   const [zones, setZones] = useState<ZoneSummary[]>([]);
   const [state, setState] = useState<State>({ kind: "loading" });
   const [open, setOpen] = useState<{ row: GridRow; date: string } | null>(null);
+  const [locking, setLocking] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -118,6 +122,11 @@ export function ManagerAttendanceGridPage() {
         >
           Next
         </Button>
+        {canProcess && month < todayIso().slice(0, 7) && (
+          <Button variant="outlined" onClick={() => setLocking(true)}>
+            Lock month for payroll
+          </Button>
+        )}
         <TextField
           select
           size="small"
@@ -232,6 +241,14 @@ export function ManagerAttendanceGridPage() {
         </>
       )}
 
+      {locking && (
+        <LockMonthDialog
+          month={month}
+          onClose={() => setLocking(false)}
+          onChanged={() => void load()}
+        />
+      )}
+
       {open && (
         <ManagerDayDialog
           managerId={open.row.managerId}
@@ -239,6 +256,7 @@ export function ManagerAttendanceGridPage() {
           month={month}
           initialDate={open.date}
           canEdit={canEdit}
+          canProcess={canProcess}
           onClose={() => setOpen(null)}
           onChanged={() => void load()}
         />

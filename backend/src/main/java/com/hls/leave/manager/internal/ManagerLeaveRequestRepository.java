@@ -17,6 +17,10 @@ public interface ManagerLeaveRequestRepository extends JpaRepository<ManagerLeav
 
     List<ManagerLeaveRequest> findByManagerIdOrderByRequestedAtAsc(UUID managerId);
 
+    /** The requests in a status that touch the range (first on or before its end, last on or after its start). */
+    List<ManagerLeaveRequest> findByStatusAndFirstDateLessThanEqualAndLastDateGreaterThanEqual(
+            Status status, LocalDate lastDate, LocalDate firstDate);
+
     /** The manager's requests in these statuses that overlap the range, for the overlap check. */
     List<ManagerLeaveRequest> findByManagerIdAndStatusInAndFirstDateLessThanEqualAndLastDateGreaterThanEqual(
             UUID managerId, Collection<Status> statuses, LocalDate lastDate, LocalDate firstDate);
