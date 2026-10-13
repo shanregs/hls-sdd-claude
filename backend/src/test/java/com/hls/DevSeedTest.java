@@ -49,4 +49,13 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(get("/api/v1/marketing/pipeline", director.token()).body()).contains("FINAL_STAGE");
         assertThat(get("/api/v1/marketing/dashboard", director.token()).body()).contains("\"won\":1");
     }
+
+    @Test
+    void schoolWorkingDaysDemoRowsAreSeededForTheCurrentYear() {
+        Signed admin = signIn(null, "9800000001", "Password123!");
+
+        Resp page = get("/api/v1/school-working-days?size=100", admin.token());
+        assertThat(page.status()).isEqualTo(200);
+        assertThat(((Number) page.map().get("total")).intValue()).isGreaterThanOrEqualTo(12);
+    }
 }

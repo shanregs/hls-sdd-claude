@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.2 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then two PATCH: 2.5.1 and 2.5.2)
+Version change: 1.7.0 → 2.5.4 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.4)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.4 (PATCH, spec 037): the Default role access matrix gains a School Working Days row (the working days each
+    School counts in each calendar month). Admin holds View, Create, Edit and Delete; Director holds View, Create and Edit
+    (no Delete, as for other School master data); a Manager may be granted View only and is then limited to assigned
+    Schools; Teacher and System have no access. The navigation model gains the MASTER DATA item School Working Days.
+    Principle VII is unchanged: the feature is the `attendance.workingdays` sub-package of `attendance` and publishes
+    `attendance.api.SchoolWorkingDays`, which payroll, Manager attendance and the attendance rollups adopt in later
+    amendments. No principle changes.
   - 2.5.3 (PATCH, spec 011): the Default role access matrix row System & Security Settings gains Admin (View, Edit)
     alongside System, since Admin holds full operational authority; Director stays off by default and may be granted
     it. The `settings` module (Principle VII) keeps eleven runtime values and `identity` reads them through its own
@@ -324,6 +331,7 @@ kept intentionally lightweight for v1.
   | School Management               | ✓     | ✓        | Assigned | —       | —      |
   | Teacher Management              | ✓     | ✓        | Assigned | —       | —      |
   | Designations                    | ✓     | ✓        | View only if granted (reads the fields on people in scope) | — | — |
+  | School Working Days (monthly working days per School) | View, Create, Edit, Delete | View, Create, Edit | View only if granted (Assigned Schools) | — | — |
   | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
   | Substitutions (requirements, assign, cover, School informed) | View, Edit | View, Edit | View, Edit (their Schools) | My Substitutions: View (own) | — |
   | Manager Tasks                   | View, Create, Edit, Approve | View, Create, Edit, Approve | Own tasks (View, Create for self, Edit to act on them; never Approve) | — | — |
@@ -382,4 +390,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.3 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-11
+**Version**: 2.5.4 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-13

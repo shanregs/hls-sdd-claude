@@ -5,8 +5,10 @@ import com.hls.attendance.manager.internal.CheckInService;
 import com.hls.attendance.manager.internal.ManagerContext;
 import com.hls.attendance.manager.internal.CorrectionService;
 import com.hls.attendance.manager.internal.ManagerDayView;
+import com.hls.attendance.manager.internal.ManagerAttendanceSettingsService;
 import com.hls.attendance.manager.internal.ManagerGridService;
 import com.hls.attendance.manager.internal.ManagerMonthLockService;
+import com.hls.attendance.manager.internal.MissedCheckInService;
 import com.hls.attendance.manager.internal.RegularizationService;
 import com.hls.attendance.manager.internal.RegularizationService.RegularizationView;
 import com.hls.identity.permissions.PermissionAction;
@@ -44,6 +46,8 @@ public class ManagerAttendanceController {
     private final CorrectionService corrections;
     private final RegularizationService regularizations;
     private final ManagerMonthLockService monthLock;
+    private final MissedCheckInService missed;
+    private final ManagerAttendanceSettingsService settings;
     private final PermissionGuard guard;
 
     public ManagerAttendanceController(
@@ -54,6 +58,8 @@ public class ManagerAttendanceController {
             CorrectionService corrections,
             RegularizationService regularizations,
             ManagerMonthLockService monthLock,
+            MissedCheckInService missed,
+            ManagerAttendanceSettingsService settings,
             PermissionGuard guard) {
         this.checkIns = checkIns;
         this.photos = photos;
@@ -61,6 +67,8 @@ public class ManagerAttendanceController {
         this.corrections = corrections;
         this.regularizations = regularizations;
         this.monthLock = monthLock;
+        this.missed = missed;
+        this.settings = settings;
         this.context = context;
         this.guard = guard;
     }
@@ -98,6 +106,33 @@ public class ManagerAttendanceController {
         }
         return monthLock.reopen(
                 CallerContext.userId(jwt), ManagerGridService.parseMonth(month), body.managerId(), body.reason());
+    }
+
+    @GetMapping("/missed")
+    public List<MissedCheckInService.Missed> missed(
+            @RequestParam(required = false) LocalDate date, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.VIEW);
+        return missed.missedOn(date == null ? missed.today() : date, missed.now());
+    }
+
+    @GetMapping("/on-leave")
+    public List<MissedCheckInService.OnLeave> onLeave(
+            @RequestParam(required = false) LocalDate date, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.VIEW);
+        return missed.onLeaveOn(date == null ? missed.today() : date);
+    }
+
+    @GetMapping("/settings")
+    public ManagerAttendanceSettingsService.SettingsView settings(@AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.VIEW);
+        return settings.get();
+    }
+
+    @PutMapping("/settings")
+    public ManagerAttendanceSettingsService.SettingsView changeSettings(
+            @RequestBody ManagerAttendanceSettingsService.UpdateInput body, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.MANAGER_ATTENDANCE, PermissionAction.EDIT);
+        return settings.update(CallerContext.userId(jwt), body);
     }
 
     @GetMapping("/grid")

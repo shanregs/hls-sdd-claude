@@ -32,6 +32,11 @@ import { SchoolsPage } from "../features/schools/SchoolsPage";
 import { SchoolDialog } from "../features/schools/SchoolDialog";
 import { DesignationsPage } from "../features/designations/DesignationsPage";
 import { DesignationDialog } from "../features/designations/DesignationDialog";
+import { SchoolWorkingDaysPage } from "../features/schoolWorkingDays/SchoolWorkingDaysPage";
+import { AddRowDialog } from "../features/schoolWorkingDays/AddRowDialog";
+import { DeleteDialog } from "../features/schoolWorkingDays/DeleteDialog";
+import { HistoryDialog } from "../features/schoolWorkingDays/HistoryDialog";
+import { CopyYearDialog } from "../features/schoolWorkingDays/CopyYearDialog";
 import { ManagerEmploymentDialog } from "../features/managers/ManagerEmploymentDialog";
 import { TeacherEmploymentDialog } from "../features/teachers/TeacherEmploymentDialog";
 import { ManagersPage } from "../features/managers/ManagersPage";
@@ -242,6 +247,11 @@ const ACCESS_MODEL = {
           route: "/master-data/designations",
           actions: ["VIEW", "CREATE", "EDIT"],
         },
+        {
+          label: "School Working Days",
+          route: "/master-data/school-working-days",
+          actions: ["VIEW", "CREATE", "EDIT", "DELETE"],
+        },
       ],
     },
     {
@@ -278,6 +288,30 @@ const TEACHER = {
     designation: null,
     missing: ["DESIGNATION"],
   },
+};
+
+const WORKING_DAYS_SCHOOL = {
+  id: "s1",
+  name: "Greenfield School",
+  zoneId: "z1",
+  zoneName: "North",
+  active: true,
+};
+
+const WORKING_DAYS_ROW = {
+  id: "wd1",
+  schoolId: "s1",
+  schoolName: "Greenfield School",
+  zoneId: "z1",
+  zoneName: "North",
+  year: 2027,
+  month: 3,
+  workingDays: 26,
+  daysInMonth: 31,
+  calendarDerived: 27,
+  updatedBy: "Asha R",
+  updatedAt: "2027-02-01T10:15:00",
+  version: 2,
 };
 
 const MANAGER = {
@@ -919,6 +953,38 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   if (url.startsWith("/api/v1/managers/m1")) {
     return { ok: true, status: 200, json: async () => MANAGER } as Response;
   }
+  if (url.startsWith("/api/v1/school-working-days/schools")) {
+    return {
+      ok: true,
+      json: async () => [WORKING_DAYS_SCHOOL],
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/school-working-days/history")) {
+    return {
+      ok: true,
+      json: async () => [
+        {
+          action: "CREATE",
+          oldValue: null,
+          newValue: 26,
+          actorName: "Asha R",
+          actorRoles: "ADMIN",
+          occurredAt: "2027-02-01T10:15:00",
+        },
+      ],
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/school-working-days")) {
+    return {
+      ok: true,
+      json: async () => ({
+        items: [WORKING_DAYS_ROW],
+        total: 1,
+        page: 0,
+        size: 25,
+      }),
+    } as Response;
+  }
   if (url === "/api/v1/designations") {
     return {
       ok: true,
@@ -1434,6 +1500,58 @@ const pages: PageCase[] = [
     name: "DesignationsPage",
     render: () => <DesignationsPage />,
     settle: () => screen.findAllByText("Primary Teacher"),
+  },
+  {
+    name: "SchoolWorkingDaysPage",
+    render: () => <SchoolWorkingDaysPage />,
+    settle: () => screen.findAllByText("March 2027"),
+  },
+  {
+    name: "AddRowDialog",
+    render: () => (
+      <AddRowDialog
+        schools={[WORKING_DAYS_SCHOOL]}
+        year={2027}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+        onEditExisting={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "DeleteDialog (working days)",
+    render: () => (
+      <DeleteDialog
+        row={WORKING_DAYS_ROW}
+        onClose={vi.fn()}
+        onDeleted={vi.fn()}
+        onStale={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "HistoryDialog (working days)",
+    render: () => <HistoryDialog row={WORKING_DAYS_ROW} onClose={vi.fn()} />,
+    settle: () => screen.findByRole("table", { name: "Change history" }),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "CopyYearDialog",
+    render: () => (
+      <CopyYearDialog
+        schools={[WORKING_DAYS_SCHOOL]}
+        year={2027}
+        schoolId="s1"
+        onClose={vi.fn()}
+        onCopied={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
   },
   {
     name: "DesignationDialog",
