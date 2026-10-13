@@ -100,6 +100,7 @@ public class PermissionMatrixService {
         seedMarketing();
         seedTasks();
         seedManagerAttendance();
+        seedSchoolWorkingDays();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -241,6 +242,17 @@ public class PermissionMatrixService {
         }
         for (PermissionAction action : PermissionModule.MY_MANAGER_ATTENDANCE.actions()) {
             seed(Role.MANAGER, PermissionModule.MY_MANAGER_ATTENDANCE, action, true);
+        }
+        grants.invalidateAround();
+    }
+
+    /** School working days defaults (spec 037): Admin holds all four actions, the Director everything but Delete. */
+    private void seedSchoolWorkingDays() {
+        for (PermissionAction action : PermissionModule.SCHOOL_WORKING_DAYS.actions()) {
+            seed(Role.ADMIN, PermissionModule.SCHOOL_WORKING_DAYS, action, true);
+            if (action != PermissionAction.DELETE) {
+                seed(Role.DIRECTOR, PermissionModule.SCHOOL_WORKING_DAYS, action, true);
+            }
         }
         grants.invalidateAround();
     }
