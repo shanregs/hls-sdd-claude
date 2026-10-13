@@ -5,6 +5,10 @@ import com.hls.attendance.manager.internal.CheckInPhotoService;
 import com.hls.attendance.manager.internal.CheckInService;
 import com.hls.attendance.manager.internal.CheckInService.LocationInput;
 import com.hls.attendance.manager.internal.ManagerDayView;
+import com.hls.attendance.manager.internal.ManagerGridService;
+import com.hls.attendance.manager.internal.RegularizationService;
+import com.hls.attendance.manager.internal.RegularizationService.RegularizationView;
+import com.hls.attendance.manager.internal.RegularizationService.RequestInput;
 import com.hls.files.api.FileStore.FileContent;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
@@ -25,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,11 +63,20 @@ public class MyManagerAttendanceController {
 
     private final CheckInService checkIns;
     private final CheckInPhotoService photos;
+    private final ManagerGridService grid;
+    private final RegularizationService regularizations;
     private final PermissionGuard guard;
 
-    public MyManagerAttendanceController(CheckInService checkIns, CheckInPhotoService photos, PermissionGuard guard) {
+    public MyManagerAttendanceController(
+            CheckInService checkIns,
+            CheckInPhotoService photos,
+            ManagerGridService grid,
+            RegularizationService regularizations,
+            PermissionGuard guard) {
         this.checkIns = checkIns;
         this.photos = photos;
+        this.grid = grid;
+        this.regularizations = regularizations;
         this.guard = guard;
     }
 
@@ -70,6 +84,32 @@ public class MyManagerAttendanceController {
     public CheckInService.Today today(@AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.VIEW);
         return checkIns.today(CallerContext.userId(jwt));
+    }
+
+    @GetMapping("/months/{month}")
+    public ManagerGridService.MonthView month(@PathVariable String month, @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.VIEW);
+        return grid.myMonth(CallerContext.userId(jwt), ManagerGridService.parseMonth(month));
+    }
+
+    @GetMapping("/regularizations")
+    public List<RegularizationView> regularizations(@AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.VIEW);
+        return regularizations.mine(CallerContext.userId(jwt));
+    }
+
+    @PostMapping("/regularizations")
+    public ResponseEntity<RegularizationView> requestRegularization(
+            @RequestBody RequestInput body, @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.CREATE);
+        return ResponseEntity.status(201).body(regularizations.request(CallerContext.userId(jwt), body));
+    }
+
+    @DeleteMapping("/regularizations/{id}")
+    public ResponseEntity<Void> cancelRegularization(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.DELETE);
+        regularizations.cancel(CallerContext.userId(jwt), id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/check-in")

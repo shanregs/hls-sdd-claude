@@ -146,6 +146,16 @@ public class UserAdminService {
         return appUserRepository.findById(userId).map(u -> new UserWithRoles(u, rolesOf(userId)));
     }
 
+    /** The users with the given ids in one query, keyed by id; the roles are left empty (callers that need names only). */
+    @Transactional(readOnly = true)
+    public java.util.Map<UUID, UserWithRoles> findWithoutRoles(java.util.Collection<UUID> userIds) {
+        java.util.Map<UUID, UserWithRoles> out = new java.util.HashMap<>();
+        for (AppUser u : appUserRepository.findAllById(userIds)) {
+            out.put(u.getId(), new UserWithRoles(u, List.of()));
+        }
+        return out;
+    }
+
     @Transactional(readOnly = true)
     public UserWithRoles get(UUID userId) {
         AppUser user = requireUser(userId);

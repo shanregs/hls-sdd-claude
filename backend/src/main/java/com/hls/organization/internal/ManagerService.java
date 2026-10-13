@@ -167,7 +167,8 @@ public class ManagerService implements ManagerQueries {
     @Transactional(readOnly = true)
     public List<ManagerRef> allManagers() {
         List<Manager> all = managerRepository.findAll();
-        Map<UUID, UserWithRoles> users = usersOf(all);
+        Map<UUID, UserWithRoles> users =
+                userAdminService.findWithoutRoles(all.stream().map(Manager::getUserId).distinct().toList());
         return all.stream()
                 .map(m -> refOf(m, users))
                 .sorted(Comparator.comparing(m -> m.displayName().toLowerCase(Locale.ROOT)))

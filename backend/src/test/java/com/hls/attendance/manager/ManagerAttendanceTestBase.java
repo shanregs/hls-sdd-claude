@@ -2,6 +2,7 @@ package com.hls.attendance.manager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.Role;
 import com.hls.support.AttendanceTestBase;
 import java.nio.charset.StandardCharsets;
@@ -9,9 +10,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /** Helpers shared by the spec 032 integration tests: Managers with a joining date, day rows and the settings row. */
 abstract class ManagerAttendanceTestBase extends AttendanceTestBase {
@@ -20,6 +23,9 @@ abstract class ManagerAttendanceTestBase extends AttendanceTestBase {
     protected static final String ATT = "/api/v1/manager-attendance";
     protected static final byte[] PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4};
     protected static final byte[] JPG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2, 3, 4};
+
+    @Autowired
+    protected WorkingCalendar workingCalendar;
 
     @AfterEach
     void restoreSettings() {
@@ -135,5 +141,62 @@ abstract class ManagerAttendanceTestBase extends AttendanceTestBase {
                 .returnResult(String.class);
         assertThat(result.getStatus()).isNotNull();
         return new Resp(result.getStatus().value(), result.getResponseBody());
+    }
+
+    /** A Manager who joined six months ago, so every day of last month is inside the employment. */
+    protected ManagerCtx longJoinedManager(String adminToken) {
+        ManagerCtx manager = newManager(adminToken);
+        jdbc.update("update manager set joining_date = ? where id = ?", today().minusMonths(6), manager.managerId());
+        return manager;
+    }
+
+    protected YearMonth lastMonth() {
+        return YearMonth.from(today()).minusMonths(1);
+    }
+
+    protected List<LocalDate> workingDates(YearMonth month) {
+        return workingCalendar.workingDays(null, month.atDay(1), month.atEndOfMonth());
+    }
+
+    protected Instant instant(LocalDate date, int hour, int minute) {
+        return date.atTime(hour, minute).atZone(businessCalendar.zone()).toInstant();
+    }
+
+    protected UUID seedFieldDay(UUID managerId, LocalDate date, String purpose, Instant checkIn, Instant checkOut) {
+        UUID id = seedDay(managerId, date, checkIn, checkOut);
+        jdbc.update("update manager_day set day_type = 'FIELD', purpose = ? where id = ?", purpose, id);
+        return id;
+    }
+
+    protected String auditBody(String adminToken, String entityType, Object entityId) {
+        return get("/api/v1/audit/change-history?entityType=" + entityType + "&entityId=" + entityId + "&size=100", adminToken)
+                .body();
+    }
+
+    protected long notifications(UUID userId, String type) {
+        return jdbc.queryForObject(
+                "select count(*) from notification where recipient_user_id = ? and type = ?", Long.class, userId, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected static List<Map<String, Object>> listOf(Resp resp) {
+        return (List<Map<String, Object>>)
+                (List<?>) org.springframework.boot.json.JsonParserFactory.getJsonParser().parseList(resp.body());
+    }
+
+    /** The entry of a month response for one date. */
+    @SuppressWarnings("unchecked")
+    protected static Map<String, Object> dayOf(Resp month, LocalDate date) {
+        return ((List<Map<String, Object>>) month.map().get("days"))
+                .stream().filter(d -> date.toString().equals(d.get("date"))).findFirst().orElseThrow();
+    }
+
+    protected void addHoliday(String adminToken, LocalDate date) {
+        assertThat(post("/api/v1/attendance/calendar/non-working-dates", adminToken, Map.of("onDate", date.toString(), "description", "Test holiday")).status())
+                .isEqualTo(201);
+    }
+
+    protected void removeHoliday(String adminToken, LocalDate date) {
+        delete("/api/v1/attendance/calendar/non-working-dates/" + date, adminToken);
     }
 }

@@ -117,6 +117,27 @@ public final class MessageFactory {
                 "/operations/substitutions/" + requirementId);
     }
 
+    public static Text managerDayCorrected(LocalDate day) {
+        return new Text(
+                "Your attendance was corrected",
+                "Your attendance for " + date(day) + " was corrected by the office.",
+                "/manager-attendance/me/month");
+    }
+
+    public static Text managerRegularizationRequested(String managerName, LocalDate day) {
+        return new Text(
+                shorten("Forgotten check-in: " + managerName, MAX_TITLE),
+                shorten(managerName + " asked to add a missing check-in for " + date(day) + ".", MAX_MESSAGE),
+                "/operations/manager-attendance");
+    }
+
+    public static Text managerRegularizationDecided(LocalDate day, boolean approved, String reason) {
+        return new Text(
+                approved ? "Check-in approved" : "Check-in rejected",
+                "Your request to add a check-in for " + date(day) + (approved ? " was approved." : " was rejected" + because(reason) + "."),
+                "/manager-attendance/me/month");
+    }
+
     public static Text monthLocked(YearMonth month) {
         return new Text(
                 "Your attendance month was locked",

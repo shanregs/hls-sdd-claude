@@ -18,7 +18,11 @@ public record ManagerDayView(
         Instant checkOutAt,
         boolean hasPhoto,
         Leave leave,
-        List<String> flags) {
+        List<String> flags,
+        List<ActivityRef> activities) {
+
+    /** A planned activity linked to a Field day, by kind and id. */
+    public record ActivityRef(String kind, UUID id) {}
 
     /** Approved leave on the day: 1.0 or 0.5, and whether it is unpaid (Loss of Pay). */
     public record Leave(BigDecimal fraction, boolean unpaid) {}
@@ -52,6 +56,10 @@ public record ManagerDayView(
                 day.getCheckOutAt(),
                 day.getPhotoFileId() != null,
                 leave,
-                List.copyOf(flags));
+                List.copyOf(flags),
+                day.getActivities().stream()
+                        .map(a -> new ActivityRef(a.getKind(), a.getActivityId()))
+                        .sorted(java.util.Comparator.comparing(ActivityRef::kind).thenComparing(ActivityRef::id))
+                        .toList());
     }
 }

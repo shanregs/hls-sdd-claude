@@ -44,6 +44,11 @@ public class RecipientResolver {
         return Optional.ofNullable(info).map(TeacherInfo::userId);
     }
 
+    /** The Manager with the given id, or empty when there is none (spec 032 notifies the Manager of their own day). */
+    public Optional<ManagerQueries.ManagerRef> manager(UUID managerId) {
+        return managers.allManagers().stream().filter(m -> m.id().equals(managerId)).findFirst();
+    }
+
     /** Every active Director: who an escalated task goes to (spec 025). */
     public Set<UUID> activeDirectors() {
         Set<UUID> ids = new LinkedHashSet<>(roles.userIdsWithRole(Role.DIRECTOR));
