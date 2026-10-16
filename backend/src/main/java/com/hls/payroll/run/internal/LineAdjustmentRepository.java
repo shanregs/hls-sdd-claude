@@ -12,4 +12,6 @@ interface LineAdjustmentRepository extends JpaRepository<LineAdjustment, UUID> {
     List<LineAdjustment> findByLineIdIn(Collection<UUID> lineIds);
 
     List<LineAdjustment> findByAdjustmentId(UUID adjustmentId);
+
+    void deleteByLineIdIn(Collection<UUID> lineIds);
 }
