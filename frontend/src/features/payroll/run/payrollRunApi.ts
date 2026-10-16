@@ -115,6 +115,8 @@ export interface Run {
   /** Only on the single-run read. */
   events: RunEvent[] | null;
   recomputeSummary: RecomputeSummary | null;
+  /** Waiting adjustments recorded after this draft was computed; they join when it is computed again. */
+  adjustmentsWaitingSinceComputed: number;
 }
 
 export interface AdjustmentLine {
@@ -305,9 +307,13 @@ export interface Adjustment {
   amount: string;
   reason: string;
   status: AdjustmentStatus;
+  attachedRunId: string | null;
+  appliedRunId: string | null;
+  appliedLineId: string | null;
   createdBy: Person | null;
   createdAt: string;
-  appliedRunId: string | null;
+  withdrawnBy: Person | null;
+  withdrawnAt: string | null;
   withdrawReason: string | null;
 }
 

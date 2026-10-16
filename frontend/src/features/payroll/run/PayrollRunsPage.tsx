@@ -91,6 +91,12 @@ export function PayrollRunsPage() {
         </Typography>
       </Box>
 
+      <Box>
+        <Link component={RouterLink} to={`${ROUTE}/adjustments`}>
+          Adjustments waiting for a run
+        </Link>
+      </Box>
+
       {canProcess && (
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 1.5 }}>

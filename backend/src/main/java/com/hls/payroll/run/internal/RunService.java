@@ -51,6 +51,7 @@ public class RunService {
     private final PayRunRepository runs;
     private final PayRunLineRepository lines;
     private final LineAdjustmentRepository lineAdjustments;
+    private final PayAdjustmentRepository adjustmentRepository;
     private final RunEventRepository events;
     private final RunComputation computation;
     private final ChangeRecorder changes;
@@ -63,6 +64,7 @@ public class RunService {
             PayRunRepository runs,
             PayRunLineRepository lines,
             LineAdjustmentRepository lineAdjustments,
+            PayAdjustmentRepository adjustmentRepository,
             RunEventRepository events,
             RunComputation computation,
             ChangeRecorder changes,
@@ -74,6 +76,7 @@ public class RunService {
         this.runs = runs;
         this.lines = lines;
         this.lineAdjustments = lineAdjustments;
+        this.adjustmentRepository = adjustmentRepository;
         this.events = events;
         this.computation = computation;
         this.changes = changes;
@@ -142,6 +145,8 @@ public class RunService {
         }
         Instant now = clock.instant();
         run.cancel(actor, why, now);
+        // the adjustments this draft held wait again for the next run (spec 013b 4.3)
+        adjustmentRepository.findByAttachedRunId(runId).forEach(PayAdjustment::detach);
         events.save(new RunEvent(run.getId(), now, actor, "CANCELLED", why, null));
         changes.record(actor, ENTITY, run.getId(), "status", PayRun.Status.DRAFT, PayRun.Status.CANCELLED);
         changes.recordLifecycle(actor, ENTITY, run.getId(), "cancelled", why);
@@ -371,7 +376,17 @@ public class RunService {
                 r.getPolicy(),
                 r.getVersion(),
                 eventViews,
-                history == null ? null : r.getRecomputeSummary());
+                history == null ? null : r.getRecomputeSummary(),
+                waitingSinceComputed(r, history != null));
+    }
+
+    /** Adjustments recorded after this draft was computed: they join only when it is computed again (research 11). */
+    private long waitingSinceComputed(PayRun r, boolean single) {
+        if (!single || r.getStatus() != PayRun.Status.DRAFT || r.getComputeState() != PayRun.ComputeState.DONE
+                || r.getHeartbeatAt() == null) {
+            return 0;
+        }
+        return adjustmentRepository.countWaitingSince(r.getId(), r.getHeartbeatAt());
     }
 
     private static LineView lineView(PayRunLine l, boolean withWorking, List<AdjustmentLine> adjustments) {

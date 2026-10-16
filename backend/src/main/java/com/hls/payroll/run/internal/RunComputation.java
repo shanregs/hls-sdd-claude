@@ -60,6 +60,7 @@ public class RunComputation {
     private final PayRunRepository runs;
     private final PayRunLineRepository lines;
     private final LineAdjustmentRepository lineAdjustments;
+    private final PayAdjustmentRepository adjustments;
     private final RunEventRepository events;
     private final TransactionTemplate tx;
     private final Clock clock;
@@ -73,6 +74,7 @@ public class RunComputation {
             PayRunRepository runs,
             PayRunLineRepository lines,
             LineAdjustmentRepository lineAdjustments,
+            PayAdjustmentRepository adjustments,
             RunEventRepository events,
             PlatformTransactionManager transactions,
             Clock clock,
@@ -84,6 +86,7 @@ public class RunComputation {
         this.runs = runs;
         this.lines = lines;
         this.lineAdjustments = lineAdjustments;
+        this.adjustments = adjustments;
         this.events = events;
         this.tx = new TransactionTemplate(transactions);
         this.clock = clock;
@@ -142,6 +145,7 @@ public class RunComputation {
                 inRun.stream().filter(c -> c.ref().kind() == Kind.MANAGER).map(c -> c.ref().id()).toList(), month);
 
         Map<RecomputeDiff.Key, RecomputeDiff.Before> before = snapshot(runId);
+        Map<PersonRef, List<AdjustmentInput>> waiting = waitingAdjustments(runId);
         tx.executeWithoutResult(s -> runs.lockById(runId).ifPresent(r -> r.setProgress(0, inRun.size(), clock.instant())));
 
         Map<RecomputeDiff.Key, PersonResult> fresh = new LinkedHashMap<>();
@@ -152,7 +156,12 @@ public class RunComputation {
                 futures.add(executor.submit(() -> {
                     permits.acquire();
                     try {
-                        return one(candidate, month, policy, managerMonths.get(candidate.ref().id()));
+                        return one(
+                                candidate,
+                                month,
+                                policy,
+                                managerMonths.get(candidate.ref().id()),
+                                waiting.getOrDefault(candidate.ref(), List.of()));
                     } finally {
                         permits.release();
                     }
@@ -216,9 +225,14 @@ public class RunComputation {
 
     // ------------------------------------------------------------ one person (read-only)
 
-    private PersonResult one(Candidate c, YearMonth month, PayPolicyView policy, ManagerMonth managerMonth) {
+    private PersonResult one(
+            Candidate c,
+            YearMonth month,
+            PayPolicyView policy,
+            ManagerMonth managerMonth,
+            List<AdjustmentInput> waiting) {
         try {
-            return calculate(c, month, policy, managerMonth);
+            return calculate(c, month, policy, managerMonth, waiting);
         } catch (RuntimeException e) {
             LOG.error("Pay run: {} {} could not be worked out", c.ref().kind(), c.ref().id(), e);
             String why = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
@@ -237,7 +251,12 @@ public class RunComputation {
         }
     }
 
-    private PersonResult calculate(Candidate c, YearMonth month, PayPolicyView policy, ManagerMonth managerMonth) {
+    private PersonResult calculate(
+            Candidate c,
+            YearMonth month,
+            PayPolicyView policy,
+            ManagerMonth managerMonth,
+            List<AdjustmentInput> waiting) {
         PersonRef ref = c.ref();
         String blocked = blocked(ref, month, managerMonth);
         EarnedPay earned = payRules.earnedPay(ref, month);
@@ -266,7 +285,7 @@ public class RunComputation {
             }
         }
         return LineCalculator.calculate(new LineCalculator.Inputs(
-                ref, c.name(), c.label(), earned, deduction, reasons, policy, List.of(), figures, blocked, warning));
+                ref, c.name(), c.label(), earned, deduction, reasons, policy, waiting, figures, blocked, warning));
     }
 
     /** FR-005: a Teacher's or Manager's attendance month must be locked; staff need none. */
@@ -370,13 +389,8 @@ public class RunComputation {
                 lines.flush();
             }
             List<PayRunLine> all = lines.findByRunId(runId);
-            run.setTotals(
-                    sum(all, PayRunLine::getEarned),
-                    sum(all, PayRunLine::getDeduction),
-                    sum(all, PayRunLine::getAdjustments),
-                    sum(all, PayRunLine::getNet),
-                    (int) all.stream().filter(l -> l.getState() == PersonResult.State.PAYABLE).count(),
-                    (int) all.stream().filter(l -> l.getState() == PersonResult.State.CANNOT_PAY).count());
+            RunTotals.refresh(run, all);
+            attachAdjustments(runId, fresh);
             run.setPolicy(Json.write(policyMap(policy)));
             if (recompute) {
                 run.setRecomputeSummary(diff.toJson());
@@ -387,11 +401,35 @@ public class RunComputation {
         });
     }
 
-    private static BigDecimal sum(List<PayRunLine> lines, java.util.function.Function<PayRunLine, BigDecimal> field) {
-        return lines.stream()
-                .map(field)
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
+    /** The waiting adjustments a run may take, by person: free ones, and the ones this run already holds (research 11). */
+    private Map<PersonRef, List<AdjustmentInput>> waitingAdjustments(UUID runId) {
+        Map<PersonRef, List<AdjustmentInput>> map = new HashMap<>();
+        for (PayAdjustment a : tx.execute(s -> adjustments.waitingForRun(runId))) {
+            map.computeIfAbsent(new PersonRef(a.getPersonKind(), a.getPersonId()), k -> new ArrayList<>())
+                    .add(new AdjustmentInput(a.getId(), a.getKind().name(), a.getAmount(), a.getReason()));
+        }
+        return map;
+    }
+
+    /**
+     * Marks the adjustments the lines took as attached to this run (they stay WAITING until approval) and lets go of the
+     * ones it held but no longer takes, for example a person who cannot be paid any more (spec 4.3).
+     */
+    private void attachAdjustments(UUID runId, Map<RecomputeDiff.Key, PersonResult> fresh) {
+        java.util.Set<UUID> taken = fresh.values().stream()
+                .flatMap(r -> r.adjustmentLines().stream())
+                .map(AdjustmentInput::id)
+                .collect(Collectors.toSet());
+        for (PayAdjustment held : adjustments.findByAttachedRunId(runId)) {
+            if (!taken.contains(held.getId())) {
+                held.detach();
+            }
+        }
+        if (!taken.isEmpty()) {
+            for (PayAdjustment a : adjustments.findAllById(taken)) {
+                a.attachTo(runId);
+            }
+        }
     }
 
     static Map<String, Object> policyMap(PayPolicyView policy) {

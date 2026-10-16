@@ -19,6 +19,18 @@ interface PayAdjustmentRepository extends JpaRepository<PayAdjustment, UUID> {
 
     List<PayAdjustment> findByAttachedRunId(UUID runId);
 
+    /** What a run may take: waiting adjustments that no other run holds, in the order they were recorded. */
+    @Query("select a from PayAdjustment a where a.status = com.hls.payroll.run.internal.PayAdjustment$Status.WAITING"
+            + " and (a.attachedRunId is null or a.attachedRunId = :runId) order by a.createdAt, a.id")
+    List<PayAdjustment> waitingForRun(@Param("runId") UUID runId);
+
+    /** Waiting adjustments recorded after a draft was computed, for people it pays: they appear only once it is computed again. */
+    @Query("select count(a) from PayAdjustment a where a.status = com.hls.payroll.run.internal.PayAdjustment$Status.WAITING"
+            + " and a.attachedRunId is null and a.createdAt > :since and exists (select 1 from PayRunLine l"
+            + " where l.runId = :runId and l.personKind = a.personKind and l.personId = a.personId"
+            + " and l.state = com.hls.payroll.run.internal.PersonResult$State.PAYABLE)")
+    long countWaitingSince(@Param("runId") UUID runId, @Param("since") java.time.Instant since);
+
     @Query("select a from PayAdjustment a where (:status is null or a.status = :status)"
             + " order by a.createdAt desc, a.id")
     Page<PayAdjustment> search(@Param("status") PayAdjustment.Status status, Pageable pageable);

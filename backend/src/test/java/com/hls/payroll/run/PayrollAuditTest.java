@@ -87,4 +87,39 @@ class PayrollAuditTest extends PayrollRunTestBase {
 
         assertThat(changeCount(admin.token(), ENTITY, draft.run())).isEqualTo(before);
     }
+
+    @Test
+    void recordingAndWithdrawingAnAdjustmentAreAuditedWithTheActorTheAmountAndTheReason() {
+        Signed admin = signInAs(Role.ADMIN);
+        UUID teacher = teacher(admin.token());
+        Resp created = post(
+                "/api/v1/payroll/adjustments",
+                admin.token(),
+                Map.of("personKind", "TEACHER", "personId", teacher.toString(), "kind", "CORRECTION", "amount", 2000, "reason", "August was underpaid"));
+        assertThat(created.status()).as(created.body()).isEqualTo(201);
+        Resp withdrawn = post(
+                "/api/v1/payroll/adjustments/" + created.id() + "/withdraw", admin.token(), Map.of("reason", "Entered twice"));
+        assertThat(withdrawn.status()).as(withdrawn.body()).isEqualTo(200);
+
+        List<Map<String, Object>> entries = changeEntries(admin.token(), "PAYROLL_ADJUSTMENT", created.id(), 3);
+
+        assertThat(fields(entries)).contains("created", "status", "withdrawn");
+        assertThat(entries).allSatisfy(e -> assertThat(e).containsEntry("actorUserId", admin.userId().toString()));
+        assertThat(entries)
+                .filteredOn(e -> "created".equals(e.get("field")))
+                .singleElement()
+                .satisfies(e -> assertThat((String) e.get("afterValue")).contains("2,000.00").contains("August was underpaid"));
+        assertThat(entries)
+                .filteredOn(e -> "status".equals(e.get("field")))
+                .singleElement()
+                .satisfies(e -> {
+                    assertThat(e.get("beforeValue")).isEqualTo("WAITING");
+                    assertThat(e.get("afterValue")).isEqualTo("WITHDRAWN");
+                });
+        assertThat(entries)
+                .filteredOn(e -> "withdrawn".equals(e.get("field")))
+                .singleElement()
+                .satisfies(e -> assertThat(e.get("afterValue")).isEqualTo("Entered twice"));
+    }
+
 }
