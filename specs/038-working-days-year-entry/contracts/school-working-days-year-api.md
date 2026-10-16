@@ -8,7 +8,7 @@ screen shows DD/MM/YYYY and month names.
 ## GET `/year?schoolId=&year=`  (View)
 
 Both parameters required. `year` must be within the current year minus 5 to plus 5 (400 naming the allowed years
-otherwise). The School must exist (400 if unknown) and be in the caller's scope (403 outside it).
+otherwise). The School must exist (400 if unknown) and be in the caller's scope (an out-of-scope School is indistinguishable from a missing one and gets 404, as in the grid).
 
 200:
 
@@ -50,7 +50,8 @@ Body (only the months the user changed):
 
 **Request-level refusals** (nothing is saved):
 
-- `403` no View, or neither Create nor Edit, or the School is outside the caller's scope.
+- `403` no View, or neither Create nor Edit.
+- `404` the School is outside the caller's scope (indistinguishable from a missing one, as in the grid).
 - `400` unknown School; `year` outside the window (names the allowed years); `month` outside 1 to 12; the same `month`
   twice; zero entries or more than 12; a missing field.
 

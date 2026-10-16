@@ -118,6 +118,68 @@ public class WorkingDaysService {
         }
     }
 
+    /** What one month of a year save came to (spec 038): the status, why not when refused, and the row as it is now. */
+    public record MonthOutcome(String status, String reason, String message, SchoolWorkingDaysRow row) {}
+
+    /**
+     * Saves one month of a year entry in its own transaction (spec 038 FR-006 to FR-014): creates or updates through the
+     * same history and audit writes as the grid, reports an equal figure as unchanged, and returns every refusal as data
+     * so the other months can still be saved. A race with another writer is decided again once on fresh data.
+     */
+    public MonthOutcome saveMonth(
+            UUID actor,
+            Set<Role> roles,
+            UUID schoolId,
+            int year,
+            int month,
+            BigDecimal workingDays,
+            Long version,
+            boolean canCreate,
+            boolean canEdit) {
+        try {
+            return tx.execute(status ->
+                    saveMonthInTransaction(actor, roles, schoolId, year, month, workingDays, version, canCreate, canEdit));
+        } catch (DataIntegrityViolationException | ObjectOptimisticLockingFailureException e) {
+            return tx.execute(status ->
+                    saveMonthInTransaction(actor, roles, schoolId, year, month, workingDays, version, canCreate, canEdit));
+        }
+    }
+
+    private MonthOutcome saveMonthInTransaction(
+            UUID actor,
+            Set<Role> roles,
+            UUID schoolId,
+            int year,
+            int month,
+            BigDecimal workingDays,
+            Long version,
+            boolean canCreate,
+            boolean canEdit) {
+        SchoolWorkingDaysRow current =
+                rows.findBySchoolIdAndYearAndMonth(schoolId, year, month).orElse(null);
+        MonthDecision decision = MonthDecision.decide(workingDays, version, current, canCreate, canEdit, year, month);
+        switch (decision.kind()) {
+            case CREATE -> {
+                SchoolWorkingDaysRow row = insert(actor, roles, schoolId, year, month, decision.figure(), Action.CREATE);
+                return new MonthOutcome("CREATED", null, null, row);
+            }
+            case UPDATE -> {
+                BigDecimal old = current.getWorkingDays();
+                current.change(decision.figure(), actor, clock.instant());
+                rows.saveAndFlush(current);
+                record(actor, roles, current, Action.EDIT, old, decision.figure());
+                changes.record(actor, AUDIT_TYPE, current.getId(), "workingDays", old, decision.figure());
+                return new MonthOutcome("UPDATED", null, null, current);
+            }
+            case UNCHANGED -> {
+                return new MonthOutcome("UNCHANGED", null, null, current);
+            }
+            default -> {
+                return new MonthOutcome("NOT_SAVED", decision.kind().name(), decision.message(), current);
+            }
+        }
+    }
+
     /** Adds one row in the caller's transaction, refusing a second figure for the same School and month. */
     SchoolWorkingDaysRow insert(
             UUID actor, Set<Role> roles, UUID schoolId, int year, int month, BigDecimal figure, Action action) {

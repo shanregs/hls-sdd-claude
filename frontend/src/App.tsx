@@ -16,6 +16,7 @@ import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid"
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
 import { SchoolWorkingDaysPage } from "./features/schoolWorkingDays/SchoolWorkingDaysPage";
+import { YearEntryPage } from "./features/schoolWorkingDays/YearEntryPage";
 import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage";
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
@@ -143,6 +144,14 @@ export function App() {
           element={
             <RouteGuard>
               <SchoolWorkingDaysPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/master-data/school-working-days/year"
+          element={
+            <RouteGuard>
+              <YearEntryPage />
             </RouteGuard>
           }
         />

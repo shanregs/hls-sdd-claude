@@ -10,6 +10,10 @@ import com.hls.attendance.workingdays.internal.WorkingDaysService;
 import com.hls.attendance.workingdays.internal.WorkingDaysViewFactory;
 import com.hls.attendance.workingdays.internal.WorkingDaysViewFactory.RowView;
 import com.hls.attendance.workingdays.internal.YearCopyService;
+import com.hls.attendance.workingdays.internal.YearEntryService;
+import com.hls.attendance.workingdays.internal.YearEntryService.SaveRequest;
+import com.hls.attendance.workingdays.internal.YearEntryService.SaveResult;
+import com.hls.attendance.workingdays.internal.YearEntryService.YearView;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
@@ -18,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,6 +47,7 @@ public class SchoolWorkingDaysController {
     private final WorkingDaysViewFactory views;
     private final WorkingDaysHistoryService history;
     private final YearCopyService copy;
+    private final YearEntryService yearEntry;
     private final PermissionGuard guard;
 
     public SchoolWorkingDaysController(
@@ -50,12 +56,14 @@ public class SchoolWorkingDaysController {
             WorkingDaysViewFactory views,
             WorkingDaysHistoryService history,
             YearCopyService copy,
+            YearEntryService yearEntry,
             PermissionGuard guard) {
         this.service = service;
         this.grid = grid;
         this.views = views;
         this.history = history;
         this.copy = copy;
+        this.yearEntry = yearEntry;
         this.guard = guard;
     }
 
@@ -134,6 +142,29 @@ public class SchoolWorkingDaysController {
             @RequestParam UUID schoolId, @RequestParam int year, @AuthenticationPrincipal Jwt jwt) {
         guard.require(CallerContext.roles(jwt), MODULE, PermissionAction.VIEW);
         return history.deleted(CallerContext.userId(jwt), CallerContext.roles(jwt), schoolId, year);
+    }
+
+    /** The twelve months of one School and year (spec 038 FR-001, FR-002). */
+    @GetMapping("/year")
+    public YearView year(
+            @RequestParam(required = false) UUID schoolId,
+            @RequestParam(required = false) Integer year,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), MODULE, PermissionAction.VIEW);
+        return yearEntry.loadYear(CallerContext.userId(jwt), CallerContext.roles(jwt), schoolId, year);
+    }
+
+    /** Saves the changed months of a year; Create is needed per new month and Edit per stored month (spec 038 FR-020). */
+    @PutMapping("/year")
+    public SaveResult saveYear(@RequestBody SaveRequest request, @AuthenticationPrincipal Jwt jwt) {
+        var roles = CallerContext.roles(jwt);
+        guard.require(roles, MODULE, PermissionAction.VIEW);
+        boolean canCreate = guard.isGranted(roles, MODULE, PermissionAction.CREATE);
+        boolean canEdit = guard.isGranted(roles, MODULE, PermissionAction.EDIT);
+        if (!canCreate && !canEdit) {
+            throw new AccessDeniedException("Not authorized for " + MODULE + " to create or edit");
+        }
+        return yearEntry.saveYear(CallerContext.userId(jwt), roles, request, canCreate, canEdit);
     }
 
     @PostMapping("/copy")
