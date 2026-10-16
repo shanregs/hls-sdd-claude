@@ -100,6 +100,7 @@ public class PermissionMatrixService {
         seedMarketing();
         seedTasks();
         seedManagerAttendance();
+        seedPayroll();
         seedSchoolWorkingDays();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
@@ -265,6 +266,17 @@ public class PermissionMatrixService {
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
             seed(Role.MANAGER, PermissionModule.TASKS, action, true);
         }
+        grants.invalidateAround();
+    }
+
+    /** Payroll run defaults (spec 013b): the Admin processes and exports, the Director approves and exports; both read. */
+    private void seedPayroll() {
+        seed(Role.ADMIN, PermissionModule.PAYROLL, PermissionAction.VIEW, true);
+        seed(Role.ADMIN, PermissionModule.PAYROLL, PermissionAction.PROCESS, true);
+        seed(Role.ADMIN, PermissionModule.PAYROLL, PermissionAction.EXPORT, true);
+        seed(Role.DIRECTOR, PermissionModule.PAYROLL, PermissionAction.VIEW, true);
+        seed(Role.DIRECTOR, PermissionModule.PAYROLL, PermissionAction.APPROVE, true);
+        seed(Role.DIRECTOR, PermissionModule.PAYROLL, PermissionAction.EXPORT, true);
         grants.invalidateAround();
     }
 

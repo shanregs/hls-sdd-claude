@@ -47,6 +47,14 @@ public interface PayRules {
      */
     TotalLossOfPay totalLossOfPay(PersonRef person, YearMonth month);
 
+    /**
+     * Spec 013b FR-004: what the person earned for the month. Each payable date is valued at the salary in effect on that
+     * date over the working days of its month on the calendar of the School the person was in that day; the sum is
+     * rounded once by the policy in effect on the last day of the month. The divisor of a date is the one
+     * {@link #totalLossOfPay} uses for the same date.
+     */
+    EarnedPay earnedPay(PersonRef person, YearMonth month);
+
     /** Bulk form of {@link #salaryOn}; every asked person is in the map. */
     Map<PersonRef, SalaryInEffect> salariesOn(Collection<PersonRef> people, LocalDate date);
 

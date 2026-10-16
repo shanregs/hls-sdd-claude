@@ -27,9 +27,10 @@ sealed interface EarnedPay {
 Rules (each has a test first):
 - The payable dates are exactly those of `payableDays`; the salary of a date is `salaryOn(person, date)`; the divisor of a
   date is the same number `totalLossOfPay` uses for the same date (one `Computed`, one place).
-- A date with no salary gives `Cannot` naming the date and the reason (as `totalLossOfPay` does); a month with no working
-  days for a date gives `Cannot`; a person with no payable dates gives `Found` with zero days only if the caller asked for a
-  person the run decided is payable, so the run never calls it for such a person.
+- A date with no salary gives `Cannot` naming the date and the reason (as `totalLossOfPay` does); a date with no
+  working days gives `Cannot`; a person who is not known gives `Cannot` with the same reason `unpaidDays` gives; a
+  person with no payable date in the month gives `Cannot("The person has no payable date in <month>.")`, never a zero
+  `Found`. The run never asks about a person it decided is not in the run.
 - Rounding uses `LossOfPayCalculator.round` with the policy of the month's last day, once, on the sum.
 - Same inputs, same answer. One query set however it is called; the run calls it once per person from a virtual thread.
 

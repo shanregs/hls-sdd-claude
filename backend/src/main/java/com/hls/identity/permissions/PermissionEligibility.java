@@ -51,7 +51,8 @@ public final class PermissionEligibility {
             PermissionModule.MANAGER_ATTENDANCE,
             PermissionModule.MANAGER_LEAVE,
             PermissionModule.MY_MANAGER_ATTENDANCE,
-            PermissionModule.SCHOOL_WORKING_DAYS);
+            PermissionModule.SCHOOL_WORKING_DAYS,
+            PermissionModule.PAYROLL);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -90,6 +91,10 @@ public final class PermissionEligibility {
     static final Map<PermissionModule, Set<Role>> SCHOOL_WORKING_DAYS_MODULES = Map.of(
             PermissionModule.SCHOOL_WORKING_DAYS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
+    /** Payroll run (spec 013b): pay is for Admin and Director only; no other role can be granted any of it. */
+    static final Map<PermissionModule, Set<Role>> PAYROLL_MODULES =
+            Map.of(PermissionModule.PAYROLL, EnumSet.of(Role.ADMIN, Role.DIRECTOR));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -111,6 +116,10 @@ public final class PermissionEligibility {
         }
         Set<Role> workingDaysOnly = SCHOOL_WORKING_DAYS_MODULES.get(module);
         if (workingDaysOnly != null && !workingDaysOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
+        if (payrollOnly != null && !payrollOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
