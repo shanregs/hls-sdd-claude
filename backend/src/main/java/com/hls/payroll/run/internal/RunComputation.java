@@ -63,6 +63,7 @@ public class RunComputation {
     private final PayAdjustmentRepository adjustments;
     private final RunEventRepository events;
     private final TransactionTemplate tx;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final Clock clock;
     private final int parallelism;
 
@@ -76,6 +77,7 @@ public class RunComputation {
             LineAdjustmentRepository lineAdjustments,
             PayAdjustmentRepository adjustments,
             RunEventRepository events,
+            org.springframework.jdbc.core.JdbcTemplate jdbc,
             PlatformTransactionManager transactions,
             Clock clock,
             @Value("${hls.payroll.run.parallelism:6}") int parallelism) {
@@ -88,6 +90,7 @@ public class RunComputation {
         this.lineAdjustments = lineAdjustments;
         this.adjustments = adjustments;
         this.events = events;
+        this.jdbc = jdbc;
         this.tx = new TransactionTemplate(transactions);
         this.clock = clock;
         this.parallelism = Math.max(1, parallelism);
@@ -135,6 +138,11 @@ public class RunComputation {
         PayPolicyView policy = payRules.policyOn(month.atEndOfMonth());
 
         List<Candidate> candidates = candidates();
+        if (run.getKind() == PayRun.Kind.SUPPLEMENTARY) {
+            // only the people not yet paid for the month, computed by the same rules (spec 013b FR-021)
+            java.util.Set<PersonRef> paid = paidIn(month);
+            candidates = candidates.stream().filter(c -> !paid.contains(c.ref())).toList();
+        }
         Map<PersonRef, PayableDays> payable = payRules.payableDays(
                 candidates.stream().map(Candidate::ref).toList(), month);
         // a person with no payable date and no defect is not in the run (research 4)
@@ -215,6 +223,36 @@ public class RunComputation {
             all.add(new Candidate(new PersonRef(Kind.STAFF, s.id()), s.name(), staffLabel(s.roles())));
         }
         return all;
+    }
+
+    private java.util.Set<PersonRef> paidIn(YearMonth month) {
+        return new java.util.HashSet<>(jdbc.query(
+                "select person_kind, person_id from payroll_paid_month where month = ?",
+                (rs, n) -> new PersonRef(Kind.valueOf(rs.getString("person_kind")), (UUID) rs.getObject("person_id")),
+                java.sql.Date.valueOf(month.atDay(1))));
+    }
+
+    /**
+     * Why the person cannot be paid right now, or null when the same checks as a computation would let them be paid.
+     * A hint for the owed list only (research 10); it never feeds a figure.
+     */
+    String blockerNow(PersonRef ref, YearMonth month) {
+        try {
+            ManagerMonth managerMonth = ref.kind() == Kind.MANAGER ? managerAttendance.month(ref.id(), month) : null;
+            String blocked = blocked(ref, month, managerMonth);
+            if (blocked != null) {
+                return blocked;
+            }
+            if (payRules.earnedPay(ref, month) instanceof EarnedPay.Cannot e) {
+                return e.reason();
+            }
+            if (payRules.totalLossOfPay(ref, month) instanceof TotalLossOfPay.Cannot d) {
+                return d.reason();
+            }
+            return null;
+        } catch (RuntimeException e) {
+            return "Could not be checked: " + e.getMessage();
+        }
     }
 
     private static String staffLabel(List<String> roles) {

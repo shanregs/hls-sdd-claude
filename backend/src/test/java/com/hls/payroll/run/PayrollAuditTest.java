@@ -122,4 +122,27 @@ class PayrollAuditTest extends PayrollRunTestBase {
                 .satisfies(e -> assertThat(e.get("afterValue")).isEqualTo("Entered twice"));
     }
 
+
+    @Test
+    void startingASupplementaryRunIsAuditedWithItsNumberAndTheActor() {
+        Signed admin = signInAs(Role.ADMIN);
+        Site site = site(admin.token());
+        UUID paid = teacherAt(admin.token(), site.schoolId(), java.time.LocalDate.now().minusDays(200));
+        teacherSalary(admin.token(), paid, "26000", java.time.LocalDate.now().minusDays(300));
+        lockTeacherMonth(paid);
+        UUID leftOut = teacherAt(admin.token(), site.schoolId(), java.time.LocalDate.now().minusDays(200));
+        teacherSalary(admin.token(), leftOut, "31200", java.time.LocalDate.now().minusDays(300));
+        UUID primary = startAndCompute(admin.token());
+        submitAndApprove(admin.token(), primary);
+
+        Resp started = post(RUNS, admin.token(), Map.of("month", month.toString(), "supplementary", true));
+
+        assertThat(started.status()).as(started.body()).isEqualTo(202);
+        List<Map<String, Object>> entries = changeEntries(admin.token(), ENTITY, started.id(), 1);
+        assertThat(entries).anySatisfy(e -> {
+            assertThat(e).containsEntry("field", "created");
+            assertThat(e).containsEntry("actorUserId", admin.userId().toString());
+            assertThat((String) e.get("afterValue")).contains("supplementary run 1");
+        });
+    }
 }

@@ -44,6 +44,8 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
         list.add(new Endpoint("submit", HttpMethod.POST, RUNS + "/" + unknown + "/submit", Map.of(), PROCESS));
         list.add(new Endpoint("return", HttpMethod.POST, RUNS + "/" + unknown + "/return", Map.of("reason", "x"), APPROVE));
         list.add(new Endpoint("approve", HttpMethod.POST, RUNS + "/" + unknown + "/approve", Map.of(), APPROVE));
+        list.add(new Endpoint("owed", HttpMethod.GET, RUNS + "/" + unknown + "/owed", null, VIEW));
+        list.add(new Endpoint("start supplementary run", HttpMethod.POST, RUNS, Map.of("month", "not-a-month", "supplementary", true), PROCESS));
         list.add(new Endpoint("list adjustments", HttpMethod.GET, "/api/v1/payroll/adjustments", null, VIEW));
         list.add(new Endpoint("record adjustment", HttpMethod.POST, "/api/v1/payroll/adjustments", Map.of("kind", "NOPE"), PROCESS));
         list.add(new Endpoint("withdraw adjustment", HttpMethod.POST, "/api/v1/payroll/adjustments/" + unknown + "/withdraw", Map.of("reason", "x"), PROCESS));
