@@ -20,6 +20,8 @@ import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage"
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
+import { PayrollRunPage } from "./features/payroll/run/PayrollRunPage";
+import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
@@ -412,6 +414,22 @@ export function App() {
           element={
             <RouteGuard>
               <DesignationSalaryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/payroll"
+          element={
+            <RouteGuard>
+              <PayrollRunsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/payroll/:runId"
+          element={
+            <RouteGuard>
+              <PayrollRunPage />
             </RouteGuard>
           }
         />

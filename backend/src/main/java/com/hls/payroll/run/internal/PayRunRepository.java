@@ -24,6 +24,17 @@ interface PayRunRepository extends JpaRepository<PayRun, UUID> {
 
     List<PayRun> findByMonthOrderByKindAscSequenceAsc(LocalDate month);
 
+    /**
+     * Takes a queued run for computing, or one whose heartbeat went stale (the node stopped). Only the caller that gets
+     * 1 back continues, so a double click or a second node cannot compute the same run twice (research 3).
+     */
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update PayRun r set r.computeState = com.hls.payroll.run.internal.PayRun$ComputeState.RUNNING, r.heartbeatAt = :now"
+            + " where r.id = :id and r.status = com.hls.payroll.run.internal.PayRun$Status.DRAFT"
+            + " and (r.computeState = com.hls.payroll.run.internal.PayRun$ComputeState.QUEUED"
+            + " or (r.computeState = com.hls.payroll.run.internal.PayRun$ComputeState.RUNNING and r.heartbeatAt < :stale))")
+    int claim(@Param("id") UUID id, @Param("now") java.time.Instant now, @Param("stale") java.time.Instant stale);
+
     @Query("select coalesce(max(r.sequence), 0) from PayRun r where r.month = :month and r.kind = :kind")
     int maxSequence(@Param("month") LocalDate month, @Param("kind") PayRun.Kind kind);
 

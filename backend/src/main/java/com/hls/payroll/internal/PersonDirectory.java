@@ -15,7 +15,7 @@ import java.util.UUID;
  * port, not on the types of the modules behind it (spec 013a T011), so those can change without touching the rules.
  * Every bulk method is one query however many ids it is given.
  */
-interface PersonDirectory {
+public interface PersonDirectory {
 
     record DesignationRef(UUID id, String name, Kind kind, boolean retired) {}
 

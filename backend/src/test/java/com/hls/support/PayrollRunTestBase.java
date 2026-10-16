@@ -113,6 +113,88 @@ public abstract class PayrollRunTestBase extends PayrollTestBase {
         return new BigDecimal(salary).divide(BigDecimal.valueOf(workingDays), 10, RoundingMode.HALF_EVEN);
     }
 
+    // ------------------------------------------------------------------ the run endpoints (US1)
+
+    protected static final String RUNS = "/api/v1/payroll/runs";
+
+    /** A Teacher's attendance month locked, written the way the attendance tests write it. */
+    protected void lockTeacherMonth(UUID teacher) {
+        jdbc.update(
+                "insert into attendance_teacher_month (id, teacher_id, year_month, state, working_days, days_worked,"
+                        + " days_leave, training_available, training_attended, unmarked, weighted_total, changed_at, version)"
+                        + " values (?, ?, ?, 'LOCKED', 20, 20, 0, 0, 0, 0, 20, now(), 0)",
+                UUID.randomUUID(),
+                teacher,
+                month.toString());
+    }
+
+    /** A Manager who worked every default-calendar working day of the month, locked through the real endpoint. */
+    protected void lockWorkedManagerMonth(String admin, UUID managerId) {
+        for (LocalDate date : workingDays(null)) {
+            managerCheckIn(managerId, date);
+        }
+        Resp locked = post("/api/v1/manager-attendance/months/" + month + "/lock", admin, Map.of("managerId", managerId.toString()));
+        assertThat(locked.status()).as(locked.body()).isEqualTo(200);
+    }
+
+    protected Resp startRun(String token) {
+        return post(RUNS, token, Map.of("month", month.toString()));
+    }
+
+    /** Polls the run until its computation is DONE (or FAILED) and returns the run. */
+    protected Map<String, Object> awaitComputed(String token, UUID runId) {
+        long deadline = System.currentTimeMillis() + 180_000;
+        while (true) {
+            Resp resp = get(RUNS + "/" + runId, token);
+            assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+            Map<String, Object> run = resp.map();
+            String state = (String) run.get("computeState");
+            if ("DONE".equals(state) || "FAILED".equals(state)) {
+                return run;
+            }
+            assertThat(System.currentTimeMillis()).as("the run did not finish: " + run).isLessThan(deadline);
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    /** Starts the run for the month and waits for it; returns the run id. */
+    protected UUID startAndCompute(String token) {
+        Resp started = startRun(token);
+        assertThat(started.status()).as(started.body()).isEqualTo(202);
+        UUID id = started.id();
+        Map<String, Object> done = awaitComputed(token, id);
+        assertThat(done.get("computeState")).as(done.toString()).isEqualTo("DONE");
+        return id;
+    }
+
+    /** Every line of the run, all pages. */
+    @SuppressWarnings("unchecked")
+    protected List<Map<String, Object>> allLines(String token, UUID runId) {
+        List<Map<String, Object>> all = new java.util.ArrayList<>();
+        for (int page = 0; ; page++) {
+            Resp resp = get(RUNS + "/" + runId + "/lines?size=200&page=" + page, token);
+            assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+            List<Map<String, Object>> content = content(resp);
+            all.addAll(content);
+            if (all.size() >= total(resp) || content.isEmpty()) {
+                return all;
+            }
+        }
+    }
+
+    /** The person's line in the run, or null when they are not in it. */
+    protected Map<String, Object> lineOf(String token, UUID runId, UUID personId) {
+        return allLines(token, runId).stream()
+                .filter(l -> personId.toString().equals(l.get("personId")))
+                .findFirst()
+                .orElse(null);
+    }
+
     protected static PersonRef teacherRef(UUID id) {
         return new PersonRef(Kind.TEACHER, id);
     }
