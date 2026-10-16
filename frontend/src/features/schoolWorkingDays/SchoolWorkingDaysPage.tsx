@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import {
   Alert,
@@ -33,6 +33,7 @@ const ROUTE = "/master-data/school-working-days";
 /** MASTER DATA -> School Working Days: every School's monthly working days in a grid with add, edit and delete. */
 export function SchoolWorkingDaysPage() {
   const { authFetch } = useAuth();
+  const navigate = useNavigate();
   const actions = useGrantedActions(ROUTE);
   const canCreate = actions.has("CREATE");
   const canEdit = actions.has("EDIT");
@@ -232,6 +233,17 @@ export function SchoolWorkingDaysPage() {
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           <Button onClick={() => setDeletedView(true)}>Deleted rows</Button>
+          {(canCreate || canEdit) && (
+            <Button
+              onClick={() => {
+                const query = new URLSearchParams({ year: String(year) });
+                if (schoolId) query.set("schoolId", schoolId);
+                navigate(`${ROUTE}/year?${query.toString()}`);
+              }}
+            >
+              Enter a year
+            </Button>
+          )}
           {canCreate && (
             <Button onClick={() => setCopying(true)}>Copy year</Button>
           )}

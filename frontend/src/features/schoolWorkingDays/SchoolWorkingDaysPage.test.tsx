@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RouteGuard } from "../../app/RouteGuard";
 import { SchoolWorkingDaysPage } from "./SchoolWorkingDaysPage";
@@ -144,8 +144,23 @@ function renderPage(path = `/master-data/school-working-days?year=${YEAR}`) {
             </RouteGuard>
           }
         />
+        <Route
+          path="/master-data/school-working-days/year"
+          element={<YearStub />}
+        />
       </Routes>
     </MemoryRouter>,
+  );
+}
+
+/** Stands in for the year screen and shows the address it was opened with. */
+function YearStub() {
+  const [params] = useSearchParams();
+  return (
+    <p>
+      The year screen: school {params.get("schoolId") ?? "none"}, year{" "}
+      {params.get("year")}
+    </p>
   );
 }
 
@@ -190,6 +205,48 @@ describe("SchoolWorkingDaysPage (spec 037 US2)", () => {
     expect(
       screen.getByRole("button", { name: `History ${ROW_LABEL}` }),
     ).toBeInTheDocument();
+  });
+
+  describe("Enter a year (spec 038 US5)", () => {
+    it("opens the year screen on the School and year the grid is filtered to", async () => {
+      const user = userEvent.setup();
+      renderPage(`/master-data/school-working-days?year=${YEAR}&schoolId=s1`);
+
+      await user.click(
+        await screen.findByRole("button", { name: "Enter a year" }),
+      );
+
+      expect(
+        await screen.findByText(`The year screen: school s1, year ${YEAR}`),
+      ).toBeInTheDocument();
+    });
+
+    it("opens it with the year alone when no School is chosen", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByText("Greenfield School");
+
+      await user.click(screen.getByRole("button", { name: "Enter a year" }));
+
+      expect(
+        await screen.findByText(`The year screen: school none, year ${YEAR}`),
+      ).toBeInTheDocument();
+    });
+
+    it("is offered to a user with Create or Edit and hidden from one with View only", async () => {
+      grantedActions = ["VIEW", "EDIT"];
+      const { unmount } = renderPage();
+      await screen.findByText("Greenfield School");
+      expect(
+        screen.getByRole("button", { name: "Enter a year" }),
+      ).toBeInTheDocument();
+      unmount();
+
+      grantedActions = ["VIEW"];
+      renderPage();
+      await screen.findByText("Greenfield School");
+      expect(screen.queryByRole("button", { name: "Enter a year" })).toBeNull();
+    });
   });
 
   it("hides Delete from a Director, who has View, Create and Edit", async () => {

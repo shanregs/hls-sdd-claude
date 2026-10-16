@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
-import { MemoryRouter } from "react-router-dom";
-import type { ReactElement } from "react";
+import { MemoryRouter, useSearchParams } from "react-router-dom";
+import { useEffect, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 import { buildMuiTheme, type ThemeMode } from "../theme/tokens";
@@ -33,6 +33,7 @@ import { SchoolDialog } from "../features/schools/SchoolDialog";
 import { DesignationsPage } from "../features/designations/DesignationsPage";
 import { DesignationDialog } from "../features/designations/DesignationDialog";
 import { SchoolWorkingDaysPage } from "../features/schoolWorkingDays/SchoolWorkingDaysPage";
+import { YearEntryPage } from "../features/schoolWorkingDays/YearEntryPage";
 import { AddRowDialog } from "../features/schoolWorkingDays/AddRowDialog";
 import { DeleteDialog } from "../features/schoolWorkingDays/DeleteDialog";
 import { HistoryDialog } from "../features/schoolWorkingDays/HistoryDialog";
@@ -974,6 +975,30 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
       ],
     } as Response;
   }
+  if (url.startsWith("/api/v1/school-working-days/year")) {
+    const month = (m: number, stored: number | null) => ({
+      month: m,
+      daysInMonth: new Date(2027, m, 0).getDate(),
+      calendarDerived: 24,
+      id: stored === null ? null : `wd${m}`,
+      workingDays: stored,
+      version: stored === null ? null : 1,
+      updatedBy: stored === null ? null : "Asha R",
+      updatedAt: stored === null ? null : "2027-01-04T10:15:00",
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        schoolId: "s1",
+        schoolName: "Greenfield School",
+        zoneName: "North",
+        year: 2027,
+        months: Array.from({ length: 12 }, (_, i) =>
+          month(i + 1, i < 3 ? 26 : null),
+        ),
+      }),
+    } as Response;
+  }
   if (url.startsWith("/api/v1/school-working-days")) {
     return {
       ok: true,
@@ -1327,6 +1352,15 @@ function renderWithChrome(ui: ReactElement, mode: ThemeMode) {
   );
 }
 
+/** The year screen needs a School and year in the address; the harness has one plain router, so set them on mount. */
+function YearEntryPageForSchool() {
+  const [, setParams] = useSearchParams();
+  useEffect(() => {
+    setParams({ schoolId: "s1", year: "2027" }, { replace: true });
+  }, [setParams]);
+  return <YearEntryPage />;
+}
+
 interface PageCase {
   name: string;
   render: () => ReactElement;
@@ -1505,6 +1539,11 @@ const pages: PageCase[] = [
     name: "SchoolWorkingDaysPage",
     render: () => <SchoolWorkingDaysPage />,
     settle: () => screen.findAllByText("March 2027"),
+  },
+  {
+    name: "YearEntryPage",
+    render: () => <YearEntryPageForSchool />,
+    settle: () => screen.findByLabelText("January 2027"),
   },
   {
     name: "AddRowDialog",
