@@ -2,6 +2,7 @@ package com.hls.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.hls.identity.user.Role;
 import com.hls.payroll.api.PayRules.Kind;
 import com.hls.payroll.api.PayRules.PersonRef;
 import java.math.BigDecimal;
@@ -193,6 +194,47 @@ public abstract class PayrollRunTestBase extends PayrollTestBase {
                 .filter(l -> personId.toString().equals(l.get("personId")))
                 .findFirst()
                 .orElse(null);
+    }
+
+    // ------------------------------------------------------- review and approval (US2)
+
+    /** A computed draft with two paid Teachers (26,000 and 31,200 a month) whose attendance month is locked. */
+    public record Draft(UUID run, UUID teacher, UUID otherTeacher, Site site) {}
+
+    protected Draft readyDraft(String admin) {
+        Site site = site(admin);
+        UUID teacher = teacherAt(admin, site.schoolId(), LocalDate.now().minusDays(200));
+        teacherSalary(admin, teacher, "26000", LocalDate.now().minusDays(300));
+        lockTeacherMonth(teacher);
+        UUID other = teacherAt(admin, site.schoolId(), LocalDate.now().minusDays(200));
+        teacherSalary(admin, other, "31200", LocalDate.now().minusDays(300));
+        lockTeacherMonth(other);
+        return new Draft(startAndCompute(admin), teacher, other, site);
+    }
+
+    protected Resp submitRun(String token, UUID run) {
+        return post(RUNS + "/" + run + "/submit", token, Map.of());
+    }
+
+    protected Resp approveRun(String token, UUID run) {
+        return post(RUNS + "/" + run + "/approve", token, Map.of());
+    }
+
+    protected Resp returnRun(String token, UUID run, String reason) {
+        return post(RUNS + "/" + run + "/return", token, Map.of("reason", reason));
+    }
+
+    /** Submits as the Admin and approves as a Director; returns the Director's token. */
+    protected String submitAndApprove(String admin, UUID run) {
+        String director = signInAs(Role.DIRECTOR).token();
+        assertThat(submitRun(admin, run).status()).isEqualTo(200);
+        Resp approved = approveRun(director, run);
+        assertThat(approved.status()).as(approved.body()).isEqualTo(200);
+        return director;
+    }
+
+    protected Map<String, Object> runOf(String token, UUID run) {
+        return get(RUNS + "/" + run, token).map();
     }
 
     protected static PersonRef teacherRef(UUID id) {

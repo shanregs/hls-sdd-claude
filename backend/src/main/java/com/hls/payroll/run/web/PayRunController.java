@@ -3,6 +3,7 @@ package com.hls.payroll.run.web;
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
+import com.hls.payroll.run.internal.ApprovalService;
 import com.hls.payroll.run.internal.RunService;
 import com.hls.payroll.run.internal.RunViews.RunView;
 import com.hls.school.api.CallerContext;
@@ -28,10 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayRunController {
 
     private final RunService service;
+    private final ApprovalService approvals;
     private final PermissionGuard guard;
 
-    public PayRunController(RunService service, PermissionGuard guard) {
+    public PayRunController(RunService service, ApprovalService approvals, PermissionGuard guard) {
         this.service = service;
+        this.approvals = approvals;
         this.guard = guard;
     }
 
@@ -68,6 +71,25 @@ public class PayRunController {
     public ResponseEntity<RunView> recompute(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.PROCESS);
         return ResponseEntity.accepted().body(service.recompute(CallerContext.userId(jwt), id));
+    }
+
+    @PostMapping("/{id}/submit")
+    public RunView submit(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.PROCESS);
+        return service.submit(CallerContext.userId(jwt), id);
+    }
+
+    @PostMapping("/{id}/return")
+    public RunView returnToDraft(
+            @PathVariable UUID id, @RequestBody(required = false) ReasonRequest request, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.APPROVE);
+        return service.returnToDraft(CallerContext.userId(jwt), id, request == null ? null : request.reason());
+    }
+
+    @PostMapping("/{id}/approve")
+    public RunView approve(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.APPROVE);
+        return approvals.approve(CallerContext.userId(jwt), id);
     }
 
     @PostMapping("/{id}/cancel")
