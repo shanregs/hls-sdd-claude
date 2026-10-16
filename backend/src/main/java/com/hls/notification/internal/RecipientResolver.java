@@ -1,5 +1,8 @@
 package com.hls.notification.internal;
 
+import com.hls.identity.permissions.PermissionAction;
+import com.hls.identity.permissions.PermissionMatrixService;
+import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.identity.user.Role;
@@ -26,16 +29,19 @@ public class RecipientResolver {
     private final ManagerQueries managers;
     private final RoleAssignmentRepository roles;
     private final AppUserRepository users;
+    private final PermissionMatrixService matrix;
 
     public RecipientResolver(
             TeacherDirectory teachers,
             ManagerQueries managers,
             RoleAssignmentRepository roles,
-            AppUserRepository users) {
+            AppUserRepository users,
+            PermissionMatrixService matrix) {
         this.teachers = teachers;
         this.managers = managers;
         this.roles = roles;
         this.users = users;
+        this.matrix = matrix;
     }
 
     /** The user account linked to the Teacher, or empty when the Teacher has none. */
@@ -47,6 +53,18 @@ public class RecipientResolver {
     /** The Manager with the given id, or empty when there is none (spec 032 notifies the Manager of their own day). */
     public Optional<ManagerQueries.ManagerRef> manager(UUID managerId) {
         return managers.allManagers().stream().filter(m -> m.id().equals(managerId)).findFirst();
+    }
+
+    /** Every active user whose role holds Payroll Approve (spec 013b): who hears of a run submitted for approval. */
+    public Set<UUID> payrollApprovers() {
+        Set<UUID> ids = new LinkedHashSet<>();
+        for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
+            if (matrix.isGranted(role, PermissionModule.PAYROLL, PermissionAction.APPROVE)) {
+                ids.addAll(roles.userIdsWithRole(role));
+            }
+        }
+        ids.removeIf(id -> !users.findById(id).filter(AppUser::isActive).isPresent());
+        return ids;
     }
 
     /** Every active Director: who an escalated task goes to (spec 025). */

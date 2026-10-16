@@ -24,14 +24,19 @@ import {
 import { useAuth } from "../../../auth/useAuth";
 import { useGrantedActions } from "../../common/useGrantedActions";
 import { CancelRunDialog } from "./CancelRunDialog";
+import { ReturnRunDialog } from "./ReturnRunDialog";
+import { RunLineWorkingDialog } from "./RunLineWorkingDialog";
 import {
+  approveRun,
   cancelRun,
   getRun,
   KIND_LABELS,
   listLines,
   PERSON_KIND_LABELS,
   recomputeRun,
+  returnRun,
   STATUS_LABELS,
+  submitRun,
   type Line,
   type LineState,
   type PersonKind,
@@ -44,6 +49,15 @@ import { dateTime, money, monthLabel } from "./format";
 const ROUTE = "/operations/payroll";
 const PAGE_SIZE = 50;
 const POLL_MS = 2000;
+
+const EVENT_LABELS: Record<string, string> = {
+  STARTED: "Started",
+  RECOMPUTED: "Computed again",
+  SUBMITTED: "Submitted for approval",
+  RETURNED: "Returned to draft",
+  APPROVED: "Approved",
+  CANCELLED: "Cancelled",
+};
 
 type LoadState =
   | { kind: "loading" }
@@ -114,7 +128,13 @@ function RecomputeSummaryPanel({ summary }: { summary: RecomputeSummary }) {
   );
 }
 
-function LinesTable({ lines }: { lines: Line[] }) {
+function LinesTable({
+  lines,
+  onOpen,
+}: {
+  lines: Line[];
+  onOpen: (lineId: string) => void;
+}) {
   return (
     <TableContainer component={Paper} variant="outlined">
       <Table size="small" aria-label="Lines of the pay run">
@@ -126,6 +146,7 @@ function LinesTable({ lines }: { lines: Line[] }) {
             <TableCell align="right">Deduction</TableCell>
             <TableCell align="right">Adjustments</TableCell>
             <TableCell align="right">Net pay</TableCell>
+            <TableCell>Working</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -150,6 +171,15 @@ function LinesTable({ lines }: { lines: Line[] }) {
               <TableCell align="right">{money(line.deduction)}</TableCell>
               <TableCell align="right">{money(line.adjustments)}</TableCell>
               <TableCell align="right">{money(line.net)}</TableCell>
+              <TableCell>
+                <Button
+                  size="small"
+                  aria-label={`Show working for ${line.name}`}
+                  onClick={() => onOpen(line.id)}
+                >
+                  Show working
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -164,13 +194,16 @@ function LinesTable({ lines }: { lines: Line[] }) {
  */
 export function PayrollRunPage() {
   const { runId = "" } = useParams();
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const actions = useGrantedActions(ROUTE);
   const canProcess = actions.has("PROCESS");
+  const canApprove = actions.has("APPROVE");
 
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [workingLine, setWorkingLine] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [stateFilter, setStateFilter] = useState<LineState | "">("PAYABLE");
@@ -274,6 +307,38 @@ export function PayrollRunPage() {
     return null;
   };
 
+  const submit = async () => {
+    setActionError(null);
+    setBusy(true);
+    const result = await submitRun(authFetch, runId);
+    setBusy(false);
+    if (!result.ok) {
+      setActionError(result.reason);
+      return;
+    }
+    setState({ kind: "ready", run: result.data });
+  };
+
+  const approve = async () => {
+    setActionError(null);
+    setBusy(true);
+    const result = await approveRun(authFetch, runId);
+    setBusy(false);
+    if (!result.ok) {
+      setActionError(result.reason);
+      return;
+    }
+    setState({ kind: "ready", run: result.data });
+  };
+
+  const sendBack = async (reason: string): Promise<string | null> => {
+    const result = await returnRun(authFetch, runId, reason);
+    if (!result.ok) return result.reason;
+    setState({ kind: "ready", run: result.data });
+    setReturnOpen(false);
+    return null;
+  };
+
   if (state.kind === "loading") {
     return (
       <Stack direction="row" sx={{ p: 3, gap: 1.5, alignItems: "center" }}>
@@ -302,6 +367,12 @@ export function PayrollRunPage() {
       : 0;
   const canComputeAgain =
     canProcess && isDraft && !computing && r.computeState !== "QUEUED";
+  const submittedByMe =
+    user !== null && user !== undefined && r.submittedBy?.id === user.id;
+  // the newest return, shown to the Admin on the draft it sent back
+  const returned = [...(r.events ?? [])]
+    .reverse()
+    .find((e) => e.kind === "RETURNED");
 
   return (
     <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
@@ -363,8 +434,63 @@ export function PayrollRunPage() {
         </Alert>
       )}
 
-      {(canComputeAgain || (canProcess && isDraft)) && (
+      {isDraft && returned && (
+        <Alert severity="warning">
+          Returned{returned.actor ? ` by ${returned.actor.name}` : ""}:{" "}
+          {returned.reason}
+        </Alert>
+      )}
+      {r.status === "AWAITING_APPROVAL" && (
+        <Alert severity="info">
+          Submitted{r.submittedBy ? ` by ${r.submittedBy.name}` : ""}
+          {r.submittedAt ? ` on ${dateTime(r.submittedAt)}` : ""} and waiting
+          for approval. It cannot be changed while it waits.
+        </Alert>
+      )}
+      {r.status === "AWAITING_APPROVAL" && canApprove && submittedByMe && (
+        <Alert severity="warning">
+          You submitted this run, so someone else must approve it.
+        </Alert>
+      )}
+      {r.status === "APPROVED" && (
+        <Alert severity="success">
+          Approved{r.approvedBy ? ` by ${r.approvedBy.name}` : ""}
+          {r.approvedAt ? ` on ${dateTime(r.approvedAt)}` : ""}. This run is
+          final and locked: nothing in it can be changed.
+        </Alert>
+      )}
+
+      {(canComputeAgain ||
+        (canProcess && isDraft) ||
+        (canApprove && r.status === "AWAITING_APPROVAL")) && (
         <Stack direction="row" sx={{ gap: 1.5, flexWrap: "wrap" }}>
+          {canProcess && isDraft && (
+            <Button
+              variant="contained"
+              onClick={() => void submit()}
+              disabled={busy || computing || r.computeState !== "DONE"}
+            >
+              Submit for approval
+            </Button>
+          )}
+          {canApprove && r.status === "AWAITING_APPROVAL" && !submittedByMe && (
+            <Button
+              variant="contained"
+              onClick={() => void approve()}
+              disabled={busy}
+            >
+              {busy ? "Approving…" : "Approve"}
+            </Button>
+          )}
+          {canApprove && r.status === "AWAITING_APPROVAL" && (
+            <Button
+              variant="outlined"
+              onClick={() => setReturnOpen(true)}
+              disabled={busy}
+            >
+              Return to draft
+            </Button>
+          )}
           {canProcess && isDraft && (
             <Button
               variant="outlined"
@@ -481,7 +607,7 @@ export function PayrollRunPage() {
             )}
             {linesState.kind === "ready" && linesState.lines.length > 0 && (
               <>
-                <LinesTable lines={linesState.lines} />
+                <LinesTable lines={linesState.lines} onOpen={setWorkingLine} />
                 <TablePagination
                   component="div"
                   count={linesState.total}
@@ -535,6 +661,41 @@ export function PayrollRunPage() {
             )}
           </Box>
         </>
+      )}
+
+      <ReturnRunDialog
+        open={returnOpen}
+        runName={runName}
+        onConfirm={sendBack}
+        onClose={() => setReturnOpen(false)}
+      />
+      <RunLineWorkingDialog
+        runId={runId}
+        lineId={workingLine}
+        onClose={() => setWorkingLine(null)}
+      />
+
+      {(r.events ?? []).length > 0 && (
+        <Box component="section" aria-labelledby="history-heading">
+          <Typography
+            id="history-heading"
+            variant="h2"
+            sx={{ fontSize: "1.25rem", mb: 1.5 }}
+          >
+            History
+          </Typography>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Box component="ul" sx={{ m: 0, pl: 3 }}>
+              {(r.events ?? []).map((e) => (
+                <li key={`${e.at}-${e.kind}`}>
+                  {EVENT_LABELS[e.kind] ?? e.kind}
+                  {e.actor ? ` by ${e.actor.name}` : ""} on {dateTime(e.at)}
+                  {e.reason ? `: ${e.reason}` : ""}
+                </li>
+              ))}
+            </Box>
+          </Paper>
+        </Box>
       )}
 
       <CancelRunDialog

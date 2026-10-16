@@ -4,6 +4,8 @@ import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.payroll.api.PayRules.Kind;
+import com.hls.payroll.api.PayrollRunReturned;
+import com.hls.payroll.api.PayrollRunSubmitted;
 import com.hls.payroll.run.internal.RunViews.AdjustmentLine;
 import com.hls.payroll.run.internal.RunViews.EventView;
 import com.hls.payroll.run.internal.RunViews.LineView;
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -54,6 +57,7 @@ public class RunService {
     private final WorkingCalendar calendar;
     private final AppUserRepository users;
     private final Clock clock;
+    private final ApplicationEventPublisher publisher;
 
     RunService(
             PayRunRepository runs,
@@ -64,7 +68,9 @@ public class RunService {
             ChangeRecorder changes,
             WorkingCalendar calendar,
             AppUserRepository users,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
         this.runs = runs;
         this.lines = lines;
         this.lineAdjustments = lineAdjustments;
@@ -139,6 +145,51 @@ public class RunService {
         events.save(new RunEvent(run.getId(), now, actor, "CANCELLED", why, null));
         changes.record(actor, ENTITY, run.getId(), "status", PayRun.Status.DRAFT, PayRun.Status.CANCELLED);
         changes.recordLifecycle(actor, ENTITY, run.getId(), "cancelled", why);
+        return view(run, names(run), null);
+    }
+
+    /** Sends a computed draft for approval. Refused while computing, or when any paid line has a negative net pay. */
+    @Transactional
+    public RunView submit(UUID actor, UUID runId) {
+        PayRun run = locked(runId);
+        if (run.getStatus() != PayRun.Status.DRAFT) {
+            throw new ConflictException("Only a draft run can be submitted; this run is " + statusName(run.getStatus()) + ".");
+        }
+        Instant now = clock.instant();
+        if (run.getComputeState() != PayRun.ComputeState.DONE) {
+            throw new ConflictException(isComputing(run, now)
+                    ? "The run is being computed now. Submit it when it has finished."
+                    : "The run has not been computed. Compute it again before submitting.");
+        }
+        List<PayRunLine> negative = lines.findNegativeNet(runId);
+        if (!negative.isEmpty()) {
+            PayRunLine first = negative.get(0);
+            throw new ConflictException("The net pay of " + first.getPersonName() + " is below zero ("
+                    + RunInput.rupees(first.getNet()) + ")"
+                    + (negative.size() > 1 ? " and of " + (negative.size() - 1) + " more" : "")
+                    + ". Correct it with an adjustment, then compute again.");
+        }
+        run.submit(actor, now);
+        events.save(new RunEvent(runId, now, actor, "SUBMITTED", null, null));
+        changes.record(actor, ENTITY, runId, "status", PayRun.Status.DRAFT, PayRun.Status.AWAITING_APPROVAL);
+        publisher.publishEvent(new PayrollRunSubmitted(runId, run.getMonth(), actor));
+        return view(run, names(run), null);
+    }
+
+    /** The approver sends a run back to draft with a reason; the reason stays in the run's history. */
+    @Transactional
+    public RunView returnToDraft(UUID actor, UUID runId, String reason) {
+        String why = RunInput.requiredReason(reason, "returning a pay run");
+        PayRun run = locked(runId);
+        if (run.getStatus() != PayRun.Status.AWAITING_APPROVAL) {
+            throw new ConflictException("Only a run awaiting approval can be returned; this run is " + statusName(run.getStatus()) + ".");
+        }
+        Instant now = clock.instant();
+        run.returnToDraft();
+        events.save(new RunEvent(runId, now, actor, "RETURNED", why, null));
+        changes.record(actor, ENTITY, runId, "status", PayRun.Status.AWAITING_APPROVAL, PayRun.Status.DRAFT);
+        changes.recordLifecycle(actor, ENTITY, runId, "returned", why);
+        publisher.publishEvent(new PayrollRunReturned(runId, run.getMonth(), actor, run.getSubmittedBy(), why));
         return view(run, names(run), null);
     }
 

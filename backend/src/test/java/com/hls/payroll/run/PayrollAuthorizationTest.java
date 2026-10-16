@@ -23,6 +23,7 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
 
     private static final Set<Role> VIEW = EnumSet.of(Role.ADMIN, Role.DIRECTOR);
     private static final Set<Role> PROCESS = EnumSet.of(Role.ADMIN);
+    private static final Set<Role> APPROVE = EnumSet.of(Role.DIRECTOR);
 
     private record Endpoint(String name, HttpMethod method, String path, Object body, Set<Role> allowed) {}
 
@@ -40,6 +41,9 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
         list.add(new Endpoint("read run", HttpMethod.GET, RUNS + "/" + run, null, VIEW));
         list.add(new Endpoint("recompute", HttpMethod.POST, RUNS + "/" + unknown + "/recompute", Map.of(), PROCESS));
         list.add(new Endpoint("cancel", HttpMethod.POST, RUNS + "/" + unknown + "/cancel", Map.of("reason", "x"), PROCESS));
+        list.add(new Endpoint("submit", HttpMethod.POST, RUNS + "/" + unknown + "/submit", Map.of(), PROCESS));
+        list.add(new Endpoint("return", HttpMethod.POST, RUNS + "/" + unknown + "/return", Map.of("reason", "x"), APPROVE));
+        list.add(new Endpoint("approve", HttpMethod.POST, RUNS + "/" + unknown + "/approve", Map.of(), APPROVE));
         list.add(new Endpoint("lines", HttpMethod.GET, RUNS + "/" + run + "/lines", null, VIEW));
         list.add(new Endpoint("one line", HttpMethod.GET, RUNS + "/" + run + "/lines/" + line, null, VIEW));
         return list;
