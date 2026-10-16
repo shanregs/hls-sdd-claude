@@ -17,6 +17,10 @@ Decided by default while writing (no one was available to answer); each is also 
 - Q: Does the screen cover one School or several? → A: **One School and one year at a time.** A grid of many Schools is out of scope (decided with the requester on 2026-10-16).
 - Q: Can this screen remove a stored figure? → A: **No.** Deleting stays where spec 037 put it (the grid, Admin only, with confirmation). A blank field means "nothing entered": it saves nothing and never deletes.
 
+### Session 2026-10-16
+
+- Q: When a month already holds exactly the figure the user typed (stored by someone else, or by the user's own earlier Save that timed out), is it a success or a conflict? → A: **Success.** It counts as "unchanged". Only a stored figure that **differs** from the typed one is refused as changed or already existing (FR-010, FR-011, FR-014).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Enter or Correct All Twelve Months of a Year in One Go (Priority: P1) 🎯 MVP
@@ -50,12 +54,12 @@ When some months cannot be saved, the others are still saved, and the user is to
 **Acceptance Scenarios**:
 
 1. **Given** a figure outside 0 to the days in that month, or not a whole or half day, **When** the user saves, **Then** that month is refused with the allowed range named, every other valid month is saved, and the typed value stays in the field.
-2. **Given** a month whose stored figure was changed by someone else since the screen was opened, **When** the user saves a change to it, **Then** that month is refused as changed, the current stored figure and who changed it are shown beside it, the user's typed value is kept, and every other month is saved. Nothing is silently overwritten.
-3. **Given** a month that someone else created since the screen was opened, while this user is trying to create it, **When** they save, **Then** that month is refused as already existing, the existing figure is shown, and the user's value is kept for them to apply or discard.
+2. **Given** a month whose stored figure was changed by someone else since the screen was opened to a figure **different** from the one the user typed, **When** the user saves a change to it, **Then** that month is refused as changed (if the stored figure now equals the typed one, it is reported as unchanged), the current stored figure and who changed it are shown beside it, the user's typed value is kept, and every other month is saved. Nothing is silently overwritten.
+3. **Given** a month that someone else created since the screen was opened, while this user is trying to create it, **When** they save and the stored figure **differs** from the typed one, **Then** that month is refused as already existing, the existing figure is shown, and the user's value is kept for them to apply or discard; if the stored figure **equals** the typed one, the month is reported as unchanged and counts as saved.
 4. **Given** a month whose row was deleted by someone else since the screen was opened, **When** the user saves a change to it, **Then** that month is refused with a message that the row was deleted, and it is not recreated by this save.
 5. **Given** a month the user's permissions do not allow them to change (for example a figure exists and they have Create but not Edit), **When** the screen is shown, **Then** that month is read-only and cannot be edited, and the backend refuses it if attempted anyway.
 6. **Given** a save with several failures, **When** it completes, **Then** the screen lists the failed months in calendar order with one reason each, moves focus to the first failed month, and states how many months were saved and how many were not.
-7. **Given** a failed save of the whole request (network or server error), **When** it ends, **Then** every typed value is kept, nothing is shown as saved, and the user can retry; a retry never creates a duplicate.
+7. **Given** a failed save of the whole request (network or server error), **When** it ends, **Then** every typed value is kept, nothing is shown as saved, and the user can retry; a retry never creates a duplicate, and months the first attempt had already stored are reported as unchanged, not as conflicts.
 8. **Given** the fixed notice of spec 037 ("Months already finalised in payroll or attendance keep the figure they used."), **When** the screen is shown, **Then** it appears beside Save, once, for the whole screen.
 
 ---
@@ -122,7 +126,7 @@ The screen is reachable from the School Working Days grid and from the menu, ope
 - A year outside the allowed window (current year minus 5 to plus 5, spec 037 FR-029): the year cannot be picked; a request for it is refused.
 - A School is deactivated: its rows stay editable for historical months, as in spec 037.
 - The user's session expires mid-edit: the typed values are not lost on the screen, the user is asked to sign in again, and a repeated Save after signing in does not create duplicates.
-- The same Save sent twice (double tap, slow network): the second does nothing extra; a month already created by the first is not created again, and is reported as unchanged or as already existing.
+- The same Save sent twice (double tap, slow network, or a retry after a dropped connection): the second does nothing extra; a month already stored with the typed figure by the first is not written again and is reported as unchanged (success).
 - A month saved here and the same month edited in the grid at the same moment: the same one-writer-wins rule as everywhere else; the loser is told.
 - The calendar changes while the screen is open: the hints shown are as of when the screen was loaded; a stored figure is never altered by a calendar change.
 - A Manager is later granted access: scoping to their assigned Schools applies, as in spec 037.
@@ -145,11 +149,11 @@ The screen is reachable from the School Working Days grid and from the menu, ope
 - **FR-007**: Save MUST be unavailable while nothing has changed, and the screen MUST say so.
 - **FR-008**: A blank entry MUST mean "nothing entered": it MUST save nothing and MUST NOT delete a stored figure. Removing a stored figure remains a spec 037 action (grid, Admin by default, with confirmation).
 - **FR-009**: Each month MUST be saved independently, so that months that are valid and unchallenged are stored even when other months fail. The system MUST NOT roll back saved months because another month failed.
-- **FR-010**: Each month's update MUST use the same optimistic-lock check as a single edit in the grid (spec 037 FR-021): if the stored figure changed since the screen loaded it, that month is refused and the current figure and who changed it are returned.
-- **FR-011**: A month created by someone else since the screen loaded MUST be refused as already existing, with its current figure shown; a month deleted by someone else MUST be refused as deleted and MUST NOT be recreated by this save.
+- **FR-010**: Each month's update MUST use the same optimistic-lock check as a single edit in the grid (spec 037 FR-021): if the stored figure changed since the screen loaded it, and now differs from the typed figure, that month is refused and the current figure and who changed it are returned; if it now equals the typed figure, the month is reported as unchanged and nothing is written.
+- **FR-011**: A month created by someone else since the screen loaded MUST be refused as already existing, with its current figure shown, when that figure differs from the typed one; when it equals the typed one the month MUST be reported as unchanged and count as saved; a month deleted by someone else MUST be refused as deleted and MUST NOT be recreated by this save.
 - **FR-012**: The result of a Save MUST report, for each of the twelve months: created, updated, unchanged, or not saved with a reason (outside the allowed range or not a half day; year not allowed; changed by someone else; already exists; deleted by someone else; not permitted), and MUST return the current stored figures and versions so the screen can continue without a reload.
 - **FR-013**: The screen MUST keep what the user typed in every month that was not saved, MUST list the failed months in calendar order with one reason each, MUST show the stored figure beside a changed-by-someone-else month, and MUST move focus to the first failed month.
-- **FR-014**: A save that fails as a whole (network, server or expired session) MUST keep every typed value, MUST NOT show anything as saved, and MUST be safe to retry: repeating the same Save MUST NOT create a duplicate row or a duplicate audit entry for a month already stored.
+- **FR-014**: A save that fails as a whole (network, server or expired session) MUST keep every typed value, MUST NOT show anything as saved, and MUST be safe to retry: repeating the same Save MUST NOT create a duplicate row or a duplicate audit entry, and months already stored with the typed figure MUST be reported as unchanged, not as conflicts.
 - **FR-015**: The screen MUST always show the fixed notice of spec 037 FR-028 beside Save, once for the whole screen: "Months already finalised in payroll or attendance keep the figure they used." It MUST NOT query payroll or attendance.
 - **FR-016**: A save MUST NOT alter, recompute or lock any attendance mark, leave balance or payroll figure by itself (spec 037 FR-010).
 
@@ -200,7 +204,7 @@ The screen is reachable from the School Working Days grid and from the menu, ope
 - **SC-003**: 0 stored figures are silently overwritten: every month changed by someone else since the screen loaded is refused and reported (checked with two simultaneous users).
 - **SC-004**: 100% of figures created or updated here have an audit entry (who, when, School, month, old and new figure), the same as from the grid; 0 unchanged or refused months have one.
 - **SC-005**: 100% of attempts to store a figure outside 0 to the days in the month, or not a whole or half day, are refused for that month with the reason named.
-- **SC-006**: Repeating the same Save never creates a duplicate row or duplicate audit entry.
+- **SC-006**: Repeating the same Save never creates a duplicate row or duplicate audit entry, and reports 0 conflicts for months already stored with the typed figure.
 - **SC-007**: A user without View never sees the menu entry or the "Enter a year" action and gets the not-authorized page on a deep link; users without Create or Edit never get an editable field for a month they cannot change (checked per role), and the backend refuses it anyway.
 - **SC-008**: At 375 px width there is no horizontal page scroll, and all twelve fields and Save can be reached and used without sideways scrolling (checked in a real browser).
 - **SC-009**: The screen for one School and year appears in under 2 seconds, and a Save of all twelve months completes in under 3 seconds.
