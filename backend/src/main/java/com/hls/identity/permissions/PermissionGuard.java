@@ -24,9 +24,13 @@ public class PermissionGuard {
      *     translated to an HTTP 403 by Spring Security's standard exception handling.
      */
     public void require(Set<Role> callerRoles, PermissionModule module, PermissionAction action) {
-        boolean granted = callerRoles.stream().anyMatch(role -> permissionMatrixService.isGranted(role, module, action));
-        if (!granted) {
+        if (!isGranted(callerRoles, module, action)) {
             throw new AccessDeniedException("Not authorized for " + module + "." + action);
         }
+    }
+
+    /** The same check as {@link #require} without throwing, for a request that is allowed for some parts only. */
+    public boolean isGranted(Set<Role> callerRoles, PermissionModule module, PermissionAction action) {
+        return callerRoles.stream().anyMatch(role -> permissionMatrixService.isGranted(role, module, action));
     }
 }

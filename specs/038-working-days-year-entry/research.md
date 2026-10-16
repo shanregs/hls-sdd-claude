@@ -115,3 +115,20 @@ Each item: decision, why, what else was considered.
 
 Consumers read the figure through `attendance.api.SchoolWorkingDays` (037) and see these figures like any other
 (FR-023). Payroll, Manager attendance and the rollups are not touched.
+
+## 14. Names confirmed before coding (T001, 2026-10-16)
+
+- Backend (`attendance.workingdays.internal`): `WorkingDaysService` (`insert`, `requireSchoolExists`, private `record`,
+  `checkVersion`, `conflictFor`), `WorkingDaysRules.checkFigure` and `checkNewYear`, `CalendarCounts.byMonth` (package
+  private, so `YearEntryService` sits in the same package), `WorkingDaysScope.requireSchool` (an out-of-scope School
+  throws `NotFoundException`, so the year endpoints answer 404 for it, as the grid does),
+  `WorkingDaysViewFactory.userNames`, `SchoolWorkingDaysRepository.findBySchoolIdAndYear`,
+  `PermissionMatrixService.isGranted`. Controller base path `/api/v1/school-working-days`.
+- `PermissionGuard` is used from `web` only; to keep `attendance.workingdays.internal` free of an `identity.permissions`
+  dependency the controller computes `canCreate` and `canEdit` and passes them to the service.
+- Frontend (`features/schoolWorkingDays`): `schoolWorkingDaysApi.ts` (`call`, `Outcome`), `workingDaysRules.ts`
+  (`figureProblem`, `formatFigure`, `monthName`, `FINALISED_NOTICE`), `useGrantedActions` (`features/common`).
+- Helper names in `yearEntryState.ts` are `fillWithCalendarCounts` and `fillSameFigure` (a `use` prefix would be read
+  as a React hook by the lint rules).
+- A month typed as something that cannot be a figure (for example `abc`) is held back in the browser and not sent; the
+  other changed months are still sent. The server repeats the rule for anything that does arrive.

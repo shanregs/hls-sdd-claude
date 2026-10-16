@@ -219,3 +219,80 @@ export function copyYear(
 ): Promise<Outcome<CopyResult>> {
   return call(authFetch, "POST", `${BASE}/copy`, body);
 }
+
+/** One month of the year screen: the stored figure (the last five fields are null when none) and the hint. */
+export interface YearMonthState {
+  month: number;
+  daysInMonth: number;
+  calendarDerived: number;
+  id: string | null;
+  workingDays: number | null;
+  version: number | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export interface YearView {
+  schoolId: string;
+  schoolName: string;
+  zoneName: string;
+  year: number;
+  months: YearMonthState[];
+}
+
+export interface YearMonthRequest {
+  month: number;
+  workingDays: number;
+  /** The version loaded for the month, null when the screen loaded no figure for it. */
+  version: number | null;
+}
+
+export type YearMonthReason =
+  | "INVALID_FIGURE"
+  | "STALE"
+  | "ALREADY_EXISTS"
+  | "ROW_DELETED"
+  | "NOT_PERMITTED";
+
+export interface YearMonthResult {
+  month: number;
+  status: "CREATED" | "UPDATED" | "UNCHANGED" | "NOT_SAVED";
+  reason?: YearMonthReason | null;
+  message?: string | null;
+  current: YearMonthState;
+}
+
+export interface YearSaveResult {
+  created: number;
+  updated: number;
+  unchanged: number;
+  notSaved: number;
+  months: YearMonthResult[];
+}
+
+export function getYear(
+  authFetch: AuthFetch,
+  schoolId: string,
+  year: number,
+): Promise<Outcome<YearView>> {
+  return call(
+    authFetch,
+    "GET",
+    `${BASE}/year?schoolId=${schoolId}&year=${year}`,
+    undefined,
+    "Could not load the year.",
+  );
+}
+
+export function saveYear(
+  authFetch: AuthFetch,
+  body: { schoolId: string; year: number; months: YearMonthRequest[] },
+): Promise<Outcome<YearSaveResult>> {
+  return call(
+    authFetch,
+    "PUT",
+    `${BASE}/year`,
+    body,
+    "Could not save the year.",
+  );
+}
