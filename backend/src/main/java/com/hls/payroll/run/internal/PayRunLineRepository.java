@@ -16,6 +16,11 @@ interface PayRunLineRepository extends JpaRepository<PayRunLine, UUID> {
 
     List<PayRunLine> findByRunIdAndState(UUID runId, PersonResult.State state);
 
+    /** A paid line whose net pay is below zero: reported at submit, never clamped (spec 013b FR-012). */
+    @Query("select l from PayRunLine l where l.runId = :runId and l.state = com.hls.payroll.run.internal.PersonResult$State.PAYABLE"
+            + " and l.net < 0 order by l.personName, l.id")
+    List<PayRunLine> findNegativeNet(@Param("runId") UUID runId);
+
     /** Always called with non-null filters (all states, all kinds, "%") so the statement is one fixed shape. */
     @Query("select l from PayRunLine l where l.runId = :runId and l.state in :states and l.personKind in :kinds"
             + " and lower(l.personName) like :query order by l.personName, l.id")

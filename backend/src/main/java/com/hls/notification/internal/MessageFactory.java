@@ -197,6 +197,28 @@ public final class MessageFactory {
                 attendanceLink(month));
     }
 
+    /** A pay run waits for approval. The month and the status only, never an amount (spec 013b). */
+    public static Text payrollRunSubmitted(UUID runId, YearMonth month) {
+        return new Text(
+                "Pay run awaiting approval",
+                "The pay run for " + monthName(month) + " was submitted and is awaiting approval.",
+                "/operations/payroll/" + runId);
+    }
+
+    public static Text payrollRunApproved(UUID runId, YearMonth month) {
+        return new Text(
+                "Pay run approved",
+                "The pay run for " + monthName(month) + " was approved and is now final.",
+                "/operations/payroll/" + runId);
+    }
+
+    public static Text payrollRunReturned(UUID runId, YearMonth month, String reason) {
+        return new Text(
+                "Pay run returned",
+                "The pay run for " + monthName(month) + " was returned to draft" + because(reason) + ".",
+                "/operations/payroll/" + runId);
+    }
+
     public static String attendanceLink(YearMonth month) {
         return "/my-attendance?month=" + month;
     }
