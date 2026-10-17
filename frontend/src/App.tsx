@@ -21,6 +21,7 @@ import { DesignationSalaryPage } from "./features/payroll/DesignationSalaryPage"
 import { PayPolicyPage } from "./features/payroll/PayPolicyPage";
 import { PersonSalaryPage } from "./features/payroll/PersonSalaryPage";
 import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
+import { AdjustmentsPage } from "./features/payroll/run/AdjustmentsPage";
 import { PayrollRunPage } from "./features/payroll/run/PayrollRunPage";
 import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
@@ -431,6 +432,14 @@ export function App() {
           element={
             <RouteGuard>
               <PayrollRunsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/payroll/adjustments"
+          element={
+            <RouteGuard>
+              <AdjustmentsPage />
             </RouteGuard>
           }
         />

@@ -58,3 +58,16 @@ export function reasonProblem(reason: string): string | null {
     return `The reason can be at most ${MAX_REASON} characters.`;
   return null;
 }
+
+/** A signed amount with at most two decimals, not zero, within what a line can hold. */
+export function amountProblem(text: string): string | null {
+  const value = text.trim();
+  if (value === "") return "The amount is required.";
+  if (!/^-?\d+(\.\d+)?$/.test(value))
+    return "Enter the amount as a number, for example 2000 or -500.50.";
+  if (/\.\d{3,}$/.test(value))
+    return "The amount can have at most two decimals.";
+  if (Number(value) === 0) return "The amount cannot be zero.";
+  if (Math.abs(Number(value)) > 9999999.99) return "The amount is too large.";
+  return null;
+}

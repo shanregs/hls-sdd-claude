@@ -48,7 +48,9 @@ public final class RunViews {
             @JsonRawValue String policy,
             long version,
             List<EventView> events,
-            @JsonRawValue String recomputeSummary) {}
+            @JsonRawValue String recomputeSummary,
+            /** Waiting adjustments recorded after this draft was computed; they join when it is computed again. */
+            long adjustmentsWaitingSinceComputed) {}
 
     public record AdjustmentLine(UUID adjustmentId, String kind, String amount, String reason) {}
 

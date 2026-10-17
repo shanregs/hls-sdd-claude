@@ -251,7 +251,12 @@ public final class LineCalculator {
      * a line only when this changes (FR-008).
      */
     private static String fingerprint(Inputs in, String workingJson) {
-        String text = in.name() + "\u0001" + in.label() + "\u0001" + in.warning() + "\u0001" + workingJson;
+        return fingerprintOf(in.name(), in.label(), in.warning(), workingJson);
+    }
+
+    /** The same hash from the parts, for a line whose working was changed by arithmetic (withdrawing an adjustment). */
+    static String fingerprintOf(String name, String label, String warning, String workingJson) {
+        String text = name + "\u0001" + label + "\u0001" + warning + "\u0001" + workingJson;
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {

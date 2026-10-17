@@ -440,6 +440,15 @@ export function PayrollRunPage() {
           {returned.reason}
         </Alert>
       )}
+      {isDraft && r.adjustmentsWaitingSinceComputed > 0 && (
+        <Alert severity="info">
+          {r.adjustmentsWaitingSinceComputed === 1
+            ? "1 adjustment has been waiting since this run was computed."
+            : `${r.adjustmentsWaitingSinceComputed} adjustments have been waiting since this run was computed.`}{" "}
+          Compute again to include{" "}
+          {r.adjustmentsWaitingSinceComputed === 1 ? "it" : "them"}.
+        </Alert>
+      )}
       {r.status === "AWAITING_APPROVAL" && (
         <Alert severity="info">
           Submitted{r.submittedBy ? ` by ${r.submittedBy.name}` : ""}
