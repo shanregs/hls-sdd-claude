@@ -53,4 +53,7 @@ copy) were **not measured**.
 - `SchoolWorkingDays` returns the stored figure or the calendar-derived count, labelled, and issues the same number of
   statements for 1 and 50 Schools (`SchoolWorkingDaysReadApiTest`).
 - Grid page with 40 Schools x 12 months (480 rows) answers in under 2 seconds with the same number of statements as a
-  year with 2 rows (`WorkingDaysGridTest`). The full 500 Schools x 12 months case of SC-008 was **not run**.
+  year with 2 rows (`WorkingDaysGridTest`). The full SC-008 case (500 Schools x 12 months = 6,000 rows) was run on 2026-10-16 in
+  `WorkingDaysGridTest.aFilteredPageOf500SchoolsAnd6000RowsAnswersInUnderTwoSeconds`: a filtered page (year, name search,
+  sorted by working days, 25 per page) took 60 to 64 ms over 5 runs after one warm-up, and an unfiltered page of 100
+  rows took 165 ms. Both are well under the 2 second target. **SC-008 met.**
