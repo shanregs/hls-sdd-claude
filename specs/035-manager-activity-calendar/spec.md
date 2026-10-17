@@ -8,6 +8,16 @@
 
 **Input**: User description: "035-manager-activity-calendar: Manager and Director read-only calendar of planned versus completed activity across campus drives (016), marketing visits and meetings (023), training (024, not built yet) and tasks (025), per Manager and area, with missed and rescheduled items, built on the planned-activity contract C1."
 
+## Clarifications
+
+### Session 2026-10-18
+
+- Q: Should this spec include small changes to 023, 025 and 016 so their feeds return completed and cancelled items and reschedule history? → A: Yes. The three feeds are amended additively (more fields and statuses, no existing screen changes) and the plan for 035 includes those amendments.
+- Q: Should a Zone Manager see only their own activity, or also that of other Managers in the Zone? → A: Only their own. Director and Admin see all Managers.
+- Q: Does a completed but not yet verified task count as Done? → A: Yes. Verification stays on the tasks screen and does not delay the Done count.
+- Q: Should a visit with several attending Managers show for each of them, and how is it counted? → A: It shows on every attendee's calendar and in each Manager's count; the overall total counts it once.
+- Q: Which Zone is an activity counted under when filtering by Zone? → A: The Zone of the item's School or prospect first, then the owner Manager's current Zone.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The Director Sees What Every Manager Planned and Did (Priority: P1) 🎯 MVP
@@ -192,14 +202,14 @@ These defaults were chosen without asking the user; each point marked is **to co
   - The real marketing feed returns **only activities still in the PLANNED status** (completed and cancelled visits are left out); the owner is the **creator**, and attendees are matched only when a single user is asked for. "Missed" and "Rescheduled" exist only in the marketing calendar's own screen data, not in C1.
   - The real campus drive feed returns every status (planned, held, cancelled), one entry per drive date, with the Manager who scheduled it as owner (interviewers are matched only when a user is asked for).
   - The real task feed returns every non-cancelled task by its due date with its status (assigned, acknowledged, in progress, completed, verified); it has no moved-date record. "Overdue" is derived for tasks.
-  - Therefore **planned versus completed cannot be built on C1 as it stands**: the marketing feed must also return completed and cancelled visits and say whether a visit was rescheduled and from which date; the task feed should say when a task was completed and whether its due date was moved; the drive feed should state any date change if one is recorded. These are required amendments to 023, 025 and 016 for the plan (**to confirm in /speckit-clarify**); this read-only spec cannot work around them.
+  - Therefore **planned versus completed cannot be built on C1 as it stands**: the marketing feed must also return completed and cancelled visits and say whether a visit was rescheduled and from which date; the task feed should say when a task was completed and whether its due date was moved; the drive feed should state any date change if one is recorded. These are required amendments to 023, 025 and 016, included in the plan for this spec (confirmed 2026-10-18); this read-only spec cannot work around them.
   - The attendance helper that lists a day's activities for a Field day (spec 032) is internal to attendance; 035 reads the same three feeds through their public interfaces and does not reuse it.
   - Training (024) has no code or contract yet. The web Marketing Calendar already shows the user's drives beside visits with Missed and Rescheduled marks and a "mine" toggle; this spec generalizes that to all four kinds and to all Managers.
-- **Statuses**: Done means a visit or meeting completed, a drive held, a task completed or verified. A completed-but-not-yet-verified task counts as Done (verification stays in the tasks screen). To confirm in /speckit-clarify.
+- **Statuses**: Done means a visit or meeting completed, a drive held, a task completed or verified. A completed-but-not-yet-verified task counts as Done (verification stays in the tasks screen) (confirmed 2026-10-18).
 - **Task rescheduling**: a task counts as Rescheduled only if its due-date change is recorded by spec 025 (an amendment as above); otherwise tasks never show as rescheduled. To confirm in /speckit-clarify.
-- **Zone (area)**: an item with a School or prospect uses that Zone first; otherwise the owner Manager's current Zone assignment (a Manager may have several). To confirm in /speckit-clarify.
-- **Attendee visibility**: a visit appears for every attendee Manager as well as the creator; totals count it once. To confirm in /speckit-clarify.
-- **Scope of a Zone Manager**: strictly own items; a Zone Manager does not see Zone-mates' items, even though specs 023 and 025 let a Zone's Managers see prospects. To confirm in /speckit-clarify.
+- **Zone (area)**: an item with a School or prospect uses that Zone first; otherwise the owner Manager's current Zone assignment (a Manager may have several) (confirmed 2026-10-18).
+- **Attendee visibility**: a visit appears for every attendee Manager as well as the creator; totals count it once (confirmed 2026-10-18).
+- **Scope of a Zone Manager**: strictly own items; a Zone Manager does not see Zone-mates' items, even though specs 023 and 025 let a Zone's Managers see prospects (confirmed 2026-10-18).
 - **Mobile**: the first release is the web screen. Managers already see visits and tasks on the phone (spec 034), unchanged here; a Director mobile calendar is a later spec. To confirm in /speckit-clarify.
 - **Menu**: Admin and Director under OPERATIONS, Manager under MY WORK; the Director dashboard (spec 028) may link here later, but no dashboard tile is part of this spec.
 - **Not included**: travel claims (015), field-day linking (032, already built) and the Director dashboard (028) read the same contract but are separate specs; export to file, reminders and any editing are not part of this spec.
