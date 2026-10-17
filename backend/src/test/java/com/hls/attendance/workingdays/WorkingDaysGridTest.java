@@ -161,4 +161,42 @@ class WorkingDaysGridTest extends WorkingDaysTestBase {
         assertThat(manyStatements).isEqualTo(few);
         assertThat(millis).as("grid page time in ms").isLessThan(2000);
     }
+
+    /** SC-008: 500 Schools and 6,000 rows for a year; a filtered page appears in under 2 seconds. */
+    @Test
+    void aFilteredPageOf500SchoolsAnd6000RowsAnswersInUnderTwoSeconds() {
+        String admin = signInAs(Role.ADMIN).token();
+        int year = thisYear() + 3;
+        List<UUID> schools = new ArrayList<>();
+        for (int i = 0; i < 500; i++) {
+            schools.add(schoolInNewZone(admin)[2]);
+        }
+        for (int month = 1; month <= 12; month++) {
+            for (UUID school : schools) {
+                jdbc.update(
+                        "insert into school_working_days (id, school_id, year, month, working_days, version, created_by,"
+                                + " created_at, updated_by, updated_at) values (?, ?, ?, ?, 20, 0, ?, now(), ?, now())",
+                        UUID.randomUUID(), school, year, month, UUID.randomUUID(), UUID.randomUUID());
+            }
+        }
+        String filtered = BASE + "?year=" + year + "&q=a&sort=workingDays,desc&size=25";
+        get(filtered, admin); // warm caches
+        long[] millis = new long[5];
+        Resp last = null;
+        for (int i = 0; i < millis.length; i++) {
+            long started = System.nanoTime();
+            last = get(filtered, admin);
+            millis[i] = (System.nanoTime() - started) / 1_000_000;
+        }
+        long unfilteredStarted = System.nanoTime();
+        Resp unfiltered = get(BASE + "?year=" + year + "&size=100", admin);
+        long unfilteredMillis = (System.nanoTime() - unfilteredStarted) / 1_000_000;
+        System.out.println("SC-008 filtered page ms (5 runs): " + java.util.Arrays.toString(millis)
+                + "; unfiltered size=100 ms: " + unfilteredMillis);
+
+        assertThat(last.status()).isEqualTo(200);
+        assertThat(unfiltered.status()).isEqualTo(200);
+        assertThat(java.util.Arrays.stream(millis).max().getAsLong()).as("slowest filtered page in ms").isLessThan(2000);
+        assertThat(unfilteredMillis).as("unfiltered page in ms").isLessThan(2000);
+    }
 }
