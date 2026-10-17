@@ -8,6 +8,15 @@
 
 **Input**: User description: "033-mobile-manager-field: Field-day screens for the Manager in the HLS Android app, built on the app shell, sign-in and server-driven menus of spec 018 and the Manager attendance rules and APIs of spec 032, which stay unchanged. Full input: docs/spec-inputs/033-mobile-manager-field.md (check-in with required device location and optional photo and day type; field-day activity selection from the server's planned-activity list or purpose text where 032 accepts it; check-out with location and the complete-with-a-reason action for a missed check-out; Home plan showing today's status and planned activities; My month reusing the 019 month component; Manager leave request and the Director's decision as in spec 020; menu entries and allowed actions come only from the server access model; refusals shown in plain language with entered data kept; every call carries device location or its reason and every change is audited server-side). Out of scope: Admin/Director grid, corrections and month lock (web), geofencing, offline check-in, background tracking, push notifications, iOS."
 
+## Clarifications
+
+### Session 2026-10-17
+
+- Q: May a Manager attach a photo from the phone's gallery as well as the camera, and are the image's own details recorded beyond what spec 032 keeps? → A: Camera or gallery. The photo stays optional. Only what spec 032 already keeps is recorded and shown with it (file name, type, size, who attached it and when); nothing is added to spec 032, so the time or place a picture was taken is not read from the file.
+- Q: Should the app refuse a check-in or check-out when the location fix is poor? → A: No. The app sends whatever fix the phone gives together with its accuracy figure and never refuses for accuracy; only a missing location (denied, switched off or not found in the short wait) stops the request.
+- Q: May the Manager change a day's type or add activities after checking in? → A: No. The day type and links stay as checked in; a wrong one is corrected by the Admin or Director on the web, with a reason (spec 032), and the app offers no edit of a recorded check-in.
+- Q: Does Home show only today's planned activities or the coming days too? → A: Today only. A Field day can link only to an activity dated that day, and planning ahead belongs to the activity calendar (spec 035).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Manager Checks In From the Phone (Priority: P1) 🎯 MVP
@@ -39,9 +48,10 @@ selected and a photo added, and confirm the day shows the visit and the photo.
 4. **Given** a Field day with neither an activity nor a purpose, **When** the Manager taps Check in,
    **Then** the app does not send it and says which of the two is needed; a Field day the server refuses
    anyway is shown with the server's reason and everything entered is kept.
-5. **Given** a Manager who is checking in, **When** they add a photo (taken or chosen from the phone) of
-   a type and size the server accepts, **Then** the photo is attached to that day's check-in and shown
-   on today's status; a photo the server refuses is explained and the check-in itself stays as recorded.
+5. **Given** a Manager who is checking in, **When** they add a photo (taken in the app or chosen from the phone's gallery) of a type and size the server
+   accepts, **Then** the photo is attached to that day's check-in and shown on today's status with the details
+   the server holds (file name, type, size, who attached it and when); a photo the server refuses is
+   explained and the check-in itself stays as recorded.
 6. **Given** location is denied, switched off or not found within the short wait of spec 018, **When**
    the Manager taps Check in, **Then** the app sends nothing, says that a location is needed for
    check-in and how to turn it on (or to allow it for this app), and offers to try again; nothing is
@@ -236,6 +246,8 @@ or button disappears after the next load.
 
 ### Edge Cases
 
+- A Manager checked in as Office and then went on a visit, or picked the wrong activity: the app offers no change
+  to a recorded check-in; the Admin or Director corrects the day on the web with a reason.
 - Location fix is slow or imprecise: the app waits only the short time of spec 018, then tells the
   Manager location was not found; it does not send a check-in or check-out without a location and does
   not judge accuracy (the server stores the figure as captured).
@@ -268,16 +280,18 @@ or button disappears after the next load.
   server offers (Office or Field); a Leave day arises only from approved leave and is never chosen at
   check-in.
 - **FR-002**: The app MUST read the phone's location at the moment of the Check in tap and send it with
-  the request. If location is denied, switched off or not found within the wait of spec 018, the app MUST
+  the request, together with the accuracy the phone reports, and MUST NOT refuse a fix for being imprecise. If location is denied, switched off or not found within the wait of spec 018, the app MUST
   NOT send the check-in and MUST tell the Manager how to turn location on. This is the one action in the
   app for which location is required rather than best-effort (decision D15 of spec 032).
 - **FR-003**: For a Field day the app MUST let the Manager select one or more of today's planned
   activities from the list the server returns for the day, showing it exactly as returned, and MUST
   offer a purpose text where the server accepts one. It MUST NOT send a Field day with neither, and MUST
   say which of the two is needed.
-- **FR-004**: The app MUST let the Manager add a photo to the day's check-in, optionally, by taking one or
-  choosing one from the phone, in a type and size the server accepts. A check-in without a photo is valid,
-  and a refused photo MUST NOT undo the check-in.
+- **FR-004**: The app MUST let the Manager add a photo to the day's check-in, optionally, by taking one in
+  the app or choosing one from the phone's gallery, in a type and size the server accepts. A check-in without
+  a photo is valid, and a refused photo MUST NOT undo the check-in. The app MUST show the details the server
+  holds for an attached photo (file name, type, size, who attached it and when) and MUST NOT read or store
+  the time or place a picture was taken; spec 032 is not changed to keep them.
 - **FR-005**: The app MUST show the time of a check-in only from the server's response, and MUST NOT show
   a check-in as made until the server confirms it.
 
@@ -397,12 +411,13 @@ what that role's navigation offers.
 - The check-in day type offered is Office or Field. The input mentioned Leave as a third choice, but
   spec 032 (FR-006) creates a Leave day only from approved leave, so the app offers leave through My
   Leave and shows leave days on Home and My Month.
-- Items from the input's clarify list are resolved with these defaults, to be confirmed in
-  `/speckit-clarify`: offline check-in is refused with a message (no queue); a photo may be taken or
-  chosen from the phone; the app takes a fresh location reading at the tap and applies no accuracy
-  threshold of its own; a Manager cannot change a day's type after checking in (a correction is an
-  Admin or Director action on the web); no reminder before the missed check-in cut-off (needs push
-  notifications, out of scope); Home shows today's plan only, not the coming week.
+- The open questions of the input's clarify list are settled (2026-10-17). Confirmed in `/speckit-clarify`: a photo may
+  be taken or chosen from the gallery, with only the details spec 032 already keeps; the app takes a fresh
+  location reading at the tap, sends the accuracy the phone reports and applies no accuracy threshold of its
+  own; a Manager cannot change a day's type or links after checking in (a correction is an Admin or Director
+  action on the web); Home shows today's plan only. Settled by the input's own scope: offline check-in is
+  refused with a message (no queue, a later spec) and there is no reminder before the missed check-in
+  cut-off (it needs push notifications, out of scope).
 - Forgotten check-in requests (story 6) are included because they are part of the Manager's own API in
   spec 032 and the same screens serve them. They are the lowest priority and can be cut without
   affecting the other stories.
