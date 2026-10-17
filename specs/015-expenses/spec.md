@@ -12,7 +12,11 @@
 
 ### Session 2026-10-18
 
-None yet. The defaults chosen while writing are listed under Assumptions and marked "to confirm in /speckit-clarify".
+- Q: Should Teachers be able to raise expense claims in this version, or only Managers, Admin and Director? → A: Teachers too. Their claims use the same approval (Admin or Director), the same bills and categories, and My Expenses is added to the Teacher menu.
+- Q: How should an approved claim the claimant paid personally be paid back? → A: Through payroll by default; the Admin can instead record an individual claim as paid outside payroll. Company-paid claims never go to payroll.
+- Q: Who may approve or reject a claim? → A: Any Admin or Director; no named approver or chain, and nobody decides their own claim (an Admin's claim is decided by a Director and the reverse).
+- Q: At what level is a budget set, and how is spend counted against it? → A: One amount per area per calendar month, spend counted by expense date; no per-category or yearly budgets; going over is shown, never blocked.
+- Q: Is a bill always required, or can small amounts go without one? → A: Always required; the only exception is a stated "no bill" reason; no amount threshold; up to 5 bills; expense date within the last 60 days.
 
 ## Why this exists
 
@@ -55,8 +59,8 @@ one photo of the bill, submit it, and see it in My Expenses as "Submitted"; conf
    it is refused with the reason and the claim is unchanged.
 7. **Given** the same Manager, date, amount and category as a claim already submitted or approved, **When** they submit,
    **Then** they are warned about the possible duplicate and may confirm to continue; the confirmation is recorded.
-8. **Given** a Teacher or System user, **When** they look for expenses, **Then** there is no menu entry and direct access
-   is refused.
+8. **Given** a System user, **When** they look for expenses, **Then** there is no menu entry and direct access is refused.
+   A Teacher sees only My Expenses.
 
 ---
 
@@ -331,8 +335,8 @@ of approved, unpaid reimbursable claims, and no other person's claim.
 
 **Visibility, audit, notification**
 
-- **FR-027**: A claimant MUST see only their own claims; the Admin and Director see all; no one else sees any. Teacher and
-  System have no access.
+- **FR-027**: A claimant MUST see only their own claims; the Admin and Director see all; no one else sees any. A Teacher
+  sees only their own claims in My Expenses; System has no access.
 - **FR-028**: Every creation, edit, submission, withdrawal, decision, reversal, bill addition or removal, payment, budget
   change and export MUST be written to the audit trail (spec 003) with who, when and the before and after values.
 - **FR-029**: The Admin and Director MUST be notified (spec 010) when a claim is submitted or resubmitted; the claimant
@@ -361,12 +365,11 @@ of approved, unpaid reimbursable claims, and no other person's claim.
 | Admin | OPERATIONS → Expenses (all claims, approvals, pending and ageing, budget versus actual, costs, export, record payment); OPERATIONS → My Expenses | View, Create (budgets), Edit (budgets), Approve, Process (record paid, reverse), Export; own claims: View, Create, Edit, Delete | Org-wide |
 | Director | OPERATIONS → Expenses; OPERATIONS → My Expenses | View, Create, Edit (budgets), Approve, Export; no Process by default; own claims as Admin | Org-wide |
 | Manager (Zone Manager) | OPERATIONS → My Expenses | View, Create, Edit (own Draft and Rejected), Delete (own Draft) | Own |
-| Teacher | none | none | None |
+| Teacher | OPERATIONS → My Expenses | View, Create, Edit (own Draft and Rejected), Delete (own Draft) | Own |
 | System | none (System MUST NOT see business data) | none | None |
 
 **New permission keys**: `EXPENSES` (View, Create, Edit, Approve, Process, Export; all claims, approvals, budgets,
-cost views, payment), `MY_EXPENSES` (View, Create, Edit, Delete; a claimant's own claims). Seeded as above; Teacher and
-System are not eligible. Only Admin, Director and System edit the matrix. The constitution's Default role access matrix
+cost views, payment), `MY_EXPENSES` (View, Create, Edit, Delete; a claimant's own claims). Seeded as above; System is not eligible. Only Admin, Director and System edit the matrix. The constitution's Default role access matrix
 gets an Expenses row when this spec merges. Navigation entries and the notification types (expense awaiting approval,
 decided, reversed) are added with the spec. Spec 036 adds no keys.
 
@@ -387,7 +390,7 @@ decided, reversed) are added with the spec. Spec 036 adds no keys.
   status, a month with no budget, a head-office claim and a rejected-then-approved claim.
 - **SC-007**: Cost per School acquired and per Teacher trained equal the hand-computed figures for a sample period, and
   show a clear no-data state when the divisor is zero.
-- **SC-008**: A claimant never sees another person's claim, and a Teacher or System user cannot reach any expense data,
+- **SC-008**: A claimant never sees another person's claim, and a System user cannot reach any expense data and a Teacher reaches only their own claims,
   proved by tests across every list and detail.
 - **SC-009**: After an approved claim is paid, no field of it can be changed, and every status change is in the audit
   trail with who and when.
@@ -397,29 +400,30 @@ decided, reversed) are added with the spec. Spec 036 adds no keys.
 
 Items marked "to confirm in /speckit-clarify" are defaults chosen because no one could be asked; change them there.
 
-- **Who may raise claims** (to confirm in /speckit-clarify): Managers, Admin and Director. Teachers are not included in
-  this version although the requirements document lists teacher commute and food claims; the roadmap, D11 and the 036
-  input speak of employees and Managers, and Teachers have no Operations menu. A Teacher claim flow is a later change.
-- **Approver rule** (to confirm in /speckit-clarify): any Admin or Director may decide; there is no named approver per
+- **Who may raise claims** (confirmed 2026-10-18): Managers, Admin, Director and Teachers. A Teacher's claim follows the
+  same rules and approval as any other (Admin or Director decides) and is reimbursed through payroll like any other
+  personally paid claim. Teachers have no Operations menu today, so My Expenses is a new Teacher menu entry; the mobile
+  spec 036 and the Teacher app will need to offer it.
+- **Approver rule** (confirmed 2026-10-18): any Admin or Director may decide; there is no named approver per
   claim and no chain. The "approver" is recorded on decision. Nobody decides their own claim, so an Admin's claim is
   decided by a Director and the reverse.
 - **Area is a Zone** (the deck's "Area", spec 005), plus "Head office". The claim carries the area chosen; it is not
   forced to the claimant's own Zone, and a Manager may pick any active Zone or Head office (to confirm in
   /speckit-clarify whether a Manager is limited to the Zones they are assigned).
-- **Budget grain** (to confirm in /speckit-clarify): one amount per area per calendar month, no budget per category and
+- **Budget grain** (confirmed 2026-10-18): one amount per area per calendar month, no budget per category and
   no yearly roll-over; going over is shown, never blocked. "Actual" counts claims by their expense date, not by their
   approval date.
-- **Reimbursement route** (to confirm in /speckit-clarify): an approved personally paid claim goes to payroll by default
+- **Reimbursement route** (confirmed 2026-10-18): an approved personally paid claim goes to payroll by default
   and may be recorded as paid outside the system instead. Spec 013b reserves a "Reimbursement" adjustment kind but has no
   way to receive it yet; this spec exposes the owed claims and 013b (or an amendment to it) takes them, so this spec
   states the behaviour and 013b's plan must accept it. Spend paid by the company (rent, supplier) is "paid by company"
   and never goes to payroll.
-- **Bills** (to confirm in /speckit-clarify): required, with a stated reason as the only exception, no amount threshold
+- **Bills** (confirmed 2026-10-18): required, with a stated reason as the only exception, no amount threshold
   below which a bill is waived. The shared file store (spec 023) accepts only jpg, png, pdf, docx, xlsx and txt up to
   10 MB, checked by extension and content; this spec allows jpg, png and pdf only. Phone formats such as HEIC or WebP
   are therefore not accepted as they are, and spec 036 must convert and compress photos to jpg before sending. Up to 5
   bills per claim.
-- **Date window**: the expense date may not be in the future or older than 60 days (to confirm in /speckit-clarify);
+- **Date window**: the expense date may not be in the future or older than 60 days (confirmed 2026-10-18);
   the figure is fixed in this version, not a setting.
 - **Cost per School acquired** (to confirm in /speckit-clarify): approved cost of Marketing claims plus Travel and Fuel
   claims linked to marketing visits, meetings or campus drives, dated in the period, divided by the Schools that became
@@ -440,7 +444,7 @@ Items marked "to confirm in /speckit-clarify" are defaults chosen because no one
 - **Payment of reimbursement is manual or through payroll**: the system never moves money. Paid status for a claim
   recorded outside payroll is typed in by the Admin, as D8 decides for payroll.
 - **Not in this version**: categories managed by users, per-category budgets, yearly budgets, multi-level approval,
-  advances, mileage rates or per-diem rules, GST on bills, OCR of bills, Teacher claims, and Zone Managers seeing their
+  advances, mileage rates or per-diem rules, GST on bills, OCR of bills, and Zone Managers seeing their
   Zone's spend.
 - **Month closing**: expenses have no month lock of their own; payroll's approved run is what fixes the reimbursement.
   A claim dated in a closed month is still accepted within the 60-day window.
