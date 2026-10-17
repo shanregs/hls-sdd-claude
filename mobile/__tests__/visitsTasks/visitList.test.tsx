@@ -21,8 +21,9 @@ describe("the month's visits", () => {
     const { server } = await openVisitTaskScreen(MENU, { marketing: { visits: OCT } });
 
     expect(await screen.findByText("Today School")).toBeTruthy();
-    const call = server.callsTo("GET /api/v1/marketing/activities")[0];
-    expect(call.query).toEqual({ from: "2026-10-01", to: "2026-10-31", mine: "true" });
+    // Home also asks for today alone, for its card; the month is the request that spans the whole month
+    const call = server.callsTo("GET /api/v1/marketing/activities").find((c) => c.query.to === "2026-10-31");
+    expect(call?.query).toEqual({ from: "2026-10-01", to: "2026-10-31", mine: "true" });
 
     const headers = screen.getAllByRole("header").map((n) => n.props.children);
     expect(headers).toEqual(expect.arrayContaining(["Today", "Later", "Earlier"]));
@@ -109,7 +110,8 @@ describe("moving between months", () => {
 
     expect(await screen.findByText("November School")).toBeTruthy();
     expect(screen.queryByText("Today School")).toBeNull();
-    expect(server.callsTo("GET /api/v1/marketing/activities").map((c) => c.query.from)).toEqual(["2026-10-01", "2026-11-01"]);
+    const months = server.callsTo("GET /api/v1/marketing/activities").map((c) => c.query.from).filter((from) => from.endsWith("-01"));
+    expect(months).toEqual(["2026-10-01", "2026-11-01"]);
     await press("Previous month");
     expect(await screen.findByText("Today School")).toBeTruthy();
   });

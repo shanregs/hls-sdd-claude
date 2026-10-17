@@ -179,6 +179,17 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
       entries.
     - The camera is a native module: after pulling this change run `npx expo run:android` again (a reload does not
       add it). The camera permission is asked only when you tap Take a photo.
+16. **Visits and tasks** (spec 034, steps in `specs/034-mobile-visits-tasks/quickstart.md`):
+    - Manoj (Manager): OPERATIONS → My Tasks and MARKETING → Marketing Calendar appear; Tara sees neither; Divya (Director) sees both as
+      "Manager Tasks" and "Marketing Calendar", with tasks read-only. Home shows "N visits today" and "N overdue, M due today".
+    - On the web, plan a visit for Manoj today and one next week, and leave one from last week uncompleted. In the app the Marketing
+      Calendar groups them Today, Later and Earlier, and last week's shows Missed. Complete one with an outcome (it is required), a
+      follow-up date and a photo; the follow-up task appears in My Tasks. Plan, reschedule and cancel (with a reason) another.
+    - My Tasks: the Today, Upcoming, Overdue, Awaiting verification, Done and All views. Acknowledge, start and complete a task with a
+      note of at least 10 characters; give a reason of at least 5 characters for an overdue one; add photos up to 5. Cancel a task on
+      the web while it is open on the phone, then tap a step: the server's reason shows and the task reloads.
+    - Add a task for me appears for Manoj, not for Divya. Airplane mode on Send: "No connection. Nothing was sent." and the entries stay.
+    - No rebuild is needed since spec 033 (the camera and gallery package is already in the app).
 
 ## 6. Automated tests
 

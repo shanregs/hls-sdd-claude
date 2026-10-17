@@ -146,6 +146,16 @@ export function VisitDetailPane({ id, canCreate, canEdit, onChanged, onBack }: P
             {photoUpload.error}
           </HelperText>
         ) : null}
+        {failed.length > 0 ? (
+          <View style={styles.box}>
+            <Text variant="titleSmall">These photos were not added:</Text>
+            {failed.map((photo, index) => (
+              <HelperText key={`${photo.name}-${index}`} type="error" visible accessibilityRole="alert">
+                {photo.name}: {photo.reason}
+              </HelperText>
+            ))}
+          </View>
+        ) : null}
         <Button
           mode="contained"
           disabled={extraPhotos.length === 0 || photoUpload.sending}
