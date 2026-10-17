@@ -51,6 +51,9 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
         list.add(new Endpoint("withdraw adjustment", HttpMethod.POST, "/api/v1/payroll/adjustments/" + unknown + "/withdraw", Map.of("reason", "x"), PROCESS));
         list.add(new Endpoint("lines", HttpMethod.GET, RUNS + "/" + run + "/lines", null, VIEW));
         list.add(new Endpoint("one line", HttpMethod.GET, RUNS + "/" + run + "/lines/" + line, null, VIEW));
+        // the run is a draft, so an allowed caller gets 404 and never a file
+        list.add(new Endpoint("one payslip", HttpMethod.GET, RUNS + "/" + run + "/lines/" + line + "/payslip", null, VIEW));
+        list.add(new Endpoint("all payslips", HttpMethod.GET, RUNS + "/" + run + "/payslips", null, VIEW));
         return list;
     }
 

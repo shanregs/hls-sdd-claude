@@ -292,6 +292,87 @@ export function listOwed(
   );
 }
 
+// ------------------------------------------------------------------ payslips
+
+export interface PayslipFile {
+  blob: Blob;
+  filename: string;
+}
+
+/** The file name the server chose ({@code Content-Disposition: attachment; filename="..."}), or the fallback. */
+function fileNameOf(response: Response, fallback: string): string {
+  const header = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match ? decodeURIComponent(match[1]) : fallback;
+}
+
+async function fetchFile(
+  authFetch: AuthFetch,
+  url: string,
+  fallbackName: string,
+  failure: string,
+): Promise<ApiResult<PayslipFile>> {
+  try {
+    const response = await authFetch(url);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        reason?: string;
+      };
+      return {
+        ok: false,
+        reason: body.reason ?? failure,
+        status: response.status,
+      };
+    }
+    return {
+      ok: true,
+      data: {
+        blob: await response.blob(),
+        filename: fileNameOf(response, fallbackName),
+      },
+    };
+  } catch {
+    return { ok: false, reason: failure };
+  }
+}
+
+/** One person's payslip of an approved run (permission View); the PDF as issued at approval. */
+export function downloadPayslip(
+  authFetch: AuthFetch,
+  runId: string,
+  lineId: string,
+): Promise<ApiResult<PayslipFile>> {
+  return fetchFile(
+    authFetch,
+    `${BASE}/runs/${runId}/lines/${lineId}/payslip`,
+    "payslip.pdf",
+    "Could not download the payslip.",
+  );
+}
+
+/** Every payslip of an approved run, as one zip. */
+export function downloadAllPayslips(
+  authFetch: AuthFetch,
+  runId: string,
+): Promise<ApiResult<PayslipFile>> {
+  return fetchFile(
+    authFetch,
+    `${BASE}/runs/${runId}/payslips`,
+    "payslips.zip",
+    "Could not download the payslips.",
+  );
+}
+
+/** Hands a downloaded file to the browser's save dialog. */
+export function saveFile(file: PayslipFile): void {
+  const url = URL.createObjectURL(file.blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = file.filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 // ------------------------------------------------------------------ adjustments
 
 export type AdjustmentKind =

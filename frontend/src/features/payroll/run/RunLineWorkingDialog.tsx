@@ -19,13 +19,15 @@ import {
 } from "@mui/material";
 import { useAuth } from "../../../auth/useAuth";
 import { formatDate } from "../../teachers/formatters";
-import { getLine, type Line } from "./payrollRunApi";
+import { downloadPayslip, getLine, saveFile, type Line } from "./payrollRunApi";
 import { ADJUSTMENT_KIND_LABELS, type LineWorking } from "./lineWorking";
 import { money } from "./format";
 
 interface Props {
   runId: string;
   lineId: string | null;
+  /** True for an approved run, the only kind that has payslips (spec 013b US6). */
+  runApproved?: boolean;
   onClose: () => void;
 }
 
@@ -82,15 +84,23 @@ function Section({
  * the salary rows and the dates each applied to, the divisor, each unpaid day, the amounts before and after rounding,
  * the policy and each adjustment. It shows what was stored with the line, never a fresh calculation.
  */
-export function RunLineWorkingDialog({ runId, lineId, onClose }: Props) {
+export function RunLineWorkingDialog({
+  runId,
+  lineId,
+  runApproved = false,
+  onClose,
+}: Props) {
   const { authFetch } = useAuth();
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [slipError, setSlipError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!lineId) return;
     let cancelled = false;
     void (async () => {
       setState({ kind: "loading" });
+      setSlipError(null);
       const result = await getLine(authFetch, runId, lineId);
       if (cancelled) return;
       setState(
@@ -105,6 +115,17 @@ export function RunLineWorkingDialog({ runId, lineId, onClose }: Props) {
   }, [authFetch, runId, lineId]);
 
   const line = state.kind === "ready" ? state.line : null;
+  const hasPayslip = runApproved && line?.state === "PAYABLE";
+
+  const getPayslip = async () => {
+    if (!lineId) return;
+    setDownloading(true);
+    setSlipError(null);
+    const result = await downloadPayslip(authFetch, runId, lineId);
+    setDownloading(false);
+    if (result.ok) saveFile(result.data);
+    else setSlipError(result.reason);
+  };
   const working = line?.working as LineWorking | undefined;
 
   return (
@@ -243,6 +264,16 @@ export function RunLineWorkingDialog({ runId, lineId, onClose }: Props) {
         )}
       </DialogContent>
       <DialogActions>
+        {slipError && (
+          <Alert severity="error" sx={{ mr: "auto" }}>
+            {slipError}
+          </Alert>
+        )}
+        {hasPayslip && (
+          <Button onClick={() => void getPayslip()} disabled={downloading}>
+            {downloading ? "Downloading…" : "Download payslip"}
+          </Button>
+        )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>
