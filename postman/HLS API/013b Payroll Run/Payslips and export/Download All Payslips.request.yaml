@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download All Payslips
+description: "A zip with every payslip of an approved run. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/payslips"
+method: GET
+order: 2000

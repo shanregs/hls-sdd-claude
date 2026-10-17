@@ -1,0 +1,17 @@
+$kind: http-request
+name: Record Payment
+description: "Approved run and payable line only (409 otherwise). paidOn is required when paid and cannot be in the future; mode is BANK_TRANSFER, CASH, UPI, CHEQUE or OTHER; reference is at most 100 characters. Send paid false to mark a line not paid again. Each call adds an entry; the earlier ones are kept and the run's amounts never change. Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines/{{lineId}}/payment"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "paid": true,
+      "paidOn": "2026-10-05",
+      "mode": "BANK_TRANSFER",
+      "reference": "UTR 123456"
+    }
+order: 1000

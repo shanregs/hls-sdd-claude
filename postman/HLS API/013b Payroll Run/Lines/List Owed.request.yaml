@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Owed
+description: "People not yet paid for the run's month, with the reason they were left out and whether it is resolved now. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/owed"
+method: GET
+order: 3000

@@ -1,0 +1,3 @@
+$kind: collection
+description: "Payroll run (spec 013b). A monthly pay run built only from locked attendance and the stored salaries, approved by the Director and then frozen. Admin: View, Process, Export; Director: View, Approve, Export; Manager, Teacher and System get 403 on every endpoint. Run Password Login as the Admin first. Collection variables: runId (set by Start Run), lineId (set by List Lines), adjustmentId (set by Record Adjustment) and month (shared). Approve needs a different signed-in person (the Director) from the one who submitted."
+order: 13200

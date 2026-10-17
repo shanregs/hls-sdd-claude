@@ -1,0 +1,12 @@
+$kind: http-request
+name: Approve Run
+description: "Approves and locks the run and issues the payslips. 403 when the caller submitted the run; 409 unless it is awaiting approval. Needs PAYROLL.APPROVE."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 8000

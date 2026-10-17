@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Payment
+description: "The current entry and the earlier ones, newest first. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines/{{lineId}}/payment"
+method: GET
+order: 2000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export CSV
+description: "The run as CSV (UTF-8 with a byte-order mark): the first two rows state the month and the run status, then one row per person. Allowed for a draft too, and marked as one. Each export is audited as PAYROLL_EXPORT. Needs PAYROLL.EXPORT."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/export"
+method: GET
+order: 3000

@@ -1,0 +1,3 @@
+$kind: collection
+description: "Manual payment records on an approved run (payment itself happens outside the system) and a person's payroll history."
+order: 4000

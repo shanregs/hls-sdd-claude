@@ -76,14 +76,20 @@ item 5. This is the implementer's review; it still needs a sign-off from whoever
 - **Module boundaries.** Payroll reads Manager attendance only through `attendance.api.ManagerAttendanceReadApi`;
   `attendance` does not depend on `leave`.
 
-Two points for 013b (the payroll run), found in this review and not changed here:
+Two points for 013b (the payroll run), found in this review. **Both are closed by spec 013b** (see below each point):
 
 1. `PayRules` does not look at whether the month is locked, and for a month still in progress the days that are not over
    yet are pending, not unpaid. A run must therefore use only months that have ended and are locked
    (`ManagerMonth.Found.locked`), or it will under-deduct.
+   *Closed:* a run only starts for a month that has ended, and a person whose month is not locked becomes a "cannot be
+   paid" line with the reason (`PayRunComputationTest`, the locked-month rule: a Manager whose month is not locked is
+   listed apart with the reason and no amounts).
 2. After a lock, the frozen unpaid dates are fixed but the value of a day still divides by the live calendar's working days
    of the month. A holiday added to the calendar after the lock would change the value of a frozen day. This is the same
    for Teachers today; the run should either refuse a calendar change in a locked month or freeze the divisor too.
+   *Closed:* an approved run stores each line's working, divisor and unpaid days, and nothing read after approval asks
+   the calendar; a holiday, a reopened month, a backdated salary and a changed policy leave the lines, totals, payslip
+   bytes and CSV identical (`PayRunFreezingTest`).
 
 ## Not done
 

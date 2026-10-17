@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Adjustments
+description: "Filters personKind, personId and status (WAITING, APPLIED, WITHDRAWN). Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/adjustments?status=WAITING&page=0&size=50"
+method: GET
+order: 1000

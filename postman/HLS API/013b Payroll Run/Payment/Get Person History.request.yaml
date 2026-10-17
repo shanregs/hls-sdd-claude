@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Person History
+description: "Each run the person was in: month, run kind, net pay, status and the current payment entry. kind is TEACHER, MANAGER or STAFF. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/people/TEACHER/{{teacherId}}/history"
+method: GET
+order: 3000

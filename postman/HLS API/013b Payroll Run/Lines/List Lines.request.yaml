@@ -1,0 +1,10 @@
+$kind: http-request
+name: List Lines
+description: "The lines of a run, 50 a page; filters state (PAYABLE or CANNOT_PAY), kind (TEACHER, MANAGER, STAFF) and query (part of the name). A CANNOT_PAY line has a reason and null amounts. Each line carries its current payment entry. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines?state=PAYABLE&page=0&size=50"
+method: GET
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code === 200) { const p = pm.response.json(); const first = (p.content || [])[0]; if (first) { pm.collectionVariables.set('lineId', first.id); } }"
+    language: text/javascript
+order: 1000

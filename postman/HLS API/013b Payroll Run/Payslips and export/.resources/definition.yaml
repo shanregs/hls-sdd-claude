@@ -1,0 +1,3 @@
+$kind: collection
+description: "The payslip PDF of a line, every payslip as a zip, and the CSV export."
+order: 5000
