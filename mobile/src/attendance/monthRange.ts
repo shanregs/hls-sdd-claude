@@ -41,3 +41,10 @@ export function shiftMonth(month: string, delta: number, allowed: string[]): str
   if (index < 0) return null;
   return allowed[index + delta] ?? null;
 }
+
+/** The first and last date, both YYYY-MM-DD, of a "YYYY-MM" month. */
+export function monthBounds(month: string): { from: string; to: string } {
+  const [year, m] = month.split("-").map(Number);
+  const last = new Date(Date.UTC(year, m, 0)).getUTCDate();
+  return { from: `${month}-01`, to: `${month}-${String(last).padStart(2, "0")}` };
+}

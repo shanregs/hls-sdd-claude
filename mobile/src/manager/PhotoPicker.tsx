@@ -1,40 +1,16 @@
-import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { Button, HelperText, Text } from "react-native-paper";
 import { formatImageType, formatSize } from "../formats/manager";
+import { choosePhoto, takePhoto, type PickedPhoto } from "../media/pickPhoto";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 
-/** A picture chosen on the phone, held in memory until it is uploaded or removed (spec 033 FR-004). */
-export interface PickedPhoto {
-  uri: string;
-  name: string;
-  type: string;
-  sizeBytes: number | null;
-}
+export type { PickedPhoto };
 
 interface Props {
   value: PickedPhoto | null;
   onChange: (photo: PickedPhoto | null) => void;
   disabled?: boolean;
-}
-
-const CAMERA_REFUSED =
-  "The camera is not allowed. Allow it in your phone settings, or choose a picture from the gallery. " +
-  "You can also check in without a photo.";
-
-const OPTIONS: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.7 };
-
-function toPhoto(result: ImagePicker.ImagePickerResult): PickedPhoto | null {
-  const asset = result.canceled ? undefined : result.assets?.[0];
-  if (!asset) return null;
-  const type = asset.mimeType ?? "image/jpeg";
-  return {
-    uri: asset.uri,
-    name: asset.fileName ?? (type === "image/png" ? "check-in.png" : "check-in.jpg"),
-    type,
-    sizeBytes: asset.fileSize ?? null,
-  };
 }
 
 /**
@@ -47,19 +23,15 @@ export function PhotoPicker({ value, onChange, disabled }: Props) {
 
   const take = async () => {
     setProblem(null);
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      setProblem(CAMERA_REFUSED);
-      return;
-    }
-    const photo = toPhoto(await ImagePicker.launchCameraAsync(OPTIONS));
-    if (photo) onChange(photo);
+    const result = await takePhoto();
+    if (result.problem) setProblem(result.problem);
+    if (result.photo) onChange(result.photo);
   };
 
   const choose = async () => {
     setProblem(null);
-    const photo = toPhoto(await ImagePicker.launchImageLibraryAsync(OPTIONS));
-    if (photo) onChange(photo);
+    const result = await choosePhoto();
+    if (result.photo) onChange(result.photo);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useAccessModel } from "../access/AccessModelProvider";
+import { useMenuActions } from "../access/useMenuActions";
 
 export interface ManagerActions {
   canCreate: boolean;
@@ -6,17 +6,10 @@ export interface ManagerActions {
 }
 
 /**
- * What the server's menu grants on one of the Manager's own attendance screens (spec 033 FR-014). The actions of the
- * menu item with this route decide which buttons are shown; nothing here looks at a role. The server refuses an
- * action regardless of what a button shows.
+ * What the server's menu grants on one of the Manager's own attendance screens (spec 033 FR-014). It reads the same
+ * menu actions as every other screen; nothing here looks at a role.
  */
 export function useManagerActions(route: string): ManagerActions {
-  const { model } = useAccessModel();
-  const actions = new Set<string>();
-  for (const section of model?.navigation ?? []) {
-    for (const item of section.items) {
-      if (item.route === route) item.actions.forEach((a) => actions.add(a));
-    }
-  }
-  return { canCreate: actions.has("CREATE"), canDelete: actions.has("DELETE") };
+  const { canCreate, canDelete } = useMenuActions(route);
+  return { canCreate, canDelete };
 }
