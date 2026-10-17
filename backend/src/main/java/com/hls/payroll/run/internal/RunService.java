@@ -52,6 +52,7 @@ public class RunService {
     private final PayRunLineRepository lines;
     private final LineAdjustmentRepository lineAdjustments;
     private final PayAdjustmentRepository adjustmentRepository;
+    private final OwedService owed;
     private final RunEventRepository events;
     private final RunComputation computation;
     private final ChangeRecorder changes;
@@ -65,6 +66,7 @@ public class RunService {
             PayRunLineRepository lines,
             LineAdjustmentRepository lineAdjustments,
             PayAdjustmentRepository adjustmentRepository,
+            OwedService owed,
             RunEventRepository events,
             RunComputation computation,
             ChangeRecorder changes,
@@ -77,6 +79,7 @@ public class RunService {
         this.lines = lines;
         this.lineAdjustments = lineAdjustments;
         this.adjustmentRepository = adjustmentRepository;
+        this.owed = owed;
         this.events = events;
         this.computation = computation;
         this.changes = changes;
@@ -92,8 +95,7 @@ public class RunService {
     public RunView start(UUID actor, String monthText, boolean supplementary) {
         YearMonth month = RunInput.endedMonth(RunInput.month(monthText), calendar.businessToday());
         if (supplementary) {
-            // spec 013b US5 (T044) adds the supplementary run; until then it is refused rather than half done
-            throw new ConflictException("A supplementary run is not available yet.");
+            return startSupplementary(actor, month);
         }
         runs.findByMonthOrderByKindAscSequenceAsc(month.atDay(1)).stream()
                 .filter(r -> r.getKind() == PayRun.Kind.PRIMARY && r.getStatus() != PayRun.Status.CANCELLED)
@@ -113,6 +115,43 @@ public class RunService {
         }
         events.save(new RunEvent(run.getId(), now, actor, "STARTED", null, null));
         changes.recordLifecycle(actor, ENTITY, run.getId(), "created", "primary run for " + month);
+        afterCommit(() -> computation.launch(run.getId(), actor, false));
+        return view(run, names(run), null);
+    }
+
+    /**
+     * Starts a supplementary run for the people an approved run left out (spec 013b FR-021). It needs the month's primary
+     * run approved, no other supplementary run open, and somebody still owed; it computes only the people not yet paid.
+     */
+    private RunView startSupplementary(UUID actor, YearMonth month) {
+        List<PayRun> inMonth = runs.findByMonthOrderByKindAscSequenceAsc(month.atDay(1));
+        boolean primaryApproved = inMonth.stream()
+                .anyMatch(r -> r.getKind() == PayRun.Kind.PRIMARY && r.getStatus() == PayRun.Status.APPROVED);
+        if (!primaryApproved) {
+            throw new ConflictException("The pay run for " + RunInput.monthName(month)
+                    + " must be approved before a supplementary run can be started.");
+        }
+        inMonth.stream()
+                .filter(r -> r.getKind() == PayRun.Kind.SUPPLEMENTARY
+                        && (r.getStatus() == PayRun.Status.DRAFT || r.getStatus() == PayRun.Status.AWAITING_APPROVAL))
+                .findFirst()
+                .ifPresent(r -> {
+                    throw new ConflictException("A supplementary run for " + RunInput.monthName(month) + " is already open ("
+                            + statusName(r.getStatus()) + "). Finish or cancel it first.");
+                });
+        if (owed.owed(month).isEmpty()) {
+            throw new ConflictException("Nobody is owed pay for " + RunInput.monthName(month) + ".");
+        }
+        Instant now = clock.instant();
+        int sequence = runs.maxSequence(month.atDay(1), PayRun.Kind.SUPPLEMENTARY) + 1;
+        PayRun run;
+        try {
+            run = runs.saveAndFlush(new PayRun(month, PayRun.Kind.SUPPLEMENTARY, sequence, actor, now));
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("A supplementary run for " + RunInput.monthName(month) + " is already open.");
+        }
+        events.save(new RunEvent(run.getId(), now, actor, "STARTED", null, null));
+        changes.recordLifecycle(actor, ENTITY, run.getId(), "created", "supplementary run " + sequence + " for " + month);
         afterCommit(() -> computation.launch(run.getId(), actor, false));
         return view(run, names(run), null);
     }

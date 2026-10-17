@@ -4,10 +4,12 @@ import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.payroll.run.internal.ApprovalService;
+import com.hls.payroll.run.internal.OwedService;
 import com.hls.payroll.run.internal.RunService;
 import com.hls.payroll.run.internal.RunViews.RunView;
 import com.hls.school.api.CallerContext;
 import com.hls.school.api.PageResponse;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,9 +32,12 @@ public class PayRunController {
 
     private final RunService service;
     private final ApprovalService approvals;
+    private final OwedService owed;
     private final PermissionGuard guard;
 
-    public PayRunController(RunService service, ApprovalService approvals, PermissionGuard guard) {
+    public PayRunController(
+            RunService service, ApprovalService approvals, OwedService owed, PermissionGuard guard) {
+        this.owed = owed;
         this.service = service;
         this.approvals = approvals;
         this.guard = guard;
@@ -65,6 +70,12 @@ public class PayRunController {
     public RunView get(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.VIEW);
         return service.get(id);
+    }
+
+    @GetMapping("/{id}/owed")
+    public List<OwedService.OwedPerson> owed(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.VIEW);
+        return owed.owedFor(id);
     }
 
     @PostMapping("/{id}/recompute")

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -32,8 +32,10 @@ import {
   getRun,
   KIND_LABELS,
   listLines,
+  listOwed,
   PERSON_KIND_LABELS,
   recomputeRun,
+  startRun,
   returnRun,
   STATUS_LABELS,
   submitRun,
@@ -42,6 +44,7 @@ import {
   type PersonKind,
   type RecomputeEntry,
   type RecomputeSummary,
+  type OwedPerson,
   type Run,
 } from "./payrollRunApi";
 import { dateTime, money, monthLabel } from "./format";
@@ -194,6 +197,7 @@ function LinesTable({
  */
 export function PayrollRunPage() {
   const { runId = "" } = useParams();
+  const navigate = useNavigate();
   const { authFetch, user } = useAuth();
   const actions = useGrantedActions(ROUTE);
   const canProcess = actions.has("PROCESS");
@@ -216,6 +220,7 @@ export function PayrollRunPage() {
     | { kind: "ready"; lines: Line[]; total: number }
   >({ kind: "loading" });
   const [cannotPay, setCannotPay] = useState<Line[]>([]);
+  const [owed, setOwed] = useState<OwedPerson[]>([]);
 
   const loadRun = useCallback(async () => {
     const result = await getRun(authFetch, runId);
@@ -286,6 +291,33 @@ export function PayrollRunPage() {
       cancelled = true;
     };
   }, [authFetch, runId, ready]);
+
+  // the people still to be paid for the month of an approved run (spec 013b US5)
+  const approved = run !== null && run.status === "APPROVED";
+  useEffect(() => {
+    if (!approved) return;
+    let cancelled = false;
+    void (async () => {
+      const result = await listOwed(authFetch, runId);
+      if (!cancelled && result.ok) setOwed(result.data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, runId, approved]);
+
+  const startSupplementary = async () => {
+    if (!run) return;
+    setActionError(null);
+    setBusy(true);
+    const result = await startRun(authFetch, run.month, true);
+    setBusy(false);
+    if (!result.ok) {
+      setActionError(result.reason);
+      return;
+    }
+    navigate(`${ROUTE}/${result.data.id}`);
+  };
 
   const recompute = async () => {
     setActionError(null);
@@ -670,6 +702,68 @@ export function PayrollRunPage() {
             )}
           </Box>
         </>
+      )}
+
+      {r.status === "APPROVED" && (
+        <Box component="section" aria-labelledby="owed-heading">
+          <Typography
+            id="owed-heading"
+            variant="h2"
+            sx={{ fontSize: "1.25rem", mb: 1.5 }}
+          >
+            Still to be paid for {monthLabel(r.month)}
+          </Typography>
+          {owed.length === 0 ? (
+            <Alert severity="success">
+              Nobody is waiting to be paid for this month.
+            </Alert>
+          ) : (
+            <Stack spacing={1.5}>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small" aria-label="People still to be paid">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Role</TableCell>
+                      <TableCell>Left out because</TableCell>
+                      <TableCell>Now</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {owed.map((o) => (
+                      <TableRow key={`${o.kind}-${o.personId}`}>
+                        <TableCell>{o.name}</TableCell>
+                        <TableCell>{PERSON_KIND_LABELS[o.kind]}</TableCell>
+                        <TableCell>{o.reason}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            label={
+                              o.resolved ? "Can be paid now" : "Still blocked"
+                            }
+                            color={o.resolved ? "success" : "default"}
+                            variant={o.resolved ? "filled" : "outlined"}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {canProcess && (
+                <Box>
+                  <Button
+                    variant="contained"
+                    onClick={() => void startSupplementary()}
+                    disabled={busy}
+                  >
+                    Start supplementary run
+                  </Button>
+                </Box>
+              )}
+            </Stack>
+          )}
+        </Box>
       )}
 
       <ReturnRunDialog

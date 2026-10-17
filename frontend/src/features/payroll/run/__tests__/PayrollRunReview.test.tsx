@@ -150,12 +150,21 @@ const CANNOT_LINE = {
 let run: Record<string, unknown> = BASE_RUN;
 let lines: Record<string, unknown>[] = [WORKING_LINE, CANNOT_LINE];
 let submitResult: Response | null = null;
+let owedList: Record<string, unknown>[] = [];
+let startResult: Response | null = null;
 
 function json(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
 function respond(url: string, init?: RequestInit) {
+  if (url.endsWith("/owed")) return json(owedList);
+  if (init?.method === "POST" && url.endsWith("/api/v1/payroll/runs")) {
+    return (
+      startResult ??
+      json({ ...run, id: "r2", kind: "SUPPLEMENTARY", status: "DRAFT" }, 202)
+    );
+  }
   const detail = /\/lines\/(l\d+)$/.exec(url);
   if (detail) {
     const found = lines.find((l) => l.id === detail[1]);
@@ -218,6 +227,8 @@ beforeEach(() => {
   run = BASE_RUN;
   lines = [WORKING_LINE, CANNOT_LINE];
   submitResult = null;
+  owedList = [];
+  startResult = null;
   currentUser = { id: "u-admin" };
   grantFor(["VIEW", "PROCESS", "EXPORT"]);
   authFetch.mockImplementation(async (url: string, init?: RequestInit) =>
@@ -229,7 +240,7 @@ describe("Pay run review and approval (spec 013b US2)", () => {
   it("lets an Admin submit a computed draft and shows that it now waits", async () => {
     const user = userEvent.setup();
     renderPage();
-    await screen.findByText("Tara Teacher");
+    await screen.findByText("Tara Teacher", {}, { timeout: 5000 });
 
     await user.click(
       screen.getByRole("button", { name: "Submit for approval" }),

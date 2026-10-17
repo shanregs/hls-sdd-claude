@@ -117,6 +117,7 @@ function json(body: unknown, status = 200) {
 }
 
 function respond(url: string, init?: RequestInit) {
+  if (url.endsWith("/owed")) return json([]);
   if (url.includes("/lines")) {
     const state = new URL(url, "http://x").searchParams.get("state");
     const content = lines.filter((l) => !state || l.state === state);
@@ -178,7 +179,9 @@ describe("Pay run page (spec 013b US1)", () => {
     const section = (
       await screen.findByRole("heading", { name: "Cannot be paid in this run" })
     ).closest("section")!;
-    expect(within(section).getByText("Mohan Manager")).toBeInTheDocument();
+    expect(
+      await within(section).findByText("Mohan Manager"),
+    ).toBeInTheDocument();
     expect(
       within(section).getByText(
         "Manager attendance for September 2026 is not locked yet.",
