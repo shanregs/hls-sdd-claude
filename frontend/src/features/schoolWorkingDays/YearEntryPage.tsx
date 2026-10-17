@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Stack,
   TextField,
@@ -30,6 +32,7 @@ import {
   buildRequest,
   dirtyMonths,
   fillSameFigure,
+  hasEmptyMonths,
   fillWithCalendarCounts,
   initialState,
   localProblem,
@@ -52,6 +55,11 @@ interface PendingChange {
  */
 export function YearEntryPage() {
   const { authFetch } = useAuth();
+  // a renewed sign-in token gives a new authFetch; the load below must not rerun for it and wipe what the user typed
+  const authFetchRef = useRef(authFetch);
+  useEffect(() => {
+    authFetchRef.current = authFetch;
+  }, [authFetch]);
   const navigate = useNavigate();
   const actions = useGrantedActions(ROUTE);
   const canCreate = actions.has("CREATE");
@@ -79,6 +87,7 @@ export function YearEntryPage() {
   const [leaving, setLeaving] = useState(false);
   const [sameFigureOpen, setSameFigureOpen] = useState(false);
   const [sameFigureText, setSameFigureText] = useState("");
+  const [replaceAll, setReplaceAll] = useState(false);
   const [skippedNotice, setSkippedNotice] = useState<string | null>(null);
   const [focusToken, setFocusToken] = useState(0);
 
@@ -101,7 +110,7 @@ export function YearEntryPage() {
     if (!schoolId) return;
     let cancelled = false;
     (async () => {
-      const result = await getYear(authFetch, schoolId, year);
+      const result = await getYear(authFetchRef.current, schoolId, year);
       if (cancelled) return;
       setLoadedKey(queryKey);
       if (result.ok) {
@@ -119,7 +128,7 @@ export function YearEntryPage() {
     };
     // queryKey covers schoolId, year and reloadCount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authFetch, queryKey]);
+  }, [queryKey]);
 
   // closing or reloading the tab with unsaved changes (the left menu cannot be intercepted, plan research section 9)
   useEffect(() => {
@@ -204,7 +213,11 @@ export function YearEntryPage() {
 
   const applySameFigure = () => {
     if (!state) return;
-    const { state: filled, skipped } = fillSameFigure(state, sameFigureText);
+    const { state: filled, skipped } = fillSameFigure(
+      state,
+      sameFigureText,
+      canReplace && replaceAll,
+    );
     setState(filled);
     setSkippedNotice(
       skipped.length > 0
@@ -212,8 +225,15 @@ export function YearEntryPage() {
         : null,
     );
     setSameFigureOpen(false);
+    setReplaceAll(false);
   };
 
+  const allStored = state
+    ? state.loaded.months.every((m) => m.workingDays !== null)
+    : false;
+  // a figure may be replaced across the year only for a future year, and only by a user who may edit
+  const canReplace = canEdit && year > thisYear;
+  const anyEmpty = state ? hasEmptyMonths(state) : false;
   const readOnlyFor = (stored: boolean) => (stored ? !canEdit : !canCreate);
   const mayChangeAny = canCreate || canEdit;
   const sameFigureProblem =
@@ -322,14 +342,31 @@ export function YearEntryPage() {
               sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
             >
               {canCreate && (
-                <Button onClick={useCalendar}>Use calendar counts</Button>
+                <Button onClick={useCalendar} disabled={!anyEmpty}>
+                  Use calendar counts
+                </Button>
               )}
               {canCreate && (
-                <Button onClick={() => setSameFigureOpen(true)}>
+                <Button
+                  onClick={() => {
+                    setSameFigureText("");
+                    setReplaceAll(false);
+                    setSameFigureOpen(true);
+                  }}
+                  disabled={!anyEmpty && !canReplace}
+                >
                   Same figure for all empty months
                 </Button>
               )}
             </Stack>
+          )}
+          {mayChangeAny && allStored && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Every month already has a figure, so there is nothing to fill.
+              {canReplace
+                ? ' Use "Same figure" and tick "Also replace months that already have a figure" to set them all again.'
+                : " Click a figure to replace it, or pick a year with empty months."}
+            </Alert>
           )}
           {skippedNotice && (
             <Alert severity="info" sx={{ mb: 2 }}>
@@ -481,6 +518,17 @@ export function YearEntryPage() {
             }
             slotProps={{ htmlInput: { inputMode: "decimal" } }}
           />
+          {canReplace && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={replaceAll}
+                  onChange={(e) => setReplaceAll(e.target.checked)}
+                />
+              }
+              label="Also replace months that already have a figure"
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSameFigureOpen(false)}>Cancel</Button>

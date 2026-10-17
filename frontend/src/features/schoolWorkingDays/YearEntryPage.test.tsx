@@ -16,8 +16,14 @@ const authFetch = vi.fn();
 let grantedActions: string[] = ["VIEW", "CREATE", "EDIT", "DELETE"];
 let hasMenuItem = true;
 
+// a renewed sign-in token gives the page a new authFetch function on every render
+let renewedToken = false;
 vi.mock("../../auth/useAuth", () => ({
-  useAuth: () => ({ authFetch }),
+  useAuth: () => ({
+    authFetch: renewedToken
+      ? (...args: unknown[]) => authFetch(...args)
+      : authFetch,
+  }),
 }));
 
 vi.mock("../../access-model/useAccessModel", async () => {
@@ -191,6 +197,7 @@ const puts = () => calls.filter((c) => c.method === "PUT");
 beforeEach(() => {
   grantedActions = ["VIEW", "CREATE", "EDIT", "DELETE"];
   hasMenuItem = true;
+  renewedToken = false;
   loadFailures = 0;
   mockApi();
 });
@@ -638,6 +645,159 @@ describe("YearEntryPage", () => {
       expect(
         remove.mock.calls.filter(([type]) => type === "beforeunload"),
       ).toHaveLength(1);
+    });
+  });
+});
+
+describe("YearEntryPage usability", () => {
+  it("says there is nothing to fill, and disables the helpers, when every month has a figure", async () => {
+    const all: Record<number, YearMonthState> = {};
+    for (let m = 1; m <= 12; m++) all[m] = stored(m, 20);
+    mockApi({ view: yearView(all) });
+    renderPage();
+    await screen.findByLabelText(`January ${YEAR}`);
+
+    expect(
+      screen.getByText(/Every month already has a figure/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Use calendar counts" }),
+    ).toBeDisabled();
+    // a future year can still be set again with the replace option
+    expect(
+      screen.getByRole("button", { name: "Same figure for all empty months" }),
+    ).toBeEnabled();
+  });
+
+  it("does not say it while some month is empty", async () => {
+    renderPage();
+    await screen.findByLabelText(`January ${YEAR}`);
+
+    expect(
+      screen.queryByText(/Every month already has a figure/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Same figure for all empty months" }),
+    ).toBeEnabled();
+  });
+
+  it("selects a stored figure on focus so typing replaces it", async () => {
+    mockApi({ view: yearView({ 3: stored(3, 31) }) });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByLabelText(`March ${YEAR}`);
+
+    await user.click(field("March"));
+    await user.keyboard("24");
+
+    expect(field("March")).toHaveValue("24");
+  });
+
+  it("keeps what the user typed when the sign-in token is renewed", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderPage();
+    await screen.findByLabelText(`January ${YEAR}`);
+    await user.type(field("February"), "22");
+
+    renewedToken = true;
+    rerender(
+      <MemoryRouter initialEntries={[PATH]}>
+        <Routes>
+          <Route
+            path="/master-data/school-working-days/year"
+            element={
+              <RouteGuard>
+                <YearEntryPage />
+              </RouteGuard>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(field("February")).toHaveValue("22"));
+    expect(
+      calls.filter((c) => c.method === "GET" && c.url.includes("/year")),
+    ).toHaveLength(1);
+  });
+
+  describe("setting a future year again", () => {
+    async function openSameFigure(user: ReturnType<typeof userEvent.setup>) {
+      await user.click(
+        screen.getByRole("button", {
+          name: "Same figure for all empty months",
+        }),
+      );
+      return screen.findByRole("dialog");
+    }
+
+    it("replaces stored and typed figures in every month when asked, and leaves Save ready", async () => {
+      const all: Record<number, YearMonthState> = {};
+      for (let m = 1; m <= 12; m++) all[m] = stored(m, 20);
+      mockApi({ view: yearView(all) });
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByLabelText(`January ${YEAR}`);
+
+      const dialog = await openSameFigure(user);
+      await user.type(within(dialog).getByLabelText("Working days"), "22");
+      await user.click(
+        within(dialog).getByRole("checkbox", {
+          name: "Also replace months that already have a figure",
+        }),
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Fill" }));
+
+      expect(field("January")).toHaveValue("22");
+      expect(field("June")).toHaveValue("22");
+      expect(field("December")).toHaveValue("22");
+      expect(await screen.findByRole("button", { name: "Save" })).toBeEnabled();
+      expect(puts()).toHaveLength(0);
+    });
+
+    it("keeps stored figures when the box is not ticked", async () => {
+      mockApi({ view: yearView({ 1: stored(1, 20) }) });
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByLabelText(`January ${YEAR}`);
+
+      const dialog = await openSameFigure(user);
+      await user.type(within(dialog).getByLabelText("Working days"), "22");
+      await user.click(within(dialog).getByRole("button", { name: "Fill" }));
+
+      expect(field("January")).toHaveValue("20");
+      expect(field("February")).toHaveValue("22");
+    });
+
+    it("is not offered for the current year or to a user who cannot edit", async () => {
+      const current = new Date().getFullYear();
+      const user = userEvent.setup();
+      const first = renderPage(
+        `/master-data/school-working-days/year?schoolId=s1&year=${current}`,
+      );
+      await screen.findByLabelText(`January ${current}`);
+      const dialog = await openSameFigure(user);
+      expect(within(dialog).queryByRole("checkbox")).not.toBeInTheDocument();
+      first.unmount();
+
+      grantedActions = ["VIEW", "CREATE"];
+      renderPage();
+      await screen.findByLabelText(`January ${YEAR}`);
+      const second = await openSameFigure(user);
+      expect(within(second).queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("opens the dialog empty each time, so a second figure is not added to the first", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByLabelText(`January ${YEAR}`);
+
+      let dialog = await openSameFigure(user);
+      await user.type(within(dialog).getByLabelText("Working days"), "20");
+      await user.click(within(dialog).getByRole("button", { name: "Fill" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+      dialog = await openSameFigure(user);
+      expect(within(dialog).getByLabelText("Working days")).toHaveValue("");
     });
   });
 });
