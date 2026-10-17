@@ -1,4 +1,5 @@
 import { Box, Button, Chip, Stack, TextField, Typography } from "@mui/material";
+import type { FocusEvent, MouseEvent } from "react";
 import type { FailedMonth } from "./yearEntryState";
 import type { YearMonthState } from "./schoolWorkingDaysApi";
 import { formatFigure, formatWhen, monthName } from "./workingDaysRules";
@@ -82,6 +83,18 @@ export function MonthField({
               inputMode: "decimal",
               "aria-label": label,
               autoComplete: "off",
+              // select the figure so typing replaces it instead of adding to it ("31" + "24" is "3124")
+              onFocus: (e: FocusEvent<HTMLInputElement>) => e.target.select(),
+              onMouseUp: (e: MouseEvent<HTMLInputElement>) => {
+                if (e.currentTarget.dataset.justFocused) {
+                  e.preventDefault();
+                  delete e.currentTarget.dataset.justFocused;
+                }
+              },
+              onMouseDown: (e: MouseEvent<HTMLInputElement>) => {
+                if (document.activeElement !== e.currentTarget)
+                  e.currentTarget.dataset.justFocused = "1";
+              },
             },
             formHelperText: { role: message ? "alert" : undefined },
           }}

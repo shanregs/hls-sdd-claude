@@ -140,6 +140,11 @@ export function applyResult(
 }
 
 /** Months that have no stored figure and nothing typed: the only ones a helper may fill. */
+/** True when at least one month has neither a stored figure nor typed text, so the two fill helpers have work to do. */
+export function hasEmptyMonths(state: YearEntryState): boolean {
+  return emptyMonths(state).length > 0;
+}
+
 function emptyMonths(state: YearEntryState): number[] {
   return state.loaded.months
     .filter(
@@ -165,16 +170,21 @@ export function fillWithCalendarCounts(state: YearEntryState): YearEntryState {
 
 /**
  * "Same figure for all empty months": fills each empty month the figure is valid for and lists the ones it is not
- * (30 in February). Saves nothing and never touches a stored figure or typed text.
+ * (30 in February). Saves nothing and never touches a stored figure or typed text. With `replaceAll` it fills every
+ * month the figure fits, replacing stored figures and typed text too (the page offers that for future years only).
  */
 export function fillSameFigure(
   state: YearEntryState,
   text: string,
+  replaceAll = false,
 ): { state: YearEntryState; skipped: number[] } {
   const typed = { ...state.typed };
   const filled: number[] = [];
   const skipped: number[] = [];
-  for (const month of emptyMonths(state)) {
+  const months = replaceAll
+    ? state.loaded.months.map((m) => m.month)
+    : emptyMonths(state);
+  for (const month of months) {
     if (figureProblem(text, state.loaded.year, month) === null) {
       typed[month] = text.trim();
       filled.push(month);
