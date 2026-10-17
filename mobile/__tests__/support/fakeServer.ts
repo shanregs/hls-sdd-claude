@@ -18,7 +18,31 @@ export interface FakeRequest {
 export interface FakeReply {
   status: number;
   body?: unknown;
+  /** Raw bytes to send instead of a JSON body (an image), with the headers the test sets. */
+  rawBody?: Uint8Array;
   headers?: Record<string, string>;
+}
+
+/** One part of a multipart upload as the fake server records it (spec 033: a check-in photo). */
+export interface UploadedPart {
+  fieldName: string;
+  uri?: string;
+  name?: string;
+  type?: string;
+}
+
+/** The body recorded for a request sent as multipart form data. */
+export interface MultipartBody {
+  multipart: UploadedPart[];
+}
+
+function bodyOf(raw: unknown): unknown {
+  if (!raw) return undefined;
+  if (typeof FormData !== "undefined" && raw instanceof FormData) {
+    const parts = (raw as unknown as { getParts?: () => UploadedPart[] }).getParts?.() ?? [];
+    return { multipart: parts.map(({ fieldName, uri, name, type }) => ({ fieldName, uri, name, type })) } satisfies MultipartBody;
+  }
+  return JSON.parse(String(raw));
 }
 
 export type Handler = (request: FakeRequest) => FakeReply | Promise<FakeReply>;
@@ -70,7 +94,7 @@ export class FakeServer {
         method,
         path: url.pathname,
         headers: { ...((init?.headers as Record<string, string>) ?? {}) },
-        body: init?.body ? JSON.parse(String(init.body)) : undefined,
+        body: bodyOf(init?.body),
         query: Object.fromEntries(url.searchParams.entries()),
         params: {},
       };
@@ -79,6 +103,9 @@ export class FakeServer {
       this.calls.push(request);
       const reply: FakeReply = matched ? await matched.handler(request) : { status: 404, body: { message: "not found" } };
       if (reply.status === 204) return new Response(null, { status: 204, headers: reply.headers });
+      if (reply.rawBody) {
+        return new Response(reply.rawBody as unknown as BodyInit, { status: reply.status, headers: reply.headers });
+      }
       return new Response(reply.body === undefined ? "" : JSON.stringify(reply.body), {
         status: reply.status,
         headers: reply.headers,

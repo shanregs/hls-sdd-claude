@@ -16,6 +16,9 @@ import {
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+/** An upload waits this many times longer than a JSON call. */
+const UPLOAD_TIMEOUT_FACTOR = 3;
+
 export interface CallInfo {
   method: HttpMethod;
   path: string;
@@ -50,6 +53,10 @@ export function setAuthHooks(hooks: AuthHooks | null): void {
 
 export interface RequestOptions {
   body?: unknown;
+  /** A multipart upload (one file part). The content type is left to the platform so the boundary is added. */
+  form?: FormData;
+  /** Read the answer as bytes (an image) instead of JSON. */
+  binary?: boolean;
   /** Send the access token (default true). Sign-in, renewal and public calls pass false. */
   auth?: boolean;
   headers?: Record<string, string>;
@@ -89,6 +96,7 @@ interface ParsedResponse {
   status: number;
   data: unknown;
   retryAfter: number | undefined;
+  headers: Headers;
 }
 
 async function send(method: HttpMethod, path: string, options: RequestOptions): Promise<ParsedResponse> {
@@ -97,7 +105,7 @@ async function send(method: HttpMethod, path: string, options: RequestOptions): 
     ...(await providerHeaders({ method, path })),
     ...options.headers,
   };
-  if (options.body !== undefined) {
+  if (options.body !== undefined && !options.form) {
     headers["Content-Type"] = "application/json";
   }
   if (options.auth !== false) {
@@ -106,13 +114,14 @@ async function send(method: HttpMethod, path: string, options: RequestOptions): 
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  // An upload may be a few megabytes on a slow connection, so it gets a longer wait than a JSON call.
+  const timer = setTimeout(() => controller.abort(), options.form ? REQUEST_TIMEOUT_MS * UPLOAD_TIMEOUT_FACTOR : REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: options.form ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       signal: controller.signal,
     });
   } catch {
@@ -124,18 +133,23 @@ async function send(method: HttpMethod, path: string, options: RequestOptions): 
   // The server clock, used only to pick the default month on attendance screens.
   recordServerDate(response.headers.get("Date"));
 
-  const text = await response.text();
   let data: unknown;
-  try {
-    data = text ? JSON.parse(text) : undefined;
-  } catch {
-    data = undefined;
+  if (options.binary && response.ok) {
+    data = new Uint8Array(await response.arrayBuffer());
+  } else {
+    const text = await response.text();
+    try {
+      data = text ? JSON.parse(text) : undefined;
+    } catch {
+      data = undefined;
+    }
   }
   const retryAfterHeader = Number(response.headers.get("Retry-After"));
   return {
     status: response.status,
     data,
     retryAfter: Number.isFinite(retryAfterHeader) && retryAfterHeader > 0 ? retryAfterHeader : undefined,
+    headers: response.headers,
   };
 }
 
@@ -191,7 +205,7 @@ function toError(response: ParsedResponse): ApiError {
  * headers), the bearer token when asked, retries once after a successful renewal on 401, and turns
  * every failure into a typed error.
  */
-export async function apiRequest<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<T> {
+async function execute(method: HttpMethod, path: string, options: RequestOptions): Promise<ParsedResponse> {
   let response = await send(method, path, options);
 
   if (response.status === 401 && options.auth !== false && authHooks && getAccessToken()) {
@@ -202,9 +216,65 @@ export async function apiRequest<T>(method: HttpMethod, path: string, options: R
   }
 
   if (response.status >= 200 && response.status < 300) {
-    return response.data as T;
+    return response;
   }
   throw toError(response);
+}
+
+export async function apiRequest<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<T> {
+  return (await execute(method, path, options)).data as T;
+}
+
+/** What the server says about a file it sends (spec 033: a check-in photo). */
+export interface BinaryAnswer {
+  bytes: Uint8Array;
+  contentType: string;
+  /** From `Content-Length`; the number of bytes received when the header is missing. */
+  sizeBytes: number;
+  /** From `Content-Disposition`; null when the server sent none. */
+  fileName: string | null;
+}
+
+/** The file name of a `Content-Disposition` header, plain (`filename="a.jpg"`) or encoded (`filename*=UTF-8''a.jpg`). */
+export function fileNameFromDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const encoded = /filename\*\s*=\s*(?:[\w-]+'[^']*')?([^;]+)/i.exec(header);
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1].trim().replace(/^"|"$/g, ""));
+    } catch {
+      // fall through to the plain form
+    }
+  }
+  const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/i.exec(header);
+  return plain ? (plain[2] ?? plain[1]).trim() : null;
+}
+
+/** One call that answers with a file. Same headers, token, renewal and errors as {@link apiRequest}. */
+export async function fetchBinary(path: string, options: RequestOptions = {}): Promise<BinaryAnswer> {
+  const response = await execute("GET", path, { ...options, binary: true });
+  const bytes = response.data instanceof Uint8Array ? response.data : new Uint8Array(0);
+  const length = Number(response.headers.get("Content-Length"));
+  return {
+    bytes,
+    contentType: response.headers.get("Content-Type") ?? "application/octet-stream",
+    sizeBytes: Number.isFinite(length) && length > 0 ? length : bytes.length,
+    fileName: fileNameFromDisposition(response.headers.get("Content-Disposition")),
+  };
+}
+
+/** A file picked on the phone, as the platform's form data wants it. */
+export interface UploadFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+/** One call that sends a single file as multipart form data under {@code field}. */
+export async function upload<T>(path: string, field: string, file: UploadFile, options: RequestOptions = {}): Promise<T> {
+  const form = new FormData();
+  form.append(field, file as unknown as Blob);
+  return (await execute("POST", path, { ...options, form })).data as T;
 }
 
 export const api = {

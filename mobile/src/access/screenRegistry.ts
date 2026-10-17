@@ -13,7 +13,10 @@ export type ScreenKey =
   | "applyLeave"
   | "myLeaveHistory"
   | "leaveManagement"
-  | "notifications";
+  | "notifications"
+  | "managerCheckIn"
+  | "managerMonth"
+  | "managerLeave";
 
 const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/dashboard": "home",
@@ -26,6 +29,9 @@ const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/leave/history": "myLeaveHistory",
   "/operations/leave": "leaveManagement",
   "/account/notifications": "notifications",
+  "/manager-attendance/me": "managerCheckIn",
+  "/manager-attendance/me/month": "managerMonth",
+  "/manager-attendance/me/leave": "managerLeave",
 };
 
 export function screenFor(route: string): ScreenKey | undefined {
@@ -33,5 +39,7 @@ export function screenFor(route: string): ScreenKey | undefined {
 }
 
 export const HOME_ROUTE = "/dashboard";
+/** The Manager's own attendance (spec 033): the menu items the server offers under MY ATTENDANCE. */
+export const MANAGER_CHECK_IN_ROUTE = "/manager-attendance/me";
 export const PROFILE_ROUTE = "/account/profile";
 export const NOTIFICATIONS_ROUTE = "/account/notifications";

@@ -12,6 +12,9 @@ import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
 import { DevicesScreen } from "../screens/DevicesScreen";
 import { HolidayCalendarScreen } from "../screens/HolidayCalendarScreen";
 import { LeaveManagementScreen } from "../screens/LeaveManagementScreen";
+import { ManagerCheckInScreen } from "../screens/ManagerCheckInScreen";
+import { ManagerLeaveScreen } from "../screens/ManagerLeaveScreen";
+import { ManagerMonthScreen } from "../screens/ManagerMonthScreen";
 import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
 import { MyAttendanceScreen } from "../screens/MyAttendanceScreen";
 import { TeacherAttendanceScreen } from "../screens/TeacherAttendanceScreen";
@@ -189,6 +192,15 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "leaveManagement") {
     body = <LeaveManagementScreen initialStatus={routeState?.status} />;
     title = "Leave Management";
+  } else if (current === "managerCheckIn") {
+    body = <ManagerCheckInScreen />;
+    title = "Check-in";
+  } else if (current === "managerMonth") {
+    body = <ManagerMonthScreen />;
+    title = "My Month";
+  } else if (current === "managerLeave") {
+    body = <ManagerLeaveScreen />;
+    title = "My Leave";
   } else if (current === "notifications") {
     body = <NotificationsScreen openRoute={openRoute} canOpen={canOpen} />;
     title = "Notifications";

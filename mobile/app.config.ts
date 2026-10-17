@@ -38,6 +38,14 @@ const config: ExpoConfig = {
           "HLS records where you are only when the app talks to the server, to keep an audit trail.",
       },
     ],
+    [
+      "expo-image-picker",
+      {
+        cameraPermission: "HLS uses the camera only when you choose Take a photo for a check-in.",
+        microphonePermission: false,
+        photosPermission: false,
+      },
+    ],
     ["expo-build-properties", { android: { minSdkVersion: 29 } }],
   ],
   extra: {
