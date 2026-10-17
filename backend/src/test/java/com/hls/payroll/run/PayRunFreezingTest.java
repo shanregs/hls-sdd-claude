@@ -29,7 +29,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 /**
  * Spec 013b T030 (SC-003, US3): once approved, nothing the rest of the system does changes the run. The mutations here
  * are the ones the spec names: a holiday, a reopened and changed Teacher month, a reopened Manager month, a backdated
- * salary and a changed pay policy. The CSV of the run joins this test with the export (T055).
+ * salary and a changed pay policy. The CSV of the run is part of the picture (T055).
  */
 class PayRunFreezingTest extends PayrollRunTestBase {
 
@@ -60,7 +60,8 @@ class PayRunFreezingTest extends PayrollRunTestBase {
             Map<String, Object> managerLine,
             Object totals,
             Object counts,
-            byte[] teacherPayslip) {}
+            byte[] teacherPayslip,
+            String csv) {}
 
     private Picture pictureOf(String token, UUID run, UUID teacher, UUID manager) {
         Map<String, Object> header = runOf(token, run);
@@ -74,7 +75,8 @@ class PayRunFreezingTest extends PayrollRunTestBase {
                 get(RUNS + "/" + run + "/lines/" + managerLine, token).map(),
                 header.get("totals"),
                 List.of(header.get("payableCount"), header.get("cannotPayCount")),
-                files.open(fileId).orElseThrow().bytes());
+                files.open(fileId).orElseThrow().bytes(),
+                get(RUNS + "/" + run + "/export", token).body());
     }
 
     @Test
@@ -131,6 +133,7 @@ class PayRunFreezingTest extends PayrollRunTestBase {
             assertThat(after.totals()).isEqualTo(before.totals());
             assertThat(after.counts()).isEqualTo(before.counts());
             assertThat(after.teacherPayslip()).as("payslip bytes").isEqualTo(before.teacherPayslip());
+            assertThat(after.csv()).as("csv rows").isEqualTo(before.csv());
         } finally {
             jdbc.update("delete from attendance_non_working_date where description = 'Freezing test holiday'");
             jdbc.execute("alter table pay_policy disable trigger user");

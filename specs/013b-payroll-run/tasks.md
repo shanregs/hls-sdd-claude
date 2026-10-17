@@ -179,10 +179,10 @@ that person paid, exactly once, with the first run unchanged.
 
 **Independent Test**: export a draft and an approved run; both carry the status; the approved rows match the screen and payslips; each export is audited.
 
-- [ ] T055 [P] [US8] `backend/src/test/java/com/hls/payroll/run/PayRunCsvTest.java`, failing first: the first two rows state the month and the run status; one row per person including cannot-pay people with the reason and no amounts; the approved file's figures equal the line columns and the payslip figures for every person (SC-008); a name beginning with `=`, `+`, `-` or `@` is prefixed with an apostrophe while numeric cells are not changed; commas, quotes and line breaks in text are escaped; UTF-8 with a byte-order mark; an export is audited with who, which run and when; the file for an approved run is identical before and after a calendar change; the caller needs Export (a Director or Admin without it gets 403)
-- [ ] T056 [US8] `payroll/run/internal/RunCsvWriter.java` per research.md section 14 (columns listed there) and `GET /runs/{id}/export` in `PayRunController` (permission E, `text/csv; charset=utf-8`, file name with the month and status, `Cache-Control: no-store`), audited as `PAYROLL_EXPORT`
-- [ ] T057 [US8] Frontend: "Export CSV" on `PayrollRunPage.tsx` shown only with Export permission; extend tests
-- [ ] T058 [P] [US8] Extend `PayrollAuthorizationTest` for the export endpoint
+- [X] T055 [P] [US8] `backend/src/test/java/com/hls/payroll/run/PayRunCsvTest.java`, failing first: the first two rows state the month and the run status; one row per person including cannot-pay people with the reason and no amounts; the approved file's figures equal the line columns and the payslip figures for every person (SC-008); a name beginning with `=`, `+`, `-` or `@` is prefixed with an apostrophe while numeric cells are not changed; commas, quotes and line breaks in text are escaped; UTF-8 with a byte-order mark; an export is audited with who, which run and when; the file for an approved run is identical before and after a calendar change; the caller needs Export (a Director or Admin without it gets 403)
+- [X] T056 [US8] `payroll/run/internal/RunCsvWriter.java` per research.md section 14 (columns listed there) and `GET /runs/{id}/export` in `PayRunController` (permission E, `text/csv; charset=utf-8`, file name with the month and status, `Cache-Control: no-store`), audited as `PAYROLL_EXPORT`
+- [X] T057 [US8] Frontend: "Export CSV" on `PayrollRunPage.tsx` shown only with Export permission; extend tests
+- [X] T058 [P] [US8] Extend `PayrollAuthorizationTest` for the export endpoint
 
 **Checkpoint**: US8 works.
 

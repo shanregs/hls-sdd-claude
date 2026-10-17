@@ -365,6 +365,19 @@ export function downloadAllPayslips(
   );
 }
 
+/** The run as a CSV for the accountant (permission Export); a draft says so in the file itself. */
+export function downloadExport(
+  authFetch: AuthFetch,
+  runId: string,
+): Promise<ApiResult<PayslipFile>> {
+  return fetchFile(
+    authFetch,
+    `${BASE}/runs/${runId}/export`,
+    "payroll.csv",
+    "Could not export this run.",
+  );
+}
+
 /** Hands a downloaded file to the browser's save dialog. */
 export function saveFile(file: PayslipFile): void {
   const url = URL.createObjectURL(file.blob);
