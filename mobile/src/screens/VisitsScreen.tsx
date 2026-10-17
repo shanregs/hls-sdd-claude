@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
-import { Chip, Text } from "react-native-paper";
+import { Button, Chip, Text } from "react-native-paper";
 import { VISITS_ROUTE } from "../access/screenRegistry";
 import { useMenuActions } from "../access/useMenuActions";
 import { Problem } from "../attendance/MonthPane";
@@ -8,8 +8,9 @@ import { MonthPicker } from "../attendance/MonthPicker";
 import { currentMonth } from "../attendance/monthRange";
 import { businessToday, serverNow } from "../attendance/serverClock";
 import { useInnerBack } from "../navigation/InnerBack";
-import { spacingUnit } from "../theme/tokens";
+import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { VisitCard } from "../visits/VisitCard";
+import { PlanVisitForm } from "../visits/PlanVisitForm";
 import { VisitDetailPane } from "../visits/VisitDetailPane";
 import { filterVisits, groupVisits, useVisits, VISIT_FILTERS, type VisitFilter } from "../visits/useVisits";
 import { Screen } from "./Screen";
@@ -30,13 +31,29 @@ export function VisitsScreen() {
   const [filter, setFilter] = useState<VisitFilter>("ALL");
   const { status, view, message, reload } = useVisits(month);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [planning, setPlanning] = useState(false);
 
   // Leaving a detail reloads the list quietly, since the visit may have changed or gone while it was open.
   const closeDetail = () => {
     setOpenId(null);
     reload({ quiet: true });
   };
-  useInnerBack(openId !== null, closeDetail);
+  useInnerBack(openId !== null || planning, () => (planning ? setPlanning(false) : closeDetail()));
+
+  if (planning) {
+    return (
+      <Screen>
+        <PlanVisitForm
+          onCancel={() => setPlanning(false)}
+          onDone={(created) => {
+            setPlanning(false);
+            setOpenId(created.id);
+            reload({ quiet: true });
+          }}
+        />
+      </Screen>
+    );
+  }
 
   if (openId) {
     return (
@@ -57,6 +74,11 @@ export function VisitsScreen() {
 
   return (
     <Screen onRefresh={() => reload({ quiet: true })}>
+      {canCreate ? (
+        <Button mode="contained" onPress={() => setPlanning(true)} contentStyle={styles.button} accessibilityLabel="Plan a visit">
+          Plan a visit
+        </Button>
+      ) : null}
       <MonthPicker value={month} kind="leave" onChange={setMonth} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} accessibilityLabel="Filter by status">
         {VISIT_FILTERS.map((option) => (
@@ -102,4 +124,5 @@ export function VisitsScreen() {
 const styles = StyleSheet.create({
   chips: { gap: spacingUnit, paddingVertical: spacingUnit / 2 },
   group: { gap: spacingUnit },
+  button: { minHeight: minTouchTarget },
 });

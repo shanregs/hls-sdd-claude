@@ -10,14 +10,16 @@ import { uploadPhotos, type FailedPhoto } from "../media/uploadPhotos";
 import { useAction } from "../manager/useAction";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { MAX_VISIT_FILES } from "../tasks/taskMessages";
+import { CancelVisitDialog } from "./CancelVisitDialog";
 import { CompleteVisitForm } from "./CompleteVisitForm";
+import { RescheduleDialog } from "./RescheduleDialog";
 import { VisitDetail } from "./VisitDetail";
 
 type Loaded =
   | { state: "ready"; id: string; visit: Visit }
   | { state: "gone" | "error"; id: string; message: string };
 
-type Panel = "complete" | "photos" | null;
+type Panel = "complete" | "photos" | "reschedule" | "cancel" | null;
 
 interface Props {
   id: string;
@@ -117,6 +119,21 @@ export function VisitDetailPane({ id, canCreate, canEdit, onChanged, onBack }: P
     );
   }
 
+  if (panel === "reschedule") {
+    return (
+      <RescheduleDialog
+        visit={visit}
+        onStale={reload}
+        onCancel={() => setPanel(null)}
+        onDone={(moved) => {
+          setLoaded({ state: "ready", id, visit: moved });
+          setPanel(null);
+          onChanged();
+        }}
+      />
+    );
+  }
+
   if (panel === "photos") {
     return (
       <View style={styles.box}>
@@ -157,7 +174,12 @@ export function VisitDetailPane({ id, canCreate, canEdit, onChanged, onBack }: P
         visit={visit}
         canCreate={canCreate}
         canEdit={canEdit}
-        actions={{ onComplete: () => setPanel("complete"), onAddPhoto: () => setPanel("photos") }}
+        actions={{
+          onComplete: () => setPanel("complete"),
+          onReschedule: () => setPanel("reschedule"),
+          onCancel: () => setPanel("cancel"),
+          onAddPhoto: () => setPanel("photos"),
+        }}
       >
         {failed.length > 0 ? (
           <View style={styles.box}>
@@ -171,6 +193,18 @@ export function VisitDetailPane({ id, canCreate, canEdit, onChanged, onBack }: P
         ) : null}
       </VisitDetail>
       {back}
+      {panel === "cancel" ? (
+        <CancelVisitDialog
+          visit={visit}
+          onStale={reload}
+          onCancel={() => setPanel(null)}
+          onDone={(cancelled) => {
+            setLoaded({ state: "ready", id, visit: cancelled });
+            setPanel(null);
+            onChanged();
+          }}
+        />
+      ) : null}
     </View>
   );
 }
