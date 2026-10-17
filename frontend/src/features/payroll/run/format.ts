@@ -71,3 +71,27 @@ export function amountProblem(text: string): string | null {
   if (Math.abs(Number(value)) > 9999999.99) return "The amount is too large.";
   return null;
 }
+
+export const MAX_REFERENCE = 100;
+
+export const today = () => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
+/** The first problem with the entered details, or null; mirrors the server's rules so the message comes before the call. */
+export function paymentProblem(
+  paid: boolean,
+  paidOn: string,
+  mode: string,
+  reference: string,
+): string | null {
+  if (!paid) return null;
+  if (paidOn === "") return "The payment date is required.";
+  if (paidOn > today()) return "The payment date cannot be in the future.";
+  if (mode === "") return "Choose how it was paid.";
+  if (reference.trim().length > MAX_REFERENCE)
+    return `The reference can be at most ${MAX_REFERENCE} characters.`;
+  return null;
+}

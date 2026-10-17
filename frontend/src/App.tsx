@@ -24,6 +24,7 @@ import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
 import { AdjustmentsPage } from "./features/payroll/run/AdjustmentsPage";
 import { PayrollRunPage } from "./features/payroll/run/PayrollRunPage";
 import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
+import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistory";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
@@ -440,6 +441,14 @@ export function App() {
           element={
             <RouteGuard>
               <AdjustmentsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/payroll/people/:kind/:personId"
+          element={
+            <RouteGuard>
+              <PersonPayrollHistory />
             </RouteGuard>
           }
         />

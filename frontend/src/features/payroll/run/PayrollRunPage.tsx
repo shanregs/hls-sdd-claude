@@ -25,6 +25,7 @@ import { useAuth } from "../../../auth/useAuth";
 import { useGrantedActions } from "../../common/useGrantedActions";
 import { CancelRunDialog } from "./CancelRunDialog";
 import { ReturnRunDialog } from "./ReturnRunDialog";
+import { PaymentDialog } from "./PaymentDialog";
 import { RunLineWorkingDialog } from "./RunLineWorkingDialog";
 import {
   approveRun,
@@ -34,6 +35,7 @@ import {
   KIND_LABELS,
   listLines,
   listOwed,
+  PAYMENT_MODE_LABELS,
   PERSON_KIND_LABELS,
   recomputeRun,
   startRun,
@@ -50,6 +52,7 @@ import {
   type Run,
 } from "./payrollRunApi";
 import { dateTime, money, monthLabel } from "./format";
+import { formatDate } from "../../teachers/formatters";
 
 const ROUTE = "/operations/payroll";
 const PAGE_SIZE = 50;
@@ -133,12 +136,24 @@ function RecomputeSummaryPanel({ summary }: { summary: RecomputeSummary }) {
   );
 }
 
+function paymentText(line: Line): string {
+  if (line.state === "CANNOT_PAY") return "";
+  const p = line.payment;
+  if (!p || !p.paid) return "Not paid";
+  const mode = p.mode ? PAYMENT_MODE_LABELS[p.mode] : "";
+  return `Paid on ${formatDate(p.paidOn)} by ${mode}`;
+}
+
 function LinesTable({
   lines,
+  approved,
   onOpen,
+  onPayment,
 }: {
   lines: Line[];
+  approved: boolean;
   onOpen: (lineId: string) => void;
+  onPayment: (line: Line) => void;
 }) {
   return (
     <TableContainer component={Paper} variant="outlined">
@@ -151,6 +166,7 @@ function LinesTable({
             <TableCell align="right">Deduction</TableCell>
             <TableCell align="right">Adjustments</TableCell>
             <TableCell align="right">Net pay</TableCell>
+            {approved && <TableCell>Payment</TableCell>}
             <TableCell>Working</TableCell>
           </TableRow>
         </TableHead>
@@ -176,6 +192,21 @@ function LinesTable({
               <TableCell align="right">{money(line.deduction)}</TableCell>
               <TableCell align="right">{money(line.adjustments)}</TableCell>
               <TableCell align="right">{money(line.net)}</TableCell>
+              {approved && (
+                <TableCell>
+                  {paymentText(line)}
+                  {line.state === "PAYABLE" && (
+                    <Button
+                      size="small"
+                      sx={{ display: "block" }}
+                      aria-label={`Payment for ${line.name}`}
+                      onClick={() => onPayment(line)}
+                    >
+                      Payment
+                    </Button>
+                  )}
+                </TableCell>
+              )}
               <TableCell>
                 <Button
                   size="small"
@@ -184,6 +215,14 @@ function LinesTable({
                 >
                   Show working
                 </Button>
+                <Link
+                  component={RouterLink}
+                  to={`${ROUTE}/people/${line.personKind}/${line.personId}`}
+                  sx={{ display: "block", fontSize: "0.8125rem", ml: 1 }}
+                  aria-label={`Payroll history of ${line.name}`}
+                >
+                  History
+                </Link>
               </TableCell>
             </TableRow>
           ))}
@@ -210,6 +249,8 @@ export function PayrollRunPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [workingLine, setWorkingLine] = useState<string | null>(null);
+  const [paymentLine, setPaymentLine] = useState<Line | null>(null);
+  const [linesVersion, setLinesVersion] = useState(0);
   const [slipsBusy, setSlipsBusy] = useState(false);
   const [slipsError, setSlipsError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -279,7 +320,16 @@ export function PayrollRunPage() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, runId, ready, stateFilter, kindFilter, query, page]);
+  }, [
+    authFetch,
+    runId,
+    ready,
+    stateFilter,
+    kindFilter,
+    query,
+    page,
+    linesVersion,
+  ]);
 
   useEffect(() => {
     if (!ready) return;
@@ -596,6 +646,15 @@ export function PayrollRunPage() {
               ["Net pay", money(r.totals.net)],
               ["People paid", String(r.payableCount)],
               ["Cannot be paid", String(r.cannotPayCount)],
+              ...(r.status === "APPROVED"
+                ? ([
+                    ["Marked paid", `${r.paidCount} (${money(r.paidAmount)})`],
+                    [
+                      "Not yet paid",
+                      `${r.unpaidCount} (${money(r.unpaidAmount)})`,
+                    ],
+                  ] as const)
+                : []),
             ] as const
           ).map(([label, value]) => (
             <Box key={label}>
@@ -677,7 +736,12 @@ export function PayrollRunPage() {
             )}
             {linesState.kind === "ready" && linesState.lines.length > 0 && (
               <>
-                <LinesTable lines={linesState.lines} onOpen={setWorkingLine} />
+                <LinesTable
+                  lines={linesState.lines}
+                  approved={r.status === "APPROVED"}
+                  onOpen={setWorkingLine}
+                  onPayment={setPaymentLine}
+                />
                 <TablePagination
                   component="div"
                   count={linesState.total}
@@ -800,6 +864,17 @@ export function PayrollRunPage() {
         runName={runName}
         onConfirm={sendBack}
         onClose={() => setReturnOpen(false)}
+      />
+      <PaymentDialog
+        runId={runId}
+        lineId={paymentLine?.id ?? null}
+        personName={paymentLine?.name ?? ""}
+        canRecord={canProcess}
+        onClose={() => setPaymentLine(null)}
+        onSaved={() => {
+          setLinesVersion((v) => v + 1);
+          void loadRun();
+        }}
       />
       <RunLineWorkingDialog
         runId={runId}

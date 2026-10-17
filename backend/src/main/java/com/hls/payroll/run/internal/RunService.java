@@ -60,6 +60,7 @@ public class RunService {
     private final AppUserRepository users;
     private final Clock clock;
     private final ApplicationEventPublisher publisher;
+    private final PaymentService payments;
 
     RunService(
             PayRunRepository runs,
@@ -73,8 +74,10 @@ public class RunService {
             WorkingCalendar calendar,
             AppUserRepository users,
             Clock clock,
-            ApplicationEventPublisher publisher) {
+            ApplicationEventPublisher publisher,
+            PaymentService payments) {
         this.publisher = publisher;
+        this.payments = payments;
         this.runs = runs;
         this.lines = lines;
         this.lineAdjustments = lineAdjustments;
@@ -282,7 +285,10 @@ public class RunService {
                 : EnumSet.of(parse(Kind.class, kindText, "kind"));
         String like = query == null || query.isBlank() ? "%" : "%" + query.trim().toLowerCase(Locale.ROOT) + "%";
         PageRequest paging = PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, MAX_PAGE_SIZE)));
-        return lines.search(runId, states, kinds, like, paging).map(l -> lineView(l, false, List.of()));
+        Page<PayRunLine> found = lines.search(runId, states, kinds, like, paging);
+        Map<UUID, PaymentService.EntryView> current =
+                payments.currentOf(found.getContent().stream().map(PayRunLine::getId).toList());
+        return found.map(l -> lineView(l, false, List.of(), current.get(l.getId())));
     }
 
     @Transactional(readOnly = true)
@@ -293,7 +299,7 @@ public class RunService {
         List<AdjustmentLine> adjustments = lineAdjustments.findByLineId(lineId).stream()
                 .map(a -> new AdjustmentLine(a.getAdjustmentId(), a.getKind(), money(a.getAmount()), a.getReason()))
                 .toList();
-        return lineView(line, true, adjustments);
+        return lineView(line, true, adjustments, payments.currentOf(List.of(lineId)).get(lineId));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -375,8 +381,7 @@ public class RunService {
         Instant now = clock.instant();
         boolean stalled = (r.getComputeState() == PayRun.ComputeState.RUNNING || r.getComputeState() == PayRun.ComputeState.QUEUED)
                 && !isComputing(r, now);
-        // payment entries arrive with spec 013b US7; until then nothing of an approved run is recorded as paid
-        boolean approved = r.getStatus() == PayRun.Status.APPROVED;
+        PaymentService.Figures paid = payments.figures(r);
         List<EventView> eventViews = history == null
                 ? null
                 : history.stream()
@@ -399,10 +404,10 @@ public class RunService {
                         money(r.getTotalNet())),
                 r.getPayableCount(),
                 r.getCannotPayCount(),
-                0,
-                approved ? r.getPayableCount() : 0,
-                "0.00",
-                approved ? money(r.getTotalNet()) : "0.00",
+                paid.paidCount(),
+                paid.unpaidCount(),
+                money(paid.paidAmount()),
+                money(paid.unpaidAmount()),
                 person(r.getStartedBy(), names),
                 r.getStartedAt(),
                 person(r.getSubmittedBy(), names),
@@ -428,7 +433,8 @@ public class RunService {
         return adjustmentRepository.countWaitingSince(r.getId(), r.getHeartbeatAt());
     }
 
-    private static LineView lineView(PayRunLine l, boolean withWorking, List<AdjustmentLine> adjustments) {
+    private static LineView lineView(
+            PayRunLine l, boolean withWorking, List<AdjustmentLine> adjustments, PaymentService.EntryView payment) {
         return new LineView(
                 l.getId(),
                 l.getPersonKind(),
@@ -448,7 +454,8 @@ public class RunService {
                 l.getWarning(),
                 l.getComputedAt(),
                 withWorking ? l.getWorking() : null,
-                withWorking ? adjustments : null);
+                withWorking ? adjustments : null,
+                payment);
     }
 
     static String money(BigDecimal value) {
