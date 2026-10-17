@@ -1,9 +1,12 @@
 import { StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
-import { screenFor } from "../access/screenRegistry";
+import { MANAGER_CHECK_IN_ROUTE, screenFor } from "../access/screenRegistry";
 import type { AccessModel } from "../api/accessModelApi";
 import type { SignedInUser } from "../api/authApi";
 import { usePendingCount } from "../leave/usePendingCount";
+import { TodayCard } from "../manager/TodayCard";
+import { useManagerActions } from "../manager/useManagerActions";
+import { useToday } from "../manager/useToday";
 import type { OpenRoute } from "../navigation/AppShell";
 import { spacingUnit } from "../theme/tokens";
 import { Screen } from "./Screen";
@@ -31,9 +34,18 @@ export function HomeScreen({ user, model, openRoute }: { user: SignedInUser; mod
   const bar = { backgroundColor: theme.colors.surfaceVariant };
   const offersLeave = model.navigation.some((section) => section.items.some((item) => item.route === LEAVE_MANAGEMENT_ROUTE));
   const pending = usePendingCount(offersLeave);
+  // The Manager's day appears only when the server's menu offers the check-in screen (spec 033), never by role.
+  const offersCheckIn = model.navigation.some((section) => section.items.some((item) => item.route === MANAGER_CHECK_IN_ROUTE));
+  const today = useToday(offersCheckIn);
+  const { canCreate } = useManagerActions(MANAGER_CHECK_IN_ROUTE);
 
   return (
-    <Screen onRefresh={pending.reload}>
+    <Screen
+      onRefresh={() => {
+        pending.reload();
+        if (offersCheckIn) today.reload({ quiet: true });
+      }}
+    >
       <Text variant="headlineMedium" accessibilityRole="header">
         Welcome, {user.displayName}
       </Text>
@@ -54,6 +66,8 @@ export function HomeScreen({ user, model, openRoute }: { user: SignedInUser; mod
           <Card.Title title="Leave" subtitle={pendingText(pending)} />
         </Card>
       ) : null}
+
+      {offersCheckIn ? <TodayCard state={today} canCreate={canCreate} openRoute={openRoute} /> : null}
 
       {sections.map((name) => (
         <Card key={name} accessibilityLabel={`${name}, coming to the app soon`}>

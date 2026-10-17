@@ -91,6 +91,45 @@ import * as SecureStore from "expo-secure-store";
 import { resetLocationGate } from "./src/location/LocationGate";
 import { setAccessToken } from "./src/security/memoryToken";
 
+// Controllable fake of expo-image-picker (spec 033): tests set what the camera and the gallery return, and whether the
+// camera permission is granted, through `jest.requireMock("expo-image-picker").__state`.
+jest.mock("expo-image-picker", () => {
+  const state = {
+    cameraPermission: "granted" as "granted" | "denied",
+    camera: {
+      canceled: false,
+      assets: [{ uri: "file:///cache/camera.jpg", fileName: "camera.jpg", mimeType: "image/jpeg", fileSize: 348_160 }],
+    } as { canceled: boolean; assets?: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number | null }[] },
+    library: {
+      canceled: false,
+      assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
+    } as { canceled: boolean; assets?: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number | null }[] },
+  };
+  return {
+    __state: state,
+    requestCameraPermissionsAsync: jest.fn(async () => ({
+      status: state.cameraPermission,
+      granted: state.cameraPermission === "granted",
+      canAskAgain: true,
+    })),
+    launchCameraAsync: jest.fn(async () => state.camera),
+    launchImageLibraryAsync: jest.fn(async () => state.library),
+  };
+});
+
+// React Native's FormData takes a plain {uri, name, type} object as a file part and can list its parts; Node's does
+// neither. This stand-in has the part of that behaviour the upload tests need (spec 033).
+class NativeFormData {
+  private parts: { fieldName: string; [key: string]: unknown }[] = [];
+  append(name: string, value: unknown): void {
+    this.parts.push({ ...(typeof value === "object" && value !== null ? value : { string: String(value) }), fieldName: name });
+  }
+  getParts(): { fieldName: string; [key: string]: unknown }[] {
+    return this.parts;
+  }
+}
+globalThis.FormData = NativeFormData as unknown as typeof FormData;
+
 beforeEach(async () => {
   await AsyncStorage.clear();
   Object.assign(jest.requireMock("expo-location").__state, {
@@ -102,6 +141,17 @@ beforeEach(async () => {
     neverResolves: false,
     failWith: null,
     onRequestPermission: "granted",
+  });
+  Object.assign(jest.requireMock("expo-image-picker").__state, {
+    cameraPermission: "granted",
+    camera: {
+      canceled: false,
+      assets: [{ uri: "file:///cache/camera.jpg", fileName: "camera.jpg", mimeType: "image/jpeg", fileSize: 348_160 }],
+    },
+    library: {
+      canceled: false,
+      assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
+    },
   });
   resetLocationGate();
   (SecureStore as unknown as { __reset: () => void }).__reset();

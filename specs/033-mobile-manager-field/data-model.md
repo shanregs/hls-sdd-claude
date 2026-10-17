@@ -28,7 +28,7 @@ day). The location is never part of the view.
 
 `month`, `locked`, `figures` (`workingDays`, `daysWorked`, `leavePaid`, `leaveUnpaid`, `unpaid`, `fieldDays`, `pending`
 dates), `figuresUnavailable` (a message, for example no joining date, or `null`), and `days`: one entry per date with
-`status` (`WORKED`, `FIELD`, `LEAVE`, `HOLIDAY`, `WEEKLY_OFF`, `NOT_EMPLOYED`, `PENDING`, `MISSED`) and the day's fields
+`status` (`WORKED`, `FIELD`, `NO_CHECK_OUT`, `LEAVE`, `HOLIDAY`, `WEEKLY_OFF`, `NOT_EMPLOYED`, `PENDING`, `MISSED`, `ABSENT`; a past working day with no check-in and no leave is `ABSENT`, `MISSED` is only today after the cut-off, and `NO_CHECK_OUT` is a past day with a check-in and no check-out) and the day's fields
 above (`id`, `dayType`, `purpose`, `checkInAt`, `checkOutAt`, `late`, `hasPhoto`, `leave`, `flags`, `activities`). In the
 Manager's own month the places and the day history are empty.
 

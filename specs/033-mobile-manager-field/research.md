@@ -96,9 +96,12 @@ actions.
 **Rationale**: spec 033 says "reusing the month component of spec 019"; the grid's layout rules (seven columns, list layout
 at large text, 48 dp targets) should exist once. The existing 019 and 020 tests guard the refactor.
 
-**Manager statuses and flags** (from the server): `WORKED`, `FIELD`, `LEAVE`, `HOLIDAY`, `WEEKLY_OFF`, `NOT_EMPLOYED`,
-`PENDING`, `MISSED`; flags `LATE`, `NO_CHECK_OUT`, `ADDED_LATER`, `CORRECTED`, `UNLINKED`. The app labels them in plain
-words and computes none of them (FR-010). `CORRECTED` and `UNLINKED` are review marks for the Director; the Manager sees
+**Manager statuses and flags** (from the server, checked against the running server on 2026-10-17): `WORKED`, `FIELD`,
+`NO_CHECK_OUT`, `LEAVE`, `HOLIDAY`, `WEEKLY_OFF`, `NOT_EMPLOYED`, `PENDING`, `MISSED`, `ABSENT`. A past working day with
+no check-in and no leave is `ABSENT`; `MISSED` is only today after the cut-off; `NO_CHECK_OUT` is a past day with a
+check-in and no check-out. Flags are `LATE`, `NO_CHECK_OUT`, `ADDED_LATER`, `CORRECTED` and `UNLINKED`. The app labels
+them in plain words and computes none of them (FR-010). `CORRECTED` and `UNLINKED` are review marks for the Director; the
+Manager sees
 them as "Corrected by your Director" and "No planned activity linked".
 
 **Alternatives considered**: a second grid component for Managers (rejected: duplicate layout and accessibility work).
@@ -118,7 +121,7 @@ approved one is revoked by the approver"); the server refuses anything else with
 
 ## 8. Forgotten check-in requests live in My Month
 
-**Decision**: a past working day with status `MISSED` (or no check-in) in My Month offers "Ask to add a check-in" in its day
+**Decision**: a past working day with status `ABSENT` in My Month offers "Ask to add a check-in" (`MISSED` is today after the cut-off, which the Manager can still check in for) in its day
 sheet; a "Check-in requests" section under the month lists the Manager's requests with status and the decider's reason and a
 Cancel for Pending ones. There is no new menu entry.
 

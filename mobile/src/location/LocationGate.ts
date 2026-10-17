@@ -108,6 +108,27 @@ export function captureForCall(): Promise<CaptureResult> {
   return inFlight;
 }
 
+/**
+ * A reading taken now, for the one kind of action that needs a position to be valid: a Manager's check-in or
+ * check-out (spec 033, decision D15 of spec 032). It never reuses a reading shared with other calls and joins no
+ * lookup already running. The reading it takes is stored, so the audit header of the same request carries the same
+ * position as the request body. `askIfNeeded` shows the system permission prompt when the user has not refused it
+ * for good. Like every lookup in this file it runs only because it was called, with no timer and no watcher.
+ */
+export async function captureFresh(options: { askIfNeeded?: boolean } = {}): Promise<CaptureResult> {
+  if (options.askIfNeeded) {
+    try {
+      const permission = await Location.getForegroundPermissionsAsync();
+      if (!permission.granted && permission.canAskAgain) {
+        await Location.requestForegroundPermissionsAsync();
+      }
+    } catch {
+      // The lookup below reports the missing permission.
+    }
+  }
+  return lookUp();
+}
+
 /** The `X-HLS-Location` header value (contracts/mobile-api.md). */
 export function formatLocationHeader(reading: Reading): string {
   return (

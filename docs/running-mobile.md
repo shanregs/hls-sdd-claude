@@ -162,6 +162,23 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
     - Mark as read, Mark all as read, Delete, and Clear read (asks to confirm). Remove the Delete permission for the
       role on the web and refresh the menu: Delete and Clear read disappear, marking read still works.
     - TalkBack announces "Notifications, N unread" on the bell; check light and dark themes and the largest text size.
+15. **Manager field day** (spec 033, steps in `specs/033-mobile-manager-field/quickstart.md`):
+    - Manoj (Manager): MY ATTENDANCE shows Check-in, My Month and My Leave; Tara and Divya see none of them.
+      Home shows a Today card. Plan one thing for today for Manoj on the web (a college drive, a marketing visit or
+      a task) to see Field days work.
+    - Emulator `...` → Location → set a point. Check in as Office: the time is the server's. Check in as Field with a
+      planned activity ticked (or a purpose) and a photo (emulator camera or gallery): the day shows the photo with
+      its file name, type and size. Switch location off or deny it: Check in sends nothing and says how to fix it.
+    - Check out. On the web, correct a past day to have a check-in and no check-out: Home lists it, and Complete
+      check-out with a time and a reason clears it.
+    - My Month: compare each day, flag and figure with the web **OPERATIONS → Manager Attendance** screen. A past
+      working day without a check-in is "Absent" and offers "Ask to add a check-in"; approve it on the web and the day
+      shows "Added later".
+    - My Leave: request leave, approve or reject it on the web (OPERATIONS → Manager Leave), pull down to refresh.
+    - Airplane mode on Check in, Check out and a request: each says "No connection. Nothing was sent." and keeps your
+      entries.
+    - The camera is a native module: after pulling this change run `npx expo run:android` again (a reload does not
+      add it). The camera permission is asked only when you tap Take a photo.
 
 ## 6. Automated tests
 
