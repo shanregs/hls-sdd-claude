@@ -6,6 +6,7 @@ import { HOME_ROUTE, NOTIFICATIONS_ROUTE, screenFor } from "../access/screenRegi
 import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
 import type { LeaveStatus } from "../api/leaveApi";
+import type { TaskView } from "../api/tasksApi";
 import { useAuth } from "../auth/AuthProvider";
 import { ApplyLeaveScreen } from "../screens/ApplyLeaveScreen";
 import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
@@ -16,6 +17,8 @@ import { ManagerCheckInScreen } from "../screens/ManagerCheckInScreen";
 import { ManagerLeaveScreen } from "../screens/ManagerLeaveScreen";
 import { ManagerMonthScreen } from "../screens/ManagerMonthScreen";
 import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
+import { TasksScreen } from "../screens/TasksScreen";
+import { VisitsScreen } from "../screens/VisitsScreen";
 import { MyAttendanceScreen } from "../screens/MyAttendanceScreen";
 import { TeacherAttendanceScreen } from "../screens/TeacherAttendanceScreen";
 import { LocationPrivacyScreen } from "../screens/LocationPrivacyScreen";
@@ -52,6 +55,8 @@ export interface RouteState {
   status?: LeaveStatus;
   /** The month ("YYYY-MM") My Attendance opens on, from a notification link. */
   month?: string;
+  /** The task view the tasks screen opens on, from a Home card. */
+  taskView?: TaskView;
 }
 
 /** Opens a screen by its route, through the same menu check as the drawer. */
@@ -201,6 +206,12 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "managerLeave") {
     body = <ManagerLeaveScreen />;
     title = "My Leave";
+  } else if (current === "visits") {
+    body = <VisitsScreen />;
+    title = "Marketing Calendar";
+  } else if (current === "tasks") {
+    body = <TasksScreen initialView={routeState?.taskView} />;
+    title = "My Tasks";
   } else if (current === "notifications") {
     body = <NotificationsScreen openRoute={openRoute} canOpen={canOpen} />;
     title = "Notifications";

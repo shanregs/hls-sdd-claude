@@ -18,6 +18,13 @@ export function serverNow(): Date {
   return new Date(Date.now() + offsetMs);
 }
 
+/** Today's date, YYYY-MM-DD, in the business time zone (UTC+05:30), by the server-corrected clock. */
+export function businessToday(now: Date = serverNow()): string {
+  const shifted = new Date(now.getTime() + (5 * 60 + 30) * 60_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}`;
+}
+
 export function resetServerClock(): void {
   offsetMs = 0;
 }

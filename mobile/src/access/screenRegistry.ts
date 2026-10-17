@@ -16,7 +16,9 @@ export type ScreenKey =
   | "notifications"
   | "managerCheckIn"
   | "managerMonth"
-  | "managerLeave";
+  | "managerLeave"
+  | "visits"
+  | "tasks";
 
 const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/dashboard": "home",
@@ -32,6 +34,8 @@ const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/manager-attendance/me": "managerCheckIn",
   "/manager-attendance/me/month": "managerMonth",
   "/manager-attendance/me/leave": "managerLeave",
+  "/marketing/calendar": "visits",
+  "/operations/tasks": "tasks",
 };
 
 export function screenFor(route: string): ScreenKey | undefined {
@@ -41,5 +45,8 @@ export function screenFor(route: string): ScreenKey | undefined {
 export const HOME_ROUTE = "/dashboard";
 /** The Manager's own attendance (spec 033): the menu items the server offers under MY ATTENDANCE. */
 export const MANAGER_CHECK_IN_ROUTE = "/manager-attendance/me";
+/** The visit diary and the task list (spec 034): the menu items the server offers under MARKETING and OPERATIONS. */
+export const VISITS_ROUTE = "/marketing/calendar";
+export const TASKS_ROUTE = "/operations/tasks";
 export const PROFILE_ROUTE = "/account/profile";
 export const NOTIFICATIONS_ROUTE = "/account/notifications";

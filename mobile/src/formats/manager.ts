@@ -38,3 +38,13 @@ export function formatBusinessDateTime(instant: string): string {
   const shifted = new Date(t + BUSINESS_OFFSET_MINUTES * 60_000);
   return `${pad(shifted.getUTCDate())}/${pad(shifted.getUTCMonth() + 1)}/${shifted.getUTCFullYear()} ${formatBusinessTime(instant)}`;
 }
+
+/** A file's type in words: JPG, PNG, PDF, Word, Excel, Text; anything else as the part after the slash, upper case. */
+export function formatFileType(contentType: string): string {
+  const type = contentType.split(";")[0].trim().toLowerCase();
+  if (type === "application/pdf") return "PDF";
+  if (type.includes("wordprocessingml") || type === "application/msword") return "Word";
+  if (type.includes("spreadsheetml") || type === "application/vnd.ms-excel") return "Excel";
+  if (type === "text/plain") return "Text";
+  return formatImageType(contentType);
+}

@@ -1,9 +1,11 @@
 import { StyleSheet, View } from "react-native";
 import { Card, Chip, Text, useTheme } from "react-native-paper";
-import { MANAGER_CHECK_IN_ROUTE, screenFor } from "../access/screenRegistry";
+import { MANAGER_CHECK_IN_ROUTE, TASKS_ROUTE, VISITS_ROUTE, screenFor } from "../access/screenRegistry";
 import type { AccessModel } from "../api/accessModelApi";
 import type { SignedInUser } from "../api/authApi";
 import { usePendingCount } from "../leave/usePendingCount";
+import { TasksCard, VisitsCard } from "../home/VisitsTasksCards";
+import { useTaskCounts, useVisitsToday } from "../home/useHomeCounts";
 import { TodayCard } from "../manager/TodayCard";
 import { useManagerActions } from "../manager/useManagerActions";
 import { useToday } from "../manager/useToday";
@@ -38,12 +40,20 @@ export function HomeScreen({ user, model, openRoute }: { user: SignedInUser; mod
   const offersCheckIn = model.navigation.some((section) => section.items.some((item) => item.route === MANAGER_CHECK_IN_ROUTE));
   const today = useToday(offersCheckIn);
   const { canCreate } = useManagerActions(MANAGER_CHECK_IN_ROUTE);
+  // The visit and task cards appear only when the server's menu offers the matching screen (spec 034 FR-013), never by role.
+  const offers = (route: string) => model.navigation.some((section) => section.items.some((item) => item.route === route));
+  const offersVisits = offers(VISITS_ROUTE);
+  const offersTasks = offers(TASKS_ROUTE);
+  const visitsToday = useVisitsToday(offersVisits);
+  const taskCounts = useTaskCounts(offersTasks);
 
   return (
     <Screen
       onRefresh={() => {
         pending.reload();
         if (offersCheckIn) today.reload({ quiet: true });
+        if (offersVisits) visitsToday.reload();
+        if (offersTasks) taskCounts.reload();
       }}
     >
       <Text variant="headlineMedium" accessibilityRole="header">
@@ -68,6 +78,9 @@ export function HomeScreen({ user, model, openRoute }: { user: SignedInUser; mod
       ) : null}
 
       {offersCheckIn ? <TodayCard state={today} canCreate={canCreate} openRoute={openRoute} /> : null}
+
+      {offersVisits ? <VisitsCard counted={visitsToday} onOpen={() => openRoute(VISITS_ROUTE)} /> : null}
+      {offersTasks ? <TasksCard counted={taskCounts} onOpen={() => openRoute(TASKS_ROUTE, { taskView: "overdue" })} /> : null}
 
       {sections.map((name) => (
         <Card key={name} accessibilityLabel={`${name}, coming to the app soon`}>
