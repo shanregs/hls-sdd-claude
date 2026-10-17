@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.5 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.5)
+Version change: 1.7.0 → 2.5.6 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.6)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.6 (PATCH, spec 013b): the Default role access matrix row Payroll is made specific: Admin holds View, Process and
+    Export; Director holds View, Approve and Export; Manager, Teacher and System have no access. Process starts,
+    computes again, cancels and submits a run and records adjustments and payments; Approve returns or approves it, and
+    whoever submitted a run can never approve it. Payslips and the CSV export are read from the stored run only, so an
+    approved run never changes. Principle VII holds: the monthly run is the `payroll.run` sub-package, which reads
+    attendance, Manager attendance and the calendar only while a draft is computed, through their public APIs. No
+    principle changes.
   - 2.5.5 (PATCH, spec 032): the Default role access matrix gains three rows. Manager Attendance (the grid, corrections,
     the month lock and the check-in times): Admin holds View, Create, Edit and Process; Director holds View, Create and
     Edit but never Process, so only an Admin locks or reopens a Manager's month. Manager Leave (the decisions on
@@ -356,7 +363,7 @@ kept intentionally lightweight for v1.
   | Manager Attendance (grid, corrections, month lock, check-in times) | View, Create, Edit, Process | View, Create, Edit (never Process, the lock) | — (own record under My Manager Attendance) | — | — |
   | Manager Leave (decide Managers' leave and forgotten check-ins) | View, Approve | View, Approve | — | — | — |
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
-  | Payroll                         | ✓     | ✓        | —        | —       | —      |
+  | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
@@ -404,4 +411,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.5 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-13
+**Version**: 2.5.6 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-18

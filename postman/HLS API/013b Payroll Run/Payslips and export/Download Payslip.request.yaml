@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download Payslip
+description: "The PDF issued at approval. 404 for a draft or awaiting run and for a cannot-pay line. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines/{{lineId}}/payslip"
+method: GET
+order: 1000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Compute Again
+description: "202. Draft runs only and not while computing (409). Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/recompute"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 4000

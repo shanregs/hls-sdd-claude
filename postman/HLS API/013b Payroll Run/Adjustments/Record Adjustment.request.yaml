@@ -1,0 +1,22 @@
+$kind: http-request
+name: Record Adjustment
+description: "201. Only the CORRECTION kind can be recorded here; a reserved kind answers 400. Joins the next run that is computed for the person. Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/adjustments"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "personKind": "TEACHER",
+      "personId": "{{teacherId}}",
+      "kind": "CORRECTION",
+      "amount": 2000,
+      "reason": "August was underpaid"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code === 201) { pm.collectionVariables.set('adjustmentId', pm.response.json().id); }"
+    language: text/javascript
+order: 2000

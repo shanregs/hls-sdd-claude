@@ -1,0 +1,12 @@
+$kind: http-request
+name: Submit For Approval
+description: "409 unless the run is a draft that has finished computing and no paid line has a negative net pay. Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/submit"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 6000

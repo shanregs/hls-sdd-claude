@@ -1,0 +1,19 @@
+$kind: http-request
+name: Start Run
+description: "202 with the run (computeState QUEUED); the lines are computed in the background, so read the run until computeState is DONE. 400 when the month has not ended; 409 when a primary run exists. Set supplementary to true to start the run for people left out of an approved primary run. Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/runs"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "month": "{{month}}",
+      "supplementary": false
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code === 202 || pm.response.code === 200) { const r = pm.response.json(); if (r.id) { pm.collectionVariables.set('runId', r.id); } }"
+    language: text/javascript
+order: 2000

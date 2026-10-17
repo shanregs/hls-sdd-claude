@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Run
+description: "Header, status, totals, counts, progress, paid and unpaid figures, the pay policy, the history of events and the summary of the last compute. Needs PAYROLL.VIEW."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}"
+method: GET
+order: 3000

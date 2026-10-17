@@ -1,0 +1,14 @@
+$kind: http-request
+name: Return To Draft
+description: "Sends a submitted run back to draft with a required reason. Needs PAYROLL.APPROVE."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/return"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Check the deduction for one Teacher"
+    }
+order: 7000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Cancel Run
+description: "Draft only (409 otherwise). A reason of at most 500 characters is required (400). Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Wrong month"
+    }
+order: 5000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Withdraw Adjustment
+description: "Waiting adjustments only; 409 when applied or attached to a run awaiting approval. Needs PAYROLL.PROCESS."
+url: "{{baseUrl}}/api/v1/payroll/adjustments/{{adjustmentId}}/withdraw"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Entered twice"
+    }
+order: 3000

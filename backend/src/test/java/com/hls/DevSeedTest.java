@@ -82,4 +82,17 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(get("/api/v1/manager-attendance/leave?status=PENDING", director.token()).body()).contains("Manoj Manager");
         assertThat(get("/api/v1/manager-attendance/leave?status=APPROVED", director.token()).body()).contains("Family function");
     }
+
+    @Test
+    void payrollRunDemoDataLeavesADraftRunForLastMonth() {
+        Signed admin = signIn(null, "9800000001", "Password123!");
+        String last = java.time.YearMonth.now().minusMonths(1).toString();
+
+        Resp runs = get("/api/v1/payroll/runs?month=" + last, admin.token());
+
+        assertThat(runs.status()).as(runs.body()).isEqualTo(200);
+        assertThat(runs.body()).contains("\"month\":\"" + last + "\"").contains("\"status\":\"DRAFT\"");
+        // started once: a second start of the same month is refused, so the seeder never duplicates or changes a run
+        assertThat(post("/api/v1/payroll/runs", admin.token(), java.util.Map.of("month", last)).status()).isEqualTo(409);
+    }
 }
