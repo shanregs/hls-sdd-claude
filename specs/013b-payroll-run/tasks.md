@@ -149,10 +149,10 @@ that person paid, exactly once, with the first run unchanged.
 
 **Independent Test**: approve a run, download a payslip, change the calendar, download again: identical; a person left out has none.
 
-- [ ] T047 [P] [US6] `backend/src/test/java/com/hls/payroll/run/PayslipTest.java`, failing first: an approved run's payslip for a line is a PDF whose text carries the line's figures; the zip holds one payslip per paid line and none for a cannot-pay line; a draft or awaiting run returns 404 for both; a second download is byte-identical after a calendar change; a Manager, Teacher and System get 403 and no bytes; every payslip download is by line id of the given run (a line id of another run answers 404); a download writes no state
-- [ ] T048 [US6] `payroll/run/web/PayslipController.java` for `GET /runs/{id}/lines/{lineId}/payslip` (`application/pdf`, `Content-Disposition` with a safe file name) and `GET /runs/{id}/payslips` (a zip streamed with `ZipOutputStream`), opening the stored PDF through `FileStore.open`; permission V; no cache headers that allow shared caching of pay data (`Cache-Control: no-store`)
-- [ ] T049 [US6] Frontend: payslip download in `RunLineWorkingDialog.tsx` and "Download all payslips" on `PayrollRunPage.tsx` for approved runs only; extend tests
-- [ ] T050 [P] [US6] Extend `PayrollAuthorizationTest` for the payslip endpoints
+- [X] T047 [P] [US6] `backend/src/test/java/com/hls/payroll/run/PayslipTest.java`, failing first: an approved run's payslip for a line is a PDF whose text carries the line's figures; the zip holds one payslip per paid line and none for a cannot-pay line; a draft or awaiting run returns 404 for both; a second download is byte-identical after a calendar change; a Manager, Teacher and System get 403 and no bytes; every payslip download is by line id of the given run (a line id of another run answers 404); a download writes no state
+- [X] T048 [US6] `payroll/run/web/PayslipController.java` for `GET /runs/{id}/lines/{lineId}/payslip` (`application/pdf`, `Content-Disposition` with a safe file name) and `GET /runs/{id}/payslips` (a zip streamed with `ZipOutputStream`), opening the stored PDF through `FileStore.open`; permission V; no cache headers that allow shared caching of pay data (`Cache-Control: no-store`)
+- [X] T049 [US6] Frontend: payslip download in `RunLineWorkingDialog.tsx` and "Download all payslips" on `PayrollRunPage.tsx` for approved runs only; extend tests
+- [X] T050 [P] [US6] Extend `PayrollAuthorizationTest` for the payslip endpoints
 
 **Checkpoint**: US6 works.
 

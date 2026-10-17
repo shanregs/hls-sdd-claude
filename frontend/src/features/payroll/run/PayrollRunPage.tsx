@@ -29,6 +29,7 @@ import { RunLineWorkingDialog } from "./RunLineWorkingDialog";
 import {
   approveRun,
   cancelRun,
+  downloadAllPayslips,
   getRun,
   KIND_LABELS,
   listLines,
@@ -37,6 +38,7 @@ import {
   recomputeRun,
   startRun,
   returnRun,
+  saveFile,
   STATUS_LABELS,
   submitRun,
   type Line,
@@ -208,6 +210,8 @@ export function PayrollRunPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState(false);
   const [workingLine, setWorkingLine] = useState<string | null>(null);
+  const [slipsBusy, setSlipsBusy] = useState(false);
+  const [slipsError, setSlipsError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [stateFilter, setStateFilter] = useState<LineState | "">("PAYABLE");
@@ -337,6 +341,15 @@ export function PayrollRunPage() {
     setState({ kind: "ready", run: result.data });
     setCancelOpen(false);
     return null;
+  };
+
+  const getAllPayslips = async () => {
+    setSlipsBusy(true);
+    setSlipsError(null);
+    const result = await downloadAllPayslips(authFetch, runId);
+    setSlipsBusy(false);
+    if (result.ok) saveFile(result.data);
+    else setSlipsError(result.reason);
   };
 
   const submit = async () => {
@@ -499,6 +512,22 @@ export function PayrollRunPage() {
           {r.approvedAt ? ` on ${dateTime(r.approvedAt)}` : ""}. This run is
           final and locked: nothing in it can be changed.
         </Alert>
+      )}
+      {r.status === "APPROVED" && (
+        <Box>
+          <Button
+            variant="outlined"
+            onClick={() => void getAllPayslips()}
+            disabled={slipsBusy}
+          >
+            {slipsBusy ? "Preparing the payslips…" : "Download all payslips"}
+          </Button>
+          {slipsError && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {slipsError}
+            </Alert>
+          )}
+        </Box>
       )}
 
       {(canComputeAgain ||
@@ -775,6 +804,7 @@ export function PayrollRunPage() {
       <RunLineWorkingDialog
         runId={runId}
         lineId={workingLine}
+        runApproved={r.status === "APPROVED"}
         onClose={() => setWorkingLine(null)}
       />
 
