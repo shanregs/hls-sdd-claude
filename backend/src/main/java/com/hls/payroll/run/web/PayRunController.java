@@ -4,6 +4,8 @@ import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.payroll.run.internal.ApprovalService;
+import com.hls.payroll.run.internal.ExportService;
+import com.hls.payroll.run.internal.ExportService.CsvFile;
 import com.hls.payroll.run.internal.OwedService;
 import com.hls.payroll.run.internal.RunService;
 import com.hls.payroll.run.internal.RunViews.RunView;
@@ -11,6 +13,10 @@ import com.hls.school.api.CallerContext;
 import com.hls.school.api.PageResponse;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -33,11 +39,17 @@ public class PayRunController {
     private final RunService service;
     private final ApprovalService approvals;
     private final OwedService owed;
+    private final ExportService exports;
     private final PermissionGuard guard;
 
     public PayRunController(
-            RunService service, ApprovalService approvals, OwedService owed, PermissionGuard guard) {
+            RunService service,
+            ApprovalService approvals,
+            OwedService owed,
+            ExportService exports,
+            PermissionGuard guard) {
         this.owed = owed;
+        this.exports = exports;
         this.service = service;
         this.approvals = approvals;
         this.guard = guard;
@@ -70,6 +82,21 @@ public class PayRunController {
     public RunView get(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.VIEW);
         return service.get(id);
+    }
+
+    /** The run as a CSV for the accountant: a draft is marked as one in the file itself. */
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> export(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.EXPORT);
+        CsvFile file = exports.export(CallerContext.userId(jwt), id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv; charset=utf-8"))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(file.fileName()).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .cacheControl(CacheControl.noStore())
+                .body(file.bytes());
     }
 
     @GetMapping("/{id}/owed")

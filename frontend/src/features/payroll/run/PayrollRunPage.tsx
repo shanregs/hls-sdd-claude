@@ -31,6 +31,7 @@ import {
   approveRun,
   cancelRun,
   downloadAllPayslips,
+  downloadExport,
   getRun,
   KIND_LABELS,
   listLines,
@@ -243,6 +244,7 @@ export function PayrollRunPage() {
   const actions = useGrantedActions(ROUTE);
   const canProcess = actions.has("PROCESS");
   const canApprove = actions.has("APPROVE");
+  const canExport = actions.has("EXPORT");
 
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
@@ -253,6 +255,8 @@ export function PayrollRunPage() {
   const [linesVersion, setLinesVersion] = useState(0);
   const [slipsBusy, setSlipsBusy] = useState(false);
   const [slipsError, setSlipsError] = useState<string | null>(null);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [stateFilter, setStateFilter] = useState<LineState | "">("PAYABLE");
@@ -400,6 +404,15 @@ export function PayrollRunPage() {
     setSlipsBusy(false);
     if (result.ok) saveFile(result.data);
     else setSlipsError(result.reason);
+  };
+
+  const exportCsv = async () => {
+    setExportBusy(true);
+    setExportError(null);
+    const result = await downloadExport(authFetch, runId);
+    setExportBusy(false);
+    if (result.ok) saveFile(result.data);
+    else setExportError(result.reason);
   };
 
   const submit = async () => {
@@ -575,6 +588,29 @@ export function PayrollRunPage() {
           {slipsError && (
             <Alert severity="error" sx={{ mt: 1 }}>
               {slipsError}
+            </Alert>
+          )}
+        </Box>
+      )}
+
+      {canExport && r.status !== "CANCELLED" && (
+        <Box>
+          <Button
+            variant="outlined"
+            onClick={() => void exportCsv()}
+            disabled={exportBusy}
+          >
+            {exportBusy ? "Preparing the file…" : "Export CSV"}
+          </Button>
+          {isDraft || r.status === "AWAITING_APPROVAL" ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              This run is not approved yet, so the file is marked{" "}
+              {STATUS_LABELS[r.status].toLowerCase()} and is not final.
+            </Typography>
+          ) : null}
+          {exportError && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {exportError}
             </Alert>
           )}
         </Box>

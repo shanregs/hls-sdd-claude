@@ -24,6 +24,7 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
     private static final Set<Role> VIEW = EnumSet.of(Role.ADMIN, Role.DIRECTOR);
     private static final Set<Role> PROCESS = EnumSet.of(Role.ADMIN);
     private static final Set<Role> APPROVE = EnumSet.of(Role.DIRECTOR);
+    private static final Set<Role> EXPORT = EnumSet.of(Role.ADMIN, Role.DIRECTOR);
 
     private record Endpoint(String name, HttpMethod method, String path, Object body, Set<Role> allowed) {}
 
@@ -55,6 +56,7 @@ class PayrollAuthorizationTest extends PayrollRunTestBase {
         list.add(new Endpoint("one payslip", HttpMethod.GET, RUNS + "/" + run + "/lines/" + line + "/payslip", null, VIEW));
         list.add(new Endpoint("all payslips", HttpMethod.GET, RUNS + "/" + run + "/payslips", null, VIEW));
         // the run is a draft, so an allowed caller gets 409 and nothing is recorded
+        list.add(new Endpoint("export csv", HttpMethod.GET, RUNS + "/" + run + "/export", null, EXPORT));
         list.add(new Endpoint("record payment", HttpMethod.PUT, RUNS + "/" + run + "/lines/" + line + "/payment", Map.of("paid", false), PROCESS));
         list.add(new Endpoint("read payment", HttpMethod.GET, RUNS + "/" + run + "/lines/" + line + "/payment", null, VIEW));
         list.add(new Endpoint("person history", HttpMethod.GET, "/api/v1/payroll/people/TEACHER/" + unknown + "/history", null, VIEW));
