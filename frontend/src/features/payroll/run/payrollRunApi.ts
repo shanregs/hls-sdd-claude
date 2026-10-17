@@ -148,6 +148,8 @@ export interface Line {
   /** Only on the single-line read: the frozen working the line was computed from. */
   working: unknown;
   adjustmentLines: AdjustmentLine[] | null;
+  /** The newest payment entry of the line, or null when none was recorded. */
+  payment: PaymentEntry | null;
 }
 
 const BASE = "/api/v1/payroll";
@@ -447,16 +449,27 @@ export function withdrawAdjustment(
 
 export type PaymentMode = "BANK_TRANSFER" | "CASH" | "UPI" | "CHEQUE" | "OTHER";
 
+export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  BANK_TRANSFER: "Bank transfer",
+  CASH: "Cash",
+  UPI: "UPI",
+  CHEQUE: "Cheque",
+  OTHER: "Other",
+};
+
 export interface PaymentEntry {
+  id: string;
   paid: boolean;
   paidOn: string | null;
   mode: PaymentMode | null;
   reference: string | null;
-  enteredBy: Person | null;
+  enteredBy: string;
+  enteredByName: string;
   enteredAt: string;
 }
 
 export interface Payment {
+  lineId: string;
   current: PaymentEntry | null;
   earlier: PaymentEntry[];
 }
@@ -506,8 +519,10 @@ export interface HistoryEntry {
   lineId: string;
   month: string;
   runKind: RunKind;
-  runStatus: RunStatus;
+  sequence: number;
+  status: RunStatus;
   state: LineState;
+  reason: string | null;
   net: string | null;
   payment: PaymentEntry | null;
 }

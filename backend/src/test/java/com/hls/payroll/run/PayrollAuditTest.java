@@ -145,4 +145,38 @@ class PayrollAuditTest extends PayrollRunTestBase {
             assertThat((String) e.get("afterValue")).contains("supplementary run 1");
         });
     }
+
+    @Test
+    void recordingAndCorrectingAPaymentAreAuditedWithTheActorTheDateTheModeAndTheReference() {
+        Signed admin = signInAs(Role.ADMIN);
+        Site site = site(admin.token());
+        UUID paid = teacherAt(admin.token(), site.schoolId(), java.time.LocalDate.now().minusDays(200));
+        teacherSalary(admin.token(), paid, "26000", java.time.LocalDate.now().minusDays(300));
+        lockTeacherMonth(paid);
+        UUID run = startAndCompute(admin.token());
+        submitAndApprove(admin.token(), run);
+        Object lineId = lineOf(admin.token(), run, paid).get("id");
+        String uri = RUNS + "/" + run + "/lines/" + lineId + "/payment";
+        String today = java.time.LocalDate.now().toString();
+
+        assertThat(put(uri, admin.token(), Map.of("paid", true, "paidOn", today, "mode", "CASH", "reference", "R-1")).status())
+                .isEqualTo(200);
+        assertThat(put(uri, admin.token(), Map.of("paid", true, "paidOn", today, "mode", "UPI", "reference", "R-2")).status())
+                .isEqualTo(200);
+        // a refused entry leaves nothing behind
+        assertThat(put(uri, admin.token(), Map.of("paid", true, "paidOn", today, "mode", "NOPE")).status()).isEqualTo(400);
+
+        List<Map<String, Object>> entries = changeEntries(admin.token(), "PAYROLL_PAYMENT", lineId, 2);
+
+        assertThat(entries).hasSize(2).allSatisfy(e -> assertThat(e).containsEntry("actorUserId", admin.userId().toString()));
+        assertThat(fields(entries)).containsExactlyInAnyOrder("recorded", "corrected");
+        assertThat(entries)
+                .filteredOn(e -> "recorded".equals(e.get("field")))
+                .singleElement()
+                .satisfies(e -> assertThat((String) e.get("afterValue")).contains("CASH").contains("R-1"));
+        assertThat(entries)
+                .filteredOn(e -> "corrected".equals(e.get("field")))
+                .singleElement()
+                .satisfies(e -> assertThat((String) e.get("afterValue")).contains("UPI").contains("R-2"));
+    }
 }

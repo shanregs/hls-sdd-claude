@@ -74,5 +74,7 @@ public final class RunViews {
             String warning,
             Instant computedAt,
             @JsonRawValue String working,
-            List<AdjustmentLine> adjustmentLines) {}
+            List<AdjustmentLine> adjustmentLines,
+            /** The newest payment entry of the line, or null when none was recorded. */
+            PaymentService.EntryView payment) {}
 }
