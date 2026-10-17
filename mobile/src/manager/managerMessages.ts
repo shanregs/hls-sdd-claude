@@ -63,6 +63,8 @@ const STATUS_TEXT: Record<MonthStatus, string> = {
   NOT_EMPLOYED: "Not employed",
   PENDING: "Not yet",
   MISSED: "No check-in",
+  ABSENT: "Absent",
+  NO_CHECK_OUT: "No check-out",
 };
 
 export function statusText(status: MonthStatus): string {

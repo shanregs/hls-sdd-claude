@@ -13,8 +13,21 @@ export type DayType = "OFFICE" | "FIELD";
 /** A mark the server puts on a day; the Manager sees them in plain words. */
 export type DayFlag = "LATE" | "NO_CHECK_OUT" | "ADDED_LATER" | "CORRECTED" | "UNLINKED";
 
+/**
+ * The server's status for a date. A past working day with no check-in and no leave is ABSENT; MISSED is only today
+ * after the cut-off; NO_CHECK_OUT is a past day with a check-in and no check-out (spec 032).
+ */
 export type MonthStatus =
-  "WORKED" | "FIELD" | "LEAVE" | "HOLIDAY" | "WEEKLY_OFF" | "NOT_EMPLOYED" | "PENDING" | "MISSED";
+  | "WORKED"
+  | "FIELD"
+  | "NO_CHECK_OUT"
+  | "LEAVE"
+  | "HOLIDAY"
+  | "WEEKLY_OFF"
+  | "NOT_EMPLOYED"
+  | "PENDING"
+  | "MISSED"
+  | "ABSENT";
 
 export interface ActivityRef {
   kind: string;

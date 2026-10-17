@@ -54,10 +54,21 @@ describe("managerMessages", () => {
       "No planned activity linked",
     ]);
     expect(
-      ["WORKED", "FIELD", "LEAVE", "HOLIDAY", "WEEKLY_OFF", "NOT_EMPLOYED", "PENDING", "MISSED"].map((s) =>
+      ["WORKED", "FIELD", "LEAVE", "HOLIDAY", "WEEKLY_OFF", "NOT_EMPLOYED", "PENDING", "MISSED", "ABSENT", "NO_CHECK_OUT"].map((s) =>
         statusText(s as never),
       ),
-    ).toEqual(["Worked", "Field day", "Leave", "Holiday", "Weekly off", "Not employed", "Not yet", "No check-in"]);
+    ).toEqual([
+      "Worked",
+      "Field day",
+      "Leave",
+      "Holiday",
+      "Weekly off",
+      "Not employed",
+      "Not yet",
+      "No check-in",
+      "Absent",
+      "No check-out",
+    ]);
     expect(kindText("COLLEGE_DRIVE")).toBe("College drive");
   });
 

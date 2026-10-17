@@ -30,3 +30,11 @@ export function formatImageType(contentType: string): string {
   if (subtype === "jpeg" || subtype === "jpg") return "JPG";
   return subtype ? subtype.toUpperCase() : "Image";
 }
+
+/** An instant from the server as DD/MM/YYYY HH:mm in the business time zone. */
+export function formatBusinessDateTime(instant: string): string {
+  const t = Date.parse(instant);
+  if (Number.isNaN(t)) return "";
+  const shifted = new Date(t + BUSINESS_OFFSET_MINUTES * 60_000);
+  return `${pad(shifted.getUTCDate())}/${pad(shifted.getUTCMonth() + 1)}/${shifted.getUTCFullYear()} ${formatBusinessTime(instant)}`;
+}

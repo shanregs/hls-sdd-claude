@@ -2,30 +2,45 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import type { DayView } from "../api/attendanceApi";
 import { WEEKDAY_SHORT, weekdayIndex } from "../formats/dates";
-import { minTouchTarget, spacingUnit } from "../theme/tokens";
+import { minTouchTarget, spacingUnit, type ThemeMode } from "../theme/tokens";
 import { presentCalendarDay, presentDay, type DayLook, type Viewer } from "./dayPresentation";
 
 /** From this text scale up the seven-column grid is too tight, so days are listed one per row. */
 export const LIST_LAYOUT_FONT_SCALE = 1.3;
 
-interface Props {
-  days: DayView[];
+interface Props<T extends { date: string }> {
+  days: T[];
   viewer?: Viewer;
   /** "attendance": a person's marks. "calendar": only holidays and weekly offs are marked. */
   variant?: "attendance" | "calendar";
+  /**
+   * Builds a day's look. Left out, the grid shows Teacher days (`DayView`) the way spec 019 does; a Manager's month
+   * passes its own (spec 033), so the layout rules exist once.
+   */
+  present?: (day: T, mode: ThemeMode) => DayLook;
   /** Tapping a day. Without it the days are shown but not pressable. */
-  onSelect?: (day: DayView) => void;
+  onSelect?: (day: T) => void;
   /** Overrides the device text scale (tests). */
   fontScale?: number;
 }
 
-export function MonthGrid({ days, viewer = "self", variant = "attendance", onSelect, fontScale }: Props) {
+export function MonthGrid<T extends { date: string } = DayView>({
+  days,
+  viewer = "self",
+  variant = "attendance",
+  present,
+  onSelect,
+  fontScale,
+}: Props<T>) {
   const theme = useTheme();
   const window = useWindowDimensions();
   const scale = fontScale ?? window.fontScale;
   const mode = theme.dark ? "dark" : "light";
-  const look = (day: DayView): DayLook =>
-    variant === "calendar" ? presentCalendarDay(day, mode) : presentDay(day, mode, viewer);
+  const look = (day: T): DayLook => {
+    if (present) return present(day, mode);
+    const teacherDay = day as unknown as DayView;
+    return variant === "calendar" ? presentCalendarDay(teacherDay, mode) : presentDay(teacherDay, mode, viewer);
+  };
 
   if (days.length === 0) return null;
 
@@ -52,9 +67,9 @@ export function MonthGrid({ days, viewer = "self", variant = "attendance", onSel
   }
 
   const leading = weekdayIndex(days[0].date);
-  const cells: (DayView | null)[] = [...Array<null>(leading).fill(null), ...days];
+  const cells: (T | null)[] = [...Array<null>(leading).fill(null), ...days];
   while (cells.length % 7 !== 0) cells.push(null);
-  const weeks: (DayView | null)[][] = [];
+  const weeks: (T | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
   return (
