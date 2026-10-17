@@ -12,7 +12,7 @@
 
 ### Session 2026-10-17
 
-- Q: May a Manager attach a photo from the phone's gallery as well as the camera, and are the image's own details recorded beyond what spec 032 keeps? → A: Camera or gallery. The photo stays optional. Only what spec 032 already keeps is recorded and shown with it (file name, type, size, who attached it and when); nothing is added to spec 032, so the time or place a picture was taken is not read from the file.
+- Q: May a Manager attach a photo from the phone's gallery as well as the camera, and are the image's own details recorded beyond what spec 032 keeps? → A: Camera or gallery. The photo stays optional. Only what spec 032 already holds is recorded, and what the app can show is what the server returns with the photo (file name, type and size; corrected 2026-10-17 after reading the server, which exposes neither who attached it nor when); nothing is added to spec 032, so the time or place a picture was taken is not read from the file.
 - Q: Should the app refuse a check-in or check-out when the location fix is poor? → A: No. The app sends whatever fix the phone gives together with its accuracy figure and never refuses for accuracy; only a missing location (denied, switched off or not found in the short wait) stops the request.
 - Q: May the Manager change a day's type or add activities after checking in? → A: No. The day type and links stay as checked in; a wrong one is corrected by the Admin or Director on the web, with a reason (spec 032), and the app offers no edit of a recorded check-in.
 - Q: Does Home show only today's planned activities or the coming days too? → A: Today only. A Field day can link only to an activity dated that day, and planning ahead belongs to the activity calendar (spec 035).
@@ -50,7 +50,7 @@ selected and a photo added, and confirm the day shows the visit and the photo.
    anyway is shown with the server's reason and everything entered is kept.
 5. **Given** a Manager who is checking in, **When** they add a photo (taken in the app or chosen from the phone's gallery) of a type and size the server
    accepts, **Then** the photo is attached to that day's check-in and shown on today's status with the details
-   the server holds (file name, type, size, who attached it and when); a photo the server refuses is
+   the server returns with it (file name, type and size); a photo the server refuses is
    explained and the check-in itself stays as recorded.
 6. **Given** location is denied, switched off or not found within the short wait of spec 018, **When**
    the Manager taps Check in, **Then** the app sends nothing, says that a location is needed for
@@ -124,7 +124,7 @@ before checking in, after checking in and after checking out; then repeat on a h
    Manager opens Home, **Then** the card says they have not checked in and offers Check in (the server
    marks a late check-in; the app does not).
 5. **Given** a planned activity, **When** the Manager taps it, **Then** the app opens its record if it
-   has a screen for that kind, and otherwise shows the activity's name, kind, time and place.
+   has a screen for that kind, and otherwise shows the activity's kind, place, date and status.
 6. **Given** today has no planned activities, **When** the Manager opens Home, **Then** the card says
    so; a Field day can then be checked in with a purpose where the server accepts one.
 
@@ -290,7 +290,7 @@ or button disappears after the next load.
 - **FR-004**: The app MUST let the Manager add a photo to the day's check-in, optionally, by taking one in
   the app or choosing one from the phone's gallery, in a type and size the server accepts. A check-in without
   a photo is valid, and a refused photo MUST NOT undo the check-in. The app MUST show the details the server
-  holds for an attached photo (file name, type, size, who attached it and when) and MUST NOT read or store
+  returns with an attached photo (file name, type and size) and MUST NOT read or store
   the time or place a picture was taken; spec 032 is not changed to keep them.
 - **FR-005**: The app MUST show the time of a check-in only from the server's response, and MUST NOT show
   a check-in as made until the server confirms it.
@@ -311,7 +311,7 @@ or button disappears after the next load.
   planned activities, all as the server returns them; Check in and Check out are offered only when the
   server's response allows them.
 - **FR-009**: A planned activity on Home MUST open its record where the app has a screen for that kind,
-  and otherwise show its name, kind, time and place.
+  and otherwise show its kind, place, date and status.
 - **FR-010**: My Month MUST show, for each day of the chosen month, the status, times, purpose or linked
   activities, flags (such as No check-out, Late, Added later) and leave, and the month figures, using the
   server's values and the month component of spec 019. The app MUST NOT compute totals, lateness or day
@@ -352,7 +352,7 @@ or button disappears after the next load.
   purpose or linked activities, check-in and check-out with their times and locations, an optional
   photo, flags, and any leave covering the date. The app shows and sends to it; it keeps no copy.
 - **Planned activity**: something the Manager is scheduled to do on a date, from the shared list of
-  visits, college drives, training sessions and tasks, with a kind, a name, a time and a place. The
+  visits, college drives, training sessions and tasks, with a kind, a date, a place and a status (the server's record has no title). The
   server decides which appear for today.
 - **Manager leave request**: a request for a range of dates with a type, optional half days and a
   reason, with a status (Pending, Approved, Rejected, Revoked, Cancelled) and the decider's reason.
