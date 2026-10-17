@@ -8,6 +8,16 @@
 
 **Input**: User description: "034-mobile-visits-tasks: Visit and task screens for the Manager in the HLS Android app, built on the app shell, sign-in and server-driven menus of spec 018, the School visit rules and APIs of spec 023 and the task rules and APIs of spec 025, which stay unchanged. Full input: docs/spec-inputs/034-mobile-visits-tasks.md (My visits: planned visits and meetings today, upcoming and past with School or prospect, purpose and status, filtered by status; Log a visit: complete it with a mandatory outcome and any follow-up, with photo attachments through the shared file store; Plan a visit: plan a new visit to a School or prospect, reschedule or cancel one with a reason as 023 allows; Follow-ups appear as tasks (025 contract C2); My tasks: today, upcoming and overdue, acknowledge, mark in progress, complete with evidence (note and photos), an overdue task asks for a reason as 025 requires, escalation and verification stay server-side; Task and visit detail with history, who assigned it, due date, linked record, evidence; Home counts for today's visits and overdue tasks; menu entries and allowed actions come only from the server access model; refusals in plain language with entered data kept; every call carries the device location or its reason). Out of scope: creating tasks for other users and verifying completed tasks (web), pipeline stage management and Final Stage review (web), proposals and MoU recording (web), offline capture, video attachments, push notifications, iOS."
 
+## Clarifications
+
+### Session 2026-10-18
+
+- Q: Should a Director see the two screens and read every Manager's tasks and visits on the phone, or are they for Managers only? → A: The Director sees both screens as the server's menu offers them, with the same lists across all Managers. Tasks are read-only because the server's action flags are all false for a task that is not the Director's own, and visits follow what the server permits. The app does not hide the screens by role, and the server's menu is not changed.
+- Q: When a Manager completes a visit or a task, is a fresh location reading taken or required? → A: No. Only the ordinary best-effort location every request already carries (spec 018) is sent; completing a visit or a task is never blocked by location, and neither spec 023 nor 025 asks for a position.
+- Q: Besides photos, may a Manager attach documents to a visit or task, and are photos required? → A: Photos only (taken in the app or chosen from the gallery); documents are added on the web. A photo is never required: a visit or a task is completed with no photo at all, and the app never asks for one.
+- Q: Is adding a task for oneself in this spec? → A: Yes, as the last and lowest-priority story (User Story 7): a Manager can add a task for themselves, and only for themselves; it can be dropped without affecting any other story.
+- Q: How far does the visit list reach? → A: One month at a time, opening on the current month, with month arrows and a month chooser that reach the previous, current and next year. Within the month shown, today's visits come first, then later ones, then earlier ones. Home's count of today's visits is separate and does not depend on the month shown.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Manager Sees Their Visits (Priority: P1) 🎯 MVP
@@ -28,9 +38,9 @@ fields.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Manager with visits on several dates, **When** they open the Marketing Calendar, **Then** today's visits are
-   shown first, then upcoming ones in date order, then past ones newest first, each with the target's name, the date, the
-   kind of activity and the status.
+1. **Given** a Manager with visits on several dates, **When** they open the Marketing Calendar, **Then** the current month is
+   shown, with today's visits first, then later visits in date order, then earlier visits newest first, each with the target's
+   name, the date, the kind of activity and the status.
 2. **Given** a planned visit whose date has passed, **When** the list loads, **Then** it is shown as Missed, because the
    server says so; the app does not work out lateness itself.
 3. **Given** the status filter, **When** the Manager chooses Planned, Completed, Cancelled or Missed, **Then** only those
@@ -38,7 +48,9 @@ fields.
 4. **Given** a visit, **When** the Manager opens it, **Then** the detail shows the School or prospect, the date, the kind, the
    HLS people attending, the notes, and for a completed visit the outcome and the follow-up date, for a cancelled one the
    reason, any earlier dates it was moved from, and the attached photos with their names and sizes.
-5. **Given** the Manager has no visits in a period, **When** the list loads, **Then** it says so and explains how to plan one.
+5. **Given** the Manager moves to another month with the month arrows or the month chooser (reaching the previous, current and
+   next year), **When** it loads, **Then** that month's visits are shown the same way; a month with no visits says so and
+   explains how to plan one.
 6. **Given** the list cannot be loaded, **When** the Manager opens it, **Then** the app shows the server's reason or "no
    connection" with Try again, and no stale list is shown as current.
 7. **Given** a visit of a prospect outside the Manager's Zones, **When** it would be opened, **Then** the app shows the
@@ -240,17 +252,20 @@ it is the least needed of the stories and can be cut without affecting the other
 
 **Visits (spec 023)**
 
-- **FR-001**: The app MUST list the Manager's visits, calls and meetings (those the server returns for the Manager) grouped as
-  today, upcoming and past, each showing the School or prospect, the date, the kind of activity and the status as the server
-  gives it, including Missed; the app MUST NOT work out lateness or status itself.
+- **FR-001**: The app MUST list the Manager's visits, calls and meetings (those the server returns for the Manager) one month at
+  a time, opening on the current month, with month arrows and a month chooser that reach the previous, current and next year;
+  within the month shown, today's visits come first, then later ones, then earlier ones, each showing the School or prospect,
+  the date, the kind of activity and the status as the server gives it, including Missed. The app MUST NOT work out lateness or
+  status itself.
 - **FR-002**: The app MUST let the Manager filter the list by status (All, Planned, Completed, Cancelled, Missed) and keep the
   choice while moving between a list and a detail.
 - **FR-003**: The app MUST show a visit's details as the server holds them: target, date, kind, attending colleagues, notes,
   outcome and follow-up date when completed, the reason when cancelled, earlier dates, and attachments with name and size.
 - **FR-004**: The app MUST let the Manager complete a planned visit with an outcome (required, at most 1000 characters), notes
   (at most 1000 characters) and an optional follow-up date, and MUST NOT send it with an empty or whitespace-only outcome.
-- **FR-005**: The app MUST let the Manager add photos to a visit (taken in the app or chosen from the gallery), uploaded after
-  the visit action it belongs to has succeeded, and MUST NOT undo a completed visit when a photo fails.
+- **FR-005**: The app MAY let the Manager add photos to a visit (taken in the app or chosen from the gallery; photos only, no
+  documents), uploaded after the visit action it belongs to has succeeded; a photo is optional and the app MUST NOT require one
+  to complete a visit, and MUST NOT undo a completed visit when a photo fails.
 - **FR-006**: The app MUST let the Manager plan a visit by choosing a School or prospect from the lists the server provides, a
   kind (visit, call, proposal meeting, follow-up), a date, optional attending colleagues and notes; it MUST send nothing without
   a target and a date.
@@ -264,8 +279,9 @@ it is the least needed of the stories and can be cut without affecting the other
 - **FR-009**: The app MUST let the Manager acknowledge a task, mark it in progress, give an overdue reason (at least 5
   characters, with an optional follow-up date), and complete it with a note (at least 10 characters), each only when the
   server's flags for that task allow it.
-- **FR-010**: The app MUST let the Manager add evidence to a task, as photos taken in the app or chosen from the gallery, up to
-  5 in total, showing how many are attached; the count and the limit come from the server's task.
+- **FR-010**: The app MUST let the Manager add evidence to a task, as photos taken in the app or chosen from the gallery (no
+  documents), up to 5 in total, showing how many are attached; the count and the limit come from the server's task. A photo is
+  optional: the app MUST NOT require one to complete a task.
 - **FR-011**: The app MUST show a task's details as the server holds them: who assigned it, due date, linked record and place,
   description, history of changes, the overdue reason, the completion note, verification, and the evidence, and MUST NOT offer
   verification, send-back, cancel or editing, which stay on the web.
@@ -284,7 +300,8 @@ it is the least needed of the stories and can be cut without affecting the other
   has confirmed it; when the phone is offline the app MUST say nothing was sent and keep the entries. Queued or offline capture
   is not provided.
 - **FR-017**: Every request MUST carry the device location or the reason it is unavailable, as in spec 018. Location is
-  best-effort for these actions and never required.
+  best-effort for these actions and never required: the app MUST NOT take a separate reading at the tap, and MUST NOT refuse
+  to complete a visit or a task because location is unavailable.
 - **FR-018**: Lists and details MUST be loaded from the server each time a screen opens or is refreshed; a failed load MUST drop
   the data and show an error with a way to try again, never stale data as current.
 
@@ -306,7 +323,7 @@ it is the least needed of the stories and can be cut without affecting the other
 | Role     | Menu (section → item) | Default actions | Data scope |
 | -------- | --------------------- | --------------- | ---------- |
 | Admin    | None in the app: Admin is web-only, and an account whose only app-eligible roles are Admin or System cannot sign in to the app (spec 018) | None in the app | None |
-| Director | OPERATIONS → Manager Tasks and MARKETING → Marketing Calendar as the server's menu offers them; read-only on tasks because every action flag the server returns is false for a task that is not the Director's own | As the server grants | Org-wide as the server returns |
+| Director | OPERATIONS → Manager Tasks and MARKETING → Marketing Calendar as the server's menu offers them; read-only on tasks because every action flag the server returns is false for a task that is not the Director's own (confirmed 2026-10-18) | As the server grants | Org-wide as the server returns |
 | Manager  | OPERATIONS → My Tasks; MARKETING → Marketing Calendar | Tasks: View, Create (a task for self), Edit (acknowledge, start, give a reason, complete, add evidence). Visits: View, Create (plan), Edit (complete, move, cancel) | Own tasks; visits in the Manager's own Zones |
 | Teacher  | None | None | None |
 | System   | None (System sees no business data; System-only accounts cannot sign in to the app) | None | None |
@@ -351,13 +368,13 @@ another app role as well is shown only what that role's navigation offers.
   have no screen in the app, so the server's menu items for them are simply not shown (spec 018).
 - Prospects are visible on the phone only as the target of a visit (name, and the contact person the server returns), never as
   prospect screens.
-- The Director's menu offers the same two routes under the web's names; the screens show whatever the server returns and offer only
-  the actions its flags allow, so a Director sees tasks read-only and visits as the server permits. To be confirmed in
-  `/speckit-clarify`.
-- Defaults to confirm in `/speckit-clarify`: offline capture is not provided (consistent with spec 033); photos may be taken or
-  chosen from the gallery, compressed on the phone before upload, with the server's limits (10 MB per visit photo, 5 evidence
-  files per task) enforced by the server; starting or completing a visit takes no special location reading beyond the best-effort
-  location every call carries; a Manager can add a task only for themselves (story 7, lowest priority).
+- The Director's menu offers the same two routes under the web's names; the screens show whatever the server returns and offer
+  only the actions its flags allow, so a Director sees every Manager's tasks read-only and visits as the server permits
+  (confirmed 2026-10-18).
+- Defaults to confirm in `/speckit-clarify`: offline capture is not provided (consistent with spec 033); photos only, optional, taken or
+  chosen from the gallery and compressed on the phone before upload, with the server's limits (10 files of 10 MB per visit, 5
+  evidence files per task) enforced by the server (confirmed 2026-10-18); starting or completing a visit takes no special location reading beyond the best-effort
+  location every call carries (confirmed 2026-10-18); the visit list opens on the current month and reaches the previous, current and next year (confirmed 2026-10-18); a Manager can add a task only for themselves (story 7, lowest priority; confirmed 2026-10-18).
 - Out of scope, tracked for later specs: creating tasks for other users and verifying, sending back, cancelling and editing tasks
   (web); pipeline stage changes, Final Stage review, proposals, MoU recording and the marketing dashboard (web); offline or queued
   capture; video attachments; push notifications; iOS; expenses (spec 036).
