@@ -6,22 +6,32 @@
 
 **Status**: Draft
 
-**Input**: User description: "Spec 026 Teacher observation and performance (MVP priority 1). A Manager observes a Teacher in the classroom with a structured observation form, after the School's Principal has given permission; the Principal's feedback is captured separately; a performance issue is opened when the Teacher needs improvement, with a corrective action and a follow-up observation. Outcome is good (continue), needs improvement (feedback, correction, follow-up) or unsuitable (hand-off to transfer or replacement, spec 027). Observations fall due on a schedule and are worked as Manager tasks (025)."
+**Input**: User description: "Spec 026 Teacher observation and performance (MVP priority 1). A Manager observes a Teacher in the classroom with a structured observation form, with the School's Principal's permission recorded when given; the Principal's feedback is captured separately; a performance issue is opened when the Teacher needs improvement, with a corrective action and a follow-up observation. Outcome is good (continue), needs improvement (feedback, correction, follow-up) or unsuitable (hand-off to transfer or replacement, spec 027). Observations have no fixed schedule: they are planned by management when needed, or triggered by feedback from a School, and are worked as Manager tasks (025)."
+
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: How often should each placed Teacher be observed? → A: No fixed interval; observations are planned by management as and when needed, or triggered by feedback received from a School.
+- Q: Must the Principal's permission be recorded before every observation? → A: No. It is optional, recorded when given, and never blocks submission.
+- Q: If a Teacher is still rated Needs improvement after corrective action, what happens next? → A: No limit on correction rounds; the Manager keeps correcting until the Teacher improves or is referred, and may refer or escalate at any time.
+- Q: Who chooses the overall result: the observer or the system from the average? → A: The observer chooses; the average and suggested result are a guide only (FR-004 unchanged).
+- Q: Should a Teacher be able to see their own observation ratings, Principal feedback and performance issues? → A: No. Teachers see nothing in version 1; sharing feedback is the Manager's conversation, recorded as the corrective action.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Manager Records a Classroom Observation (Priority: P1)
 
-A Manager is due to observe a Teacher placed at one of their Schools. They visit, record whether the Principal gave permission, sit in the class, and fill in the observation form: class, subject, duration, a rating for each teaching area, strengths, areas for improvement and an overall result of Good, Needs improvement or Unsuitable.
+A Manager has been asked to observe a Teacher placed at one of their Schools. They visit, record the Principal's permission if it was given, sit in the class, and fill in the observation form: class, subject, duration, a rating for each teaching area, strengths, areas for improvement and an overall result of Good, Needs improvement or Unsuitable.
 
 **Why this priority**: The observation is the core record of Teacher quality; everything else hangs from it.
 
-**Independent Test**: As a Manager, open a Teacher at one of your Schools, record Principal permission, fill in the form and submit; the observation appears in the Teacher's observation history with all ratings and cannot be changed silently afterwards. Another Manager cannot see it.
+**Independent Test**: As a Manager, open a Teacher at one of your Schools, fill in the form (recording Principal permission if given) and submit; the observation appears in the Teacher's observation history with all ratings and cannot be changed silently afterwards. Another Manager cannot see it.
 
 **Acceptance Scenarios**:
 
 1. **Given** an active Teacher placed at the Manager's School today, **When** the Manager starts an observation, **Then** the form opens with the Teacher, School, Manager and date filled in and the Principal's name taken from the School's contacts when one is recorded.
-2. **Given** the Principal has not yet given permission, **When** the Manager tries to submit the form, **Then** it is refused until permission is recorded (who gave it, how, and the date), or the visit is recorded as "not held" with a reason.
+2. **Given** the Principal's permission has not been recorded, **When** the Manager submits the form, **Then** it is accepted: permission is optional and never blocks submission, and the observation shows "Permission not recorded".
 3. **Given** a completed form with a rating (1 to 5) for every area, **When** the Manager submits, **Then** the observation is stored as Submitted with an overall result and the average rating shown.
 4. **Given** a Teacher who is not placed at any of the Manager's Schools, **When** the Manager asks for an observation of them, **Then** the answer is "not found".
 5. **Given** a Submitted observation, **When** the Manager corrects it, **Then** the correction needs a reason, the earlier values stay in the history, and the Director can see both.
@@ -29,21 +39,23 @@ A Manager is due to observe a Teacher placed at one of their Schools. They visit
 
 ---
 
-### User Story 2 - Observations Fall Due and Become Manager Tasks (Priority: P1)
+### User Story 2 - Observations Are Planned or Triggered by Feedback and Become Manager Tasks (Priority: P1)
 
-Every active, placed Teacher is due an observation on a schedule. When one falls due, the Teacher's Manager gets an "observation due" notification and an Observation task, and the task is completed by submitting the observation.
+There is no fixed observation interval. A Teacher is observed when management plans it, or when a School gives feedback about them. Either way the Teacher's Manager gets an Observation task and an in-app notification, and the task is completed by submitting the observation.
 
-**Why this priority**: The roadmap lists observation due as an event, and the deck wants Managers held accountable for observing; without a schedule it depends on memory.
+**Why this priority**: The roadmap lists observation due as an event, and the deck wants Managers held accountable for observing; a task with a reason and a date makes each observation traceable instead of depending on memory.
 
-**Independent Test**: With a Teacher whose last observation is older than the interval, run the daily check: one Observation task and one notification appear for that Teacher's Manager, and a second run changes nothing. Submit the observation: the task completes.
+**Independent Test**: As Director, plan an observation of a Teacher for a date with a reason: one Observation task and one notification appear for that Teacher's Manager, and planning it again while one is open changes nothing. Submit the observation: the task completes. Record Principal feedback with action required and plan an observation from it: the task carries the feedback as its reason.
 
 **Acceptance Scenarios**:
 
-1. **Given** an active Teacher placed at a School and no Submitted observation in the last 60 days, **When** the daily check runs, **Then** their Manager gets one Observation task due that day, linked to the Teacher, and one notification.
-2. **Given** an open Observation task for the Teacher, **When** the check runs again, **Then** no second task or notification is created.
-3. **Given** the Manager submits an observation for the Teacher, **When** it is saved, **Then** the open Observation task is completed with the observation as its evidence note and the next due date is 60 days later.
-4. **Given** a Teacher in training, on leave, exited or not placed, **When** the check runs, **Then** no task is created.
-5. **Given** the Teacher's Manager changes by a move of the School's Manager or of the Teacher, **When** the next check runs, **Then** the open task is reassigned to the current Manager through the task module.
+1. **Given** an active Teacher placed at a School, **When** Admin or Director plans an observation with a date and a reason (School feedback, Management plan, Follow-up, Other with text), **Then** their Manager gets one Observation task due on that date, linked to the Teacher and the reason, and one notification.
+2. **Given** an open Observation task for the Teacher, **When** anyone plans another observation for the same Teacher, **Then** no second task or notification is created and the existing plan is shown (the date and reason may be changed by the planner).
+3. **Given** Principal feedback marked "action required", **When** the recorder chooses to plan an observation from it, **Then** an Observation task is created for the Teacher's Manager due the same day, with the feedback as its reason, and the feedback is linked to the plan.
+4. **Given** the Manager submits an observation for the Teacher, **When** it is saved, **Then** the open Observation task is completed with the observation as its evidence note.
+5. **Given** a Teacher in training, on leave, exited or not placed, **When** someone tries to plan an observation, **Then** it is refused with the reason.
+6. **Given** the Teacher's Manager changes by a move of the School's Manager or of the Teacher, **When** the change is made, **Then** the open task is reassigned to the current Manager through the task module.
+7. **Given** a Manager, **When** they plan an observation for a Teacher at one of their Schools, **Then** it is allowed and creates a task for themselves; a Teacher outside their Schools answers "not found".
 
 ---
 
@@ -67,7 +79,7 @@ After a visit, or at any time (for example when the School phones with a complai
 
 ### User Story 4 - Performance Issue, Corrective Action and Follow-up Observation (Priority: P1)
 
-When an observation or Principal feedback shows the Teacher needs improvement, a performance issue is opened. The Manager gives the Teacher feedback, records a corrective action with a follow-up date and, on that date, makes a follow-up observation. If the Teacher improved, the issue is resolved and the Teacher continues. If not, a further round of correction is made, and after the limit the issue is escalated.
+When an observation or Principal feedback shows the Teacher needs improvement, a performance issue is opened. The Manager gives the Teacher feedback, records a corrective action with a follow-up date and, on that date, makes a follow-up observation. If the Teacher improved, the issue is resolved and the Teacher continues. If not, a further round of correction is made (there is no limit on rounds), and the Manager may refer the Teacher or escalate to the Director at any time.
 
 **Why this priority**: This is the performance management loop of the business flow (good: continue; needs improvement: feedback, correction, follow-up).
 
@@ -78,8 +90,8 @@ When an observation or Principal feedback shows the Teacher needs improvement, a
 1. **Given** a Submitted observation with the overall result Needs improvement, **When** it is saved, **Then** a performance issue is opened automatically, with the category, source and Manager, status Open.
 2. **Given** an Open issue, **When** the Manager records a corrective action (what was discussed with the Teacher, what must change, follow-up date), **Then** the issue moves to Under correction and a follow-up Observation task is created for the Manager due on that date.
 3. **Given** a follow-up observation linked to the issue with the result Good, **When** it is submitted, **Then** the issue becomes Resolved - improved and the Teacher continues with no further action.
-4. **Given** a follow-up observation with the result Needs improvement, **When** it is submitted and the issue has had fewer than 2 correction rounds, **Then** a new corrective action is asked for; at the limit the Manager must choose whether to refer the Teacher (Story 5) or escalate to the Director.
-5. **Given** an issue with a follow-up date in the past and no follow-up observation, **When** the daily check runs, **Then** the task module marks it overdue and escalates it under the rules of spec 025; nothing is stored twice.
+4. **Given** a follow-up observation with the result Needs improvement, **When** it is submitted, **Then** a new corrective action is asked for; there is no limit on rounds, and at any time the Manager may instead refer the Teacher (Story 5) or the Director may close or escalate the issue.
+5. **Given** an issue with a follow-up date in the past and no follow-up observation, **When** the follow-up Observation task passes its due date, **Then** the task module marks it overdue and escalates it under the rules of spec 025; nothing is stored twice.
 6. **Given** a performance issue opened from Principal feedback instead of an observation, **When** the corrective action is recorded, **Then** the same loop applies.
 7. **Given** an Open issue, **When** the Director cancels it with a reason (for example raised in error), **Then** it is Cancelled and kept in the history.
 
@@ -116,8 +128,8 @@ Admin and Director see every observation, Principal feedback and performance iss
 1. **Given** records across Managers, **When** the Director opens the list and filters by Manager, School or result, **Then** only matching records appear with counts.
 2. **Given** a Manager, **When** they open the list, **Then** only records for Teachers at their Schools today appear (and records they authored).
 3. **Given** a Teacher, **When** their performance page opens, **Then** observations, Principal feedback, issues and referrals appear in date order with the latest result at the top.
-4. **Given** the Observations due list, **When** opened, **Then** it shows each active placed Teacher whose next observation is due or overdue, with the days overdue and the last result.
-5. **Given** the management dashboard (028), **When** it asks for counts, **Then** it receives observations done, observations due, open issues and referrals per Manager and per Zone through a read-only summary.
+4. **Given** the Planned observations list, **When** opened, **Then** it shows each open Observation task for a Teacher with the planned date, the reason, the days overdue and the Teacher's last result.
+5. **Given** the management dashboard (028), **When** it asks for counts, **Then** it receives observations done, observations planned and overdue, open issues and referrals per Manager and per Zone through a read-only summary.
 
 ---
 
@@ -126,8 +138,9 @@ Admin and Director see every observation, Principal feedback and performance iss
 - A Teacher moves School between a visit and the submission: the observation keeps the School where the visit happened; the Manager of that School at the time stays the observer.
 - The Manager who holds the task is not the one who observed (a Director or another Manager covers): the observation is recorded by whoever performs it; the task completes only if the observer is the assignee, otherwise the assignee or the Director completes it with a note.
 - Admin or Director records an observation themselves: allowed; no task is completed, and the observer is shown by name.
-- A School has no Principal contact: the Manager types the Principal's name on the permission record.
-- Two observations of the same Teacher on the same day: both kept; only the latest Submitted counts for the next due date.
+- A School has no Principal contact: the Manager types the Principal's name on the permission record, if they record one.
+- Two observations of the same Teacher on the same day: both kept.
+- A School gives feedback about a Teacher and no observation is wanted: the feedback is recorded and, if action is required, a performance issue may be opened without any observation.
 - Ratings left blank for an area not seen: "Not observed" is allowed for any area except Overall result; the average ignores it.
 - The Teacher exits while an issue is open: the issue is closed as Resolved - exited, automatically on the next check.
 - A Manager records feedback that names another person (a pupil or a parent): free text is limited to 2000 characters and kept as written; no pupil data fields exist.
@@ -147,11 +160,11 @@ Admin and Director see every observation, Principal feedback and performance iss
 - **FR-005**: An observation MUST be Draft until submitted; a Draft may be saved and edited by its observer only; a Submitted observation is final except through a recorded correction (FR-025).
 - **FR-006**: Up to 5 files (photo, PDF, document) MAY be attached to an observation through the shared file store.
 
-**Principal permission**
+**Principal permission (optional)**
 
-- **FR-007**: Before submitting, the observer MUST record the Principal's permission: the name of the person who gave it (defaulting to the School's recorded Principal), how it was given (in person, phone, message, written), and the date. Submitting without it is refused.
+- **FR-007**: The observer MAY record the Principal's permission: the name of the person who gave it (defaulting to the School's recorded Principal), how it was given (in person, phone, message, written), and the date. Permission is optional: its absence never blocks saving or submitting, and the observation shows whether it was recorded.
 - **FR-008**: The system MUST allow the visit to be recorded as Not held, with a reason (Principal declined, Principal absent, Teacher absent, School closed, other with text); a Not held visit needs no ratings and does not satisfy a due observation.
-- **FR-009**: Whether permission is required for every observation is a code default of "required" (see Assumptions).
+- **FR-009**: No role or setting can make permission mandatory in version 1 (confirmed in clarify, 2026-10-20).
 
 **Principal feedback**
 
@@ -160,19 +173,19 @@ Admin and Director see every observation, Principal feedback and performance iss
 - **FR-012**: Feedback marked action required MUST offer to open a performance issue, or to add it to the Teacher's open issue.
 - **FR-013**: Feedback can be withdrawn by its recorder, or by Admin or Director, with a reason; withdrawn feedback stays in the history and no longer counts.
 
-**Due observations and tasks**
+**Planned observations and tasks**
 
-- **FR-014**: A Teacher is due an observation when they are ACTIVE, placed at a School today, and have no Submitted observation within the observation interval (default 60 days; a Teacher with none is due 30 days after their placement start).
-- **FR-015**: A daily check MUST create one Observation task per due Teacher for their Manager through the shared task-creation interface, idempotent per Teacher while one is open, due the day it is created, and publish an "observation due" event that notifications turns into one in-app notification for that Manager.
+- **FR-014**: There is no fixed observation interval and no scheduled job. An observation is planned by Admin or Director for any ACTIVE Teacher placed at a School, or by a Manager for a Teacher at their Schools, with a date and a reason (School feedback, Management plan, Follow-up, Other with text); or it is triggered from Principal feedback marked action required (FR-012). A Teacher who is not ACTIVE or not placed cannot be planned.
+- **FR-015**: Planning MUST create one Observation task for the Teacher's Manager through the shared task-creation interface, due on the planned date, idempotent per Teacher while one is open (a second plan updates the open one), and publish an "observation planned" event that notifications turns into one in-app notification for that Manager. A Teacher with no Manager is refused with the reason.
 - **FR-016**: Submitting an observation by the task's assignee MUST complete the open Observation task for that Teacher; recording Principal feedback by the assignee MUST complete the open Principal Feedback task linked to that Teacher.
-- **FR-017**: The check MUST reassign an open Observation task whose Teacher's Manager has changed, and MUST skip Teachers not ACTIVE or not placed.
+- **FR-017**: A change of the Teacher's Manager MUST reassign the open Observation task to the current Manager through the task module.
 
 **Performance issues**
 
 - **FR-018**: A performance issue links to one Teacher and School and to its source (an observation or a Principal feedback), with a category and a status: Open, Under correction, Referred, Resolved (improved, continue, transferred, replaced, exited), Cancelled.
 - **FR-019**: A Submitted observation with the overall result Needs improvement or Unsuitable MUST open an issue unless the Teacher already has an open one, in which case it is added to it. A feedback with action required opens or joins one only when the recorder agrees.
 - **FR-020**: A corrective action records what was discussed with the Teacher, what must change, the recorder, and a follow-up date between 1 and 60 days ahead; recording it moves the issue to Under correction and creates a follow-up Observation task through the shared interface, due on the follow-up date.
-- **FR-021**: A follow-up observation is a normal observation linked to the issue. Result Good resolves the issue as improved. Result Needs improvement asks for a further corrective action up to a limit of 2 rounds; after the limit the observer MUST either refer the Teacher or escalate to the Director with a note.
+- **FR-021**: A follow-up observation is a normal observation linked to the issue. Result Good resolves the issue as improved. Result Needs improvement asks for a further corrective action; there is no limit on correction rounds. The round number MUST be shown on the issue, and the observer MAY at any point refer the Teacher (FR-022) or escalate to the Director with a note.
 - **FR-022**: An Unsuitable result, or a failed correction, lets the observer record a referral with a recommendation (Transfer or Replace), a reason of at least 20 characters, and the supporting records; the issue becomes Referred and each active Director gets a notification.
 - **FR-023**: The module MUST expose a read-only interface for spec 027: a Teacher's Referred issues with recommendation, reason, linked observations and feedback; and a way for 027 to report that the Teacher was transferred or replaced, which closes the issue as Resolved - transferred or Resolved - replaced.
 - **FR-024**: When a Teacher exits, open issues for them close as Resolved - exited. Admin or Director can cancel an issue, or close a Referred one as Resolved - continue, with a reason.
@@ -184,8 +197,8 @@ Admin and Director see every observation, Principal feedback and performance iss
 
 **Lists and reports**
 
-- **FR-027**: The system MUST offer lists of observations, Principal feedback and issues, with filters by Zone, School, Manager, Teacher, result or category, status and date range, and with counts; and the lists Observations due, Overdue observations, Open issues and Referred.
-- **FR-028**: The system MUST expose a read-only summary for the management dashboard (028): per Manager and per Zone, observations done in a period, observations due and overdue, open issues, referrals, and resolved issues.
+- **FR-027**: The system MUST offer lists of observations, Principal feedback and issues, with filters by Zone, School, Manager, Teacher, result or category, status and date range, and with counts; and the lists Planned observations, Overdue observations, Open issues and Referred.
+- **FR-028**: The system MUST expose a read-only summary for the management dashboard (028): per Manager and per Zone, observations done in a period, observations planned and overdue, open issues, referrals, and resolved issues.
 - **FR-029**: The system MUST expose the observation as a planned activity through the task module's planned-activity feed by way of its Observation task (no separate feed).
 
 **Access**
@@ -203,7 +216,8 @@ Admin and Director see every observation, Principal feedback and performance iss
 - **Performance Issue**: Teacher, School, source, category, status, opened by and on, correction rounds, closed by, closing reason.
 - **Corrective Action**: per issue and round; discussion, required change, follow-up date, recorder, follow-up task reference.
 - **Referral**: per issue; recommendation, reason, referring user, date, supporting records, decision outcome reported by 027.
-- **Observation Interval and Round Limit**: code defaults (60 days, 2 rounds).
+- **Observation Plan**: Teacher, School, planned date, reason, planned by, source feedback if any, linked Observation task, status (Open, Done, Cancelled).
+- **Correction rounds**: no limit; the count is kept on the issue and shown.
 - **History Entry**: append-only line per change with actor, time, event, before and after.
 
 ## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
@@ -218,14 +232,14 @@ New module **Teacher Performance** (`TEACHER_PERFORMANCE`) with actions View, Cr
 | Teacher  | none | none, and cannot be granted by default (a Teacher's own view of their performance is a sensitive decision, see Assumptions) | None |
 | System   | none | none, cannot be granted | None (business data) |
 
-The constitution's default access matrix gains a Teacher Performance row (PATCH). The navigation model gains the OPERATIONS item Teacher Performance for Admin, Director and Manager; the daily due check, notifications and task integration run as the system, not as a user.
+The constitution's default access matrix gains a Teacher Performance row (PATCH). The navigation model gains the OPERATIONS item Teacher Performance for Admin, Director and Manager; notifications and task integration run as the system, not as a user.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: A Manager records and submits a full observation, including Principal permission, in under 5 minutes.
-- **SC-002**: 100% of Teachers who are active and placed and past their interval have an open Observation task for their Manager the morning after the daily check, with no duplicates however often the check runs.
+- **SC-001**: A Manager records and submits a full observation, in under 5 minutes.
+- **SC-002**: 100% of planned observations and feedback-triggered plans create exactly one open Observation task for the Teacher's Manager with the right date and reason, with no duplicates however often the same Teacher is planned.
 - **SC-003**: Every Needs improvement or Unsuitable observation has an open performance issue within the same save, and no such issue stays Open without a corrective action for more than the task module's escalation window.
 - **SC-004**: 100% of corrective actions create exactly one follow-up Observation task due on the follow-up date.
 - **SC-005**: Every endpoint refuses Teacher and System, and a Manager never sees a Teacher outside their Schools (verified for every endpoint).
@@ -239,14 +253,14 @@ The constitution's default access matrix gains a Teacher Performance row (PATCH)
 Items marked "to confirm in /speckit-clarify" are decisions taken without being able to ask.
 
 - **Real code differs from the planning documents.** The roadmap names the modules "observation" and "performance"; this spec treats it as one feature and leaves the module layout to the plan. The `tasks` module already has the task types Observation and Principal feedback, and its creation interface (C2) refuses an assignee who is not an active Manager, so an observation by a Director or Admin creates no task. Principal contacts already exist on a School record (spec 016, amendment A8), so the Principal's name is read from there rather than being added. A Teacher has only four stored statuses (In training, Active, On leave, Exited); "Under review", "Transferred" and "Replaced" in the business flow are derived views (roadmap D3), so a performance issue is its own record and does not change a Teacher's status. Placement comes from the Teacher-to-School assignment owned by the school contract (spec 012) and read through the teacher module's public interfaces; the Manager scope uses the existing Teacher scope and School-to-Manager assignment.
-- **Observation frequency** (open item 7 of the business flow): default every 60 days per Teacher and first due 30 days after placement; a code default, not a settings screen. To confirm in /speckit-clarify.
-- **Principal permission** (open item 8): required for every observation by default, recorded as a statement by the Manager (name, way, date); no Principal login or portal. To confirm in /speckit-clarify.
-- **Teacher's own view** (open item 16): a Teacher cannot see their observations, ratings, Principal feedback or issues by default; no Teacher-facing screen is built and the module cannot be granted to Teacher without a later spec. Sharing feedback with the Teacher is the Manager's conversation, recorded as the corrective action. To confirm in /speckit-clarify.
+- **Observation frequency** (open item 7 of the business flow): confirmed in clarify (2026-10-20): no fixed interval. Observations are planned by management when needed or triggered by School feedback.
+- **Principal permission** (open item 8): confirmed in clarify (2026-10-20): optional, recorded as a statement by the Manager (name, way, date) when given; no Principal login or portal.
+- **Teacher's own view** (open item 16): a Teacher cannot see their observations, ratings, Principal feedback or issues by default; no Teacher-facing screen is built and the module cannot be granted to Teacher without a later spec. Sharing feedback with the Teacher is the Manager's conversation, recorded as the corrective action. Confirmed in clarify (2026-10-20).
 - **Who may observe**: Managers for their Schools' Teachers, and Admin and Director for any. Only a Manager gets a task. The Zone Manager is the Manager role.
-- **Result choice**: the observer chooses the overall result; the average and suggested result are a guide only. No weighted score, appraisal grade, pay or increment link in version 1. To confirm in /speckit-clarify.
-- **Correction rounds**: limit of 2 before referral or Director escalation; follow-up date 1 to 60 days. To confirm in /speckit-clarify.
+- **Result choice**: the observer chooses the overall result; the average and suggested result are a guide only. No weighted score, appraisal grade, pay or increment link in version 1. Confirmed in clarify (2026-10-20).
+- **Correction rounds**: confirmed in clarify (2026-10-20): no limit; follow-up date 1 to 60 days.
 - **Referral decision**: the Director or the Zone Manager approves a transfer or replacement (roadmap D5) in spec 027; here only the recommendation is recorded. Until spec 027 exists, a Director may close a Referred issue by hand.
 - **Rating scale and areas** are taken from the business flow's observation form (nine items; Overall performance is the result). Class and subject are free text; no pupil data is held.
-- **Notifications** are in-app (spec 010): observation due, and referral recorded for the Directors. Overdue observation and escalation reuse the task module's events. Push, SMS and email are out of scope.
+- **Notifications** are in-app (spec 010): observation planned, and referral recorded for the Directors. Overdue observation and escalation reuse the task module's events. Push, SMS and email are out of scope.
 - **Out of scope**: transfer and replacement (027), substitute arrangements (017a), Manager performance analytics beyond the read-only summary (028), GPS or photo verification of the visit (the Manager's own check-in and visits are in 032 and 033), School or Principal portals, Teacher self-service, scoring tied to pay or incentives, and mobile screens (a later mobile spec).
 - Business time zone follows the existing setting (Asia/Kolkata); "today" uses it.
