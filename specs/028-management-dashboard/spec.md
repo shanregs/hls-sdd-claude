@@ -8,6 +8,16 @@
 
 **Input**: User description: "028-management-dashboard: the Director's (and Admin's) management overview, one screen answering 'what needs attention today' across Managers, Schools, Teachers, recruitment, attendance, leave, payroll, plus tiles for expenses, receivables, training, observations and incentives as those specs arrive." MVP priority 1. Module `reporting` (reads other modules only through their public interfaces and owns no transactional data).
 
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: Should Admin and Director be able to choose which tiles they see and in what order? → A: No. Fixed layout in version 1; FR-021 and the stored Dashboard Preference are dropped.
+- Q: Should the Director's mobile Home show the Dashboard tiles in this spec? → A: No. Mobile is out of scope; this spec serves tile results that a later mobile spec can reuse.
+- Q: Should the approvals inbox be built in this spec? → A: Yes. Each existing module reports its pending decisions; the inbox is read-only and lists them oldest first with links.
+- Q: Should the Dashboard refresh itself while open? → A: No. Figures are read on page load and on Refresh only, with the time taken shown.
+- Q: Build the Dashboard now, or wait for specs 015, 022 and 026? → A: Build now on what exists; each of those specs adds its own tile when it ships.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - One Screen for Today (Priority: P1) 🎯 MVP
@@ -173,7 +183,7 @@ A Manager's Dashboard shows the same kinds of tiles, but only for their Zones, S
 - A month whose attendance is not locked yet: payroll figures state the month is still open.
 - A tile's figure and its list differ because a record changed in between: the Dashboard shows when its figures were taken and offers Refresh.
 - Many tiles or a large Zone: each area appears as it arrives; a slow area never blocks the others.
-- A mobile user opens Home: the Director's mobile Home shows the permitted tile figures in a single column; the rest of the mobile Home is unchanged.
+- A mobile user opens Home: unchanged by this spec; mobile tiles come with a later mobile spec.
 - Phone-width browser or dark mode: no horizontal scroll, figures stay readable.
 - An Admin who is also the requester of a leave request: that request is not in their inbox to decide (FR-014).
 
@@ -197,18 +207,18 @@ A Manager's Dashboard shows the same kinds of tiles, but only for their Zones, S
 - **FR-014**: The system MUST NOT offer a user a decision on their own request in the inbox.
 - **FR-015**: The system MUST apply data scope: a Manager's Dashboard covers only their Zones, Schools, Teachers and their own tasks, visits and check-in, with no Manager-by-Manager table, no payroll and no organization-wide figure; Teacher and System dashboards are unchanged by this spec; for a user with several roles the Dashboard is the union, each tile once.
 - **FR-016**: The system MUST replace the placeholder boxes on the Admin and Director dashboards with these tiles, keep the existing Manager, Teacher and System dashboard content, and keep the server-provided menu and permissions as the only source of what appears (no role name tested in the screen).
-- **FR-017**: The system MUST show the time the figures were taken, offer Refresh, and show each area as soon as it is ready, with consistent loading, empty and error states and a retry per area.
-- **FR-018**: The system MUST show the same tile figures on the mobile Home for a user whose menu offers them, in a single column, without changing the rest of the mobile Home.
+- **FR-017**: The system MUST show the time the figures were taken, offer Refresh (figures are read only on load and on Refresh, never automatically), and show each area as soon as it is ready, with consistent loading, empty and error states and a retry per area.
+- **FR-018**: The tile results MUST be served by endpoints that do not depend on the web screen, so a later mobile spec can show them on the mobile Home; this spec changes no mobile screen.
 - **FR-019**: The system MUST state amounts in Indian Rupees with Indian digit grouping and dates as DD/MM/YYYY, support light and dark themes, work at phone width without horizontal scroll, and be operable by keyboard with figures a screen reader can read.
 - **FR-020**: The system MUST NOT expose any figure, name or amount beyond what the caller's permission and scope allow, even to a request made directly to the server. Reading the Dashboard is not audited.
-- **FR-021**: The system SHOULD let Admin and Director choose which available tiles they see and in what order, remembered per user, with the default set when nothing is chosen (lowest priority; see Assumptions).
+- **FR-021**: The Dashboard layout MUST be fixed in version 1: every user sees the same areas and tiles in the same order, subject only to permission and scope. There is no per-user choice of tiles and the Dashboard stores no preferences.
 
 ### Key Entities *(include if feature involves data)*
 
 - **Tile**: a registered description of one figure: area, label, period kind (today, month, all time), required permission, Zone-aware or not, link, and a way to read the figure. Owned by the spec that provides the figure; the Dashboard owns none of the data.
 - **Tile Result**: the figure for one user at one moment: a number, a pair of numbers, or a state ("no data yet", "not available yet", "not a working day", error), with the time taken.
 - **Approval Item**: a decision waiting for a user: kind, requester, subject, date asked, link.
-- **Dashboard Preference** (per user, FR-021): the chosen tiles and their order. The only data the Dashboard stores.
+- The Dashboard stores no data of its own.
 
 ## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
 
@@ -240,11 +250,11 @@ A Manager's Dashboard shows the same kinds of tiles, but only for their Zones, S
 - **Real code differs from the planning documents, and the code is followed.** There is no `reporting` module in the code yet. The Admin and Director dashboards are skeletons (placeholder boxes plus the pending-Teacher-leave count); the Manager dashboard (spec 005) shows Zone, School and Teacher counts; the mobile Home is a generic home with cards for leave, the Manager's day, visits and tasks, shown by what the server's menu offers. The marketing dashboard (023), recruitment dashboard (016) and system dashboard already exist as their own screens with their own endpoints; this spec reuses their figures and does not recompute them.
 - **Figures that exist today and are used**: the task summary (today, upcoming, overdue, awaiting, escalated, done; 025); marketing visits, stages, won, lost, win rate, demand and supply (023); recruitment counts and joining ratio (016); Manager missed check-ins, on leave today, pending leave and forgotten check-in requests, and the Manager month figures through the Manager attendance read interface (032); Teacher status, attendance and leave roll-ups, away-today and the pending Teacher leave count (005, 008, 009); substitution requirements (017a); payroll runs with states draft, awaiting approval, approved and cancelled, with payments and owed (013b); month locks.
 - **Figures that depend on specs not built, so absent or "not available yet"**: expenses, budget vs spend and pending expense approvals (015); billed, collected, outstanding and overdue Schools (022; spec 012 has contracts and occupancy but no invoices); training today and non-compliance (024); observations and performance issues (026); transfers, replacements and the Teacher views Available, Assigned, Under Review, Transferred and Replaced (027; the code stores only four statuses); incentives (030); content (029); and inbox kinds for expenses, incentives, transfers and MoU documents (031). The roadmap's 028 scope for these is met by registering their tiles later (FR-013).
-- The roadmap lists 028's dependencies as 012, 016, 023, 025, 026, 032, 013b, 015 and 022; 026, 015 and 022 are not built. 028 is built on what exists and those dependencies become "tile added by that spec", not blockers. To confirm in /speckit-clarify.
-- The approvals inbox is read-only aggregation: deciding stays on each module's own screen. The shared approval pattern (C3, spec 015) does not exist yet, so the inbox collects what each module reports rather than reading one approvals store. To confirm in /speckit-clarify.
-- The default tile set and order follow the areas in the user stories; per-user choice and order (FR-021) is the lowest priority and is dropped first if the build is tight. To confirm in /speckit-clarify.
-- Figures are read when the page loads or is refreshed (no live push) and the page shows when they were taken; no auto-refresh interval is promised. To confirm in /speckit-clarify.
+- The roadmap lists 028's dependencies as 012, 016, 023, 025, 026, 032, 013b, 015 and 022; 026, 015 and 022 are not built. 028 is built on what exists and those dependencies become "tile added by that spec", not blockers (confirmed in clarify, 2026-10-20).
+- The approvals inbox is read-only aggregation: deciding stays on each module's own screen. The shared approval pattern (C3, spec 015) does not exist yet, so each existing module reports its own pending decisions to the inbox rather than the inbox reading one approvals store. Confirmed in clarify (2026-10-20): built in this spec.
+- The tile set and order follow the areas in the user stories and are fixed in version 1 (confirmed in clarify, 2026-10-20); later specs add tiles to these areas.
+- Figures are read when the page loads or is refreshed (no live push) and the page shows when they were taken; no auto-refresh. Confirmed in clarify (2026-10-20).
 - Admin and Director see the same Dashboard, differing only where the permission matrix differs (for example the Final Stage review is the Director's by default, locking Manager months the Admin's). To confirm in /speckit-clarify.
-- Mobile: only the Home tiles for Director and Admin are in scope (FR-018), reusing the server's tile results. To confirm in /speckit-clarify.
+- Mobile: out of scope (confirmed in clarify, 2026-10-20); a later mobile spec reuses the server's tile results.
 - Manager performance comparison is limited to figures that exist: tasks, visits, check-ins and Schools won per owner. Incentives, observations and content contributions arrive with their specs. The Manager activity calendar (spec 035) is a separate screen.
 - Out of scope: downloadable and scheduled reports and exports (spec 014), charts and trends over time beyond the month picker, editing any figure, the tiles of unbuilt modules themselves, the Teacher and System dashboards, and push notifications.
