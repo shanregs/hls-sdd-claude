@@ -69,3 +69,7 @@ Observation `actions`: `edit` (Draft and observer), `submit`, `notHeld`, `correc
 Planning or re-planning creates or updates one Observation task and sends `OBSERVATION_PLANNED` to the Manager. A corrective
 action creates one follow-up Observation task. A referral sends `REFERRAL_RECORDED` to every active Director. Task overdue and
 escalation come from spec 025.
+
+## As built
+
+A correction is sent as `{reason, form}`. `POST /feedback/{id}/plan` answers 201 for a new plan and 200 when the open plan was changed. `GET /options` returns the coded values for the screens.

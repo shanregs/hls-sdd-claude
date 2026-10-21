@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Observation
+description: "One observation. Add ?versions=true (Admin and Director) for every version. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}"
+method: GET
+order: 3000

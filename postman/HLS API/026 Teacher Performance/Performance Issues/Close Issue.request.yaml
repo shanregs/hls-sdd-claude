@@ -1,0 +1,16 @@
+$kind: http-request
+name: Close Issue
+description: "Admin or Director only. outcome CANCELLED (with a reason) or CONTINUE (a Referred issue the Director decides should continue). Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues/{{issueId}}/close"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "outcome": "CANCELLED",
+      "reason": "Raised in error",
+      "version": "{{issueVersion}}"
+    }
+order: 6000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Feedback
+description: "Filters zoneId, schoolId, teacherId, category, actionRequired, status, from and to. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/feedback?teacherId={{teacherId}}"
+method: GET
+order: 1000

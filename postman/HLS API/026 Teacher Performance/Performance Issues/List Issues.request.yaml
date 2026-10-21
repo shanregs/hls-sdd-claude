@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Issues
+description: "view=open (Open and Under correction) or referred; or filter by status. Also zoneId, schoolId, managerId, teacherId, category, from and to. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues?view=open"
+method: GET
+order: 1000

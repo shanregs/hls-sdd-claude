@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Issue
+description: "The issue with its linked records, corrective actions, round number, referral and the actions allowed. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues/{{issueId}}"
+method: GET
+order: 2000

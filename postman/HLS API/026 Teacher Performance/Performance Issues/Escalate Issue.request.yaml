@@ -1,0 +1,14 @@
+$kind: http-request
+name: Escalate Issue
+description: "Records a note for the Director in the history; the status does not change. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues/{{issueId}}/escalate"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "The Teacher has not responded to feedback"
+    }
+order: 4000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Remove Attachment
+description: "Draft only; a reason is required. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}/attachments/{{fileId}}?reason=Wrong+file"
+method: DELETE
+order: 11000

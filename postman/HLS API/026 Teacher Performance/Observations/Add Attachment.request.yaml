@@ -1,0 +1,6 @@
+$kind: http-request
+name: Add Attachment
+description: "multipart/form-data with a file part named \"file\" (jpg, png, pdf, docx, xlsx, txt; at most 5 per observation). Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}/attachments"
+method: POST
+order: 9000
