@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download Attachment
+description: "Sent as a download. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}/attachments/{{fileId}}"
+method: GET
+order: 10000

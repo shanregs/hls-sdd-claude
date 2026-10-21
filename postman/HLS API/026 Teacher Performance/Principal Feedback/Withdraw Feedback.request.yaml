@@ -1,0 +1,15 @@
+$kind: http-request
+name: Withdraw Feedback
+description: "Marks it Withdrawn; it stays in the history. Recorder, Admin or Director. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/feedback/{{feedbackId}}/withdraw"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Recorded for the wrong Teacher",
+      "version": "{{feedbackVersion}}"
+    }
+order: 5000

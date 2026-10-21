@@ -1,0 +1,39 @@
+$kind: http-request
+name: Submit Observation
+description: "Submits the draft; the body (same fields as Save Draft) is saved first. Needs at least one rating, an overall result, and strengths or areas for improvement. Needs CREATE."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}/submit"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": "{{observationVersion}}",
+      "className": "Class 5",
+      "subject": "English",
+      "durationMinutes": 40,
+      "ratings": {
+        "ENGLISH_COMMUNICATION": 4,
+        "TEACHING_ABILITY": 4,
+        "CONTENT_DELIVERY": 4,
+        "CLASSROOM_MANAGEMENT": 3,
+        "STUDENT_ENGAGEMENT": 4,
+        "PREPARATION": 4,
+        "CONFIDENCE": 4,
+        "PUNCTUALITY": 5
+      },
+      "overallResult": "GOOD",
+      "strengths": "Clear voice and good rapport with the pupils",
+      "improvements": null,
+      "permission": {
+        "by": "Mrs Rao",
+        "way": "PHONE",
+        "on": "2026-09-10"
+      }
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('observationId', j.id); pm.collectionVariables.set('observationVersion', j.version); }"
+    language: text/javascript
+order: 6000

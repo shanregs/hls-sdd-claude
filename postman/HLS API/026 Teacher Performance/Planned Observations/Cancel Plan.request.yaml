@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cancel Plan
+description: "Cancels the plan and its task. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/plans/{{planId}}?reason=No+longer+needed"
+method: DELETE
+order: 5000

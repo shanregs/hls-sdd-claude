@@ -1,0 +1,21 @@
+$kind: http-request
+name: Record Corrective Action
+description: "Moves the issue to Under correction and plans the follow-up observation. followUpOn must be 1 to 60 days from today. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues/{{issueId}}/corrective-actions"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "discussed": "Talked through the lesson plan and the homework checking",
+      "requiredChange": "Check homework daily and plan lessons in steps",
+      "followUpOn": "2026-10-12",
+      "version": "{{issueVersion}}"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('issueId', j.id); pm.collectionVariables.set('issueVersion', j.version); }"
+    language: text/javascript
+order: 3000

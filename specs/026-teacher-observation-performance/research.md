@@ -116,3 +116,22 @@ Overdue and escalation are the task module's own events.
 
 The mobile screens (a later spec), a Teacher-facing view (needs its own spec), and weighted scoring are out of scope as in the
 spec.
+
+## 14. As built (2026-10-21): changes from the decisions above
+
+- **Task key.** An observation plan's task is addressed by the **plan's own id** (source `OBSERVATION_PLAN`), not by the Teacher id
+  or `{issueId}:{round}`. A completed task stays live in the task module until it is verified, so a Teacher-keyed task would have
+  blocked the next plan. One open plan per Teacher is kept by a partial unique index on `observation_plan`. A corrective action
+  reuses the Teacher's open plan (kept at the earlier date) or makes its own; its `follow_up_source_key` records the plan's key.
+- **A fifth C2 operation.** `TaskCreation.completeLinked(type, linkedType, linkedId, assigneeUserId, note)` completes the assignee's
+  open tasks of one type linked to a record. The Principal feedback task is created by hand, so it has no source key to address it
+  by; Principal feedback uses it with `PRINCIPAL_FEEDBACK` and linked type `TEACHER` (FR-016).
+- **Interface names.** The 027 record type is `PerformanceReferrals.ReferralInfo`; `reportDecision` takes the outcome as the text
+  `TRANSFERRED` or `REPLACED`.
+- **Summary keys.** `PerformanceSummary.byManager` is keyed by the Manager's **user id** (the School's Manager when the record was
+  made; an open plan belongs to the Teacher's Manager today); `byZone` by Zone id. Observations done, resolved issues and referrals
+  fall in the period; planned and overdue observations and open issues are counted as they stand today.
+- **Request shapes.** A correction is `POST /observations/{id}/correct` with `{reason, form}`; `POST /feedback/{id}/plan` answers 201
+  when a plan was made and 200 when the open plan was changed; `GET /options` returns the coded values for the screens.
+- **Validation order.** Request fields that a Teacher or System caller could trip over (for example `actionRequired`) are nullable
+  wrappers, so the permission check always answers 403 before any 400.

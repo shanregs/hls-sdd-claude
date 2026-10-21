@@ -95,4 +95,16 @@ class DevSeedTest extends IntegrationTestBase {
         // started once: a second start of the same month is refused, so the seeder never duplicates or changes a run
         assertThat(post("/api/v1/payroll/runs", admin.token(), java.util.Map.of("month", last)).status()).isEqualTo(409);
     }
+
+    @Test
+    void teacherPerformanceDemoDataHasObservationsAnIssueAndAPlan() {
+        Signed director = signIn(null, "9800000002", "Password123!");
+
+        Resp observations = get("/api/v1/teacher-performance/observations?size=100", director.token());
+        assertThat(observations.status()).as(observations.body()).isEqualTo(200);
+        assertThat(observations.body()).contains("\"overallResult\":\"GOOD\"", "\"overallResult\":\"NEEDS_IMPROVEMENT\"");
+        assertThat(get("/api/v1/teacher-performance/issues?view=open", director.token()).body()).contains("UNDER_CORRECTION");
+        assertThat(get("/api/v1/teacher-performance/feedback", director.token()).body()).contains("Demo Principal");
+        assertThat(get("/api/v1/teacher-performance/plans", director.token()).body()).contains("FOLLOW_UP", "SCHOOL_FEEDBACK");
+    }
 }

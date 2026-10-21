@@ -1,0 +1,22 @@
+$kind: http-request
+name: Correct Feedback
+description: "A new version with a reason. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/feedback/{{feedbackId}}/correct"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category": "COMMUNICATION",
+      "comments": "The Principal meant the communication with parents",
+      "actionRequired": false,
+      "reason": "Wrong category",
+      "version": "{{feedbackVersion}}"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('feedbackId', j.id); pm.collectionVariables.set('feedbackVersion', j.version); }"
+    language: text/javascript
+order: 4000
