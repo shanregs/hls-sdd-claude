@@ -17,6 +17,7 @@
 - Q: If a Teacher is still rated Needs improvement after corrective action, what happens next? → A: No limit on correction rounds; the Manager keeps correcting until the Teacher improves or is referred, and may refer or escalate at any time.
 - Q: Who chooses the overall result: the observer or the system from the average? → A: The observer chooses; the average and suggested result are a guide only (FR-004 unchanged).
 - Q: Should a Teacher be able to see their own observation ratings, Principal feedback and performance issues? → A: No. Teachers see nothing in version 1; sharing feedback is the Manager's conversation, recorded as the corrective action.
+- Q: Is "Principal declined" a hard stop, given permission is optional? → A: No. It is only a reason recorded for a visit that did not take place; the Manager may still plan or record another observation, and declined visits are flagged in the management lists.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -35,7 +36,7 @@ A Manager has been asked to observe a Teacher placed at one of their Schools. Th
 3. **Given** a completed form with a rating (1 to 5) for every area, **When** the Manager submits, **Then** the observation is stored as Submitted with an overall result and the average rating shown.
 4. **Given** a Teacher who is not placed at any of the Manager's Schools, **When** the Manager asks for an observation of them, **Then** the answer is "not found".
 5. **Given** a Submitted observation, **When** the Manager corrects it, **Then** the correction needs a reason, the earlier values stay in the history, and the Director can see both.
-6. **Given** the Principal declined or was unavailable, **When** the Manager records the visit as "not held" with a reason, **Then** no ratings are needed, the observation due stays open, and the attempt shows in the history.
+6. **Given** the Principal declined or was unavailable, **When** the Manager records the visit as "not held" with a reason, **Then** no ratings are needed, the observation due stays open, the attempt shows in the history (a "Principal declined" visit is flagged in the management lists), and the Manager may still plan or record another observation of the Teacher.
 
 ---
 
@@ -163,7 +164,7 @@ Admin and Director see every observation, Principal feedback and performance iss
 **Principal permission (optional)**
 
 - **FR-007**: The observer MAY record the Principal's permission: the name of the person who gave it (defaulting to the School's recorded Principal), how it was given (in person, phone, message, written), and the date. Permission is optional: its absence never blocks saving or submitting, and the observation shows whether it was recorded.
-- **FR-008**: The system MUST allow the visit to be recorded as Not held, with a reason (Principal declined, Principal absent, Teacher absent, School closed, other with text); a Not held visit needs no ratings and does not satisfy a due observation.
+- **FR-008**: The system MUST allow the visit to be recorded as Not held, with a reason (Principal declined, Principal absent, Teacher absent, School closed, other with text); a Not held visit needs no ratings and does not satisfy a due observation. "Principal declined" is only a recorded reason: it never blocks planning or recording a further observation, and it is flagged in the lists for Admin and Director (FR-027).
 - **FR-009**: No role or setting can make permission mandatory in version 1 (confirmed in clarify, 2026-10-20).
 
 **Principal feedback**
@@ -197,7 +198,7 @@ Admin and Director see every observation, Principal feedback and performance iss
 
 **Lists and reports**
 
-- **FR-027**: The system MUST offer lists of observations, Principal feedback and issues, with filters by Zone, School, Manager, Teacher, result or category, status and date range, and with counts; and the lists Planned observations, Overdue observations, Open issues and Referred.
+- **FR-027**: The system MUST offer lists of observations, Principal feedback and issues, with filters by Zone, School, Manager, Teacher, result or category, status and date range, and with counts; and the lists Planned observations, Overdue observations, Open issues and Referred. Visits recorded as Not held with the reason Principal declined MUST be filterable and flagged.
 - **FR-028**: The system MUST expose a read-only summary for the management dashboard (028): per Manager and per Zone, observations done in a period, observations planned and overdue, open issues, referrals, and resolved issues.
 - **FR-029**: The system MUST expose the observation as a planned activity through the task module's planned-activity feed by way of its Observation task (no separate feed).
 
