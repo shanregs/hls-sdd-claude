@@ -1,0 +1,74 @@
+# Production stack for the single AWS VM: PostgreSQL + backend + nginx frontend + Cloudflare Tunnel.
+# Nothing is published on the host: users reach nginx only through the tunnel, and PostgreSQL and the backend are
+# reachable only on the compose network. See docs/aws-deployment-and-ddos-protection.md.
+#
+# Setup:  cp .env.prod.example .env.prod   (fill in every value, keep the file out of git)
+# Start:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+name: hls-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hls
+      POSTGRES_USER: hls
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env.prod}
+    # Sized for a 4 GB VM shared with the backend.
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "effective_cache_size=768MB",
+              "-c", "max_connections=50", "-c", "statement_timeout=30000"]
+    volumes:
+      - hls-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hls -d hls"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    mem_limit: 1g
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hls
+      DB_USERNAME: hls
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env.prod}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env.prod}
+      COOKIE_SECURE: "true"
+      HLS_SEED_DEMO_DATA: "false"
+      SMS_PROVIDER: ${SMS_PROVIDER:-msg91}
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY:?set MSG91_AUTH_KEY in .env.prod (any value with SMS_PROVIDER=dev-stub)}
+      MSG91_TEMPLATE_ID: ${MSG91_TEMPLATE_ID:?set MSG91_TEMPLATE_ID in .env.prod (any value with SMS_PROVIDER=dev-stub)}
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx1g"
+    volumes:
+      - hls-files:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 1536m
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        NGINX_CONF: docker/nginx.prod.conf
+    depends_on:
+      - backend
+    mem_limit: 128m
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:2025.9.1
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env.prod}
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  hls-postgres-data:
+  hls-files:
