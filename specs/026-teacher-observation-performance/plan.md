@@ -89,3 +89,8 @@ Manager-change and Teacher-exit events.
 5. Performance issues, corrective action, follow-up, escalation, cancel (US4).
 6. Referrals, the 027 interface, Director notification and closing (US5).
 7. Lists, Teacher page, dashboard summary (US6); then frontend, Postman, demo data, roadmap, constitution row.
+
+## As built (2026-10-21)
+
+Delivered as planned, with the changes recorded in [research.md](research.md) section 14: plan-id task keys, the fifth C2
+operation `completeLinked`, `ReferralInfo`, summary keyed by Manager user id, and the `{reason, form}` correction body.

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Summary
+description: "Counts per Manager and per Zone; a Manager sees only their own. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/summary?from=2026-09-01&to=2026-09-30"
+method: GET
+order: 2000

@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.6 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.6)
+Version change: 1.7.0 → 2.5.7 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.7)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,14 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.7 (PATCH, spec 026): the Default role access matrix gains a Teacher Performance row (observations, Principal feedback,
+    performance issues, corrective actions and referrals). Admin, Director and Manager hold View, Create and Edit; nobody holds
+    Approve or Delete, because the transfer decision belongs to spec 027. A Manager reaches only the Teachers placed at their
+    Schools and the records they wrote; Teacher and System have no access and cannot be granted any, and a Teacher never sees
+    their own observations. The navigation model gains the OPERATIONS item Teacher Performance for Admin, Director and Manager.
+    Principle VII holds: the feature is the `performance` module, which reads `teacher`, `organization`, `school`, `tasks`, `files`
+    and `designation` through their api packages only; only `notification` (and later specs 027 and 028) read `performance.api`.
+    No principle changes.
   - 2.5.6 (PATCH, spec 013b): the Default role access matrix row Payroll is made specific: Admin holds View, Process and
     Export; Director holds View, Approve and Export; Manager, Teacher and System have no access. Process starts,
     computes again, cancels and submits a run and records adjustments and payments; Approve returns or approves it, and
@@ -364,6 +372,7 @@ kept intentionally lightweight for v1.
   | Manager Leave (decide Managers' leave and forgotten check-ins) | View, Approve | View, Approve | — | — | — |
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
+  | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
@@ -411,4 +420,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.6 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-18
+**Version**: 2.5.7 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-21

@@ -142,4 +142,58 @@ class TaskInterfacesTest extends TaskTestBase {
         var everyone = activities.plannedBetween(today(), today().plusDays(5), null);
         assertThat(everyone).extracting(TaskActivities.PlannedActivity::id).contains(inRange, others).doesNotContain(outOfRange, cancelled);
     }
+
+    // ------------------------------------------------------------------ amendment for spec 026: by source key
+
+    @Test
+    void reschedulesCompletesAndCancelsTheOpenTaskBySourceKey() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx manager = manager(admin);
+        String key = "plan-" + UUID.randomUUID();
+        var task = creation.createFollowUp(request(manager.signed().userId(), key, today().plusDays(2)));
+
+        assertThat(creation.reschedule("SCHOOL_BILLING", key, today().plusDays(9), null, null)).isTrue();
+        assertThat(jdbc.queryForObject("select due_on from task where id = ?", java.sql.Date.class, task.id()).toLocalDate())
+                .isEqualTo(today().plusDays(9));
+        assertThat(jdbc.queryForObject("select count(*) from task_history where task_id = ? and event = 'DUE_CHANGED'", Integer.class, task.id()))
+                .isEqualTo(1);
+
+        assertThat(creation.complete("SCHOOL_BILLING", key, "Observation submitted by the Manager", manager.signed().userId())).isTrue();
+        assertThat(statusOf(admin, task.id())).isEqualTo("COMPLETED");
+        // a completed task is no longer open for these operations
+        assertThat(creation.reschedule("SCHOOL_BILLING", key, today().plusDays(10), null, null)).isFalse();
+        assertThat(creation.cancel("SCHOOL_BILLING", key, "no longer needed")).isFalse();
+
+        String other = "plan-" + UUID.randomUUID();
+        var second = creation.createFollowUp(request(manager.signed().userId(), other, today().plusDays(2)));
+        assertThat(creation.cancel("SCHOOL_BILLING", other, "Teacher exited")).isTrue();
+        assertThat(statusOf(admin, second.id())).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    void anUnknownKeyChangesNothing() {
+        assertThat(creation.reschedule("SCHOOL_BILLING", "missing-" + UUID.randomUUID(), today(), null, null)).isFalse();
+        assertThat(creation.complete("SCHOOL_BILLING", "missing-" + UUID.randomUUID(), "A long enough note", null)).isFalse();
+        assertThat(creation.cancel("SCHOOL_BILLING", "missing-" + UUID.randomUUID(), "reason")).isFalse();
+        assertThat(creation.reassign("SCHOOL_BILLING", "missing-" + UUID.randomUUID(), UUID.randomUUID())).isFalse();
+    }
+
+    @Test
+    void reassignsToAnotherActiveManagerAndTellsThem() {
+        String admin = signInAs(Role.ADMIN).token();
+        ManagerCtx first = manager(admin);
+        ManagerCtx second = manager(admin);
+        String key = "plan-" + UUID.randomUUID();
+        var task = creation.createFollowUp(request(first.signed().userId(), key, today().plusDays(2)));
+        startTask(first.token(), task.id());
+
+        assertThat(creation.reassign("SCHOOL_BILLING", key, second.signed().userId())).isTrue();
+        assertThat(jdbc.queryForObject("select assignee_user_id from task where id = ?", UUID.class, task.id()))
+                .isEqualTo(second.signed().userId());
+        assertThat(statusOf(admin, task.id())).isEqualTo("ASSIGNED");
+        assertThat(notificationCountForTask(second.signed().userId(), "TASK_ASSIGNED", task.id())).isEqualTo(1);
+
+        UUID teacher = signInAs(Role.TEACHER).userId();
+        assertThatThrownBy(() -> creation.reassign("SCHOOL_BILLING", key, teacher)).isInstanceOf(InvalidInputException.class);
+    }
 }

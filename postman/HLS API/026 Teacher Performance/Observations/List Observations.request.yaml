@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Observations
+description: "Filters zoneId, schoolId, managerId, teacherId, result (GOOD, NEEDS_IMPROVEMENT, UNSUITABLE), status, from, to and principalDeclined. Needs TEACHER_PERFORMANCE.VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations?teacherId={{teacherId}}&page=0&size=50"
+method: GET
+order: 1000
