@@ -29,6 +29,7 @@ import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
+import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -361,6 +362,14 @@ export function App() {
           element={
             <RouteGuard>
               <SecuritySettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/activity-calendar"
+          element={
+            <RouteGuard>
+              <ActivityCalendarPage />
             </RouteGuard>
           }
         />
