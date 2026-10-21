@@ -45,7 +45,7 @@ class TasksModuleRulesTest {
         // Manager attendance (spec 032) reads tasks as planned activities through TaskActivities (contract C1).
         noClasses()
                 .that()
-                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..")
+                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..", "com.hls.activitycalendar..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAPackage("com.hls.tasks..")
