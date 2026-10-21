@@ -310,6 +310,22 @@ public final class NavigationCatalog {
                     37,
                     EnumSet.of(Role.MANAGER)),
             new NavItem(
+                    "Activity Calendar",
+                    "/operations/activity-calendar",
+                    PermissionModule.ACTIVITY_CALENDAR,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    41,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
+                    "My Activity Calendar",
+                    "/operations/activity-calendar",
+                    PermissionModule.ACTIVITY_CALENDAR,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    41,
+                    EnumSet.of(Role.MANAGER)),
+            new NavItem(
                     "Campus Drives",
                     "/recruitment/drives",
                     PermissionModule.RECRUITMENT,

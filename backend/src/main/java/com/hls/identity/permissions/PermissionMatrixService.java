@@ -101,6 +101,7 @@ public class PermissionMatrixService {
         seedTasks();
         seedManagerAttendance();
         seedPayroll();
+        seedActivityCalendar();
         seedSchoolWorkingDays();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
@@ -265,6 +266,14 @@ public class PermissionMatrixService {
         }
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
             seed(Role.MANAGER, PermissionModule.TASKS, action, true);
+        }
+        grants.invalidateAround();
+    }
+
+    /** Activity calendar defaults (spec 035): Admin, Director and Manager may view; a Manager sees only their own items. */
+    private void seedActivityCalendar() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            seed(role, PermissionModule.ACTIVITY_CALENDAR, PermissionAction.VIEW, true);
         }
         grants.invalidateAround();
     }
