@@ -165,12 +165,12 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 ### Tests for User Story 5
 
-- [ ] T039 [P] [US5] Tests in `backend/src/test/java/com/hls/payroll/run/PayrollTilesTest.java`: `payroll.run` (none, draft, awaiting approval, approved, cancelled; "no run yet" is `OK` text, not an amount of 0), `payroll.paidOwed` (paid and owed equal the run's owed tab via `OwedService`), `payroll.locks` (attendance locked for Teachers and for Managers equals `isLocked`); amounts carry `unit RUPEES`; tiles are `ORG_WIDE_ONLY`
-- [ ] T040 [P] [US5] Security test in `backend/src/test/java/com/hls/reporting/PayrollPermissionTest.java` (SC-007): with Payroll View removed from Admin, the manifest, the Payroll area response, a direct tile request (404) and every other dashboard response contain no payroll key, amount or text; a Manager-only caller gets 404 for the Payroll area
+- [x] T039 [P] [US5] Tests in `backend/src/test/java/com/hls/payroll/run/PayrollTilesTest.java`: `payroll.run` (none, draft, awaiting approval, approved, cancelled; "no run yet" is `OK` text, not an amount of 0), `payroll.paidOwed` (paid and owed equal the run's owed tab via `OwedService`), `payroll.locks` (attendance locked for Teachers and for Managers equals `isLocked`); amounts carry `unit RUPEES`; tiles are `ORG_WIDE_ONLY`
+- [x] T040 [P] [US5] Security test in `backend/src/test/java/com/hls/reporting/PayrollPermissionTest.java` (SC-007): with Payroll View removed from Admin, the manifest, the Payroll area response, a direct tile request (404) and every other dashboard response contain no payroll key, amount or text; a Manager-only caller gets 404 for the Payroll area
 
 ### Implementation for User Story 5
 
-- [ ] T041 [US5] Create `backend/src/main/java/com/hls/payroll/run/internal/PayrollTiles.java` (grant Payroll View, `ORG_WIDE_ONLY`, month period; reuses `RunService` and `OwedService`; link to the run or the Payroll runs list)
+- [x] T041 [US5] Create `backend/src/main/java/com/hls/payroll/run/internal/PayrollTiles.java` (grant Payroll View, `ORG_WIDE_ONLY`, month period; reuses `RunService` and `OwedService`; link to the run or the Payroll runs list)
 
 **Checkpoint**: US5 complete. Systemic guarantees (SC-005) are tested in Phase 12.
 
