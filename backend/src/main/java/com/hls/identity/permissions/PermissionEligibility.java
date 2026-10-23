@@ -53,7 +53,9 @@ public final class PermissionEligibility {
             PermissionModule.MY_MANAGER_ATTENDANCE,
             PermissionModule.SCHOOL_WORKING_DAYS,
             PermissionModule.PAYROLL,
-            PermissionModule.TEACHER_PERFORMANCE);
+            PermissionModule.TEACHER_PERFORMANCE,
+            PermissionModule.EXPENSES,
+            PermissionModule.MY_EXPENSES);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -103,6 +105,14 @@ public final class PermissionEligibility {
     static final Map<PermissionModule, Set<Role>> TEACHER_PERFORMANCE_MODULES = Map.of(
             PermissionModule.TEACHER_PERFORMANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
+    /**
+     * Expenses (spec 015): reviewing, paying and budgeting are for Admin and Director only; every business role may
+     * raise their own claims (System never).
+     */
+    static final Map<PermissionModule, Set<Role>> EXPENSES_MODULES = Map.of(
+            PermissionModule.EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.MY_EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -132,6 +142,10 @@ public final class PermissionEligibility {
         }
         Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
         if (payrollOnly != null && !payrollOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> expensesOnly = EXPENSES_MODULES.get(module);
+        if (expensesOnly != null && !expensesOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

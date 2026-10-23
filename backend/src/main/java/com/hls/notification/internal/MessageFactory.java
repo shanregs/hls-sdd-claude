@@ -233,6 +233,29 @@ public final class MessageFactory {
                 "/operations/payroll/" + runId);
     }
 
+    /** A claim waits for review (spec 015). Names the claimant, never an amount. */
+    public static Text expenseSubmitted(UUID claimId, String claimantName, boolean resubmitted) {
+        return new Text(
+                resubmitted ? "Expense claim resubmitted" : "Expense claim submitted",
+                claimantName + (resubmitted ? " resubmitted" : " submitted") + " an expense claim for review.",
+                "/operations/expenses/" + claimId);
+    }
+
+    public static Text expenseDecided(UUID claimId, String outcome, String reason) {
+        String what = "APPROVED".equals(outcome) ? "approved" : "rejected";
+        return new Text(
+                "Expense claim " + what,
+                "Your expense claim was " + what + because(reason) + ".",
+                "/operations/my-expenses/" + claimId);
+    }
+
+    public static Text expenseReversed(UUID claimId, String reason) {
+        return new Text(
+                "Expense approval reversed",
+                "The approval of your expense claim was reversed and it is back with the reviewers" + because(reason) + ".",
+                "/operations/my-expenses/" + claimId);
+    }
+
     public static String attendanceLink(YearMonth month) {
         return "/my-attendance?month=" + month;
     }

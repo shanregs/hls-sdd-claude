@@ -103,6 +103,7 @@ public class PermissionMatrixService {
         seedPayroll();
         seedSchoolWorkingDays();
         seedTeacherPerformance();
+        seedExpenses();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -264,6 +265,25 @@ public class PermissionMatrixService {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
             for (PermissionAction action : PermissionModule.TEACHER_PERFORMANCE.actions()) {
                 seed(role, PermissionModule.TEACHER_PERFORMANCE, action, true);
+            }
+        }
+        grants.invalidateAround();
+    }
+
+    /**
+     * Expenses defaults (spec 015): Admin holds every action, the Director everything but Process (recording payment);
+     * Admin, Director, Manager and Teacher raise their own claims.
+     */
+    private void seedExpenses() {
+        for (PermissionAction action : PermissionModule.EXPENSES.actions()) {
+            seed(Role.ADMIN, PermissionModule.EXPENSES, action, true);
+            if (action != PermissionAction.PROCESS) {
+                seed(Role.DIRECTOR, PermissionModule.EXPENSES, action, true);
+            }
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
+            for (PermissionAction action : PermissionModule.MY_EXPENSES.actions()) {
+                seed(role, PermissionModule.MY_EXPENSES, action, true);
             }
         }
         grants.invalidateAround();
