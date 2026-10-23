@@ -42,6 +42,8 @@ The full run did not finish, so there is no all-green full-suite result.
 
 ## Not done
 
-- Full frontend suite (`npx vitest run` over every feature).
+- Full frontend suite is not all green: `npx vitest run` gave 85 of 86 files and 866 of 895 tests passing. All 29 failures are in
+  `src/a11y/a11y.test.tsx` (axe hit the 30 s test timeout on a loaded machine; no violations were reported and no performance
+  test failed). A re-run of that file with a 300 s timeout was started; its result is not recorded here.
 - Quickstart sections 1 to 7 in the running app.
 - Spec 038 `YearEntryApiTest` concurrency failure from the earlier run: not re-checked.
