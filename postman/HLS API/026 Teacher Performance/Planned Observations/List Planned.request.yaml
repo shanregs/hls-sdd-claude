@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Planned
+description: "view=planned or overdue; filters zoneId, schoolId, managerId, teacherId. Opening it as Admin or Director also brings the tasks up to date with the Teachers' current Managers. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/plans?view=planned"
+method: GET
+order: 1000

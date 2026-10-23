@@ -294,6 +294,14 @@ public final class NavigationCatalog {
                     39,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
+                    "Teacher Performance",
+                    "/operations/teacher-performance",
+                    PermissionModule.TEACHER_PERFORMANCE,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    36,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
+            new NavItem(
                     "Manager Tasks",
                     "/operations/tasks",
                     PermissionModule.TASKS,

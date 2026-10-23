@@ -89,6 +89,20 @@ public final class MessageFactory {
                 "/operations/tasks/" + taskId);
     }
 
+    public static Text observationPlanned(String teacherName, LocalDate plannedOn, String reason) {
+        return new Text(
+                shorten("Observation planned: " + teacherName, MAX_TITLE),
+                shorten("Observe " + teacherName + " on " + date(plannedOn) + " (" + reason + ").", MAX_MESSAGE),
+                "/operations/teacher-performance/planned");
+    }
+
+    public static Text referralRecorded(String teacherName, String recommendation, UUID issueId) {
+        return new Text(
+                shorten("Teacher referred: " + teacherName, MAX_TITLE),
+                shorten(teacherName + " was referred for " + ("TRANSFER".equals(recommendation) ? "transfer" : "replacement") + ". Please review.", MAX_MESSAGE),
+                "/operations/teacher-performance/issues/" + issueId);
+    }
+
     public static Text substituteNeeded(String teacherName, String schoolName, LocalDate day, UUID requirementId) {
         return new Text(
                 "Substitute needed",

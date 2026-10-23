@@ -17,6 +17,9 @@ interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificationExec
 
     List<Task> findByParentTaskIdOrderByCreatedAt(UUID parentTaskId);
 
+    List<Task> findByTypeAndLinkedTypeAndLinkedIdAndAssigneeUserIdAndStatusIn(
+            com.hls.tasks.api.TaskType type, String linkedType, UUID linkedId, UUID assigneeUserId, Collection<TaskStatus> statuses);
+
     List<Task> findByDueOnBetweenAndStatusNot(LocalDate from, LocalDate to, TaskStatus status);
 
     List<Task> findByAssigneeUserIdAndDueOnBetweenAndStatusNot(UUID assignee, LocalDate from, LocalDate to, TaskStatus status);

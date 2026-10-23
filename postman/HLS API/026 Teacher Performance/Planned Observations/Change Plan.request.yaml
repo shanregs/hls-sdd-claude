@@ -1,0 +1,19 @@
+$kind: http-request
+name: Change Plan
+description: "Changes the date or reason of an open plan. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/plans/{{planId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "plannedOn": "2026-10-05",
+      "version": "{{planVersion}}"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('planId', j.id); pm.collectionVariables.set('planVersion', j.version); }"
+    language: text/javascript
+order: 4000

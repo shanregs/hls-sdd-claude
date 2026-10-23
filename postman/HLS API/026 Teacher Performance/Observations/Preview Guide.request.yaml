@@ -1,0 +1,18 @@
+$kind: http-request
+name: Preview Guide
+description: "The average and suggested result for a set of ratings; stores nothing. Needs CREATE."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/preview"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "ratings": {
+        "TEACHING_ABILITY": 4,
+        "PUNCTUALITY": 5,
+        "CONFIDENCE": null
+      }
+    }
+order: 4000

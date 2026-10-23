@@ -103,6 +103,7 @@ public class PermissionMatrixService {
         seedPayroll();
         seedActivityCalendar();
         seedSchoolWorkingDays();
+        seedTeacherPerformance();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -254,6 +255,16 @@ public class PermissionMatrixService {
             seed(Role.ADMIN, PermissionModule.SCHOOL_WORKING_DAYS, action, true);
             if (action != PermissionAction.DELETE) {
                 seed(Role.DIRECTOR, PermissionModule.SCHOOL_WORKING_DAYS, action, true);
+            }
+        }
+        grants.invalidateAround();
+    }
+
+    /** Teacher performance defaults (spec 026): Admin, Director and Manager view, record and change; nobody approves or deletes. */
+    private void seedTeacherPerformance() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            for (PermissionAction action : PermissionModule.TEACHER_PERFORMANCE.actions()) {
+                seed(role, PermissionModule.TEACHER_PERFORMANCE, action, true);
             }
         }
         grants.invalidateAround();
