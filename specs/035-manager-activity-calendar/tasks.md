@@ -180,11 +180,11 @@ user story can start before the feeds return completed and cancelled items.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T052 [P] Postman: add the three endpoints for Admin, Director, Manager, Teacher and System, including the 403 and 404 cases, to the collection under `postman/`
-- [ ] T053 [P] Demo data: extend the demo seeder with the quickstart month for Managers A, B and C so the calendar is non-empty in a local run (find the existing seeder with `grep -ril demo backend/src/main/java`); no production effect
-- [ ] T054 [P] Add "Amended by 035" notes: append a short section to `specs/023-school-marketing-mou/spec.md`, `specs/025-manager-tasks/spec.md` and `specs/016-campus-recruitment/spec.md` stating that `activitiesBetween`, `marketing_activity.completed_on`, `campus_drive.held_on` and `drive_date_change` were added additively by 035, that `plannedBetween` is unchanged, and the name of its regression test (T009, T015, T019)
-- [ ] T055 [P] Update `docs/spec-roadmap.md`: the 035 row status, the C1 entry ("second method `activitiesBetween`, amended by 035"), and an "Amended by 035" note on the 016, 023 and 025 rows
-- [ ] T056 [P] Update the default role access matrix in `.specify/memory/constitution.md` with an Activity Calendar row (Admin View, Director View, Manager View own scope, Teacher and System none) and the OPERATIONS navigation items, as a PATCH version bump with sync report
+- [x] T052 [P] Postman: add the three endpoints for Admin, Director, Manager, Teacher and System, including the 403 and 404 cases, to the collection under `postman/`
+- [x] T053 [P] Demo data: extend the demo seeder with the quickstart month for Managers A, B and C so the calendar is non-empty in a local run (find the existing seeder with `grep -ril demo backend/src/main/java`); no production effect
+- [x] T054 [P] Add "Amended by 035" notes: append a short section to `specs/023-school-marketing-mou/spec.md`, `specs/025-manager-tasks/spec.md` and `specs/016-campus-recruitment/spec.md` stating that `activitiesBetween`, `marketing_activity.completed_on`, `campus_drive.held_on` and `drive_date_change` were added additively by 035, that `plannedBetween` is unchanged, and the name of its regression test (T009, T015, T019)
+- [x] T055 [P] Update `docs/spec-roadmap.md`: the 035 row status, the C1 entry ("second method `activitiesBetween`, amended by 035"), and an "Amended by 035" note on the 016, 023 and 025 rows
+- [x] T056 [P] Update the default role access matrix in `.specify/memory/constitution.md` with an Activity Calendar row (Admin View, Director View, Manager View own scope, Teacher and System none) and the OPERATIONS navigation items, as a PATCH version bump with sync report
 - [ ] T057 Run the whole backend suite (one class at a time where slow) and the whole frontend suite (`npm test`, `npm run build`, lint); fix regressions, in particular spec 032 Field day and spec 034 tests
 - [ ] T058 Walk through every section of `specs/035-manager-activity-calendar/quickstart.md` (sections 1 to 8) and record the results in `specs/035-manager-activity-calendar/quickstart-results.md`; tick `specs/035-manager-activity-calendar/checklists/requirements.md` and note any deviation in plan.md
 

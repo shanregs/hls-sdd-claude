@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.7 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.7)
+Version change: 1.7.0 → 2.5.8 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.8)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.8 (PATCH, spec 035): the Default role access matrix gains an Activity Calendar row (read-only view of planned
+    versus done, missed and rescheduled drives, visits, calls, meetings and tasks). Admin and Director hold View for every
+    Manager; a Manager holds View for their own activities only; Teacher and System have no access and cannot be granted
+    any. The navigation model gains the OPERATIONS item Activity Calendar (Admin, Director) and My Activity Calendar
+    (Manager). Principle VII holds: the feature is the `activitycalendar` module, which reads `recruitment`, `tasks`,
+    `organization`, `school` and `identity` through their api packages only; nothing reads `activitycalendar`. No principle
+    changes.
   - 2.5.7 (PATCH, spec 026): the Default role access matrix gains a Teacher Performance row (observations, Principal feedback,
     performance issues, corrective actions and referrals). Admin, Director and Manager hold View, Create and Edit; nobody holds
     Approve or Delete, because the transfer decision belongs to spec 027. A Manager reaches only the Teachers placed at their
@@ -373,6 +380,7 @@ kept intentionally lightweight for v1.
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
+  | Activity Calendar (read-only planned vs done) | View | View | Own activities (View) | — | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
@@ -420,4 +428,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.7 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-21
+**Version**: 2.5.8 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-23

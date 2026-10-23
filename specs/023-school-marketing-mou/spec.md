@@ -324,3 +324,7 @@ Default role access matrix gets a Marketing row when this spec merges.
 - The shared file storage is built in this spec and reused by 015, 031 and 032; its limits (file types and size) are decided in the plan.
 - A renewal is a new prospect linked to the existing School (see Clarifications).
 - Out of scope: a full CRM (email, campaigns, quotes), uploading the signed MoU, e-signature, billing (spec 022), mobile screens.
+
+## Amended by 035
+
+Spec 035 (Manager Activity Calendar) added `activitiesBetween` on the marketing feed and `marketing_activity.completed_on` additively, in migration V70. `plannedBetween` and its `PlannedActivity` values are unchanged; the regression test is `MarketingPlannedBetweenUnchangedTest`.
