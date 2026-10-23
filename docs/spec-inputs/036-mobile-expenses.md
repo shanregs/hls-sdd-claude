@@ -51,3 +51,23 @@ permission keys: 036 uses those 015 adds.
 - Photo limits: size, resolution, count per claim, and the allowed file types.
 - Is a sync conflict possible (claim edited on the web while a draft is waiting), and who wins?
 - Does the approver view on the phone belong here or stay web-only for version 1?
+
+## Hand-off from the implemented spec 015 (where it differs from the text above)
+
+2026-10-23. Spec 015 is implemented; use these facts when 036 is specified.
+
+- **Photos:** the server accepts **jpg, png and pdf only**, at most 10 MB each and **5 bills per claim**. HEIC and WebP are
+  refused (400 with the reason), so the app converts to jpg and keeps each file under 10 MB before upload.
+- **Retries:** send a `clientRequestId` (a UUID made once per claim on the phone) on `POST /api/v1/my-expenses`. A repeat
+  of the same id and the same body returns the first claim (200 instead of 201); the same id with a different body is 409.
+  A likely duplicate on submit (same date, amount and category as a claim that is not Rejected) is 409 with `matches`;
+  resend with `confirmDuplicate: true` after the person agrees.
+- **Dates:** the expense date cannot be in the future or more than **60 days** old when **submitting** (a Draft may hold any date).
+- **Teachers:** a Teacher has My Expenses (own claims only) like a Manager; the menu item comes from the access model.
+- **Buttons:** show only what `allowedActions` lists (`EDIT`, `SUBMIT`, `WITHDRAW`, `DELETE`, `ADD_BILL`, `APPROVE`,
+  `REJECT`, `REVERSE`, `RECORD_PAID`, `REMOVE_BILL`). Nobody can approve a claim they raised.
+- **Links:** `GET /api/v1/my-expenses/link-options?category=&date=` lists the caller's own visits, meetings, drives and tasks
+  near the date (Travel and Fuel) or induction batches (Training Stay); send `link: {kind, ref}` on the claim.
+- **Areas:** `GET /api/v1/my-expenses/areas` lists Head office and the Zones.
+- **Review on the phone:** the review endpoints (`/api/v1/expenses`) exist for Admin and Director; budgets, cost measures and the
+  CSV stay on the web as 036 says.

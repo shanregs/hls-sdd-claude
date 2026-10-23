@@ -1,0 +1,6 @@
+$kind: http-request
+name: Link Options
+description: "What a claim of the category and date may link to: the caller's own visits, meetings, drives and tasks near the date (Travel and Fuel), or induction batches (Training Stay). Needs MY_EXPENSES.CREATE."
+url: "{{baseUrl}}/api/v1/my-expenses/link-options?category=TRAVEL_FUEL&date=2026-10-20"
+method: GET
+order: 3000

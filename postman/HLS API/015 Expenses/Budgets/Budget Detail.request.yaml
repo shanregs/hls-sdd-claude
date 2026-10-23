@@ -1,0 +1,6 @@
+$kind: http-request
+name: Budget Detail
+description: "The claims behind actual by category and by claimant; omit zoneId for all areas, head-office for Head office. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/budgets/detail?month=2026-10&zoneId={{zoneId}}"
+method: GET
+order: 2000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Claims
+description: "All claims, default Submitted oldest first; status ALL lists every status but Draft; zone is a Zone id or head-office. Each row has its age and the area's remaining budget for the claim's month. Needs EXPENSES.VIEW; Manager, Teacher and System get 403."
+url: "{{baseUrl}}/api/v1/expenses?status=SUBMITTED&claimant=&zone=&category=&from=&to=&page=0"
+method: GET
+order: 1000

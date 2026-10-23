@@ -1,0 +1,29 @@
+$kind: http-request
+name: Update Claim
+description: "Changes a Draft or Rejected claim; version must be the current one (409 when stale). Needs MY_EXPENSES.EDIT."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "clientRequestId": "{{clientRequestId}}",
+      "expenseDate": "2026-10-20",
+      "amount": "850.00",
+      "category": "TRAVEL_FUEL",
+      "zoneId": null,
+      "note": "Fuel for the Green Valley visit",
+      "paidBy": "CLAIMANT",
+      "reason": null,
+      "noBillReason": null,
+      "link": {
+        "kind": "SCHOOL_VISIT",
+        "ref": "{{activityId}}"
+      },
+      "confirmDuplicate": false,
+      "submit": false,
+      "version": 0
+    }
+order: 6000

@@ -32,6 +32,15 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.x (PATCH, spec 015; numbered when merged): the Default role access matrix gains two rows. Expenses (review, approve,
+    pay, budgets, cost measures, export): Admin holds View, Create, Edit, Approve, Process and Export; Director holds the same
+    but never Process (recording a payment outside payroll); Manager, Teacher and System have no access and cannot be granted
+    any. My Expenses (a person's own claims): Admin, Director, Manager and Teacher hold View, Create, Edit and Delete on their
+    own claims only; System has none. Nobody approves, rejects or reverses a claim they raised, even holding both approver roles.
+    The navigation model gains the OPERATIONS items Expenses (Admin, Director) and My Expenses (Admin, Director, Manager,
+    Teacher). Principle VII holds: the feature is the `expenses` module; payroll gains the additive `payroll.api`
+    `ReimbursementIntake` and `PayrollAdjustmentApplied`, and `recruitment` and `training` gain read-only `WonSchools` and batch
+    reads; only `notification` reads `expenses.api` events. No principle changes.
   - 2.5.7 (PATCH, spec 026): the Default role access matrix gains a Teacher Performance row (observations, Principal feedback,
     performance issues, corrective actions and referrals). Admin, Director and Manager hold View, Create and Edit; nobody holds
     Approve or Delete, because the transfer decision belongs to spec 027. A Manager reaches only the Teachers placed at their
@@ -373,6 +382,8 @@ kept intentionally lightweight for v1.
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
+  | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
+  | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
