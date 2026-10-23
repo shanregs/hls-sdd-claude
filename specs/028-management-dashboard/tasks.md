@@ -142,16 +142,16 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 ### Tests for User Story 4
 
-- [ ] T032 [P] [US4] Parity tests in `backend/src/test/java/com/hls/teacher/TeacherTilesTest.java` for `teachers.byStatus` (in training, active, on leave, exited by stored status, within `TeacherScopeQueries`)
-- [ ] T033 [P] [US4] Parity tests in `backend/src/test/java/com/hls/substitution/SubstitutionTilesTest.java` for `operations.substitutions` (open, assigned, Manager cover today, as the Substitutions list shows them; cancelled not counted)
-- [ ] T034 [P] [US4] Tests in `backend/src/test/java/com/hls/attendance/TeacherAttendanceTilesTest.java` for `attendance.awayToday` (absent plus approved leave equals the Attendance list away filter; `NOT_WORKING_DAY` on weekly off or holiday) and in `backend/src/test/java/com/hls/leave/TeacherLeaveTilesTest.java` for `leave.pendingTeacher` (equals `PendingLeaveWidget` / Leave Management pending)
+- [x] T032 [P] [US4] Parity tests in `backend/src/test/java/com/hls/teacher/TeacherTilesTest.java` for `teachers.byStatus` (in training, active, on leave, exited by stored status, within `TeacherScopeQueries`)
+- [x] T033 [P] [US4] Parity tests in `backend/src/test/java/com/hls/substitution/SubstitutionTilesTest.java` for `operations.substitutions` (open, assigned, Manager cover today, as the Substitutions list shows them; cancelled not counted)
+- [x] T034 [P] [US4] Tests in `backend/src/test/java/com/hls/attendance/TeacherAttendanceTilesTest.java` for `attendance.awayToday` (absent plus approved leave equals the Attendance list away filter; `NOT_WORKING_DAY` on weekly off or holiday) and in `backend/src/test/java/com/hls/leave/TeacherLeaveTilesTest.java` for `leave.pendingTeacher` (equals `PendingLeaveWidget` / Leave Management pending)
 
 ### Implementation for User Story 4
 
-- [ ] T035 [P] [US4] Create `backend/src/main/java/com/hls/teacher/internal/TeacherTiles.java` (grant Teachers, Zone-aware, link Teachers with status filter)
-- [ ] T036 [P] [US4] Create `backend/src/main/java/com/hls/substitution/internal/SubstitutionTiles.java` (grant Substitution, today, link Substitutions today with status filter; add that filter if missing)
-- [ ] T037 [P] [US4] Create `backend/src/main/java/com/hls/attendance/internal/TeacherAttendanceTiles.java` (reuses `AttendanceReadApi.teachersAwayOn`, `WorkingCalendar`; add the "today, away" filter on the Attendance list if missing)
-- [ ] T038 [P] [US4] Create `backend/src/main/java/com/hls/leave/internal/TeacherLeaveTiles.java` (same query as `PendingLeaveWidget`)
+- [x] T035 [P] [US4] Create `backend/src/main/java/com/hls/teacher/internal/TeacherTiles.java` (grant Teachers, Zone-aware, link Teachers with status filter)
+- [x] T036 [P] [US4] Create `backend/src/main/java/com/hls/substitution/internal/SubstitutionTiles.java` (grant Substitution, today, link Substitutions today with status filter; add that filter if missing)
+- [x] T037 [P] [US4] Create `backend/src/main/java/com/hls/attendance/internal/TeacherAttendanceTiles.java` (reuses `AttendanceReadApi.teachersAwayOn`, `WorkingCalendar`; add the "today, away" filter on the Attendance list if missing)
+- [x] T038 [P] [US4] Create `backend/src/main/java/com/hls/leave/internal/TeacherLeaveTiles.java` (same query as `PendingLeaveWidget`)
 
 **Checkpoint**: US4 complete.
 
