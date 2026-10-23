@@ -27,6 +27,12 @@ import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
 import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistory";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
+import { FeedbackPage } from "./features/performance/FeedbackPage";
+import { IssuePage, IssuesPage } from "./features/performance/IssuePage";
+import { ObservationForm } from "./features/performance/ObservationForm";
+import { ObservationsPage } from "./features/performance/ObservationsPage";
+import { PlannedPage } from "./features/performance/PlannedPage";
+import { TeacherPerformancePage } from "./features/performance/TeacherPerformancePage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
@@ -361,6 +367,62 @@ export function App() {
           element={
             <RouteGuard>
               <SecuritySettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance"
+          element={
+            <RouteGuard>
+              <ObservationsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/planned"
+          element={
+            <RouteGuard>
+              <PlannedPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/feedback"
+          element={
+            <RouteGuard>
+              <FeedbackPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/issues"
+          element={
+            <RouteGuard>
+              <IssuesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/issues/:id"
+          element={
+            <RouteGuard>
+              <IssuePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/observations/:id"
+          element={
+            <RouteGuard>
+              <ObservationForm />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/teacher-performance/teachers/:teacherId"
+          element={
+            <RouteGuard>
+              <TeacherPerformancePage />
             </RouteGuard>
           }
         />

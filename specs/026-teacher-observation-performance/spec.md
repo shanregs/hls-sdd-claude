@@ -261,7 +261,7 @@ Items marked "to confirm in /speckit-clarify" are decisions taken without being 
 - **Result choice**: the observer chooses the overall result; the average and suggested result are a guide only. No weighted score, appraisal grade, pay or increment link in version 1. Confirmed in clarify (2026-10-20).
 - **Correction rounds**: confirmed in clarify (2026-10-20): no limit; follow-up date 1 to 60 days.
 - **Referral decision**: the Director or the Zone Manager approves a transfer or replacement (roadmap D5) in spec 027; here only the recommendation is recorded. Until spec 027 exists, a Director may close a Referred issue by hand.
-- **Rating scale and areas** are taken from the business flow's observation form (nine items; Overall performance is the result). Class and subject are free text; no pupil data is held.
+- **Rating scale and areas** are taken from the business flow's observation form (eight teaching areas; the overall performance is the result). Class and subject are free text; no pupil data is held.
 - **Notifications** are in-app (spec 010): observation planned, and referral recorded for the Directors. Overdue observation and escalation reuse the task module's events. Push, SMS and email are out of scope.
 - **Out of scope**: transfer and replacement (027), substitute arrangements (017a), Manager performance analytics beyond the read-only summary (028), GPS or photo verification of the visit (the Manager's own check-in and visits are in 032 and 033), School or Principal portals, Teacher self-service, scoring tied to pay or incentives, and mobile screens (a later mobile spec).
 - Business time zone follows the existing setting (Asia/Kolkata); "today" uses it.

@@ -38,6 +38,14 @@ variables:
   runId: ""
   lineId: ""
   adjustmentId: ""
+  observationId: ""
+  observationVersion: ""
+  feedbackId: ""
+  feedbackVersion: ""
+  planId: ""
+  planVersion: ""
+  issueId: ""
+  issueVersion: ""
 auth:
   - id: d2f95a8d-318a-4265-b479-fdd587e14f17
     type: bearer

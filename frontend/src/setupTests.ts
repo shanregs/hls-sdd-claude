@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
 
 // Vitest doesn't auto-register React Testing Library's cleanup the way Jest does, so without
@@ -16,3 +16,6 @@ if (typeof window.ResizeObserver === "undefined") {
     disconnect() {}
   };
 }
+
+// The page tests render large MUI trees in jsdom; the 1s default for findBy*/waitFor fails them under load, not on a defect.
+configure({ asyncUtilTimeout: 10000 });

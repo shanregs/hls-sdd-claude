@@ -1,0 +1,6 @@
+$kind: http-request
+name: Teacher Performance Page
+description: "Observations, feedback, issues and referrals in date order, latest result first, with the open plan. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/teachers/{{teacherId}}"
+method: GET
+order: 1000

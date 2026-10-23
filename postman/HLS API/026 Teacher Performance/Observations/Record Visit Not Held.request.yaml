@@ -1,0 +1,16 @@
+$kind: http-request
+name: Record Visit Not Held
+description: "A visit that did not take place: reason PRINCIPAL_DECLINED, PRINCIPAL_ABSENT, TEACHER_ABSENT, SCHOOL_CLOSED or OTHER (with text). No ratings; never blocks a later observation. Needs CREATE."
+url: "{{baseUrl}}/api/v1/teacher-performance/observations/{{observationId}}/not-held"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "PRINCIPAL_DECLINED",
+      "text": "Asked us to come next week",
+      "version": "{{observationVersion}}"
+    }
+order: 7000

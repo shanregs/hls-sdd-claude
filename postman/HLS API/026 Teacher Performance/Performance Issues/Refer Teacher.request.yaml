@@ -1,0 +1,20 @@
+$kind: http-request
+name: Refer Teacher
+description: "Recommendation TRANSFER or REPLACE with a reason of at least 20 characters; the issue becomes Referred and every active Director is notified. Needs EDIT."
+url: "{{baseUrl}}/api/v1/teacher-performance/issues/{{issueId}}/referral"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "recommendation": "REPLACE",
+      "reason": "The Teacher cannot manage the class and has not improved",
+      "version": "{{issueVersion}}"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('issueId', j.id); pm.collectionVariables.set('issueVersion', j.version); }"
+    language: text/javascript
+order: 5000

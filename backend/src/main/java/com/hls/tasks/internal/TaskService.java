@@ -156,6 +156,110 @@ public class TaskService implements TaskCreation {
         return new TaskRef(task.getId(), true, task.getStatus().name());
     }
 
+    // ------------------------------------------------------------------ C2 amendment (spec 026): by source key
+
+    @Override
+    @Transactional
+    public boolean reschedule(String source, String sourceKey, LocalDate dueOn, String title, String description) {
+        Task task = openBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        if (dueOn != null && dueOn.isBefore(businessDate.today())) {
+            throw new InvalidInputException("The due date cannot be in the past.");
+        }
+        String newTitle = title == null ? task.getTitle() : cleanTitle(title);
+        String newDescription = description == null ? task.getDescription() : clean(description, 2000, "The description");
+        LocalDate newDue = dueOn == null ? task.getDueOn() : dueOn;
+        if (!newTitle.equals(task.getTitle())) {
+            recorder.change(task, "EDITED", null, "title", task.getTitle(), newTitle, source);
+        }
+        if (!Objects.equals(newDescription, task.getDescription())) {
+            recorder.change(task, "EDITED", null, "description", task.getDescription(), newDescription, source);
+        }
+        if (!newDue.equals(task.getDueOn())) {
+            recorder.change(task, "DUE_CHANGED", null, "dueOn", task.getDueOn(), newDue, source);
+        }
+        task.edit(newTitle, newDescription, task.getAssigneeUserId(), newDue, task.getEscalateAfterDays(), task.getPlace(), clock.instant());
+        tasks.saveAndFlush(task);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean complete(String source, String sourceKey, String note, UUID completedByUserId) {
+        Task task = openBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        String text = required(note, 10, 2000, "The completion note");
+        TaskStatus before = task.getStatus();
+        task.complete(text, clock.instant());
+        recorder.change(task, "COMPLETED", completedByUserId, "status", before, task.getStatus(), text);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public int completeLinked(TaskType type, String linkedType, UUID linkedId, UUID assigneeUserId, String note) {
+        if (type == null || linkedType == null || linkedId == null || assigneeUserId == null) {
+            return 0;
+        }
+        String text = required(note, 10, 2000, "The completion note");
+        int done = 0;
+        for (Task task : tasks.findByTypeAndLinkedTypeAndLinkedIdAndAssigneeUserIdAndStatusIn(type, linkedType, linkedId, assigneeUserId, TaskStatus.OPEN)) {
+            TaskStatus before = task.getStatus();
+            task.complete(text, clock.instant());
+            recorder.change(task, "COMPLETED", assigneeUserId, "status", before, task.getStatus(), text);
+            done++;
+        }
+        return done;
+    }
+
+    @Override
+    @Transactional
+    public boolean cancel(String source, String sourceKey, String reason) {
+        Task task = openBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        String text = required(reason, 3, 300, "The reason");
+        TaskStatus before = task.getStatus();
+        task.cancel(text, clock.instant());
+        recorder.change(task, "CANCELLED", null, "status", before, TaskStatus.CANCELLED, text);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean reassign(String source, String sourceKey, UUID assigneeUserId) {
+        Task task = openBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        requireActiveManager(assigneeUserId);
+        if (assigneeUserId.equals(task.getAssigneeUserId())) {
+            return true;
+        }
+        recorder.change(task, "REASSIGNED", null, "assigneeUserId", task.getAssigneeUserId(), assigneeUserId, source);
+        task.edit(task.getTitle(), task.getDescription(), assigneeUserId, task.getDueOn(), task.getEscalateAfterDays(), task.getPlace(), clock.instant());
+        if (task.getStatus() != TaskStatus.ASSIGNED) {
+            recorder.change(task, "REASSIGNED", null, "status", task.getStatus(), TaskStatus.ASSIGNED, "Back to assigned for the new Manager");
+            task.moveTo(TaskStatus.ASSIGNED, clock.instant());
+        }
+        tasks.saveAndFlush(task);
+        events.publishEvent(new TaskAssigned(task.getId(), task.getTitle(), assigneeUserId, null, task.getDueOn()));
+        return true;
+    }
+
+    /** The open task for a calling module's source key, or null. */
+    private Task openBySource(String source, String sourceKey) {
+        if (source == null || source.isBlank() || sourceKey == null || sourceKey.isBlank()) {
+            return null;
+        }
+        return tasks.findFirstBySourceAndSourceKeyAndStatusIn(source.trim(), sourceKey.trim(), TaskStatus.OPEN).orElse(null);
+    }
+
     private Task build(CreateRequest request, UUID actor, String source, String sourceKey, UUID parent) {
         if (request.type() == null) {
             throw new InvalidInputException("Choose the type of task.");

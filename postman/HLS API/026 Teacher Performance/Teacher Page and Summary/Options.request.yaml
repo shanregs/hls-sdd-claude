@@ -1,0 +1,6 @@
+$kind: http-request
+name: Options
+description: "The teaching areas, results, not-held reasons, permission ways, feedback categories and plan reasons. Needs VIEW."
+url: "{{baseUrl}}/api/v1/teacher-performance/options"
+method: GET
+order: 3000

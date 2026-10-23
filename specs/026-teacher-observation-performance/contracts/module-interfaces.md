@@ -58,3 +58,7 @@ Task overdue and escalation use the existing `TaskOverdue` and `TaskEscalated` e
 - `designation.api.BusinessDate`, `audit` `ChangeRecorder`
 
 ArchUnit: only `notification`, 027 and 028 may read `performance.api`; `performance` reads no other module's `internal`.
+
+## As built
+
+See research.md section 14: the extra C2 operation `completeLinked`, the record type `ReferralInfo`, and the summary keyed by Manager user id.
