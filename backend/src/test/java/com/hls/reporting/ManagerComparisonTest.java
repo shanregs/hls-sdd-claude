@@ -24,6 +24,12 @@ class ManagerComparisonTest extends TaskTestBase {
         return ((Number) row.get(index).get("value")).longValue();
     }
 
+    @SuppressWarnings("unchecked")
+    private static int column(Resp resp, String label) {
+        Map<String, Object> table = (Map<String, Object>) resp.map().get("table");
+        return ((List<String>) table.get("columns")).indexOf(label);
+    }
+
     @Test
     void theTableHasOneRowPerManagerInTheZoneWithTaskColumnsAndLinks() {
         String admin = signInAs(Role.ADMIN).token();
@@ -39,13 +45,15 @@ class ManagerComparisonTest extends TaskTestBase {
         Resp resp = get(URL + "?zoneId=" + zone + "&sort=tasks.overdue&dir=desc", admin);
         assertThat(resp.status()).as(resp.body()).isEqualTo(200);
         var rows = rows(resp);
+        int overdue = column(resp, "Overdue");
         assertThat(rows).hasSize(2);
-        assertThat(cell(rows.get(0), 1)).isEqualTo(2);
-        assertThat(cell(rows.get(1), 1)).isEqualTo(0);
+        assertThat(cell(rows.get(0), overdue)).isEqualTo(2);
+        assertThat(cell(rows.get(1), overdue)).isEqualTo(0);
+        assertThat(resp.body()).contains("Visits missed", "Schools won", "Days with no check-in", "Awaiting verification", "Escalated");
         assertThat(resp.body()).contains("assigneeUserId").contains(one.signed().userId().toString());
 
         Resp asc = get(URL + "?zoneId=" + zone + "&sort=tasks.overdue&dir=asc", admin);
-        assertThat(cell(rows(asc).get(0), 1)).isEqualTo(0);
+        assertThat(cell(rows(asc).get(0), overdue)).isEqualTo(0);
         assertThat(get(URL + "?sort=nonsense", admin).status()).isEqualTo(400);
     }
 

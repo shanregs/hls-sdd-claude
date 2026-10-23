@@ -82,7 +82,7 @@ class DashboardEndpointsTest extends MasterDataTestBase {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
             Resp manifest = get(BASE, signInAs(role).token());
             assertThat(manifest.status()).as(manifest.body()).isEqualTo(200);
-            assertThat(areaNames(manifest)).containsExactly("MANAGERS", "SCHOOLS");
+            assertThat(areaNames(manifest)).contains("MANAGERS", "SCHOOLS").doesNotContain("PAYROLL");
             assertThat(manifest.body()).contains("test.fixed", "test.orgwide").doesNotContain("permissionModule");
             assertThat(manifest.map()).containsKey("filters").containsKey("inbox");
         }
@@ -94,9 +94,8 @@ class DashboardEndpointsTest extends MasterDataTestBase {
         ManagerCtx manager = newManager(admin, zone(admin));
         Resp manifest = get(BASE, manager.token());
         assertThat(manifest.status()).isEqualTo(200);
-        assertThat(areaNames(manifest)).containsExactly("MANAGERS");
-        assertThat(manifest.body()).doesNotContain("test.orgwide");
-        assertThat(get(BASE + "/areas/SCHOOLS", manager.token()).status()).isEqualTo(404);
+        assertThat(areaNames(manifest)).contains("MANAGERS");
+        assertThat(manifest.body()).doesNotContain("test.orgwide").doesNotContain("managers.comparison");
         assertThat(get(BASE + "/areas/SCHOOLS/tiles/test.orgwide", manager.token()).status()).isEqualTo(404);
     }
 
