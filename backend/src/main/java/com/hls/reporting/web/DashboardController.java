@@ -48,4 +48,14 @@ public class DashboardController {
             @RequestParam(required = false) String period) {
         return service.tile(CallerContext.userId(jwt), CallerContext.roles(jwt), area, key, zoneId, period);
     }
+
+    @GetMapping("/managers")
+    public TileResult managers(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) String zoneId,
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String dir) {
+        return service.managers(CallerContext.userId(jwt), CallerContext.roles(jwt), zoneId, period, sort, dir);
+    }
 }

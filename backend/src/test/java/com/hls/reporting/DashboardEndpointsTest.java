@@ -119,7 +119,8 @@ class DashboardEndpointsTest extends MasterDataTestBase {
         assertThat(area.status()).as(area.body()).isEqualTo(200);
         assertThat(area.map()).containsKey("takenAt");
         Map<String, Map<String, Object>> tiles = tilesByKey(area);
-        assertThat(tiles).containsOnlyKeys("test.fixed", "test.global", "test.failing");
+        assertThat(tiles.keySet().stream().filter(k -> k.startsWith("test.")))
+                .containsExactly("test.fixed", "test.global", "test.failing");
         assertThat(tiles.get("test.fixed").get("state")).isEqualTo("OK");
         assertThat(tiles.get("test.failing").get("state")).isEqualTo("ERROR");
         assertThat((List<?>) tiles.get("test.failing").get("values")).isEmpty();

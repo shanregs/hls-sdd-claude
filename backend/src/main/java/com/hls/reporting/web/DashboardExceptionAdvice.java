@@ -1,5 +1,6 @@
 package com.hls.reporting.web;
 
+import com.hls.reporting.internal.DashboardForbiddenException;
 import com.hls.reporting.internal.DashboardInvalidInputException;
 import com.hls.reporting.internal.DashboardNotFoundException;
 import com.hls.school.api.Reason;
@@ -14,6 +15,11 @@ public class DashboardExceptionAdvice {
     @ExceptionHandler(DashboardNotFoundException.class)
     ResponseEntity<Reason> notFound(DashboardNotFoundException e) {
         return ResponseEntity.status(404).body(new Reason(e.getMessage()));
+    }
+
+    @ExceptionHandler(DashboardForbiddenException.class)
+    ResponseEntity<Reason> forbidden(DashboardForbiddenException e) {
+        return ResponseEntity.status(403).body(new Reason(e.getMessage()));
     }
 
     @ExceptionHandler(DashboardInvalidInputException.class)

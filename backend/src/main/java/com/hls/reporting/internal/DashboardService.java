@@ -44,6 +44,7 @@ public class DashboardService {
     private final PermissionGuard guard;
     private final ObjectProvider<ApprovalSource> approvalSources;
     private final Clock clock;
+    private final ManagerComparisonService comparison;
 
     public DashboardService(
             TileRegistry registry,
@@ -51,13 +52,15 @@ public class DashboardService {
             ZoneResolver zones,
             PermissionGuard guard,
             ObjectProvider<ApprovalSource> approvalSources,
-            Clock clock) {
+            Clock clock,
+            ManagerComparisonService comparison) {
         this.registry = registry;
         this.reader = reader;
         this.zones = zones;
         this.guard = guard;
         this.approvalSources = approvalSources;
         this.clock = clock;
+        this.comparison = comparison;
     }
 
     /** Definitions only, no figures. Teacher and System hold none of the grants, so theirs is empty. */
@@ -109,6 +112,17 @@ public class DashboardService {
             throw new DashboardNotFoundException("Tile not found.");
         }
         return reader.readOne(entry.get(), context(userId, roles, zoneId, period));
+    }
+
+    /** The Manager-by-Manager table, sorted; Admin and Director only (a Manager-only caller gets 403). */
+    public TileResult managers(UUID userId, Set<Role> roles, String zoneId, String period, String sort, String dir) {
+        if (TileRegistry.managerOnly(roles)) {
+            throw new DashboardForbiddenException("The Manager comparison is for Admin and Director.");
+        }
+        if (registry.find(roles, Area.MANAGERS, ManagerComparisonService.KEY).isEmpty()) {
+            throw new DashboardNotFoundException("Tile not found.");
+        }
+        return comparison.compare(context(userId, roles, zoneId, period), sort, dir);
     }
 
     private RequestTileContext context(UUID userId, Set<Role> roles, String zoneId, String period) {

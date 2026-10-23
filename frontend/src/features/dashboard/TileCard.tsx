@@ -2,6 +2,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Box, Button, Chip, Link, Paper, Typography } from "@mui/material";
 import type { TileDefinition, TileLink, TileResult } from "./dashboardApi";
 import { formatValue } from "./format";
+import { ManagerComparisonTable } from "./ManagerComparisonTable";
 
 interface TileCardProps {
   definition: TileDefinition;
@@ -36,6 +37,9 @@ export function TileCard({ definition, result, onRetry }: TileCardProps) {
         <Typography variant="body2" color="text.secondary">
           Loading…
         </Typography>
+      )}
+      {result?.state === "OK" && result.table && (
+        <ManagerComparisonTable table={result.table} />
       )}
       {result?.state === "OK" &&
         result.values.map((value, index) => {
