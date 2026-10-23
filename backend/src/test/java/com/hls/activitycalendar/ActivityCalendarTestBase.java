@@ -49,6 +49,10 @@ public abstract class ActivityCalendarTestBase extends MarketingTestBase {
         return UUID.fromString((String) ((Map<?, ?>) resp.map().get("task")).get("id"));
     }
 
+    protected Resp act(String token, UUID task, String action) {
+        return post("/api/v1/tasks/" + task + "/" + action, token, Map.of());
+    }
+
     protected Resp calendar(String token, String month) {
         return get(CAL + "?month=" + month, token);
     }

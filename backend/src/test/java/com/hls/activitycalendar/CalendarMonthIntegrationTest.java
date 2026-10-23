@@ -184,7 +184,4 @@ class CalendarMonthIntegrationTest extends ActivityCalendarTestBase {
                 .containsEntry("cancelled", 0).containsEntry("rescheduled", 0);
     }
 
-    private Resp act(String token, UUID task, String action) {
-        return post("/api/v1/tasks/" + task + "/" + action, token, Map.of());
-    }
 }

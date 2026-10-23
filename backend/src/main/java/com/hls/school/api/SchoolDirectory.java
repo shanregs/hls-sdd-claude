@@ -19,6 +19,9 @@ public interface SchoolDirectory {
 
     Optional<ZoneInfo> zone(UUID zoneId);
 
+    /** Every Zone ordered by name (spec 035 filter choices). */
+    List<ZoneInfo> allZones();
+
     /** Case-insensitive lookup by exact name (used by dev seeding). */
     Optional<ZoneInfo> zoneByName(String name);
 

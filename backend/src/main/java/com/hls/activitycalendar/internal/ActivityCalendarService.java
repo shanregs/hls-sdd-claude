@@ -11,7 +11,10 @@ import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.school.api.CallerContext;
+import com.hls.organization.api.ManagerQueries;
 import com.hls.school.api.InvalidInputException;
+import com.hls.school.api.NotFoundException;
+import com.hls.school.api.SchoolDirectory;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
@@ -55,6 +58,29 @@ public class ActivityCalendarService {
         }
     }
 
+    /** The optional filters of the calendar; all combine, none widens a Manager's scope. */
+    public record Filters(UUID managerId, UUID zoneId, String kind, String status) {
+        public static final Filters NONE = new Filters(null, null, null, null);
+    }
+
+    public static final List<String> KINDS = List.of("CAMPUS_DRIVE", "SCHOOL_VISIT", "CALL", "MEETING", "TASK", "TRAINING");
+    public static final List<String> STATUSES = List.of("PLANNED", "DONE", "MISSED", "CANCELLED");
+    /** The longest range of the Needs attention list. */
+    public static final int MAX_ATTENTION_DAYS = 93;
+
+    /** A Missed or Rescheduled item with how late or how far moved. */
+    public record AttentionEntry(CalendarItem item, List<String> reasons, Integer daysLate, Integer daysMoved) {}
+
+    public record AttentionGroup(UUID userId, String name, int missed, int rescheduled, List<AttentionEntry> entries) {}
+
+    public record AttentionResponse(LocalDate from, LocalDate to, boolean partial, List<SourceReport> sources, List<AttentionGroup> groups) {}
+
+    public record NamedRef(UUID id, String name) {}
+
+    public record KindChoice(String kind, boolean available) {}
+
+    public record FilterChoices(List<NamedRef> managers, List<NamedRef> zones, List<KindChoice> kinds, List<String> statuses) {}
+
     /** What a load produced: the items in scope, how each source fared, and whether any source failed. */
     public record Loaded(List<SourceReport> sources, List<CalendarItem> items, boolean partial) {}
 
@@ -67,8 +93,12 @@ public class ActivityCalendarService {
     private final BusinessDate businessDate;
     private final PermissionGuard guard;
     private final TransactionTemplate isolated;
+    private final ManagerQueries managerQueries;
+    private final SchoolDirectory schools;
 
     public ActivityCalendarService(
+            ManagerQueries managerQueries,
+            SchoolDirectory schools,
             List<ActivitySource> sourceBeans,
             PeopleDirectory directory,
             ZoneResolver zoneResolver,
@@ -78,6 +108,8 @@ public class ActivityCalendarService {
         for (ActivitySource source : sourceBeans) {
             sources.put(source.group(), source);
         }
+        this.managerQueries = managerQueries;
+        this.schools = schools;
         this.directory = directory;
         this.zoneResolver = zoneResolver;
         this.businessDate = businessDate;
@@ -88,16 +120,119 @@ public class ActivityCalendarService {
         this.isolated.setReadOnly(true);
     }
 
-    /** The calendar of one month for the caller. */
+    /** The calendar of one month for the caller, without filters. */
     public CalendarResponse month(Caller caller, YearMonth month) {
+        return month(caller, month, Filters.NONE);
+    }
+
+    /** The calendar of one month; the summary follows the filters. */
+    public CalendarResponse month(Caller caller, YearMonth month, Filters filters) {
+        validate(filters);
+        checkScope(caller, filters);
         Loaded loaded = load(caller, month.atDay(1), month.atEndOfMonth(), MAX_CALENDAR_DAYS);
+        List<CalendarItem> items = filter(loaded.items(), filters);
         return new CalendarResponse(
-                month.toString(),
-                businessDate.today(),
-                loaded.partial(),
-                loaded.sources(),
-                summarize(loaded.items(), caller.orgWide()),
-                loaded.items());
+                month.toString(), businessDate.today(), loaded.partial(), loaded.sources(), summarize(items, caller.orgWide()), items);
+    }
+
+    /** Missed and rescheduled items of the period grouped by Manager, oldest first (FR-009, FR-010). */
+    public AttentionResponse needsAttention(Caller caller, LocalDate from, LocalDate to, Filters filters) {
+        validate(filters);
+        checkScope(caller, filters);
+        Loaded loaded = load(caller, from, to, MAX_ATTENTION_DAYS);
+        // one entry per activity: a multi-date drive is judged on its last date
+        Map<String, CalendarItem> representative = new LinkedHashMap<>();
+        for (CalendarItem item : filter(loaded.items(), filters)) {
+            representative.merge(item.kind() + ":" + item.activityId(), item, (x, y) -> y.date().isAfter(x.date()) ? y : x);
+        }
+        Map<UUID, List<AttentionEntry>> byManager = new HashMap<>();
+        Map<UUID, String> names = new HashMap<>();
+        for (CalendarItem item : representative.values()) {
+            boolean missed = StatusRules.MISSED.equals(item.status());
+            boolean moved = item.rescheduled()
+                    && (StatusRules.PLANNED.equals(item.status()) || StatusRules.MISSED.equals(item.status()));
+            if (!missed && !moved) {
+                continue;
+            }
+            List<String> reasons = new ArrayList<>();
+            if (missed) {
+                reasons.add("MISSED");
+            }
+            if (moved) {
+                reasons.add("RESCHEDULED");
+            }
+            AttentionEntry entry = new AttentionEntry(item, reasons, missed ? item.daysLate() : null, moved ? item.daysMoved() : null);
+            for (Person p : item.people()) {
+                if (!p.manager() || (caller.manager() && !p.userId().equals(caller.userId()))) {
+                    continue;
+                }
+                if (filters.managerId() != null && !filters.managerId().equals(p.userId())) {
+                    continue;
+                }
+                byManager.computeIfAbsent(p.userId(), k -> new ArrayList<>()).add(entry);
+                names.put(p.userId(), p.name());
+            }
+        }
+        List<AttentionGroup> groups = byManager.entrySet().stream()
+                .map(en -> {
+                    List<AttentionEntry> entries = en.getValue().stream()
+                            .sorted(Comparator.comparing((AttentionEntry x) -> x.item().originalDate() != null ? x.item().originalDate() : x.item().date())
+                                    .thenComparing(x -> x.item().key()))
+                            .toList();
+                    int missedCount = (int) entries.stream().filter(x -> x.reasons().contains("MISSED")).count();
+                    int movedCount = (int) entries.stream().filter(x -> x.reasons().contains("RESCHEDULED")).count();
+                    return new AttentionGroup(en.getKey(), names.get(en.getKey()), missedCount, movedCount, entries);
+                })
+                .sorted(Comparator.comparing(AttentionGroup::name).thenComparing(AttentionGroup::userId))
+                .toList();
+        return new AttentionResponse(from, to, loaded.partial(), loaded.sources(), groups);
+    }
+
+    /** The choices of the filter bar: Managers (only self for a Manager), Zones, kinds and which are available. */
+    public FilterChoices filters(Caller caller) {
+        if (!caller.orgWide() && !caller.manager()) {
+            throw new AccessDeniedException("The Activity Calendar is for Admin, Director and Manager.");
+        }
+        List<NamedRef> managers = managerQueries.allManagers().stream()
+                .filter(m -> caller.orgWide() || m.userId().equals(caller.userId()))
+                .map(m -> new NamedRef(m.userId(), m.displayName()))
+                .sorted(Comparator.comparing(NamedRef::name, String.CASE_INSENSITIVE_ORDER).thenComparing(NamedRef::id))
+                .toList();
+        List<NamedRef> zones = schools.allZones().stream().map(z -> new NamedRef(z.id(), z.name())).toList();
+        List<KindChoice> kinds = KINDS.stream()
+                .map(k -> new KindChoice(k, !"TRAINING".equals(k) || trainingAvailable()))
+                .toList();
+        return new FilterChoices(managers, zones, kinds, STATUSES);
+    }
+
+    private boolean trainingAvailable() {
+        ActivitySource training = sources.get(ActivitySource.TRAINING);
+        return training != null && training.available();
+    }
+
+    private static void validate(Filters f) {
+        if (f.kind() != null && !KINDS.contains(f.kind())) {
+            throw new InvalidInputException("The kind must be one of " + String.join(", ", KINDS) + ".");
+        }
+        if (f.status() != null && !STATUSES.contains(f.status())) {
+            throw new InvalidInputException("The status must be one of " + String.join(", ", STATUSES) + ".");
+        }
+    }
+
+    /** A Manager may name only themselves; another Manager answers 404 as if it did not exist. */
+    private static void checkScope(Caller caller, Filters f) {
+        if (caller.manager() && f.managerId() != null && !f.managerId().equals(caller.userId())) {
+            throw new NotFoundException("Manager not found.");
+        }
+    }
+
+    private static List<CalendarItem> filter(List<CalendarItem> items, Filters f) {
+        return items.stream()
+                .filter(i -> f.managerId() == null || i.people().stream().anyMatch(p -> p.manager() && p.userId().equals(f.managerId())))
+                .filter(i -> f.zoneId() == null || f.zoneId().equals(i.zoneId()))
+                .filter(i -> f.kind() == null || f.kind().equals(i.kind()))
+                .filter(i -> f.status() == null || f.status().equals(i.status()))
+                .toList();
     }
 
     /** All items in the range that the caller may see, plus the source report. */
