@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAuth } from "../../auth/useAuth";
-import { fetchManifest, type Manifest } from "./dashboardApi";
+import {
+  fetchManifest,
+  type DashboardFilter,
+  type Manifest,
+} from "./dashboardApi";
+import { DashboardFilters } from "./DashboardFilters";
 import { AreaSection } from "./AreaSection";
 import { formatTime } from "./format";
 
@@ -19,6 +24,7 @@ export function ManagementDashboard({ title }: { title: string }) {
   const { authFetch } = useAuth();
   const [state, setState] = useState<ManifestState>({ kind: "loading" });
   const [refreshToken, setRefreshToken] = useState(0);
+  const [filter, setFilter] = useState<DashboardFilter>({});
   const [taken, setTaken] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -57,6 +63,11 @@ export function ManagementDashboard({ title }: { title: string }) {
         </Typography>
         {state.kind === "ready" && state.manifest.areas.length > 0 && (
           <>
+            <DashboardFilters
+              filters={state.manifest.filters}
+              value={filter}
+              onChange={setFilter}
+            />
             {latest && (
               <Typography variant="body2" color="text.secondary">
                 {`Figures taken at ${formatTime(latest)}`}
@@ -89,6 +100,7 @@ export function ManagementDashboard({ title }: { title: string }) {
           <AreaSection
             key={area.area}
             area={area}
+            filter={filter}
             refreshToken={refreshToken}
             onTaken={onTaken}
           />

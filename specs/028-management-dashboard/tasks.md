@@ -220,8 +220,8 @@ the screens they link to, and open a tile to land on the matching list with the 
 **Independent Test**: choose one Zone; every tile that can be split by Zone changes to that Zone's figures, and tiles that cannot be split say so.
 
 - [ ] T054 [P] [US8] Backend tests in `backend/src/test/java/com/hls/reporting/ZonePeriodFilterTest.java`: Zone changes only zone-aware tiles and sets `organizationWide: true` on the others; `period` changes `MONTH` tiles and is ignored by `TODAY` tiles; an unreachable Zone is 404; the Manager comparison and inbox respect the Zone/period
-- [ ] T055 [P] [US8] Frontend tests in `frontend/src/features/dashboard/__tests__/DashboardFilters.test.tsx`: Zone picker lists only manifest zones, month picker defaults to the current month, changing either reloads all areas, "organization-wide" label shown
-- [ ] T056 [US8] Create `frontend/src/features/dashboard/DashboardFilters.tsx` (Zone select with "All Zones", month input) and wire it into `ManagementDashboard.tsx` and `dashboardApi.ts` (depends on T015)
+- [x] T055 [P] [US8] Frontend tests in `frontend/src/features/dashboard/__tests__/DashboardFilters.test.tsx`: Zone picker lists only manifest zones, month picker defaults to the current month, changing either reloads all areas, "organization-wide" label shown
+- [x] T056 [US8] Create `frontend/src/features/dashboard/DashboardFilters.tsx` (Zone select with "All Zones", month input) and wire it into `ManagementDashboard.tsx` and `dashboardApi.ts` (depends on T015)
 
 ---
 
