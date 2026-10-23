@@ -133,6 +133,7 @@ function renderPage() {
 
 beforeEach(() => {
   authFetch.mockReset();
+  window.sessionStorage.clear();
   grant("DIRECTOR", "Activity Calendar");
 });
 

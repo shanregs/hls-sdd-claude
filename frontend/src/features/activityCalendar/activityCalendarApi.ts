@@ -125,9 +125,10 @@ export interface NeedsAttentionResponse {
 }
 
 export interface FiltersResponse {
-  managers: { userId: string; name: string }[];
+  managers: { id: string; name: string }[];
   zones: { id: string; name: string }[];
-  kinds: { value: CalendarKind; label: string; available: boolean }[];
+  kinds: { kind: CalendarKind; available: boolean }[];
+  statuses: CalendarStatus[];
 }
 
 export interface CalendarQuery {

@@ -1,4 +1,14 @@
-import { Box, Chip, Typography } from "@mui/material";
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
 import { formatDate } from "../teachers/formatters";
 import {
   KIND_LABELS,
@@ -17,6 +27,9 @@ const STATUS_COLOR: Record<
   CANCELLED: "default",
 };
 
+/** More items than this on one day collapse into an "N more" button. */
+const MAX_PER_DAY = 3;
+
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** The month as a Monday-first grid; every item of a day is listed with its status chip. */
@@ -31,6 +44,7 @@ export function MonthGrid({
   management: boolean;
   onOpen: (item: CalendarItem) => void;
 }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
   const [year, mon] = month.split("-").map(Number);
   const daysInMonth = new Date(year, mon, 0).getDate();
   // Date.getDay: Sunday is 0; shift so Monday is the first column
@@ -84,7 +98,7 @@ export function MonthGrid({
               <Typography variant="caption" color="text.secondary">
                 {day}
               </Typography>
-              {(byDay.get(day) ?? []).map((item) => (
+              {(byDay.get(day) ?? []).slice(0, MAX_PER_DAY).map((item) => (
                 <Box key={item.key} sx={{ mt: 0.5 }}>
                   <Chip
                     size="small"
@@ -117,10 +131,38 @@ export function MonthGrid({
                   )}
                 </Box>
               ))}
+              {(byDay.get(day)?.length ?? 0) > MAX_PER_DAY && (
+                <Button size="small" onClick={() => setExpanded(day)}>
+                  {`${(byDay.get(day)?.length ?? 0) - MAX_PER_DAY} more`}
+                </Button>
+              )}
             </>
           )}
         </Box>
       ))}
+      {expanded !== null && (
+        <Dialog open onClose={() => setExpanded(null)} fullWidth maxWidth="sm">
+          <DialogTitle>{`Activities on ${String(expanded).padStart(2, "0")}/${String(mon).padStart(2, "0")}/${year}`}</DialogTitle>
+          <DialogContent>
+            {(byDay.get(expanded) ?? []).map((item) => (
+              <Box key={item.key} sx={{ mb: 1 }}>
+                <Button
+                  onClick={() => {
+                    setExpanded(null);
+                    onOpen(item);
+                  }}
+                  aria-label={`Open ${KIND_LABELS[item.kind]} ${STATUS_LABELS[item.status]} ${item.people.map((p) => p.name).join(", ")}`}
+                >
+                  {`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]} · ${item.people.map((p) => p.name).join(", ")}`}
+                </Button>
+              </Box>
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setExpanded(null)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }
