@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Candidates
+description: "Replacement candidates. Needs CREATE and the School in scope."
+url: "{{baseUrl}}/api/v1/transfers/candidates?schoolId={{schoolId}}&on=2026-11-03"
+method: GET
+order: 6000
