@@ -108,6 +108,11 @@ public class AttendanceMark {
         this.leaveRequestId = null;
     }
 
+    /** Re-tags the mark to another School without touching its code, value or leave link (spec 027 transfers). */
+    public void retag(UUID schoolId) {
+        this.schoolId = schoolId;
+    }
+
     /** Tags the mark just set as made by approved leave; call after {@link #set}. */
     public void markFromLeave(UUID requestId) {
         this.leaveRequestId = requestId;

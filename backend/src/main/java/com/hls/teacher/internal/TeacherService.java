@@ -60,6 +60,7 @@ public class TeacherService {
     private final ChangeRecorder changes;
     private final DesignationDirectory designations;
     private final Clock clock;
+    private final org.springframework.beans.factory.ObjectProvider<com.hls.teacher.api.TeacherMovementSource> movements;
 
     public TeacherService(
             TeacherRepository teacherRepository,
@@ -71,7 +72,9 @@ public class TeacherService {
             UserAdminService userAdminService,
             ChangeRecorder changes,
             DesignationDirectory designations,
-            Clock clock) {
+            Clock clock,
+            org.springframework.beans.factory.ObjectProvider<com.hls.teacher.api.TeacherMovementSource> movements) {
+        this.movements = movements;
         this.teacherRepository = teacherRepository;
         this.placementSource = placementSource;
         this.scopeService = scopeService;
@@ -107,8 +110,40 @@ public class TeacherService {
             UUID schoolId,
             boolean missingDesignation,
             Pageable pageable) {
+        return list(userId, roles, query, status, schoolId, missingDesignation, null, pageable);
+    }
+
+    /**
+     * {@code movement} is TRANSFERRED or REPLACED (spec 027) and keeps only those Teachers, inside the caller's scope;
+     * with no movement source present nobody matches.
+     */
+    @Transactional(readOnly = true)
+    public Page<TeacherView> list(
+            UUID userId,
+            Set<Role> roles,
+            String query,
+            TeacherStatus status,
+            UUID schoolId,
+            boolean missingDesignation,
+            String movement,
+            Pageable pageable) {
         TeacherScope scope = scopeService.teacherScope(userId, roles);
         Set<UUID> restrict = scope.orgWide() ? null : new HashSet<>(scope.teacherIds());
+        if (movement != null && !movement.isBlank()) {
+            com.hls.teacher.api.TeacherMovementSource source = movements.getIfAvailable();
+            Set<UUID> moved = source == null
+                    ? Set.of()
+                    : switch (movement.trim().toUpperCase()) {
+                        case "TRANSFERRED" -> source.transferredTeacherIds();
+                        case "REPLACED" -> source.replacedTeacherIds();
+                        default -> throw new InvalidInputException("Movement must be TRANSFERRED or REPLACED.");
+                    };
+            if (restrict == null) {
+                restrict = new HashSet<>(moved);
+            } else {
+                restrict.retainAll(moved);
+            }
+        }
         if (schoolId != null) {
             Set<UUID> atSchool =
                     new HashSet<>(placementSource.teacherIdsAtSchoolsOn(List.of(schoolId), LocalDate.now(clock)));
