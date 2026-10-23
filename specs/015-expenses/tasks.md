@@ -182,8 +182,8 @@ Backend `backend/src/main/java/com/hls/expenses/{api,internal,web}/...`, tests u
 - [x] T061 [P] Accessibility pass for the new screens: focus order, labels on every input, status not by colour alone (including the over-budget marker), table headers, dialog focus return, bill preview alternatives; fix what axe or review finds
 - [x] T062 [P] Update `docs/spec-roadmap.md` (015 row: Implemented, listing the extras: payroll `ReimbursementIntake`, `WonSchools`, `V54`) and `.specify/memory/constitution.md` default role access rows for Expenses and My Expenses as a patch note, as for spec 032
 - [x] T063 [P] Hand-off note for spec 036: update `docs/spec-inputs/036-mobile-expenses.md` where it differs (jpg conversion, `clientRequestId`, Teacher My Expenses, `allowedActions`)
-- [ ] T064 Run the full backend suite and the full frontend suite, one class at a time first if the machine is slow; record the counts; a machine-sleep timeout is not a failure but must be re-run alone and noted
-- [ ] T065 Walk every scenario of quickstart.md that can be run, map each to its automated test in `specs/015-expenses/quickstart-results.md`, and complete the financial review (Principle IX): list the seven points with the fixtures that demonstrate each and the owner's confirmation status; state honestly what was not done (manual browser walkthrough, screen-reader check, Postman not run, human timing of SC-001 and SC-002)
+- [x] T064 Run the full backend suite and the full frontend suite, one class at a time first if the machine is slow; record the counts; a machine-sleep timeout is not a failure but must be re-run alone and noted
+- [x] T065 Walk every scenario of quickstart.md that can be run, map each to its automated test in `specs/015-expenses/quickstart-results.md`, and complete the financial review (Principle IX): list the seven points with the fixtures that demonstrate each and the owner's confirmation status; state honestly what was not done (manual browser walkthrough, screen-reader check, Postman not run, human timing of SC-001 and SC-002)
 
 ---
 
