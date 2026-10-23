@@ -1,10 +1,12 @@
 package com.hls.expenses.web;
 
+import com.hls.expenses.internal.DuplicateClaimException;
 import com.hls.school.api.ConflictException;
 import com.hls.school.api.ForbiddenFieldException;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import com.hls.school.api.Reason;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +40,12 @@ public class ExpensesExceptionAdvice {
     @ExceptionHandler(ForbiddenFieldException.class)
     ResponseEntity<Reason> forbidden(ForbiddenFieldException e) {
         return ResponseEntity.status(403).body(new Reason(e.getMessage()));
+    }
+
+    /** 409 with the matching claim ids so the client can show them and ask for confirmation (FR-008). */
+    @ExceptionHandler(DuplicateClaimException.class)
+    ResponseEntity<Map<String, Object>> duplicate(DuplicateClaimException e) {
+        return ResponseEntity.status(409).body(Map.of("reason", e.getMessage(), "matches", e.matches()));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

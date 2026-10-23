@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-interface ExpenseClaimRepository extends JpaRepository<ExpenseClaim, UUID> {
+interface ExpenseClaimRepository extends JpaRepository<ExpenseClaim, UUID>, JpaSpecificationExecutor<ExpenseClaim> {
 
     Optional<ExpenseClaim> findByClaimantIdAndClientRequestId(UUID claimantId, UUID clientRequestId);
 
@@ -19,11 +20,10 @@ interface ExpenseClaimRepository extends JpaRepository<ExpenseClaim, UUID> {
     @Query("select c from ExpenseClaim c where c.id = :id")
     Optional<ExpenseClaim> lockById(@Param("id") UUID id);
 
-    /** Other claims of the same claimant, date, amount and category that are submitted or beyond (FR-008). */
+    /** Other claims of the same claimant, date, amount and category that are not Rejected (FR-008). */
     @Query("select c from ExpenseClaim c where c.claimantId = :claimant and c.expenseDate = :date"
             + " and c.amount = :amount and c.category = :category and c.id <> :self"
-            + " and c.status in (com.hls.expenses.internal.ClaimStatus.SUBMITTED, com.hls.expenses.internal.ClaimStatus.APPROVED,"
-            + " com.hls.expenses.internal.ClaimStatus.PAID, com.hls.expenses.internal.ClaimStatus.PAID_BY_COMPANY)")
+            + " and c.status <> com.hls.expenses.internal.ClaimStatus.REJECTED")
     List<ExpenseClaim> duplicatesOf(
             @Param("claimant") UUID claimant,
             @Param("date") LocalDate date,

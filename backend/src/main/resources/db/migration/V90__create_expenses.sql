@@ -66,7 +66,7 @@ BEGIN
             RAISE EXCEPTION 'A paid expense claim cannot be changed';
         END IF;
     END IF;
-    RETURN NEW;
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.hls.identity.user.Role;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,19 +12,15 @@ import java.util.UUID;
 
 /**
  * Helpers for the spec 015 tests: claims through the API (create, add a bill, submit, approve), users for each role and
- * an area. The file store directory is set once for every integration test in {@link IntegrationTestBase}.
+ * an area, and the payroll fixtures of spec 013b for the reimbursement tests. The file store directory is set once for every integration test in {@link IntegrationTestBase}.
  */
-public abstract class ExpensesTestBase extends MasterDataTestBase {
+public abstract class ExpensesTestBase extends PayrollRunTestBase {
 
     protected static final String MINE = "/api/v1/my-expenses";
     protected static final String REVIEW = "/api/v1/expenses";
 
     /** The first bytes of a JPEG, enough for the file store content check. */
     protected static final byte[] JPG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 16, 'J', 'F', 'I', 'F', 0};
-
-    protected static LocalDate today() {
-        return LocalDate.now(ZoneId.of("Asia/Kolkata"));
-    }
 
     protected Map<String, Object> claimBody(LocalDate date, String amount, String category) {
         Map<String, Object> body = new HashMap<>();
@@ -183,5 +178,58 @@ public abstract class ExpensesTestBase extends MasterDataTestBase {
     protected int eventCount(UUID claim, String event) {
         return jdbc.queryForObject(
                 "select count(*) from expense_claim_event where claim_id = ? and event = ?", Integer.class, claim, event);
+    }
+
+    // ------------------------------------------------------------------ links: batches and marketing visits
+
+    /** An induction batch written directly (the induction endpoints need recruits we do not need here). */
+    protected UUID insertBatch(String name, LocalDate startsOn, LocalDate endsOn) {
+        UUID id = UUID.randomUUID();
+        jdbc.update(
+                "insert into induction_batch (id, name, starts_on, ends_on, venue_type, seat_limit, status, created_at)"
+                        + " values (?, ?, ?, ?, 'PHYSICAL', 10, 'PLANNED', now())",
+                id, name, startsOn, endsOn);
+        return id;
+    }
+
+    /** A Teacher signed off as having completed the batch. */
+    protected void insertCompleter(UUID batch, LocalDate startsOn, LocalDate endsOn) {
+        jdbc.update(
+                "insert into induction_enrolment (id, batch_id, teacher_id, starts_on, ends_on, enrolled_by, enrolled_at, result)"
+                        + " values (?, ?, ?, ?, ?, ?, now(), 'COMPLETED')",
+                UUID.randomUUID(), batch, UUID.randomUUID(), startsOn, endsOn, UUID.randomUUID());
+    }
+
+    /** A marketing visit planned by the token's user on the date; returns {activityId, prospectName}. */
+    protected Object[] marketingVisit(String token, LocalDate date) {
+        String name = uniqueName("Prospect School");
+        Map<String, Object> prospect = new HashMap<>();
+        prospect.put("name", name);
+        prospect.put("board", "CBSE");
+        prospect.put("address", "5 Lake Road");
+        prospect.put("zoneId", zone(token));
+        prospect.put("contactPerson", "Mrs Rao");
+        prospect.put("designation", "Principal");
+        prospect.put("phone", "9111111111");
+        prospect.put("email", "rao@school.test");
+        prospect.put("expectedTeachers", 4);
+        Resp created = post("/api/v1/marketing/prospects", token, prospect);
+        assertThat(created.status()).as(created.body()).isEqualTo(201);
+        String prospectId = (String) ((Map<?, ?>) created.map().get("row")).get("id");
+        Map<String, Object> activity = new HashMap<>();
+        activity.put("prospectId", prospectId);
+        activity.put("type", "VISIT");
+        activity.put("date", date.toString());
+        activity.put("notes", "Meet the principal");
+        Resp visit = post("/api/v1/marketing/activities", token, activity);
+        assertThat(visit.status()).as(visit.body()).isEqualTo(201);
+        return new Object[] {visit.id(), name};
+    }
+
+    protected Map<String, Object> linkTo(String kind, UUID ref) {
+        Map<String, Object> link = new HashMap<>();
+        link.put("kind", kind);
+        link.put("ref", ref.toString());
+        return link;
     }
 }

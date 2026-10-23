@@ -165,6 +165,9 @@ public class ExpenseClaim {
     void submit(Instant now) {
         this.status = ClaimStatus.SUBMITTED;
         this.submittedAt = now;
+        this.decidedBy = null;
+        this.decidedAt = null;
+        this.decisionReason = null;
         this.updatedAt = now;
     }
 
