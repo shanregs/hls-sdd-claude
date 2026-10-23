@@ -232,4 +232,41 @@ public abstract class ExpensesTestBase extends PayrollRunTestBase {
         link.put("ref", ref.toString());
         return link;
     }
+
+    /** A prospect that was won at the instant, in the zone; written directly (the win flow needs a whole proposal). */
+    protected UUID insertWonProspect(UUID zone, java.time.Instant wonAt) {
+        UUID id = UUID.randomUUID();
+        UUID user = UUID.randomUUID();
+        jdbc.update(
+                "insert into marketing_prospect (id, name, zone_id, name_key, owner_user_id, stage, won_at, won_by, created_by, created_at)"
+                        + " values (?, ?, ?, ?, ?, 'FINAL_STAGE', ?, ?, ?, now())",
+                id, "Won " + id, zone, "won-" + id, user, java.sql.Timestamp.from(wonAt), user, user);
+        return id;
+    }
+
+    /** Noon in the business time zone on the date. */
+    protected static java.time.Instant noonOn(LocalDate date) {
+        return date.atTime(12, 0).atZone(java.time.ZoneId.of("Asia/Kolkata")).toInstant();
+    }
+
+    protected void setSubmittedAt(UUID claim, java.time.Instant at) {
+        jdbc.update("update expense_claim set submitted_at = ? where id = ?", java.sql.Timestamp.from(at), claim);
+    }
+
+    /** A claim in the zone on the date with a bill, submitted by the token and approved by the approver. */
+    protected UUID approvedClaim(String token, String approver, UUID zone, LocalDate date, String category, String amount, Map<String, Object> link) {
+        Map<String, Object> body = claimBody(date, amount, category);
+        body.put("zoneId", zone == null ? null : zone.toString());
+        if (link != null) {
+            body.put("link", link);
+        }
+        if ("OTHER".equals(category)) {
+            body.put("reason", "One-off");
+        }
+        UUID id = newDraft(token, body);
+        uploadBill(token, id, "bill.jpg", JPG);
+        assertThat(submit(token, id).status()).isEqualTo(200);
+        assertThat(approve(approver, id).status()).isEqualTo(200);
+        return id;
+    }
 }
