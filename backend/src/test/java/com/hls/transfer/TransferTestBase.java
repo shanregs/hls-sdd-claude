@@ -135,13 +135,53 @@ public abstract class TransferTestBase extends SchoolContractsTestBase {
         return found.isEmpty() ? null : found.get(0);
     }
 
-    /** A School with an MoU of the given number of positions starting today; returns {schoolId, managerCtx...} via Fixture. */
+    protected static final UUID PRESENT = UUID.fromString("00000000-0000-0000-0008-000000000001");
+    protected static final UUID LEAVE = UUID.fromString("00000000-0000-0000-0008-000000000002");
+
+    /** Writes a mark directly (the attendance API refuses future dates); {@code code} is PRESENT or LEAVE. */
+    protected void mark(UUID teacher, LocalDate date, UUID code, UUID school) {
+        jdbc.update(
+                "insert into attendance_mark (id, teacher_id, mark_date, status_code_id, day_value, school_id, set_by_user_id,"
+                        + " set_by_kind, set_at, version) values (?, ?, ?, ?, 1.00, ?, ?, 'SUPERVISOR', now(), 0)",
+                UUID.randomUUID(), teacher, date, code, school, UUID.randomUUID());
+    }
+
+    protected void lockMonth(UUID teacher, LocalDate inMonth) {
+        jdbc.update(
+                "insert into attendance_teacher_month (id, teacher_id, year_month, state, working_days, days_worked, days_leave,"
+                        + " training_available, training_attended, unmarked, weighted_total, changed_at, version)"
+                        + " values (?, ?, ?, 'LOCKED', 0, 0, 0, 0, 0, 0, 0, now(), 0)",
+                UUID.randomUUID(), teacher, java.time.YearMonth.from(inMonth).toString());
+    }
+
+    protected int notifications(UUID user, String type) {
+        return jdbc.queryForObject(
+                "select count(*) from notification where recipient_user_id = ? and type = ?", Integer.class, user, type);
+    }
+
+    /** A School with a same-salary-for-all MoU of the given number of positions starting today (positions fill automatically). */
     protected Fixture schoolWithMou(World w, int positions) {
+        Fixture f = fixture(w.admin());
+        Resp created = createContract(w.director(), f.schoolId(), sameSalaryBody(f, w.directorSigned().userId(), positions, "20000.00"));
+        assertThat(created.status()).as(created.body()).isEqualTo(201);
+        return f;
+    }
+
+    /** Like {@link #schoolWithMou} but different salaries, so a position must be named. */
+    protected Fixture schoolWithPerTeacherMou(World w, int positions) {
         Fixture f = fixture(w.admin());
         String[] salaries = new String[positions];
         java.util.Arrays.fill(salaries, "20000.00");
         Resp created = createContract(w.director(), f.schoolId(), perTeacherBody(f, w.directorSigned().userId(), salaries));
         assertThat(created.status()).as(created.body()).isEqualTo(201);
         return f;
+    }
+
+    protected UUID positionOf(UUID school, int number) {
+        return jdbc.queryForObject(
+                "select p.id from contract_position p join contract c on c.id = p.contract_id where c.school_id = ? and p.number = ?",
+                UUID.class,
+                school,
+                number);
     }
 }
