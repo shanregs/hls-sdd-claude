@@ -53,7 +53,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
         for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
             var response = accessModelFor(role);
             assertThat(labels(response, "OPERATIONS"))
-                    .containsExactly("Attendance", "Leave Management", "School Contracts", "Substitutions", "Salary Structures", "Transfers & Replacements", "Teacher Performance", "Manager Tasks", "Manager Attendance", "Manager Leave", "Payroll", "Activity Calendar");
+                    .containsExactly("Attendance", "Leave Management", "School Contracts", "Substitutions", "Transfers & Replacements", "Salary Structures", "Teacher Performance", "Manager Tasks", "Manager Attendance", "Manager Leave", "Payroll", "Activity Calendar");
             assertThat(labels(response, "MASTER DATA")).contains("Attendance Setup");
             assertThat(response.dataScope())
                     .containsEntry("ATTENDANCE", "ORG_WIDE")
