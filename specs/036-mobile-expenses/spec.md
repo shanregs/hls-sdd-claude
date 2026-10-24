@@ -31,6 +31,8 @@ Assumptions) and are listed under **Open Questions for the User** for confirmati
   `NavigationCatalog`); 036 adds no menu entry. 036 depends on 015 being merged.
 - Q: What happens to a person's unsent drafts when they sign out? → A: They stay on the phone, hidden from everyone else, and
   are sent after the same user signs in again; the user is warned at sign-out that unsent claims remain.
+- Q: Whose version wins if a claim was edited on the web while an older draft waits on the phone? → A: The server's. The
+  phone shows the reason and the current values and the claimant re-applies changes by hand.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -267,6 +269,5 @@ the role matrix. The Teacher menu entry is seeded by spec 015 (task T006), not b
 
 1. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
 2. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
-3. **Sync conflict**: confirm the server wins when a claim was edited on the web while a draft waits.
-4. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
+3. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
    caught?
