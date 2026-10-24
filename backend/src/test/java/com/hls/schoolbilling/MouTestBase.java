@@ -17,18 +17,19 @@ public abstract class MouTestBase extends SchoolContractsTestBase {
     protected static final byte[] PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4};
 
     /** A School with a Zone Manager and one ACTIVE MoU (DRAFT approval) recorded by Admin. */
-    protected record Mou(Fixture f, String admin, Signed director, UUID contractId) {
-        String managerToken() {
+    protected record Mou(Fixture f, String admin, Signed director, UUID contractId, UUID adminUserId) {
+        public String managerToken() {
             return f.manager().token();
         }
     }
 
     protected Mou mou() {
-        String admin = signInAs(Role.ADMIN).token();
+        Signed adminSigned = signInAs(Role.ADMIN);
+        String admin = adminSigned.token();
         Fixture f = fixture(admin);
         Signed dir = director();
         UUID id = contractId(createContract(admin, f.schoolId(), sameSalaryBody(f, dir.userId(), 2, "15000")));
-        return new Mou(f, admin, dir, id);
+        return new Mou(f, admin, dir, id, adminSigned.userId());
     }
 
     protected String approvalUrl(UUID contractId) {
@@ -122,6 +123,22 @@ public abstract class MouTestBase extends SchoolContractsTestBase {
 
     protected UUID firstDocumentId(Resp approval) {
         return UUID.fromString((String) documentsOf(approval).get(0).get("id"));
+    }
+
+    protected int notifications(UUID user, String type) {
+        return jdbc.queryForObject(
+                "select count(*) from notification where recipient_user_id = ? and type = ?", Integer.class, user, type);
+    }
+
+    /** Turns the MoU into one recorded before the approval step existed. */
+    protected void makeLegacy(UUID contractId) {
+        jdbc.update("update mou_approval set status = 'APPROVED_LEGACY', round = 0, submitted_by = null, submitted_at = null,"
+                + " decided_by = null, decided_at = null, decision_reason = null where contract_id = ?", contractId);
+    }
+
+    /** A fresh sign-in token for a user made earlier. */
+    protected String tokenOf(Signed s) {
+        return signIn(s.userId(), s.phone(), PASSWORD).token();
     }
 
     /** Grants or revokes a matrix cell as Admin; the caller restores it. */
