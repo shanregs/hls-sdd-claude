@@ -295,12 +295,18 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 - **Mobile**: this spec delivers the web screens, including the Teacher and Manager views of upcoming training and history; phone screens (register, upcoming training, history) are a later mobile spec on the same API. Teacher notifications already reach the phone through spec 021 **(open)**.
 - **Not included**: induction, payroll for training, training cost (food, stay), which stays in Expenses (spec 015) linked to the session **(open)**; course material, assessments and scores, waiting lists, attendance by log-in tracking, and the dashboard tile (spec 028).
 
-## Open Questions for the User
+## Clarifications
 
-1. **Assignment on open sessions**: may an Admin also assign people to an open weekend refresher, making them Required (default: yes), or are assignments for monthly sessions only?
-2. **Group assignment**: a snapshot on the day made (default), or a live rule that follows the group (new joiners added automatically)?
-3. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
-4. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
-5. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
-6. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
-7. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
+### Session 2026-10-24
+
+- Q: May an Admin assign people to an open weekend refresher, making them Required? -> A: Yes. Either session type may have assignments.
+- Q: Group assignment: snapshot or live rule? -> A: Snapshot of the group on the day made; new joiners are not added.
+- Q: How is an exception closed as "made up"? -> A: Link any later session; no separate make-up session type.
+- Q: Certificates? -> A: A text note per attendance is enough; no generated certificate in version 1.
+- Q: Pattern rules? -> A: Nth weekday of the month (first to fourth, or last) and a fixed day of the month; no weekly or fortnightly patterns.
+- Q: Trainers? -> A: Free-text name and optional contact; trainers do not log in and there is no managed list.
+- Q: Training cost (food, stay)? -> A: Stays in Expenses (spec 015), linked to the session; no cost is kept in the training module.
+
+## Remaining Defaults (not asked, taken as accepted)
+
+The assumptions marked **(open)** above that are not in the list of clarifications stand as written: Manager training attendance kept in the training register and read by spec 032; clash with school attendance is a warning and spec 008 half-day rules decide; non-compliance means an assigned person marked Absent; mobile screens come in a later spec. Revisit at planning if any proves wrong.
