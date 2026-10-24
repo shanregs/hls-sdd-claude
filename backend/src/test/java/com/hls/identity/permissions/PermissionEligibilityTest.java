@@ -95,9 +95,12 @@ class PermissionEligibilityTest extends IntegrationTestBase {
             boolean staff = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
             assertThat(PermissionEligibility.actionsFor(role, PermissionModule.SCHOOL_CONTRACTS))
                     .as("SCHOOL_CONTRACTS " + role)
-                    .isEqualTo(staff
-                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
-                            : java.util.EnumSet.noneOf(PermissionAction.class));
+                    .isEqualTo(!staff
+                            ? java.util.EnumSet.noneOf(PermissionAction.class)
+                            : role == Role.ADMIN
+                                    ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
+                                    : java.util.EnumSet.of(
+                                            PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT, PermissionAction.APPROVE));
         }
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
             for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {

@@ -352,6 +352,9 @@ public class PermissionMatrixService {
             }
         }
         seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.VIEW, true);
+        // MoU approval (spec 031): the Director and the Zone Manager (own Schools) decide; never Admin
+        seed(Role.DIRECTOR, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.APPROVE, true);
+        seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.APPROVE, true);
         grants.invalidateAround();
     }
 

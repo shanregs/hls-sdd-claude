@@ -100,6 +100,22 @@ public final class MessageFactory {
         return "REPLACEMENT".equals(kind) ? "replacement" : "transfer";
     }
 
+    public static Text mouSubmitted(String school, boolean resubmitted) {
+        return new Text(
+                shorten("MoU for approval: " + school, MAX_TITLE),
+                shorten("The MoU of " + school + (resubmitted ? " was sent for approval again." : " was sent for approval."), MAX_MESSAGE),
+                "/operations/school-contracts/schools/");
+    }
+
+    public static Text mouDecided(String school, String outcome, String reason, boolean termsAmended) {
+        String verb = outcome.toLowerCase(Locale.ROOT);
+        String amended = termsAmended ? " The approver corrected some terms." : "";
+        return new Text(
+                shorten("MoU " + verb + ": " + school, MAX_TITLE),
+                shorten("The MoU of " + school + " was " + verb + because(reason) + "." + amended, MAX_MESSAGE),
+                "/operations/school-contracts/schools/");
+    }
+
     public static Text transferRequested(String kind, String teacherName, String fromSchool, LocalDate on) {
         return new Text(
                 shorten("New " + movement(kind) + " request: " + teacherName, MAX_TITLE),
