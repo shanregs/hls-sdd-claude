@@ -122,7 +122,7 @@ export function bill(overrides: Partial<BillRef> = {}): BillRef {
 }
 
 export function claimDetail(overrides: Partial<ClaimDetail> = {}): ClaimDetail {
-  const row = claimRow(overrides);
+  const row = claimRow({ billCount: (overrides.bills ?? []).filter((b) => !b.removed).length, ...overrides });
   return {
     ...row,
     reason: null,

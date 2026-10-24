@@ -147,13 +147,13 @@ clock; use `findBy*` or an `act` with a short wait.
 
 ### Tests for User Story 4
 
-- [ ] T041 [P] [US4] `MOBT/expenses/menuVisibility.test.tsx`: Teacher, Manager and Director models show My Expenses and never Expenses (review); a System model shows no expense entry and direct access shows "not authorized"; removing `MY_EXPENSES` from the model after a refresh removes the entry; a role-name scan finds no role names in the new files
-- [ ] T042 [P] [US4] `MOBT/expenses/neverFalseSuccess.test.tsx`: no step (create, bill, submit, withdraw, delete, update) is shown as done before its 2xx; a failed or offline step leaves the claim, the outbox item and the list as they were; a failed bill never shows the claim as submitted
-- [ ] T043 [P] [US4] `MOBT/a11y/expenses.a11y.test.tsx`: roles, labels and 48 dp targets for the list, detail, form, dialogs and banner; light and dark themes render; the `check:manifest` script still passes
+- [X] T041 [P] [US4] `MOBT/expenses/menuVisibility.test.tsx`: Teacher, Manager and Director models show My Expenses and never Expenses (review); a System model shows no expense entry and direct access shows "not authorized"; removing `MY_EXPENSES` from the model after a refresh removes the entry; a role-name scan finds no role names in the new files
+- [X] T042 [P] [US4] `MOBT/expenses/neverFalseSuccess.test.tsx`: no step (create, bill, submit, withdraw, delete, update) is shown as done before its 2xx; a failed or offline step leaves the claim, the outbox item and the list as they were; a failed bill never shows the claim as submitted
+- [X] T043 [P] [US4] `MOBT/a11y/expenses.a11y.test.tsx`: roles, labels and 48 dp targets for the list, detail, form, dialogs and banner; light and dark themes render; the `check:manifest` script still passes
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Fix whatever T041 to T043 find (labels, targets, states, registry); confirm no code path reads a role name and no screen is chosen by role
+- [X] T044 [US4] Fix whatever T041 to T043 find (labels, targets, states, registry); confirm no code path reads a role name and no screen is chosen by role
 
 **Checkpoint**: menus, permissions and safety come from the server.
 
