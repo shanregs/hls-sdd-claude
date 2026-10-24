@@ -38,7 +38,7 @@ Owner confirmation status for every point: **not yet given**.
   - mine, fixed and re-run green: `AttendanceAccessModelTest` (3), `NavigationSectionOrderTest` (1) (the new menu items and the Teacher OPERATIONS section; the lists also lacked the earlier Teacher Performance item), `TasksModuleRulesTest` (expenses may read `tasks.api`).
   - environment, pass when re-run alone: `TeacherFirstAssignedTest` (PostgreSQL "too many clients"), `PayRunRecomputeTest`, `SupplementaryRunTest`, `DevSeedTest` (long runs under load).
   - not related, left alone: `LeaveAuditTest` (the test picks dates that are not working days on today's date), `PayRunScaleTest` (took 2m27s against a 2m limit on the loaded machine).
-- Full frontend suite: 943 tests, 27 failures, all in `src/a11y/a11y.test.tsx` dark-mode pages (timeouts under load; re-run alone the worker exited unexpectedly, so it is not confirmed green here; none of the expenses tests). The expenses tests (5 files, 48 tests) pass.
+- Full frontend suite: 943 tests, 27 failures, all in `src/a11y/a11y.test.tsx` dark-mode pages (timeouts under load; re-run alone with `--pool=forks` the file passes, 178 of 178; none of the expenses tests). The expenses tests (5 files, 48 tests) pass.
 
 ## What was not done
 
