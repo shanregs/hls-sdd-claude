@@ -42,6 +42,7 @@ public class AuditVisibility {
             Map.entry("PRINCIPAL_FEEDBACK", PermissionModule.TEACHER_PERFORMANCE),
             Map.entry("PERFORMANCE_ISSUE", PermissionModule.TEACHER_PERFORMANCE),
             Map.entry("OBSERVATION_PLAN", PermissionModule.TEACHER_PERFORMANCE),
+            Map.entry("MOVEMENT_REQUEST", PermissionModule.TEACHER_TRANSFERS),
             Map.entry("PAYROLL_RUN", PermissionModule.PAYROLL),
             Map.entry("PAYROLL_ADJUSTMENT", PermissionModule.PAYROLL),
             Map.entry("PAYROLL_PAYMENT", PermissionModule.PAYROLL),

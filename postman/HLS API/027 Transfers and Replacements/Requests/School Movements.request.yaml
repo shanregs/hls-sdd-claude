@@ -1,0 +1,6 @@
+$kind: http-request
+name: School Movements
+description: "A School's arrivals and departures. Needs VIEW."
+url: "{{baseUrl}}/api/v1/transfers/schools/{{schoolId}}/movements"
+method: GET
+order: 13000

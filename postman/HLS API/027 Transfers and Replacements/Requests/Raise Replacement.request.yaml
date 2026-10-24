@@ -1,0 +1,21 @@
+$kind: http-request
+name: Raise Replacement
+description: "201. Needs CREATE. The replacement must be ACTIVE and unplaced; optional outgoingDestinationSchoolId."
+url: "{{baseUrl}}/api/v1/transfers/replacements"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherId": "{{teacherId}}",
+      "replacementTeacherId": "{{replacementTeacherId}}",
+      "effectiveOn": "2026-11-03",
+      "reasonCategory": "AFTER_REVIEW"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('requestId', j.id); pm.collectionVariables.set('requestVersion', j.version); }"
+    language: text/javascript
+order: 4000

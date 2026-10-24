@@ -302,6 +302,14 @@ public final class NavigationCatalog {
                     36,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
+                    "Transfers & Replacements",
+                    "/operations/transfers",
+                    PermissionModule.TEACHER_TRANSFERS,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    35,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
+            new NavItem(
                     "Manager Tasks",
                     "/operations/tasks",
                     PermissionModule.TASKS,

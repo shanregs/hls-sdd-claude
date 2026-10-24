@@ -27,6 +27,7 @@ import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
 import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistory";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
+import { TransfersPage } from "./features/transfers/TransfersPage";
 import { FeedbackPage } from "./features/performance/FeedbackPage";
 import { IssuePage, IssuesPage } from "./features/performance/IssuePage";
 import { ObservationForm } from "./features/performance/ObservationForm";
@@ -368,6 +369,14 @@ export function App() {
           element={
             <RouteGuard>
               <SecuritySettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/transfers"
+          element={
+            <RouteGuard>
+              <TransfersPage />
             </RouteGuard>
           }
         />

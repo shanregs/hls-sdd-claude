@@ -54,7 +54,8 @@ public final class PermissionEligibility {
             PermissionModule.SCHOOL_WORKING_DAYS,
             PermissionModule.PAYROLL,
             PermissionModule.ACTIVITY_CALENDAR,
-            PermissionModule.TEACHER_PERFORMANCE);
+            PermissionModule.TEACHER_PERFORMANCE,
+            PermissionModule.TEACHER_TRANSFERS);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -108,6 +109,13 @@ public final class PermissionEligibility {
     static final Map<PermissionModule, Set<Role>> TEACHER_PERFORMANCE_MODULES = Map.of(
             PermissionModule.TEACHER_PERFORMANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
+    /**
+     * Teacher transfers and replacements (spec 027): staff roles only; Approve is for the Director and Manager, never Admin.
+     * Teacher and System hold nothing.
+     */
+    static final Map<PermissionModule, Set<Role>> TEACHER_TRANSFERS_MODULES = Map.of(
+            PermissionModule.TEACHER_TRANSFERS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -134,6 +142,13 @@ public final class PermissionEligibility {
         Set<Role> performanceOnly = TEACHER_PERFORMANCE_MODULES.get(module);
         if (performanceOnly != null && !performanceOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> transfersOnly = TEACHER_TRANSFERS_MODULES.get(module);
+        if (transfersOnly != null && !transfersOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        if (role == Role.ADMIN && module == PermissionModule.TEACHER_TRANSFERS) {
+            return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
         }
         Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
         if (payrollOnly != null && !payrollOnly.contains(role)) {
