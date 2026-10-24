@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ManagerLeaveRequestRepository extends JpaRepository<ManagerLeaveRequest, UUID> {
 
@@ -24,4 +26,12 @@ public interface ManagerLeaveRequestRepository extends JpaRepository<ManagerLeav
     /** The manager's requests in these statuses that overlap the range, for the overlap check. */
     List<ManagerLeaveRequest> findByManagerIdAndStatusInAndFirstDateLessThanEqualAndLastDateGreaterThanEqual(
             UUID managerId, Collection<Status> statuses, LocalDate lastDate, LocalDate firstDate);
+
+    /**
+     * Takes a transaction-scoped Postgres advisory lock on the key, so two simultaneous submissions by the same
+     * Manager run their overlap check and insert one after the other. The lock is released at commit or rollback.
+     * The result is the empty text of the void function and carries no meaning.
+     */
+    @Query(value = "select cast(pg_advisory_xact_lock(hashtextextended(:key, 0)) as text)", nativeQuery = true)
+    String lockForSubmission(@Param("key") String key);
 }
