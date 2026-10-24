@@ -89,6 +89,7 @@ jest.mock("react-native-safe-area-context", () =>
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { resetLocationGate } from "./src/location/LocationGate";
+import { resetCipherKey } from "./src/outbox/cipher";
 import { setAccessToken } from "./src/security/memoryToken";
 
 // Controllable fake of expo-image-picker (spec 033): tests set what the camera and the gallery return, and whether the
@@ -105,8 +106,14 @@ jest.mock("expo-image-picker", () => {
       assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
     } as { canceled: boolean; assets?: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number | null }[] },
   };
+  // Assets a phone can produce besides jpg and png (spec 036): HEIC from the camera app, WebP from the gallery.
+  const assets = {
+    heic: { uri: "file:///cache/IMG_0001.heic", fileName: "IMG_0001.heic", mimeType: "image/heic", fileSize: 2_411_724, width: 4032, height: 3024 },
+    webp: { uri: "file:///cache/picture.webp", fileName: "picture.webp", mimeType: "image/webp", fileSize: 512_000, width: 1600, height: 1200 },
+  };
   return {
     __state: state,
+    __assets: assets,
     requestCameraPermissionsAsync: jest.fn(async () => ({
       status: state.cameraPermission,
       granted: state.cameraPermission === "granted",
@@ -212,9 +219,8 @@ jest.mock("expo-crypto", () => {
 // expo-image-manipulator: records what was asked and returns a small jpg. The source size of a picked uri is in
 // `sources` (default 4000 x 3000); the size the result reports is the next of `outputBytes` (default 700 000).
 jest.mock("expo-image-manipulator", () => {
-  type Resize = { resize?: { width?: number; height?: number } };
   const state = {
-    calls: [] as { uri: string; actions: Resize[]; options: { compress?: number; format?: string } }[],
+    calls: [] as { uri: string; actions: { resize?: { width?: number; height?: number } }[]; options: { compress?: number; format?: string } }[],
     sources: new Map<string, { width: number; height: number }>(),
     outputBytes: [] as number[],
     fail: false,
@@ -223,7 +229,7 @@ jest.mock("expo-image-manipulator", () => {
   return {
     __state: state,
     SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
-    manipulateAsync: jest.fn(async (uri: string, actions: Resize[], options: { compress?: number; format?: string }) => {
+    manipulateAsync: jest.fn(async (uri: string, actions: { resize?: { width?: number; height?: number } }[], options: { compress?: number; format?: string }) => {
       state.calls.push({ uri, actions, options });
       if (state.fail) throw new Error("Cannot decode image");
       const source = state.sources.get(uri) ?? { width: 4000, height: 3000 };
@@ -259,10 +265,9 @@ jest.mock("expo-document-picker", () => {
 
 // @react-native-community/netinfo: `__emit` fires a connectivity change to every listener.
 jest.mock("@react-native-community/netinfo", () => {
-  type Info = { isConnected: boolean | null; isInternetReachable: boolean | null };
-  const listeners = new Set<(s: Info) => void>();
-  const state: Info = { isConnected: true, isInternetReachable: true };
-  const addEventListener = jest.fn((listener: (s: Info) => void) => {
+  const listeners = new Set<unknown>();
+  const state = { isConnected: true as boolean | null, isInternetReachable: true as boolean | null };
+  const addEventListener = jest.fn((listener: unknown) => {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
@@ -275,9 +280,9 @@ jest.mock("@react-native-community/netinfo", () => {
     addEventListener,
     fetch,
     __state: state,
-    __emit: (next: Partial<Info>) => {
+    __emit: (next: Partial<typeof state>) => {
       Object.assign(state, next);
-      listeners.forEach((listener) => listener({ ...state }));
+      listeners.forEach((listener) => Reflect.apply(listener as object as () => void, undefined, [{ ...state }]));
     },
     __listenerCount: () => listeners.size,
   };
@@ -319,7 +324,24 @@ beforeEach(async () => {
       assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
     },
   });
+  const fileSystem = jest.requireMock("expo-file-system/legacy").__state;
+  fileSystem.files.clear();
+  fileSystem.dirs.clear();
+  fileSystem.sizes.clear();
+  fileSystem.full = false;
+  Object.assign(jest.requireMock("expo-crypto").__state, { uuid: 0, bytes: 0 });
+  const manipulator = jest.requireMock("expo-image-manipulator").__state;
+  manipulator.calls.length = 0;
+  manipulator.sources.clear();
+  manipulator.outputBytes.length = 0;
+  manipulator.fail = false;
+  jest.requireMock("expo-document-picker").__state.result = {
+    canceled: false,
+    assets: [{ uri: "file:///cache/bill.pdf", name: "bill.pdf", mimeType: "application/pdf", size: 120_000 }],
+  };
+  Object.assign(jest.requireMock("@react-native-community/netinfo").__state, { isConnected: true, isInternetReachable: true });
   resetLocationGate();
+  resetCipherKey();
   (SecureStore as unknown as { __reset: () => void }).__reset();
   setAccessToken(null);
 });
