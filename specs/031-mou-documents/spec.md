@@ -22,6 +22,7 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 ### Session 2026-10-24
 
 - Q: Is one approval enough, or must both the Director and the Zone Manager approve? → A: One is enough: the Director or the School's Zone Manager. No second step.
+- Q: If the document is replaced after a MoU is approved, does the approval stay? → A: No. The MoU goes back to pending and needs approval again; it does not count as approved until then.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -104,7 +105,7 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 - If the School's Zone Manager changes while a MoU is pending, the new Zone Manager sees it and the old one no longer does.
 - A School with no Zone Manager: only the Director can approve.
 - Upload fails half way, or the file is empty or unreadable: nothing is attached and the MoU keeps its earlier state.
-- Replacing the document of an approved MoU: allowed for Admin and Director; the new version becomes current, the approval stays, and the change is audited and flagged "document changed after approval" (see open questions).
+- Replacing the document of an approved MoU: allowed for Admin and Director; the new version becomes current, the MoU goes back to pending and needs approval again, and until then it does not count as approved. The change is audited.
 - Removing a document: only Admin or Director, with a reason; the removal is recorded in the audit history rather than disappearing silently.
 - Dates show as DD/MM/YYYY.
 
@@ -115,7 +116,7 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 **Document**
 
 - **FR-001**: The system MUST let an Admin or Director attach a signed document (PDF, or a scan as JPG or PNG) to a MoU recorded under spec 012, stored with file name, type, size, who added it and when, using the shared file storage (C7).
-- **FR-002**: Uploading again MUST keep every earlier version; only the latest is "current". No stored version is ever changed.
+- **FR-002**: Uploading again MUST keep every earlier version; only the latest is "current". No stored version is ever changed. Uploading a new version to an approved MoU MUST return it to pending approval.
 - **FR-003**: The system MUST refuse files of a type or size outside the allowed limits, empty files and unreadable files, with a clear reason. The limits are set in the plan, with a default of 10 MB per file and PDF, JPG and PNG only.
 - **FR-004**: Anyone who may see the MoU (by scope) MUST be able to view and download its current document and its earlier versions. Nobody outside the scope MAY learn that the document exists.
 - **FR-005**: Removing a document version MUST be limited to Admin and Director, MUST require a reason, and MUST be audited.
@@ -186,7 +187,6 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 2. **Existing MoUs from 012**: default is "approved (before approval step)". Alternative: treat them as needing a document and approval, which flags every current MoU.
 3. **Is a document mandatory for approval?** Default yes (cannot submit without one).
 4. **Can a Director approve a MoU they recorded themselves?** Default yes, audited. Alternative: another approver required.
-5. **Editing a document after approval**: default allowed for Admin and Director with the approval kept and a "changed after approval" flag. Alternative: it resets the MoU to pending.
-6. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-7. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
-8. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
+5. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
+6. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
+7. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
