@@ -26,6 +26,7 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 - Q: What happens to MoUs recorded in spec 012 before this approval step exists? → A: They count as approved but are labelled "approved (before approval step)"; a document can still be attached later.
 - Q: Can a Director approve a MoU they recorded and submitted themselves? → A: Yes. It is allowed, and the audit trail records both actions.
 - Q: Should approval block anything here, such as Teacher mapping or attendance? → A: No. Nothing is blocked; billing, incentives and marketing read the state and apply their own rules.
+- Q: Should the Admin also be told when a MoU is decided? → A: Yes. Approvers are told on submission, the submitter on the decision, and Admin also on approval or rejection (not on submission).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -139,7 +140,7 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 
 - **FR-014**: The School Contracts list and the MoU detail MUST show the document state and approval status, and the list MUST filter by them. The Director and each Zone Manager MUST have a pending-approval list limited to their scope.
 - **FR-015**: Every upload, version replacement, removal, submission, approval, rejection and resubmission MUST be written to the audit store (spec 003) with actor, role, time, and prior and new values.
-- **FR-016**: Submission and decisions MUST raise notification events (spec 010): to the approvers on submission, to the submitter on approval or rejection.
+- **FR-016**: Submission and decisions MUST raise notification events (spec 010): to the approvers on submission, to the submitter on approval or rejection, and to the Admin on approval or rejection (not on submission).
 - **FR-017**: The `schoolbilling` public interface MUST answer, for a School on a date, the approval status of the MoU in effect, its approval date and whether a document is attached, without consumers reading this module's tables. Consumers (022, 030, 023) decide their own use of the answer.
 - **FR-018**: Every list, search, detail and file download MUST be filtered by the caller's scope with no leakage between Zone Managers (Constitution Principle III). Menu items and actions MUST be offered only when the server's access model grants them.
 - **FR-019**: Screens MUST meet WCAG 2.2 AA, have loading, empty and error states, and work at phone width.
@@ -188,5 +189,4 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 
 1. **Is a document mandatory for approval?** Default yes (cannot submit without one).
 2. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-3. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
-4. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
+3. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
