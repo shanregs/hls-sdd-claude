@@ -47,17 +47,17 @@ Also covered: audit of every write (`PayrollAuditTest`, `PayrollAuditMappingTest
 
 ## Financial review (Principle IX)
 
-The owner's confirmation is **not yet given** for any point. Fixtures are the hand-computed ones in the named tests.
+The owner confirmed all seven points on 2026-10-24 (given in a working session, recorded here by the assistant). Fixtures are the hand-computed ones in the named tests.
 
 | # | Point | Fixture that demonstrates it | Owner confirmation |
 | - | ----- | ---------------------------- | ------------------ |
-| 1 | Earned-pay formula (each payable day at its own day's salary over working days; constant salary earns exactly the salary) | `PayRulesEarnedPayTest`, `LineCalculatorTest`, `PayRunComputationTest.aTeacherAManagerAndADirectorGetTheHandComputedLines` | Pending |
-| 2 | Rounding: earned pay and deduction each rounded once by the policy; with `UP`/`DOWN` the same direction applies to both, so one side can gain up to one rupee each | `PayRulesEarnedPayTest`, `LineCalculatorTest` | Pending; decision needed on rounding earned pay to nearest rupee whatever the rule |
-| 3 | Teacher who changed School in the month uses each date's own School divisor | `PayRulesEarnedPayTest` | Pending |
-| 4 | Manager lock versus calendar: divide by the calendar as computed, warn when the lock-time count differs | `PayRunComputationTest` (Manager cases) | Pending; confirm a warning, not a block |
-| 5 | Negative net blocks submission | `PayAdjustmentTest.aNegativeNetAfterAnAdjustmentBlocksSubmit`, `PayRunApprovalTest.submitWithANegativeNetLineIsRefusedNamingTheLine` | Pending |
-| 6 | Supplementary run uses the month's policy and divisor as stored at its own computation | `SupplementaryRunTest` | Pending |
-| 7 | School working days (spec 037): payroll uses the calendar-derived days, not the stored School figure | none (a decision, not a behaviour) | Pending; if payroll adopts the stored figure it is an amendment to 013a's `PayRules` |
+| 1 | Earned-pay formula (each payable day at its own day's salary over working days; constant salary earns exactly the salary) | `PayRulesEarnedPayTest`, `LineCalculatorTest`, `PayRunComputationTest.aTeacherAManagerAndADirectorGetTheHandComputedLines` | Confirmed 2026-10-24 |
+| 2 | Rounding: earned pay and deduction each rounded once by the policy; with `UP`/`DOWN` the same direction applies to both, so one side can gain up to one rupee each | `PayRulesEarnedPayTest`, `LineCalculatorTest` | Confirmed 2026-10-24; decision: keep as built (the policy rounds earned pay and deduction once each) |
+| 3 | Teacher who changed School in the month uses each date's own School divisor | `PayRulesEarnedPayTest` | Confirmed 2026-10-24 |
+| 4 | Manager lock versus calendar: divide by the calendar as computed, warn when the lock-time count differs | `PayRunComputationTest` (Manager cases) | Confirmed 2026-10-24; decision: warn only, no block |
+| 5 | Negative net blocks submission | `PayAdjustmentTest.aNegativeNetAfterAnAdjustmentBlocksSubmit`, `PayRunApprovalTest.submitWithANegativeNetLineIsRefusedNamingTheLine` | Confirmed 2026-10-24 |
+| 6 | Supplementary run uses the month's policy and divisor as stored at its own computation | `SupplementaryRunTest` | Confirmed 2026-10-24 |
+| 7 | School working days (spec 037): payroll uses the calendar-derived days, not the stored School figure | none (a decision, not a behaviour) | Confirmed 2026-10-24; decision: payroll keeps the calendar-derived days; the stored School figure is not adopted |
 
 ## Not done
 
@@ -65,5 +65,5 @@ The owner's confirmation is **not yet given** for any point. Fixtures are the ha
 - No screen-reader check (axe checks in both themes are automated only).
 - No human timing of SC-005 (a reviewer reproducing a net from the working screen).
 - The Postman collection (`postman/HLS API/013b Payroll Run/`) was not run.
-- The owner has not confirmed the seven financial points above, so the feature is not signed off for release.
+- The owner confirmed the seven financial points above (2026-10-24). The manual browser, screen-reader and SC-005 checks listed here are still open before release.
 - Five unrelated backend tests failed in the full run and passed alone (see Suites).
