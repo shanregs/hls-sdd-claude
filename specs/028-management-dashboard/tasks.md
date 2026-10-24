@@ -184,19 +184,19 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 ### Tests for User Story 6
 
-- [ ] T042 [P] [US6] Tests in `backend/src/test/java/com/hls/reporting/InboxServiceTest.java`: merge from fake `ApprovalSource`s, grant checked before the source is called (a kind is absent from the list and totals without Approve/Process), the caller's own requests dropped (FR-014), oldest first, `ageDays` in business days, totals per kind complete across pages, page size 50
-- [ ] T043 [P] [US6] Tests for each source: `backend/src/test/java/com/hls/leave/manager/ManagerLeaveApprovalsTest.java`, `backend/src/test/java/com/hls/attendance/manager/ForgottenCheckInApprovalsTest.java`, `backend/src/test/java/com/hls/recruitment/marketing/FinalStageApprovalsTest.java`, `backend/src/test/java/com/hls/payroll/run/PayrollApprovalsTest.java` (not a run the caller submitted), `backend/src/test/java/com/hls/tasks/TaskApprovalsTest.java`; each item equals the module's own pending list and a decided item is gone on the next call
-- [ ] T044 [P] [US6] Endpoint tests added to `backend/src/test/java/com/hls/reporting/DashboardEndpointsTest.java` for `GET /inbox` (403 for a Manager-only caller, `kind` filter, paging)
+- [x] T042 [P] [US6] Tests in `backend/src/test/java/com/hls/reporting/InboxServiceTest.java`: merge from fake `ApprovalSource`s, grant checked before the source is called (a kind is absent from the list and totals without Approve/Process), the caller's own requests dropped (FR-014), oldest first, `ageDays` in business days, totals per kind complete across pages, page size 50
+- [x] T043 [P] [US6] Tests for each source: `backend/src/test/java/com/hls/leave/manager/ManagerLeaveApprovalsTest.java`, `backend/src/test/java/com/hls/attendance/manager/ForgottenCheckInApprovalsTest.java`, `backend/src/test/java/com/hls/recruitment/marketing/FinalStageApprovalsTest.java`, `backend/src/test/java/com/hls/payroll/run/PayrollApprovalsTest.java` (not a run the caller submitted), `backend/src/test/java/com/hls/tasks/TaskApprovalsTest.java`; each item equals the module's own pending list and a decided item is gone on the next call
+- [x] T044 [P] [US6] Endpoint tests added to `backend/src/test/java/com/hls/reporting/DashboardEndpointsTest.java` for `GET /inbox` (403 for a Manager-only caller, `kind` filter, paging)
 
 ### Implementation for User Story 6
 
-- [ ] T045 [US6] Implement `backend/src/main/java/com/hls/reporting/internal/InboxService.java` and `GET /api/v1/dashboard/inbox?kind=&page=&size=` in `DashboardController.java` (depends on T004, T008)
-- [ ] T046 [P] [US6] Create `backend/src/main/java/com/hls/leave/manager/internal/ManagerLeaveApprovals.java` (`MANAGER_LEAVE`, Manager Leave Approve)
-- [ ] T047 [P] [US6] Create `backend/src/main/java/com/hls/attendance/manager/internal/ForgottenCheckInApprovals.java` (`FORGOTTEN_CHECK_IN`, Manager Leave Approve)
-- [ ] T048 [P] [US6] Create `backend/src/main/java/com/hls/recruitment/marketing/internal/FinalStageApprovals.java` (`FINAL_STAGE_PROSPECT`, Marketing Approve)
-- [ ] T049 [P] [US6] Create `backend/src/main/java/com/hls/payroll/run/internal/PayrollApprovals.java` (`PAYROLL_RUN`, Payroll Approve, excludes runs submitted by the caller)
-- [ ] T050 [P] [US6] Create `backend/src/main/java/com/hls/tasks/internal/TaskApprovals.java` (`TASK_VERIFICATION`, Manager Tasks Approve)
-- [ ] T051 [P] [US6] Create `frontend/src/features/dashboard/InboxPanel.tsx` (totals per kind, items with requester, subject, DD/MM/YYYY date, age, one click to the decision screen, Refresh) and `frontend/src/features/dashboard/__tests__/InboxPanel.test.tsx`; render it in `ManagementDashboard.tsx` only when the manifest says `inbox: true` (depends on T015)
+- [x] T045 [US6] Implement `backend/src/main/java/com/hls/reporting/internal/InboxService.java` and `GET /api/v1/dashboard/inbox?kind=&page=&size=` in `DashboardController.java` (depends on T004, T008)
+- [x] T046 [P] [US6] Create `backend/src/main/java/com/hls/leave/manager/internal/ManagerLeaveApprovals.java` (`MANAGER_LEAVE`, Manager Leave Approve)
+- [x] T047 [P] [US6] Create `backend/src/main/java/com/hls/attendance/manager/internal/ForgottenCheckInApprovals.java` (`FORGOTTEN_CHECK_IN`, Manager Leave Approve)
+- [x] T048 [P] [US6] Create `backend/src/main/java/com/hls/recruitment/marketing/internal/FinalStageApprovals.java` (`FINAL_STAGE_PROSPECT`, Marketing Approve)
+- [x] T049 [P] [US6] Create `backend/src/main/java/com/hls/payroll/run/internal/PayrollApprovals.java` (`PAYROLL_RUN`, Payroll Approve, excludes runs submitted by the caller)
+- [x] T050 [P] [US6] Create `backend/src/main/java/com/hls/tasks/internal/TaskApprovals.java` (`TASK_VERIFICATION`, Manager Tasks Approve)
+- [x] T051 [P] [US6] Create `frontend/src/features/dashboard/InboxPanel.tsx` (totals per kind, items with requester, subject, DD/MM/YYYY date, age, one click to the decision screen, Refresh) and `frontend/src/features/dashboard/__tests__/InboxPanel.test.tsx`; render it in `ManagementDashboard.tsx` only when the manifest says `inbox: true` (depends on T015)
 
 **Checkpoint**: US6 complete.
 

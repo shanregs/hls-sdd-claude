@@ -2,6 +2,7 @@ package com.hls.reporting.web;
 
 import com.hls.reporting.api.TileResult;
 import com.hls.reporting.internal.DashboardService;
+import com.hls.reporting.internal.InboxService;
 import com.hls.school.api.CallerContext;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,9 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class DashboardController {
 
     private final DashboardService service;
+    private final InboxService inboxService;
 
-    public DashboardController(DashboardService service) {
+    public DashboardController(DashboardService service, InboxService inboxService) {
         this.service = service;
+        this.inboxService = inboxService;
     }
 
     @GetMapping({"", "/"})
@@ -57,5 +60,14 @@ public class DashboardController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String dir) {
         return service.managers(CallerContext.userId(jwt), CallerContext.roles(jwt), zoneId, period, sort, dir);
+    }
+
+    @GetMapping("/inbox")
+    public InboxService.InboxResponse inbox(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return inboxService.inbox(CallerContext.userId(jwt), CallerContext.roles(jwt), kind, page, size);
     }
 }

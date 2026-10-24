@@ -8,6 +8,7 @@ import {
   type Manifest,
 } from "./dashboardApi";
 import { DashboardFilters } from "./DashboardFilters";
+import { InboxPanel } from "./InboxPanel";
 import { AreaSection } from "./AreaSection";
 import { formatTime } from "./format";
 
@@ -95,6 +96,7 @@ export function ManagementDashboard({ title }: { title: string }) {
           There is nothing to show here yet.
         </Typography>
       )}
+      {state.kind === "ready" && state.manifest.inbox && <InboxPanel />}
       {state.kind === "ready" &&
         state.manifest.areas.map((area) => (
           <AreaSection

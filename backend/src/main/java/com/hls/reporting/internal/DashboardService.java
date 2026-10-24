@@ -45,6 +45,7 @@ public class DashboardService {
     private final ObjectProvider<ApprovalSource> approvalSources;
     private final Clock clock;
     private final ManagerComparisonService comparison;
+    private final InboxService inbox;
 
     public DashboardService(
             TileRegistry registry,
@@ -53,7 +54,8 @@ public class DashboardService {
             PermissionGuard guard,
             ObjectProvider<ApprovalSource> approvalSources,
             Clock clock,
-            ManagerComparisonService comparison) {
+            ManagerComparisonService comparison,
+            InboxService inbox) {
         this.registry = registry;
         this.reader = reader;
         this.zones = zones;
@@ -61,6 +63,7 @@ public class DashboardService {
         this.approvalSources = approvalSources;
         this.clock = clock;
         this.comparison = comparison;
+        this.inbox = inbox;
     }
 
     /** Definitions only, no figures. Teacher and System hold none of the grants, so theirs is empty. */
@@ -84,11 +87,7 @@ public class DashboardService {
     }
 
     private boolean inboxAvailable(Set<Role> roles) {
-        if (TileRegistry.managerOnly(roles)) {
-            return false;
-        }
-        return approvalSources.orderedStream()
-                .anyMatch(s -> guard.isGranted(roles, PermissionModule.valueOf(s.permissionModule()), s.action()));
+        return inbox.available(roles);
     }
 
     /** Every tile of one area, computed now; an area outside the caller's manifest answers 404. */
