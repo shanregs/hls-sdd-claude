@@ -1,26 +1,17 @@
-import { Box, Typography } from "@mui/material";
-import { PlaceholderWidget } from "./PlaceholderWidget";
+import { Stack } from "@mui/material";
+import { ManagementDashboard } from "../features/dashboard/ManagementDashboard";
 import { PendingLeaveWidget } from "./PendingLeaveWidget";
 
-/** Admin's org-wide landing dashboard (FR-012) — placeholders until specs 005+ ship real widgets. */
+/**
+ * Admin's org-wide landing dashboard (spec 028): the areas and tiles come from the server's manifest, so the Admin and
+ * Director see the same screen and differ only by the permission matrix. The pending-leave widget stays until the leave
+ * tile (T038, US4) carries the same figure; it is then removed.
+ */
 export function AdminDashboard() {
   return (
-    <Box>
-      <Typography variant="h6" component="h2" gutterBottom>
-        Admin overview
-      </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 2,
-        }}
-      >
-        <PlaceholderWidget title="Organization headcount" />
-        <PlaceholderWidget title="Attendance today" />
-        <PendingLeaveWidget title="Pending leave approvals" />
-        <PlaceholderWidget title="Recent audit activity" />
-      </Box>
-    </Box>
+    <Stack spacing={3}>
+      <ManagementDashboard title="Admin overview" />
+      <PendingLeaveWidget title="Pending leave approvals" />
+    </Stack>
   );
 }

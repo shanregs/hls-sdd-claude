@@ -339,3 +339,7 @@ The constitution's Default role access matrix gets Recruitment, Offers and Induc
 - Spec 015 (expenses) links Training Stay expenses to induction batches; the cost is not stored here.
 - Weekend and monthly refresher training is a later spec (024).
 - Zone Managers read all recruitment records and write only to drives they scheduled or are interviewers on (see Clarifications); colleges are not Zone-bound.
+
+## Amended by 035
+
+Spec 035 (Manager Activity Calendar) added `activitiesBetween` on the drive feed, `campus_drive.held_on` and the `drive_date_change` history additively, in migration V70. `plannedBetween` and its `PlannedActivity` values are unchanged; the regression test is `DrivePlannedBetweenUnchangedTest`.

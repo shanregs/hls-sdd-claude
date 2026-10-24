@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download My Bill
+description: "Downloads one bill of an own claim as an attachment. Needs MY_EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}/bills/{{billId}}"
+method: GET
+order: 11000

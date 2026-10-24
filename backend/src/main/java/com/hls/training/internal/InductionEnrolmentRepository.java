@@ -18,6 +18,9 @@ interface InductionEnrolmentRepository extends JpaRepository<InductionEnrolment,
 
     long countByBatchId(UUID batchId);
 
+    @Query("select count(e) from InductionEnrolment e where e.batchId = :batchId and e.result = 'COMPLETED'")
+    long countCompleted(@Param("batchId") UUID batchId);
+
     /** Enrolments that still hold the Teacher on those dates (not signed off as not completed). */
     @Query("""
             select e from InductionEnrolment e

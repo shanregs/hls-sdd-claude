@@ -1,0 +1,6 @@
+$kind: http-request
+name: Filter Choices
+description: "Choices for the filter bar: Managers (only themselves for a Manager), Zones, the six kinds with available flags (TRAINING available false until spec 024) and the statuses."
+url: "{{baseUrl}}/api/v1/activity-calendar/filters"
+method: GET
+order: 4000

@@ -29,6 +29,8 @@ import {
   type TeacherSummary,
 } from "./teachersApi";
 import { RowActionButton } from "../common/RowActionButton";
+import { MovementsDialog } from "../transfers/MovementsDialog";
+import { TRANSFERS_ROUTE } from "../transfers/transfersApi";
 
 const ROUTE = "/master-data/teachers";
 const DESIGNATIONS_ROUTE = "/master-data/designations";
@@ -46,6 +48,8 @@ export function TeachersPage() {
   const limitedEdit = canEdit && !canCreate;
   // designation and employee id need DESIGNATIONS EDIT, not TEACHERS EDIT (spec 005a FR-011)
   const canEditEmployment = useGrantedActions(DESIGNATIONS_ROUTE).has("EDIT");
+  // movement history and the Transferred and Replaced filters need the Transfers View grant (spec 027)
+  const canSeeMovements = useGrantedActions(TRANSFERS_ROUTE).has("VIEW");
   // Salary is shown only when the access model reports a salary scope (TEACHER_SALARY granted).
   const { accessModel } = useAccessModel();
   const canSeeSalary = Boolean(accessModel?.dataScope?.TEACHER_SALARY);
@@ -55,6 +59,7 @@ export function TeachersPage() {
   >({
     query: "",
     status: "",
+    movement: "",
     // the Designations screen links here with ?missingDesignation=true
     missingDesignation:
       new URLSearchParams(window.location.search).get("missingDesignation") ===
@@ -70,6 +75,7 @@ export function TeachersPage() {
   const [editing, setEditing] = useState<TeacherSummary | null>(null);
   const [statusFor, setStatusFor] = useState<TeacherSummary | null>(null);
   const [placementFor, setPlacementFor] = useState<TeacherSummary | null>(null);
+  const [movementsFor, setMovementsFor] = useState<TeacherSummary | null>(null);
   const [salaryFor, setSalaryFor] = useState<TeacherSummary | null>(null);
   const [accountFor, setAccountFor] = useState<TeacherSummary | null>(null);
   const [employmentFor, setEmploymentFor] = useState<TeacherSummary | null>(
@@ -173,6 +179,19 @@ export function TeachersPage() {
       valueGetter: (_value, row) => row.manager?.displayName ?? "",
     },
   ];
+  if (canSeeMovements) {
+    columns.push({
+      field: "movements",
+      headerName: "Movements",
+      flex: 0.8,
+      sortable: false,
+      renderCell: (params) => (
+        <Button size="small" onClick={() => setMovementsFor(params.row)}>
+          Movements
+        </Button>
+      ),
+    });
+  }
   if (canEdit || canEditEmployment) {
     columns.push({
       field: "actions",
@@ -267,6 +286,26 @@ export function TeachersPage() {
             ),
           )}
         </TextField>
+        {canSeeMovements && (
+          <TextField
+            select
+            label="Movement"
+            size="small"
+            sx={{ minWidth: 160 }}
+            value={filters.movement ?? ""}
+            onChange={(e) => {
+              setPaging((p) => ({ ...p, page: 0 }));
+              setFilters((f) => ({
+                ...f,
+                movement: e.target.value as TeacherListParams["movement"],
+              }));
+            }}
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="TRANSFERRED">Transferred</MenuItem>
+            <MenuItem value="REPLACED">Replaced</MenuItem>
+          </TextField>
+        )}
         <FormControlLabel
           control={
             <Checkbox
@@ -324,6 +363,13 @@ export function TeachersPage() {
             setEditing(null);
             reload();
           }}
+        />
+      )}
+      {movementsFor && (
+        <MovementsDialog
+          title={movementsFor.name}
+          teacherId={movementsFor.id}
+          onClose={() => setMovementsFor(null)}
         />
       )}
       {statusFor && (

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Delete Draft
+description: "Deletes an own Draft (204). Any other status is 409. Needs MY_EXPENSES.DELETE."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}"
+method: DELETE
+order: 7000

@@ -84,3 +84,8 @@ Each write above writes an audit entry (entity types `PAYROLL_RUN`, `PAYROLL_ADJ
 `PAYROLL_EXPORT`) with the actor, the run or line, and the reason where there is one. `submit`, `approve` and `return`
 publish `PayrollRunSubmitted`, `PayrollRunApproved`, `PayrollRunReturned` (month, run id, actor, reason on return; no
 amounts) for the notification module.
+
+> **Amendment (spec 015, Expenses):** the reserved kind `REIMBURSEMENT` is created by spec 015 through the additive
+> `payroll.api.ReimbursementIntake` (offer, withdraw, status) with `source_ref` set to the claim id, never by hand. Approving a
+> run publishes `payroll.api.PayrollAdjustmentApplied` once per applied adjustment that has a `source_ref`, in the approval
+> transaction, so the claim becomes Paid with payroll together with the run. Nothing here changes an approved run.

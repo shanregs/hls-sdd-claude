@@ -1,0 +1,6 @@
+$kind: http-request
+name: Month Calendar
+description: "One month of drives, visits, calls, meetings and tasks with status, the summary and the sources report. Optional managerId (Admin and Director; a Manager passing another Manager gets 404), zoneId, kind (CAMPUS_DRIVE, SCHOOL_VISIT, CALL, MEETING, TASK, TRAINING) and status (PLANNED, DONE, MISSED, CANCELLED); filters combine and the summary follows them. 400 for a bad month, kind or status; 403 for Teacher and System. Needs ACTIVITY_CALENDAR.VIEW."
+url: "{{baseUrl}}/api/v1/activity-calendar?month=2026-10"
+method: GET
+order: 1000

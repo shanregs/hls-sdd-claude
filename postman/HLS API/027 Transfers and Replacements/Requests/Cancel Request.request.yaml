@@ -1,0 +1,19 @@
+$kind: http-request
+name: Cancel Request
+description: "Needs EDIT and a reason. Pending, or Approved with a future date."
+url: "{{baseUrl}}/api/v1/transfers/{{requestId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": {{requestVersion}},
+      "reason": "Plans changed"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('requestId', j.id); pm.collectionVariables.set('requestVersion', j.version); }"
+    language: text/javascript
+order: 11000

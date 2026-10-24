@@ -1,6 +1,6 @@
 # Contract: Transfers & Replacements API
 
-Base path `/api/transfers`. JSON. Dates `YYYY-MM-DD` on the wire (shown DD/MM/YYYY in the UI). Every endpoint checks the grant
+Base path `/api/v1/transfers`. JSON. Dates `YYYY-MM-DD` on the wire (shown DD/MM/YYYY in the UI). Every endpoint checks the grant
 on `TEACHER_TRANSFERS` and the caller's scope on the server; an id out of scope answers 404. Errors use the shared problem
 format: 400 invalid input, 403 missing grant or forbidden decision, 404 not found or out of scope, 409 rule refused or version
 changed. A refusal that comes from a rule returns `problems: [string]` in plain words and changes nothing.
@@ -25,19 +25,19 @@ live result of the rules (empty on a final request).
 
 | Method and path | Grant | Purpose |
 | --- | --- | --- |
-| `GET /api/transfers?status=&schoolId=&from=&to=&page=&size=` | VIEW | List in scope; default status PENDING and APPROVED; the derived APPLIED is filterable |
-| `GET /api/transfers/{id}` | VIEW | Detail with `checks` and the request's history entries |
-| `POST /api/transfers/transfers` | CREATE | Raise a transfer: `teacherId, toSchoolId, positionId?, effectiveOn, reasonCategory, note` |
-| `POST /api/transfers/replacements` | CREATE | Raise a replacement: `teacherId, replacementTeacherId, effectiveOn, outgoingDestinationSchoolId?, reasonCategory, note` |
-| `POST /api/transfers/check` | CREATE | Dry run of either body (with `kind`); returns `{ok, problems[]}`, writes nothing |
-| `GET /api/transfers/candidates?schoolId=&on=` | CREATE | Replacement candidates: ACTIVE, unplaced on the date, no open request; `{id, name, status}` |
-| `GET /api/transfers/vacancies?schoolId=&on=` | CREATE | Vacant positions of the receiving School on the date, `{positionId, number, salary?}`; empty for a "MoU pending" School |
-| `PATCH /api/transfers/{id}` | EDIT | Change date, position, destination or note of a PENDING request; `version` required; requester or a decider |
-| `POST /api/transfers/{id}/approve` | APPROVE | `version`; applies the placement change; 403 for requester and Admin |
-| `POST /api/transfers/{id}/reject` | APPROVE | `version`, `reason` required |
-| `POST /api/transfers/{id}/cancel` | EDIT | `version`, `reason` required; Pending, or Approved with a future date; requester, Director or deciding Manager |
-| `GET /api/transfers/teachers/{teacherId}/movements` | VIEW | A Teacher's placement lines (see below) |
-| `GET /api/transfers/schools/{schoolId}/movements` | VIEW | A School's arrivals and departures |
+| `GET /api/v1/transfers?status=&schoolId=&from=&to=&page=&size=` | VIEW | List in scope; default status PENDING and APPROVED; the derived APPLIED is filterable |
+| `GET /api/v1/transfers/{id}` | VIEW | Detail with `checks` and the request's history entries |
+| `POST /api/v1/transfers/transfers` | CREATE | Raise a transfer: `teacherId, toSchoolId, positionId?, effectiveOn, reasonCategory, note` |
+| `POST /api/v1/transfers/replacements` | CREATE | Raise a replacement: `teacherId, replacementTeacherId, effectiveOn, outgoingDestinationSchoolId?, reasonCategory, note` |
+| `POST /api/v1/transfers/check` | CREATE | Dry run of either body (with `kind`); returns `{ok, problems[]}`, writes nothing |
+| `GET /api/v1/transfers/candidates?schoolId=&on=` | CREATE | Replacement candidates: ACTIVE, unplaced on the date, no open request; `{id, name, status}` |
+| `GET /api/v1/transfers/vacancies?schoolId=&on=` | CREATE | Vacant positions of the receiving School on the date, `{positionId, number, salary?}`; empty for a "MoU pending" School |
+| `PATCH /api/v1/transfers/{id}` | EDIT | Change date, position, destination or note of a PENDING request; `version` required; requester or a decider |
+| `POST /api/v1/transfers/{id}/approve` | APPROVE | `version`; applies the placement change; 403 for requester and Admin |
+| `POST /api/v1/transfers/{id}/reject` | APPROVE | `version`, `reason` required |
+| `POST /api/v1/transfers/{id}/cancel` | EDIT | `version`, `reason` required; Pending, or Approved with a future date; requester, Director or deciding Manager |
+| `GET /api/v1/transfers/teachers/{teacherId}/movements` | VIEW | A Teacher's placement lines (see below) |
+| `GET /api/v1/transfers/schools/{schoolId}/movements` | VIEW | A School's arrivals and departures |
 
 Teacher list filter (existing endpoint, new parameter): `GET /api/teachers?movement=TRANSFERRED|REPLACED`, applied inside the
 caller's scope.

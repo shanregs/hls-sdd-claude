@@ -53,7 +53,16 @@ list in [contracts/tile-catalog.md](contracts/tile-catalog.md), values in [data-
 ## 7. Adding a tile later (US7, SC-006)
 
 1. Run the backend tests with the test tile configuration: the tile appears under its area for a user with its grant, is absent
-   for one without, and every other tile's result is unchanged.
+   for one without, and every other tile's result is unchanged (`TileExtensibilityTest`).
+2. To add a tile from a later spec: in the owning module's `internal` package write a `*Tiles` class annotated `@Component`
+   that implements `reporting.api.TileSource` (`tiles()` returns constant `TileDefinition`s, `read` returns a `TileResult`
+   within the caller's data scope; use `TileResult.noData/notAvailable/notWorkingDay`, never 0, for a missing figure). Name
+   the `PermissionModule` and View action that grants it; a tile a Manager may see only for their own row also names an
+   `ownRowModule`/`ownRowAction` and must narrow to the caller when the caller is not org-wide.
+3. Add a row to `contracts/tile-catalog.md` and a parity test in the module's test package that asserts the tile equals the
+   screen or API it links to (the coverage test in `TileParityCoverageTest` fails when a catalog key has none).
+4. For the Manager comparison table implement `ManagerColumns`; for the inbox implement `ApprovalSource`. No change to
+   `reporting` is needed: the registry collects the beans, rejects a duplicate key at start-up and applies the grants.
 
 ## 8. Layout
 

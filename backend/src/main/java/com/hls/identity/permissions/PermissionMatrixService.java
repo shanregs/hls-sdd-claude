@@ -101,8 +101,11 @@ public class PermissionMatrixService {
         seedTasks();
         seedManagerAttendance();
         seedPayroll();
+        seedActivityCalendar();
         seedSchoolWorkingDays();
         seedTeacherPerformance();
+        seedExpenses();
+        seedTeacherTransfers();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -269,6 +272,38 @@ public class PermissionMatrixService {
         grants.invalidateAround();
     }
 
+    /**
+     * Expenses defaults (spec 015): Admin holds every action, the Director everything but Process (recording payment);
+     * Admin, Director, Manager and Teacher raise their own claims.
+     */
+    private void seedExpenses() {
+        for (PermissionAction action : PermissionModule.EXPENSES.actions()) {
+            seed(Role.ADMIN, PermissionModule.EXPENSES, action, true);
+            if (action != PermissionAction.PROCESS) {
+                seed(Role.DIRECTOR, PermissionModule.EXPENSES, action, true);
+            }
+        }
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
+            for (PermissionAction action : PermissionModule.MY_EXPENSES.actions()) {
+                seed(role, PermissionModule.MY_EXPENSES, action, true);
+            }
+        }
+        grants.invalidateAround();
+    }
+
+    /** Transfers and replacements defaults (spec 027): Admin raises and changes; Director and Manager also approve. */
+    private void seedTeacherTransfers() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            for (PermissionAction action : PermissionModule.TEACHER_TRANSFERS.actions()) {
+                if (role == Role.ADMIN && action == PermissionAction.APPROVE) {
+                    continue;
+                }
+                seed(role, PermissionModule.TEACHER_TRANSFERS, action, true);
+            }
+        }
+        grants.invalidateAround();
+    }
+
     private void seedTasks() {
         for (PermissionAction action : PermissionModule.TASKS.actions()) {
             seed(Role.ADMIN, PermissionModule.TASKS, action, true);
@@ -276,6 +311,14 @@ public class PermissionMatrixService {
         }
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
             seed(Role.MANAGER, PermissionModule.TASKS, action, true);
+        }
+        grants.invalidateAround();
+    }
+
+    /** Activity calendar defaults (spec 035): Admin, Director and Manager may view; a Manager sees only their own items. */
+    private void seedActivityCalendar() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            seed(role, PermissionModule.ACTIVITY_CALENDAR, PermissionAction.VIEW, true);
         }
         grants.invalidateAround();
     }

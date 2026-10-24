@@ -15,6 +15,8 @@ import { useGrantedActions } from "../common/useGrantedActions";
 import { ChangePlaceDialog } from "./ChangePlaceDialog";
 import { AssignSchoolManagerDialog } from "./AssignSchoolManagerDialog";
 import { SchoolDialog } from "./SchoolDialog";
+import { MovementsDialog } from "../transfers/MovementsDialog";
+import { TRANSFERS_ROUTE } from "../transfers/transfersApi";
 import {
   listSchools,
   setSchoolActive,
@@ -34,6 +36,7 @@ export function SchoolsPage() {
   const canEdit = actions.has("EDIT");
   // Only Admin/Director hold CREATE; a Manager's edit is limited to contact fields (FR-006).
   const limitedEdit = canEdit && !canCreate;
+  const canSeeMovements = useGrantedActions(TRANSFERS_ROUTE).has("VIEW");
   const canAssignManager = useGrantedActions("/master-data/managers").has(
     "EDIT",
   );
@@ -56,6 +59,7 @@ export function SchoolsPage() {
   const [editing, setEditing] = useState<SchoolSummary | null>(null);
   const [moving, setMoving] = useState<SchoolSummary | null>(null);
   const [assigning, setAssigning] = useState<SchoolSummary | null>(null);
+  const [movementsFor, setMovementsFor] = useState<SchoolSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +145,19 @@ export function SchoolsPage() {
       ),
     },
   ];
+  if (canSeeMovements) {
+    columns.push({
+      field: "movements",
+      headerName: "Movements",
+      flex: 0.8,
+      sortable: false,
+      renderCell: (params) => (
+        <Button size="small" onClick={() => setMovementsFor(params.row)}>
+          Movements
+        </Button>
+      ),
+    });
+  }
   if (canEdit) {
     columns.push({
       field: "actions",
@@ -275,6 +292,13 @@ export function SchoolsPage() {
             setMoving(null);
             reload();
           }}
+        />
+      )}
+      {movementsFor && (
+        <MovementsDialog
+          title={movementsFor.name}
+          schoolId={movementsFor.id}
+          onClose={() => setMovementsFor(null)}
         />
       )}
       {assigning && (

@@ -67,6 +67,18 @@ public class RecipientResolver {
         return ids;
     }
 
+    /** Every active user whose role holds Expenses Approve (spec 015): who hears of a claim submitted for review. */
+    public Set<UUID> expenseReviewers() {
+        Set<UUID> ids = new LinkedHashSet<>();
+        for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
+            if (matrix.isGranted(role, PermissionModule.EXPENSES, PermissionAction.APPROVE)) {
+                ids.addAll(roles.userIdsWithRole(role));
+            }
+        }
+        ids.removeIf(id -> !users.findById(id).filter(AppUser::isActive).isPresent());
+        return ids;
+    }
+
     /** Every active Director: who an escalated task goes to (spec 025). */
     public Set<UUID> activeDirectors() {
         Set<UUID> ids = new LinkedHashSet<>(roles.userIdsWithRole(Role.DIRECTOR));

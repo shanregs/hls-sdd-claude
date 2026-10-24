@@ -67,6 +67,7 @@ public class TeacherController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) UUID schoolId,
             @RequestParam(defaultValue = "false") boolean missingDesignation,
+            @RequestParam(required = false) String movement,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
@@ -78,6 +79,7 @@ public class TeacherController {
                 parseStatus(status),
                 schoolId,
                 missingDesignation,
+                movement,
                 PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, MAX_PAGE_SIZE)), Sort.by("name"))));
     }
 

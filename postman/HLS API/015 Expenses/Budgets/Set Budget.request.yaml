@@ -1,0 +1,16 @@
+$kind: http-request
+name: Set Budget
+description: "Sets or changes the budget of an area (zoneId null is Head office) for a month; every change keeps old and new amount, who and when. Never blocks a claim. Needs EXPENSES.CREATE for a new budget, EXPENSES.EDIT to change one."
+url: "{{baseUrl}}/api/v1/expenses/budgets"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "zoneId": "{{zoneId}}",
+      "month": "2026-10",
+      "amount": "20000.00"
+    }
+order: 3000
