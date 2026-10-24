@@ -69,7 +69,7 @@ export function claimRow(overrides: Partial<ClaimRow> = {}): ClaimRow {
     expenseDate: "2026-10-22",
     amount: "850.00",
     category: "TRAVEL_FUEL",
-    categoryLabel: "Travel and Fuel",
+    categoryLabel: CATEGORY_LABELS[overrides.category ?? "TRAVEL_FUEL"],
     zoneId: null,
     areaName: "Head office",
     status,

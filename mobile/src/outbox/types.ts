@@ -38,6 +38,8 @@ export interface OutboxRefusal {
   status: number;
   reason: string;
   at: string;
+  /** For a duplicate warning: the ids of the claims the server found matching. */
+  matches?: string[];
 }
 
 /** The row a correction started from, shown next to the server's current values after a stale-version refusal. */

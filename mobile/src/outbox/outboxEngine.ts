@@ -57,6 +57,8 @@ export class OutboxEngine {
     const { items } = await listItems(this.owner);
     for (const item of items) {
       if (item.state !== "WAITING") continue;
+      // A Training Stay saved with no batch to choose from waits until the claimant chooses one when connected.
+      if (item.fields.batchPending) continue;
       if (!options.force && item.nextTryAt !== null && Date.parse(item.nextTryAt) > this.now()) continue;
       const proceed = await this.sendOne(item);
       if (!proceed) break;
@@ -102,8 +104,20 @@ export class OutboxEngine {
     return this.keep(item, { state: "WAITING", attempts: item.attempts + 1, nextTryAt: new Date(this.now() + wait * 1000).toISOString() });
   }
 
-  private refuse(item: OutboxItem, status: number, reason: string, state: "REFUSED" | "NEEDS_CONFIRMATION", extra: Partial<OutboxItem> = {}) {
-    return this.keep(item, { state, refusal: { status, reason, at: new Date(this.now()).toISOString() }, nextTryAt: null, ...extra });
+  private refuse(
+    item: OutboxItem,
+    status: number,
+    reason: string,
+    state: "REFUSED" | "NEEDS_CONFIRMATION",
+    extra: Partial<OutboxItem> = {},
+    matches?: string[],
+  ) {
+    return this.keep(item, {
+      state,
+      refusal: { status, reason, at: new Date(this.now()).toISOString(), ...(matches ? { matches } : {}) },
+      nextTryAt: null,
+      ...extra,
+    });
   }
 
   /** The outcome table of research §7. */
@@ -128,7 +142,7 @@ export class OutboxEngine {
     }
     if (error instanceof ApiError && error.status !== undefined) {
       if (error.status === 409 && error.matches.length > 0) {
-        await this.refuse(item, 409, error.message, "NEEDS_CONFIRMATION");
+        await this.refuse(item, 409, error.message, "NEEDS_CONFIRMATION", {}, error.matches);
       } else if (error.status === 409 && /changed by someone else/i.test(error.message)) {
         await this.refuse(item, 409, error.message, "REFUSED", { serverCurrent: await this.currentOnServer(item) });
       } else {

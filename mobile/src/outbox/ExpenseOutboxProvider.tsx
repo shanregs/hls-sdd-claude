@@ -29,7 +29,7 @@ export interface OutboxContextValue {
   sendingId: string | null;
   loaded: boolean;
   /** Writes the item (and its photos) first, then sends it and waits for the result. */
-  saveAndSend: (item: OutboxItem, billSources?: Record<string, string>) => Promise<SendOutcome>;
+  saveAndSend: (item: OutboxItem, billSources?: Record<string, string>, existing?: boolean) => Promise<SendOutcome>;
   /** Writes the item and leaves it for the engine ("Saved. It will be sent when you are back online."). */
   save: (item: OutboxItem, billSources?: Record<string, string>) => Promise<void>;
   update: (item: OutboxItem, billSources?: Record<string, string>) => Promise<void>;
@@ -107,7 +107,8 @@ export function ExpenseOutboxProvider({ userId, children }: { userId: string; ch
     async (itemId: string): Promise<SendOutcome> => {
       const net = await NetInfo.fetch();
       const engine = engineRef.current;
-      if (net.isConnected === false || !engine) {
+      const saved = (await listItems(userId)).items.find((i) => i.itemId === itemId);
+      if (net.isConnected === false || !engine || saved?.fields.batchPending) {
         const waiting = (await listItems(userId)).items.find((i) => i.itemId === itemId);
         return waiting ? { kind: "waiting", item: waiting } : { kind: "sent" };
       }
@@ -134,8 +135,8 @@ export function ExpenseOutboxProvider({ userId, children }: { userId: string; ch
   );
 
   const saveAndSend = useCallback(
-    async (item: OutboxItem, billSources: Record<string, string> = {}) => {
-      await storeSave(item, billSources);
+    async (item: OutboxItem, billSources: Record<string, string> = {}, existing = false) => {
+      await (existing ? storeUpdate(item, billSources) : storeSave(item, billSources));
       await reload();
       return sendOne(item.itemId);
     },
