@@ -124,16 +124,16 @@ clock; use `findBy*` or an `act` with a short wait.
 
 ### Tests for User Story 3
 
-- [ ] T034 [P] [US3] `MOBT/expenses/myList.test.tsx`: own claims newest first, each status filter, the server's `owed`, paging with Load more, an empty state, a load error with Try again, the month filter; another user's claim never appears
-- [ ] T035 [P] [US3] `MOBT/expenses/claimDetail.test.tsx`: bills (thumbnail from downloaded bytes, pdf by name, removed bills struck through), link, history, decision (who, when, why) for Rejected, payment details for Paid; buttons only for the `allowedActions` the server returns (Edit, Submit, Withdraw, Delete, Add bill, Correct and resubmit for Rejected); no review action is ever shown
-- [ ] T036 [P] [US3] `MOBT/expenses/claimActions.test.tsx`: Withdraw (confirm, becomes Draft), Delete a Draft, Correct and resubmit a Rejected claim as the same claim (update, bills, submit through the outbox), Add bill; each shown as done only after the 2xx; a refusal leaves the claim unchanged; withdraw and delete offline explain and do nothing
-- [ ] T037 [P] [US3] `MOBT/expenses/offlineList.test.tsx`: after a failed load the cached list is shown "may be out of date, loaded <time>", filtered locally, with the waiting items above; a claim opened offline shows its row and "More details need a connection"; the cache is per user
+- [X] T034 [P] [US3] `MOBT/expenses/myList.test.tsx`: own claims newest first, each status filter, the server's `owed`, paging with Load more, an empty state, a load error with Try again, the month filter; another user's claim never appears
+- [X] T035 [P] [US3] `MOBT/expenses/claimDetail.test.tsx`: bills (thumbnail from downloaded bytes, pdf by name, removed bills struck through), link, history, decision (who, when, why) for Rejected, payment details for Paid; buttons only for the `allowedActions` the server returns (Edit, Submit, Withdraw, Delete, Add bill, Correct and resubmit for Rejected); no review action is ever shown
+- [X] T036 [P] [US3] `MOBT/expenses/claimActions.test.tsx`: Withdraw (confirm, becomes Draft), Delete a Draft, Correct and resubmit a Rejected claim as the same claim (update, bills, submit through the outbox), Add bill; each shown as done only after the 2xx; a refusal leaves the claim unchanged; withdraw and delete offline explain and do nothing
+- [X] T037 [P] [US3] `MOBT/expenses/offlineList.test.tsx`: after a failed load the cached list is shown "may be out of date, loaded <time>", filtered locally, with the waiting items above; a claim opened offline shows its row and "More details need a connection"; the cache is per user
 
 ### Implementation for User Story 3
 
-- [ ] T038 [P] [US3] Create `MOB/expenses/useMyExpenses.ts` (filter, month, paging, `owed`, cache save on success, cache fallback on failure) and `MOB/expenses/ClaimCard.tsx`
-- [ ] T039 [P] [US3] Create `MOB/expenses/ClaimDetail.tsx` and `MOB/expenses/BillThumb.tsx` (reuse `AttachmentList`/`fetchBinary`; bytes in memory only; full-screen view) and `MOB/expenses/WithdrawDialog.tsx` (also used for Delete confirmation)
-- [ ] T040 [US3] Complete `MyExpensesScreen.tsx`: the list header (owed, status filter, month, Add expense), the waiting section from T032, claims, the inner detail pane and its buttons from `allowedActions`; Edit and Correct and resubmit open `ClaimForm` prefilled and send through the outbox; make T034 to T037 pass
+- [X] T038 [P] [US3] Create `MOB/expenses/useMyExpenses.ts` (filter, month, paging, `owed`, cache save on success, cache fallback on failure) and `MOB/expenses/ClaimCard.tsx`
+- [X] T039 [P] [US3] Create `MOB/expenses/ClaimDetail.tsx` and `MOB/expenses/BillThumb.tsx` (reuse `AttachmentList`/`fetchBinary`; bytes in memory only; full-screen view) and `MOB/expenses/WithdrawDialog.tsx` (also used for Delete confirmation)
+- [X] T040 [US3] Complete `MyExpensesScreen.tsx`: the list header (owed, status filter, month, Add expense), the waiting section from T032, claims, the inner detail pane and its buttons from `allowedActions`; Edit and Correct and resubmit open `ClaimForm` prefilled and send through the outbox; make T034 to T037 pass
 
 **Checkpoint**: claimants can track and correct their claims.
 

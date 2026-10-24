@@ -41,13 +41,15 @@ interface Props {
   onNoBillReason: (text: string) => void;
   onChange: (bills: FormBill[]) => void;
   disabled?: boolean;
+  /** Leave out the no-bill reason (adding a bill to a claim that exists already). */
+  hideNoBill?: boolean;
 }
 
 /**
  * The bills of a claim (spec 036 FR-005 to FR-009): take a photo, choose a photo or a pdf, up to 5, each with a preview and
  * Retake and Remove. A photo is prepared as it is added (jpg, about 2000 px). With no bill a reason is asked for instead.
  */
-export function BillSlots({ bills, serverBills, noBillReason, onNoBillReason, onChange, disabled }: Props) {
+export function BillSlots({ bills, serverBills, noBillReason, onNoBillReason, onChange, disabled, hideNoBill }: Props) {
   const [preparing, setPreparing] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const liveServer = serverBills.filter((b) => !b.removed);
@@ -123,7 +125,7 @@ export function BillSlots({ bills, serverBills, noBillReason, onNoBillReason, on
         </HelperText>
       ) : null}
 
-      {total === 0 ? (
+      {total === 0 && !hideNoBill ? (
         <TextInput
           mode="outlined"
           label="Reason there is no bill"
