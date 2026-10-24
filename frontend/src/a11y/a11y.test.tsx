@@ -689,6 +689,60 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
   if (marketing !== undefined) {
     return { ok: true, json: async () => marketing } as Response;
   }
+  if (url === "/api/v1/dashboard") {
+    // Spec 028: the management Dashboard's manifest, one area with one tile of each kind of state.
+    const tile = (key: string, label: string) => ({
+      key,
+      label,
+      periodKind: "TODAY",
+      zoneAware: true,
+      link: { path: "/operations/tasks", query: {} },
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        areas: [
+          {
+            area: "MANAGERS",
+            title: "Managers",
+            tiles: [
+              tile("m.overdue", "Overdue tasks"),
+              tile("m.visits", "School visits"),
+              tile("m.broken", "Pending requests"),
+            ],
+          },
+        ],
+        filters: { zones: [], defaultPeriod: "2026-10" },
+        inbox: false,
+      }),
+    } as Response;
+  }
+  if (url.startsWith("/api/v1/dashboard/areas/MANAGERS")) {
+    const result = (key: string, state: string, extra: object) => ({
+      key,
+      state,
+      values: [],
+      organizationWide: false,
+      note: null,
+      takenAt: "2026-10-21T06:30:12Z",
+      table: null,
+      ...extra,
+    });
+    return {
+      ok: true,
+      json: async () => ({
+        area: "MANAGERS",
+        takenAt: "2026-10-21T06:30:12Z",
+        tiles: [
+          result("m.overdue", "OK", {
+            values: [{ label: "Overdue", value: 7, unit: "COUNT", link: null }],
+          }),
+          result("m.visits", "NO_DATA", { note: "No data yet" }),
+          result("m.broken", "ERROR", { note: "Could not be read" }),
+        ],
+      }),
+    } as Response;
+  }
   const aSession = {
     id: "s1",
     deviceDescription:
@@ -1433,8 +1487,16 @@ const pages: PageCase[] = [
     render: () => <AppShell />,
     settle: () => screen.findByText(/role & permissions/i),
   },
-  { name: "AdminDashboard", render: () => <AdminDashboard /> },
-  { name: "DirectorDashboard", render: () => <DirectorDashboard /> },
+  {
+    name: "AdminDashboard",
+    render: () => <AdminDashboard />,
+    settle: () => screen.findByText("Could not be read"),
+  },
+  {
+    name: "DirectorDashboard",
+    render: () => <DirectorDashboard />,
+    settle: () => screen.findByText("Could not be read"),
+  },
   { name: "ManagerDashboard", render: () => <ManagerDashboard /> },
   { name: "TeacherDashboard", render: () => <TeacherDashboard /> },
   { name: "SystemDashboard", render: () => <SystemDashboard /> },

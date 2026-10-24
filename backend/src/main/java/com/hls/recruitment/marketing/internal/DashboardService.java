@@ -81,18 +81,28 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardDto dashboard(UUID userId, Set<Role> roles, String period) {
+        return dashboard(userId, roles, period, null);
+    }
+
+    /** The same figures narrowed to one Zone (the management Dashboard's Zone filter); a null Zone is the caller's whole scope. */
+    @Transactional(readOnly = true)
+    public DashboardDto dashboard(UUID userId, Set<Role> roles, String period, UUID zoneId) {
         ScopeView view = scope.of(userId, roles);
         YearMonth month = periodOf(period);
         LocalDate from = month.atDay(1);
         LocalDate to = month.atEndOfMonth();
         LocalDate today = LocalDate.now(clock);
 
-        List<Prospect> visible = prospects.findAll().stream().filter(p -> scope.allowsZone(view, p.getZoneId())).toList();
+        List<Prospect> visible = prospects.findAll().stream().filter(p -> scope.allowsZone(view, p.getZoneId()))
+                .filter(p -> zoneId == null || zoneId.equals(p.getZoneId()))
+                .toList();
         Set<UUID> visibleIds = visible.stream().map(Prospect::getId).collect(Collectors.toSet());
         Map<UUID, String> effective = stages.of(visible);
 
         List<MarketingActivity> inPeriod = activities.findByActivityDateBetweenOrderByActivityDate(from, to).stream()
-                .filter(a -> a.getProspectId() == null ? a.getSchoolId() != null && view.allowsSchool(a.getSchoolId()) : visibleIds.contains(a.getProspectId()))
+                .filter(a -> a.getProspectId() == null
+                        ? a.getSchoolId() != null && view.allowsSchool(a.getSchoolId()) && inZone(zoneId, a.getSchoolId())
+                        : visibleIds.contains(a.getProspectId()))
                 .toList();
         Visits visits = new Visits(
                 inPeriod.stream().filter(a -> a.getStatus() == ActivityStatus.PLANNED && !a.getActivityDate().isBefore(today)).count(),
@@ -135,6 +145,10 @@ public class DashboardService {
         Integer supplied = supplySource == null ? null : supplySource.readyToDeployCount().isPresent() ? supplySource.readyToDeployCount().getAsInt() : null;
         Integer shortfall = supplied == null ? null : (int) Math.max(0, demand - supplied);
         return new DashboardDto(month.toString(), visits, byStage, won, lost, winRate, perZone, perOwner, demand, supplied, shortfall);
+    }
+
+    private boolean inZone(UUID zoneId, UUID schoolId) {
+        return zoneId == null || schools.school(schoolId).map(sc -> zoneId.equals(sc.zoneId())).orElse(false);
     }
 
     private YearMonth periodOf(String period) {

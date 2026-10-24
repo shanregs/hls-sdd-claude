@@ -183,6 +183,42 @@ public class TaskQueries {
                 tasks.count(scope.and(view("done", today))));
     }
 
+    /** The same counts restricted to the given assignees (a Zone's Managers); an empty set counts nothing. */
+    @Transactional(readOnly = true)
+    public Summary summaryForAssignees(Caller caller, java.util.Set<UUID> assignees) {
+        LocalDate today = businessDate.today();
+        Specification<Task> scope = scope(caller, null)
+                .and((root, q, cb) -> assignees.isEmpty() ? cb.disjunction() : root.get("assigneeUserId").in(assignees));
+        return new Summary(
+                tasks.count(scope.and(view("today", today))),
+                tasks.count(scope.and(view("upcoming", today))),
+                tasks.count(scope.and(view("overdue", today))),
+                tasks.count(scope.and(view("awaiting", today))),
+                tasks.count(scope.and(view("escalated", today))),
+                tasks.count(scope.and(view("done", today))));
+    }
+
+    /** Overdue, awaiting verification and escalated counts per assignee, in three grouped queries. */
+    @Transactional(readOnly = true)
+    public Map<UUID, Summary> summariesByAssignee(java.util.Set<UUID> assignees) {
+        LocalDate today = businessDate.today();
+        Map<UUID, long[]> counts = new HashMap<>();
+        if (assignees.isEmpty()) {
+            return Map.of();
+        }
+        String[] views = {"overdue", "awaiting", "escalated"};
+        for (int i = 0; i < views.length; i++) {
+            Specification<Task> spec = view(views[i], today)
+                    .and((root, q, cb) -> root.get("assigneeUserId").in(assignees));
+            for (Task t : tasks.findAll(spec)) {
+                counts.computeIfAbsent(t.getAssigneeUserId(), k -> new long[3])[i]++;
+            }
+        }
+        Map<UUID, Summary> result = new HashMap<>();
+        counts.forEach((id, c) -> result.put(id, new Summary(0, 0, c[0], c[1], c[2], 0)));
+        return result;
+    }
+
     @Transactional(readOnly = true)
     public Detail detail(Caller caller, UUID id) {
         Task task = service.visible(caller, id);

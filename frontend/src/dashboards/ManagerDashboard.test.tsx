@@ -13,8 +13,48 @@ function jsonResponse(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
+const scopedManifest = {
+  areas: [
+    {
+      area: "MANAGERS",
+      title: "Managers",
+      tiles: [
+        {
+          key: "managers.tasks.overdue",
+          label: "Overdue tasks",
+          periodKind: "TODAY",
+          zoneAware: true,
+          link: { path: "/operations/tasks", query: { view: "overdue" } },
+        },
+      ],
+    },
+  ],
+  filters: { zones: [], defaultPeriod: "2026-10" },
+  inbox: false,
+};
+
 function mockCounts(zones: number, schools: number, teachers: number) {
   authFetch.mockImplementation(async (url: string) => {
+    if (url === "/api/v1/dashboard") return jsonResponse(scopedManifest);
+    if (url.startsWith("/api/v1/dashboard/areas/MANAGERS")) {
+      return jsonResponse({
+        area: "MANAGERS",
+        takenAt: "2026-10-21T06:30:12Z",
+        tiles: [
+          {
+            key: "managers.tasks.overdue",
+            state: "OK",
+            values: [
+              { label: "Overdue", value: 4, unit: "COUNT", link: null },
+            ],
+            organizationWide: false,
+            note: null,
+            takenAt: "2026-10-21T06:30:12Z",
+            table: null,
+          },
+        ],
+      });
+    }
     if (url.startsWith("/api/v1/me/scope")) {
       return jsonResponse({
         orgWide: false,
@@ -43,6 +83,20 @@ function renderDashboard() {
 describe("ManagerDashboard (User Story 6)", () => {
   beforeEach(() => {
     authFetch.mockReset();
+  });
+
+  it("keeps the three count cards and shows the scoped tiles below, with no comparison table, payroll area or inbox", async () => {
+    mockCounts(2, 5, 12);
+
+    renderDashboard();
+
+    expect(await screen.findByText("My assigned zones")).toBeInTheDocument();
+    expect(await screen.findByText("Overdue tasks")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.queryByText(/Managers compared/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/payroll/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Waiting for your decision")).not.toBeInTheDocument();
   });
 
   it("shows the assigned zone, school and teacher counts with links to the scoped lists", async () => {
@@ -119,8 +173,8 @@ describe("ManagerDashboard (User Story 6)", () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /could not load your assigned overview/i,
-    );
+    expect(
+      await screen.findByText(/could not load your assigned overview/i),
+    ).toBeInTheDocument();
   });
 });
