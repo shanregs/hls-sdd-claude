@@ -19,6 +19,10 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 - Q: Does this change how a MoU is recorded? → A: No. Spec 012 stays the only record of the MoU terms, signatories and mapping and is not changed in how a MoU is created. This spec adds a document and an approval status to a MoU that exists.
 - Q: Which spec owns file storage and the approval pattern? → A: File storage is the shared capability built in spec 023 (C7); the approval pattern (pending, approved, rejected with reason, resubmitted, audit entry) is defined in spec 015 (C3). This spec reuses both and builds neither.
 
+### Session 2026-10-24
+
+- Q: Is one approval enough, or must both the Director and the Zone Manager approve? → A: One is enough: the Director or the School's Zone Manager. No second step.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Attach the signed MoU document (Priority: P1) 🎯 MVP
@@ -183,7 +187,6 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 3. **Is a document mandatory for approval?** Default yes (cannot submit without one).
 4. **Can a Director approve a MoU they recorded themselves?** Default yes, audited. Alternative: another approver required.
 5. **Editing a document after approval**: default allowed for Admin and Director with the approval kept and a "changed after approval" flag. Alternative: it resets the MoU to pending.
-6. **Either-one approval or both?** Default: Director or Zone Manager, either one is enough. Alternative: Zone Manager first, then Director.
-7. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-8. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
-9. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
+6. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
+7. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
+8. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
