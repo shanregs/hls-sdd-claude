@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -68,6 +69,15 @@ export function InductionPage() {
   const [waiting, setWaiting] = useState<RecruitRef[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  // The dashboard opens this page with ?view=readyToDeploy to land on that list (spec 028).
+  const [query] = useSearchParams();
+  const wantsReady = query.get("view") === "readyToDeploy";
+  const loaded = batches !== null;
+  useEffect(() => {
+    if (wantsReady && loaded) {
+      document.getElementById("ready-to-deploy")?.scrollIntoView?.({ block: "start" });
+    }
+  }, [wantsReady, loaded]);
 
   const load = useCallback(async () => {
     const [b, r, w] = await Promise.all([
@@ -351,7 +361,7 @@ export function InductionPage() {
           </>
         )}
 
-        <Typography variant="h6" component="h2">
+        <Typography variant="h6" component="h2" id="ready-to-deploy">
           Ready to deploy ({ready.length})
         </Typography>
         {ready.length === 0 ? (

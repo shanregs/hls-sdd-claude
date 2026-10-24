@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LockMonthDialog } from "./LockMonthDialog";
 import { ReopenDialog } from "./ReopenDialog";
@@ -149,14 +150,22 @@ describe("Lock controls on the grid page", () => {
 
   it("offers Lock month only with PROCESS", async () => {
     grantedActions = ["VIEW", "EDIT", "PROCESS"];
-    const { unmount } = render(<AttendanceGridPage />);
+    const { unmount } = render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
     expect(
       await screen.findByRole("button", { name: "Lock month" }),
     ).toBeInTheDocument();
     unmount();
 
     grantedActions = ["VIEW", "EDIT"];
-    render(<AttendanceGridPage />);
+    render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
     await screen.findByText(/No teachers are placed/);
     expect(
       screen.queryByRole("button", { name: "Lock month" }),

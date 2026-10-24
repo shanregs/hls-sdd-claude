@@ -34,6 +34,7 @@ public class AttendanceGridController {
             @RequestParam(required = false) UUID schoolId,
             @RequestParam(required = false) UUID managerId,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate awayOn,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             @AuthenticationPrincipal Jwt jwt) {
@@ -43,7 +44,7 @@ public class AttendanceGridController {
                 CallerContext.userId(jwt),
                 roles,
                 MonthParam.parse(month),
-                new AttendanceGridService.Filter(query, zoneId, schoolId, managerId, status),
+                new AttendanceGridService.Filter(query, zoneId, schoolId, managerId, status, awayOn),
                 page,
                 size);
     }
