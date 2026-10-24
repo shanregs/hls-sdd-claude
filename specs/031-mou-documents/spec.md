@@ -23,6 +23,7 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 
 - Q: Is one approval enough, or must both the Director and the Zone Manager approve? → A: One is enough: the Director or the School's Zone Manager. No second step.
 - Q: If the document is replaced after a MoU is approved, does the approval stay? → A: No. The MoU goes back to pending and needs approval again; it does not count as approved until then.
+- Q: What happens to MoUs recorded in spec 012 before this approval step exists? → A: They count as approved but are labelled "approved (before approval step)"; a document can still be attached later.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -184,9 +185,8 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 ## Open questions for the user (defaults used above; for `/speckit-clarify`)
 
 1. **Does approval gate anything here?** Default: no. Mapping, attendance and listing continue regardless; billing (022) and incentives (030) decide for themselves. Alternative: block Teacher mapping until approved.
-2. **Existing MoUs from 012**: default is "approved (before approval step)". Alternative: treat them as needing a document and approval, which flags every current MoU.
-3. **Is a document mandatory for approval?** Default yes (cannot submit without one).
-4. **Can a Director approve a MoU they recorded themselves?** Default yes, audited. Alternative: another approver required.
-5. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-6. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
-7. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
+2. **Is a document mandatory for approval?** Default yes (cannot submit without one).
+3. **Can a Director approve a MoU they recorded themselves?** Default yes, audited. Alternative: another approver required.
+4. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
+5. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
+6. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
