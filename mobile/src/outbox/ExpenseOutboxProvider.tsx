@@ -82,7 +82,7 @@ export function ExpenseOutboxProvider({ userId, children }: { userId: string; ch
       },
     });
     engineRef.current = engine;
-    const connectivity = startConnectivity(() => void engine.run());
+    const connectivity = startConnectivity((force) => void engine.run({ force }));
     connectivityRef.current = connectivity;
     // Loading what is on the phone is the effect's job; the state it sets is the loaded items.
     // eslint-disable-next-line react-hooks/set-state-in-effect

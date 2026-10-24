@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Chip, HelperText, Text } from "react-native-paper";
 import { EXPENSES_ROUTE } from "../access/screenRegistry";
@@ -9,6 +9,7 @@ import { ClaimCard } from "../expenses/ClaimCard";
 import { ClaimForm, type FormResult, type FormSource } from "../expenses/ClaimForm";
 import { formatRupees, STATUS_FILTERS } from "../expenses/expenseMessages";
 import { useMyExpenses } from "../expenses/useMyExpenses";
+import { WaitingSection } from "../expenses/WaitingSection";
 import { useInnerBack } from "../navigation/InnerBack";
 import { useExpenseOutbox } from "../outbox/ExpenseOutboxProvider";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
@@ -19,13 +20,21 @@ import { Screen } from "./Screen";
  * them first) the form and the claim detail. Every status, amount and button comes from the server.
  */
 export function MyExpensesScreen() {
-  const { userId } = useExpenseOutbox();
+  const { userId, items } = useExpenseOutbox();
   const [status, setStatus] = useState<ClaimStatus | "ALL">("ALL");
   const [month] = useState<string | null>(null);
   const list = useMyExpenses(userId, status, month);
   const { canCreate } = useMenuActions(EXPENSES_ROUTE);
   const [form, setForm] = useState<FormSource | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // When a waiting claim has been sent and is gone from the phone, the list loads again so it shows as Submitted.
+  const itemCount = useRef(items.length);
+  const { reload } = list;
+  useEffect(() => {
+    if (items.length < itemCount.current) reload({ quiet: true });
+    itemCount.current = items.length;
+  }, [items.length, reload]);
 
   const closeForm = (result?: FormResult) => {
     setForm(null);
@@ -54,6 +63,7 @@ export function MyExpensesScreen() {
           {`Owed to you: ${formatRupees(list.owed)}`}
         </Text>
       ) : null}
+      <WaitingSection onOpen={(item) => { setNotice(null); setForm({ kind: "item", item }); }} />
       {canCreate ? (
         <Button mode="contained" onPress={() => { setNotice(null); setForm({ kind: "new" }); }} contentStyle={styles.button} accessibilityLabel="Add expense">
           Add expense

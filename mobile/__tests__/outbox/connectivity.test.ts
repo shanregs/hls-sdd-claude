@@ -46,6 +46,18 @@ describe("connectivity triggers", () => {
     c.stop();
   });
 
+  it("asks to ignore the backoff when the app returns or a connection is reported, but not for the timer", () => {
+    const run = jest.fn();
+    const c = startConnectivity(run);
+    appStateHandler!("active");
+    jest.advanceTimersByTime(COALESCE_MS);
+    expect(run).toHaveBeenLastCalledWith(true);
+    c.setWaiting(true);
+    jest.advanceTimersByTime(RETRY_INTERVAL_MS + COALESCE_MS);
+    expect(run).toHaveBeenLastCalledWith(false);
+    c.stop();
+  });
+
   it("coalesces triggers that arrive together into one run", () => {
     const run = jest.fn();
     const c = startConnectivity(run);

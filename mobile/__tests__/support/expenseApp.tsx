@@ -83,3 +83,23 @@ export async function signOutAndSignInAs(
   await fireEvent.press(screen.getByLabelText("Sign in"));
   await screen.findByText(`Welcome, ${user.displayName}`);
 }
+
+/** The phone loses its connection: requests fail and NetInfo says so. */
+export function goOffline(server: FakeServer) {
+  server.offline = true;
+  jest.requireMock("@react-native-community/netinfo").__emit({ isConnected: false, isInternetReachable: false });
+}
+
+/** The connection returns: requests work and NetInfo reports it, which starts a run of the outbox. */
+export function goOnline(server: FakeServer) {
+  server.offline = false;
+  jest.requireMock("@react-native-community/netinfo").__emit({ isConnected: true, isInternetReachable: true });
+}
+
+/** Closes the app and opens it again on the stored session (a kill and a restart), then opens My Expenses. */
+export async function restartApp(user: SignedInUser = ME, openScreen = true) {
+  await screen.unmount();
+  await render(<App />);
+  await screen.findByText(`Welcome, ${user.displayName}`);
+  if (openScreen) await chooseMenuItem("My Expenses");
+}

@@ -101,16 +101,16 @@ clock; use `findBy*` or an `act` with a short wait.
 
 ### Tests for User Story 2
 
-- [ ] T027 [P] [US2] `MOBT/expenses/offlineCapture.test.tsx`: offline Submit saves "Waiting to send" and survives an app restart; reconnection (NetInfo event) sends it in capture order and clears the mark only on the 2xx; Training Stay without a cached batch is saved but not sent
-- [ ] T028 [P] [US2] `MOBT/expenses/syncRecovery.test.tsx`: kill and resume after create, after a bill and before submit; a lost reply at each step gives exactly one claim and no duplicate bill (SC-002); an item refused at submit (date now over 60 days) keeps its `serverClaimId`, and correcting the date sends a `PUT` and submit, never a second create
-- [ ] T029 [P] [US2] `MOBT/expenses/refusedDraft.test.tsx`: a refused item stays with the server's reason, can be edited and sent again or deleted (files gone); a stale version shows the reason and the server's current values and the claimant re-applies by hand; a duplicate warning on sync shows Confirm / Keep as Draft; none is dropped silently (SC-005)
-- [ ] T030 [P] [US2] `MOBT/expenses/sharedPhone.test.tsx`: Log out with unsent items shows the warning with the count (from the menu and from Profile); after sign-out nothing is sent; another user sees and sends none of them; the same user signing in again gets them back and they send; an expired session behaves the same (SC-006); no plain claim or photo bytes exist in the fake file system at any point
+- [X] T027 [P] [US2] `MOBT/expenses/offlineCapture.test.tsx`: offline Submit saves "Waiting to send" and survives an app restart; reconnection (NetInfo event) sends it in capture order and clears the mark only on the 2xx; Training Stay without a cached batch is saved but not sent
+- [X] T028 [P] [US2] `MOBT/expenses/syncRecovery.test.tsx`: kill and resume after create, after a bill and before submit; a lost reply at each step gives exactly one claim and no duplicate bill (SC-002); an item refused at submit (date now over 60 days) keeps its `serverClaimId`, and correcting the date sends a `PUT` and submit, never a second create
+- [X] T029 [P] [US2] `MOBT/expenses/refusedDraft.test.tsx`: a refused item stays with the server's reason, can be edited and sent again or deleted (files gone); a stale version shows the reason and the server's current values and the claimant re-applies by hand; a duplicate warning on sync shows Confirm / Keep as Draft; none is dropped silently (SC-005)
+- [X] T030 [P] [US2] `MOBT/expenses/sharedPhone.test.tsx`: Log out with unsent items shows the warning with the count (from the menu and from Profile); after sign-out nothing is sent; another user sees and sends none of them; the same user signing in again gets them back and they send; an expired session behaves the same (SC-006); no plain claim or photo bytes exist in the fake file system at any point
 
 ### Implementation for User Story 2
 
-- [ ] T031 [P] [US2] Create `MOB/auth/useSignOutGuard.ts` (counts the signed-in user's unsent items, shows the warning dialog, then calls `logout` without deleting anything) and use it in `MOB/navigation/AppShell.tsx` and `MOB/screens/ProfileScreen.tsx` instead of calling `logout` directly
-- [ ] T032 [P] [US2] Create the waiting section and banner in the list pane: cards with the state words, "Not sent" with the server's reason, the count, "Sending..." / "Waiting for a connection" with Send now; tap opens the item in `ClaimForm` (edit resets the refusal and sets `WAITING`), with Delete and a "Current claim on the server" comparison for a stale refusal; wire the duplicate Confirm / Keep as Draft
-- [ ] T033 [US2] Make T027 to T030 pass; fix what they find in the engine, steps or provider
+- [X] T031 [P] [US2] Create `MOB/auth/useSignOutGuard.ts` (counts the signed-in user's unsent items, shows the warning dialog, then calls `logout` without deleting anything) and use it in `MOB/navigation/AppShell.tsx` and `MOB/screens/ProfileScreen.tsx` instead of calling `logout` directly
+- [X] T032 [P] [US2] Create the waiting section and banner in the list pane: cards with the state words, "Not sent" with the server's reason, the count, "Sending..." / "Waiting for a connection" with Send now; tap opens the item in `ClaimForm` (edit resets the refusal and sets `WAITING`), with Delete and a "Current claim on the server" comparison for a stale refusal; wire the duplicate Confirm / Keep as Draft
+- [X] T033 [US2] Make T027 to T030 pass; fix what they find in the engine, steps or provider
 
 **Checkpoint**: offline capture, recovery, refusals and shared-phone behaviour work.
 

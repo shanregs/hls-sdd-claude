@@ -7,7 +7,7 @@ import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
 import type { LeaveStatus } from "../api/leaveApi";
 import type { TaskView } from "../api/tasksApi";
-import { useAuth } from "../auth/AuthProvider";
+import { useSignOutGuard } from "../auth/useSignOutGuard";
 import { ApplyLeaveScreen } from "../screens/ApplyLeaveScreen";
 import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
 import { DevicesScreen } from "../screens/DevicesScreen";
@@ -70,7 +70,7 @@ type Overlay = "none" | "devices" | "privacy" | "notAuthorized";
 
 function ShellContent({ user }: { user: SignedInUser }) {
   const { model, status, refresh, canOpen } = useAccessModel();
-  const { logout } = useAuth();
+  const { requestLogout, dialog: signOutDialog } = useSignOutGuard();
   const theme = useTheme();
   const [route, setRoute] = useState(HOME_ROUTE);
   const [overlay, setOverlay] = useState<Overlay>("none");
@@ -238,6 +238,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
         <NotificationBell onOpen={() => openRoute(NOTIFICATIONS_ROUTE)} />
       </Appbar.Header>
       {body}
+      {signOutDialog}
 
       <Portal>
         <Modal
@@ -264,7 +265,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
                   label="Log out"
                   onPress={() => {
                     setDrawerOpen(false);
-                    void logout();
+                    requestLogout();
                   }}
                   accessibilityLabel="Log out"
                 />
@@ -277,7 +278,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
                 label="Log out"
                 onPress={() => {
                   setDrawerOpen(false);
-                  void logout();
+                  requestLogout();
                 }}
                 accessibilityLabel="Log out"
               />
