@@ -1,0 +1,6 @@
+$kind: http-request
+name: Areas
+description: "Head office and every Zone, for the area selector. Needs MY_EXPENSES.CREATE."
+url: "{{baseUrl}}/api/v1/my-expenses/areas"
+method: GET
+order: 2000

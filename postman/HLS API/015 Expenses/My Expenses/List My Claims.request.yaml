@@ -1,0 +1,6 @@
+$kind: http-request
+name: List My Claims
+description: "Own claims, newest first, with owed: the sum of own Approved, personally paid, unpaid claims. Needs MY_EXPENSES.VIEW. System gets 403."
+url: "{{baseUrl}}/api/v1/my-expenses?status=&month=&page=0"
+method: GET
+order: 1000

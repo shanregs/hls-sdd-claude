@@ -55,6 +55,8 @@ public final class PermissionEligibility {
             PermissionModule.PAYROLL,
             PermissionModule.ACTIVITY_CALENDAR,
             PermissionModule.TEACHER_PERFORMANCE,
+            PermissionModule.EXPENSES,
+            PermissionModule.MY_EXPENSES,
             PermissionModule.TEACHER_TRANSFERS);
 
     /**
@@ -110,6 +112,14 @@ public final class PermissionEligibility {
             PermissionModule.TEACHER_PERFORMANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
     /**
+     * Expenses (spec 015): reviewing, paying and budgeting are for Admin and Director only; every business role may
+     * raise their own claims (System never).
+     */
+    static final Map<PermissionModule, Set<Role>> EXPENSES_MODULES = Map.of(
+            PermissionModule.EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.MY_EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER));
+
+    /**
      * Teacher transfers and replacements (spec 027): staff roles only; Approve is for the Director and Manager, never Admin.
      * Teacher and System hold nothing.
      */
@@ -154,8 +164,13 @@ public final class PermissionEligibility {
         if (payrollOnly != null && !payrollOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
+<<<<<<< HEAD
         Set<Role> calendarOnly = ACTIVITY_CALENDAR_MODULES.get(module);
         if (calendarOnly != null && !calendarOnly.contains(role)) {
+=======
+        Set<Role> expensesOnly = EXPENSES_MODULES.get(module);
+        if (expensesOnly != null && !expensesOnly.contains(role)) {
+>>>>>>> origin/main
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

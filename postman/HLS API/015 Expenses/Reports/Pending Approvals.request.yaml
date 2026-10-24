@@ -1,0 +1,6 @@
+$kind: http-request
+name: Pending Approvals
+description: "Claims waiting for a decision in four buckets by age since submission (over 14, 8-14, 3-7 and 0-2 days), oldest first. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/pending"
+method: GET
+order: 1000

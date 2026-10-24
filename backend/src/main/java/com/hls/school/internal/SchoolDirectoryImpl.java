@@ -52,6 +52,14 @@ public class SchoolDirectoryImpl implements SchoolDirectory {
     }
 
     @Override
+    public List<ZoneInfo> allZones() {
+        return zoneRepository.findAll().stream()
+                .map(z -> new ZoneInfo(z.getId(), z.getName()))
+                .sorted(java.util.Comparator.comparing(ZoneInfo::name, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    @Override
     public Optional<PlaceInfo> place(UUID placeId) {
         return placeRepository
                 .findById(placeId)

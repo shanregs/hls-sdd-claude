@@ -1,0 +1,6 @@
+$kind: http-request
+name: Budget Versus Actual
+description: "Per area and in total for the month: budget (null means No budget set), actual, pending, remaining, percentUsed and over. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/budgets?month=2026-10"
+method: GET
+order: 1000

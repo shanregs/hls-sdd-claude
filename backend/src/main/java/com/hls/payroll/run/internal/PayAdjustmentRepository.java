@@ -19,6 +19,9 @@ interface PayAdjustmentRepository extends JpaRepository<PayAdjustment, UUID> {
 
     List<PayAdjustment> findByAttachedRunId(UUID runId);
 
+    /** The adjustments one source created, newest first (a withdrawn offer can be made again). */
+    List<PayAdjustment> findBySourceRefAndKindOrderByCreatedAtDescIdDesc(String sourceRef, PayAdjustment.AdjustmentKind kind);
+
     /** What a run may take: waiting adjustments that no other run holds, in the order they were recorded. */
     @Query("select a from PayAdjustment a where a.status = com.hls.payroll.run.internal.PayAdjustment$Status.WAITING"
             + " and (a.attachedRunId is null or a.attachedRunId = :runId) order by a.createdAt, a.id")

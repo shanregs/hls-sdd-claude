@@ -7,7 +7,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.Test;
 
-/** Spec 025 plan.md, Principle VII: tasks reads other modules through their api packages; only notification, Manager attendance (planned activities) and Teacher performance (task creation) read tasks. */
+/** Spec 025 plan.md, Principle VII: tasks reads other modules through their api packages; only notification, Manager attendance (planned activities) and Teacher performance (task creation) and Expenses (links, spec 015) read tasks. */
 class TasksModuleRulesTest {
 
     private static final JavaClasses MAIN = new ClassFileImporter()
@@ -46,7 +46,7 @@ class TasksModuleRulesTest {
         // performance (spec 026) creates and completes Observation tasks through TaskCreation (contract C2).
         noClasses()
                 .that()
-                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..", "com.hls.activitycalendar..", "com.hls.performance..")
+                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..", "com.hls.activitycalendar..", "com.hls.performance..", "com.hls.expenses..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAPackage("com.hls.tasks..")

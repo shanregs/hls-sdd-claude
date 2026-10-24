@@ -46,6 +46,15 @@ Modified principles:
     (Manager). Principle VII holds: the feature is the `activitycalendar` module, which reads `recruitment`, `tasks`,
     `organization`, `school` and `identity` through their api packages only; nothing reads `activitycalendar`. No principle
     changes.
+  - 2.5.9 (PATCH, spec 015): the Default role access matrix gains two rows. Expenses (review, approve,
+    pay, budgets, cost measures, export): Admin holds View, Create, Edit, Approve, Process and Export; Director holds the same
+    but never Process (recording a payment outside payroll); Manager, Teacher and System have no access and cannot be granted
+    any. My Expenses (a person's own claims): Admin, Director, Manager and Teacher hold View, Create, Edit and Delete on their
+    own claims only; System has none. Nobody approves, rejects or reverses a claim they raised, even holding both approver roles.
+    The navigation model gains the OPERATIONS items Expenses (Admin, Director) and My Expenses (Admin, Director, Manager,
+    Teacher). Principle VII holds: the feature is the `expenses` module; payroll gains the additive `payroll.api`
+    `ReimbursementIntake` and `PayrollAdjustmentApplied`, and `recruitment` and `training` gain read-only `WonSchools` and batch
+    reads; only `notification` reads `expenses.api` events. No principle changes.
   - 2.5.7 (PATCH, spec 026): the Default role access matrix gains a Teacher Performance row (observations, Principal feedback,
     performance issues, corrective actions and referrals). Admin, Director and Manager hold View, Create and Edit; nobody holds
     Approve or Delete, because the transfer decision belongs to spec 027. A Manager reaches only the Teachers placed at their
@@ -389,6 +398,8 @@ kept intentionally lightweight for v1.
   | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Activity Calendar (read-only planned vs done) | View | View | Own activities (View) | — | — |
+  | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
+  | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
@@ -436,4 +447,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.10 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-23
+**Version**: 2.5.10 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24

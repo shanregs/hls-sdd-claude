@@ -1,0 +1,15 @@
+$kind: http-request
+name: Reject Claim
+description: "Rejects with a required reason (400 without). Needs EXPENSES.APPROVE."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}/reject"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 1,
+      "reason": "The bill is for another month"
+    }
+order: 5000

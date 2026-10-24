@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export Month As CSV
+description: "One row per claim by expense date, formula characters neutralised, audited. Needs EXPENSES.EXPORT."
+url: "{{baseUrl}}/api/v1/expenses/export?month=2026-10"
+method: GET
+order: 4000

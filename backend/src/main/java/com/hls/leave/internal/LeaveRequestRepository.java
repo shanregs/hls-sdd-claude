@@ -67,4 +67,16 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
               and (:orgWide = true or r.teacherId in :teacherIds)
             """)
     long countPendingInScope(@Param("orgWide") boolean orgWide, @Param("teacherIds") Collection<UUID> teacherIds);
+
+    /** Pending requests in scope that belong to one of the given Schools (the Dashboard's Zone filter). */
+    @Query("""
+            select count(r) from LeaveRequest r
+            where r.status = com.hls.leave.internal.LeaveStatus.PENDING
+              and (:orgWide = true or r.teacherId in :teacherIds)
+              and r.schoolId in :schoolIds
+            """)
+    long countPendingInScopeAtSchools(
+            @Param("orgWide") boolean orgWide,
+            @Param("teacherIds") Collection<UUID> teacherIds,
+            @Param("schoolIds") Collection<UUID> schoolIds);
 }

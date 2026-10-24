@@ -19,6 +19,18 @@ Decisions taken while planning, with what was read in the code. Format: Decision
 - There is no shared approvals store (C3 arrives with spec 015), so pending decisions are asked of each module.
 - Migrations on main stop at V53; this spec adds none.
 
+### Prerequisite check (T001, verified against main at 2144e54)
+
+All named prerequisites exist with the names the plan uses; none differs:
+`identity.permissions.PermissionGuard` (`isGranted(Set<Role>, PermissionModule, PermissionAction)`),
+`organization.api.ScopeQueries.scopeOf(userId, roles)` returning `ScopeView(orgWide, zoneIds, schoolIds)`,
+`organization.api.ManagerQueries`, `teacher.api.TeacherScopeQueries.teacherScope`, `designation.api.BusinessDate.today()`,
+`attendance.api.AttendanceReadApi.teachersAwayOn(Collection<UUID>, LocalDate)`, `attendance.api.ManagerAttendanceReadApi.month`,
+`attendance.api.PendingManagerRequests.pendingFor(YearMonth)`, `tasks.internal.TaskQueries.summary(Caller, UUID)`,
+`recruitment.marketing.internal.DashboardService`, `recruitment.internal.RecruitmentDashboardService`,
+`payroll.run.internal.RunService` and `OwedService.owed(YearMonth)`. Controllers take the caller from `school.api.CallerContext`
+and raise `school.api.NotFoundException` / `InvalidInputException`, which each module's advice maps to 404 / 400.
+
 ## 2. Where the SPI lives and which way it points
 
 **Decision**: `reporting.api` defines `TileSource`, `ApprovalSource` and `ManagerColumns`. Each owning module implements them in

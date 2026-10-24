@@ -15,6 +15,8 @@ interface ProspectRepository extends JpaRepository<Prospect, UUID> {
 
     List<Prospect> findByWonAtIsNotNull();
 
+    List<Prospect> findByWonAtGreaterThanEqualAndWonAtLessThan(java.time.Instant from, java.time.Instant before);
+
     List<Prospect> findByWonAtIsNotNullAndSchoolIdIsNotNull();
 
     List<Prospect> findByWonAtIsNotNullAndSchoolIdIsNull();
