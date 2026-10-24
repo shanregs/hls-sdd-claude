@@ -12,7 +12,7 @@
 
 ### Session 2026-10-23 (defaults chosen without asking the user)
 
-No questions were asked. The defaults below were taken from the project documents and are listed again, with the real open points, in "Open Questions for the User" at the end of this file.
+The open points were settled with the user on 2026-10-24; see "Clarifications" at the end of this file.
 
 - Q: Which training is in this spec? → A: Weekend refresher sessions (open to register) and the standing monthly sessions (assigned). The one-month induction for new recruits stays in spec 016; this spec shows it as read-only history only.
 - Q: Is training paid? → A: No. Decided D2 (2026-10-05): training is unpaid. There is no stipend field, and payroll pays nothing for training days.
@@ -277,7 +277,7 @@ Training sessions are planned activities. The training module exposes them throu
 
 ## Assumptions
 
-Defaults chosen without asking the user; those marked **(open)** are repeated in "Open Questions for the User".
+Defaults chosen without asking the user; those marked **(open)** were either settled in "Clarifications" or accepted in "Remaining Defaults".
 
 - **Documents followed**: docs/spec-roadmap.md row 024 and contract C1; Requirements section 8 (items 1 to 8); speckit input section 9; spec 016 (induction stays there; D2: training is unpaid); spec 008 (training-day mark, month lock); spec 035 (reads training through C1 and expects it with no change).
 - **Scope split**: induction batches, induction attendance and sign-off are in spec 016 and not repeated here; this spec only shows them in the history. A certificate is a text note per attendance, not a generated document.
