@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Attendance and Leave
+description: "Teachers away today and pending Teacher leave requests."
+url: "{{baseUrl}}/api/v1/dashboard/areas/ATTENDANCE_LEAVE"
+method: GET
+order: 6000

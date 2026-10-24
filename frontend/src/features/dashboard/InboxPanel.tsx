@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
@@ -48,18 +48,20 @@ export function InboxPanel() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [reload, setReload] = useState(0);
 
-  const load = useCallback(async () => {
-    const result = await fetchInbox(authFetch, { size: 50 });
-    setState(
-      result.ok
-        ? { kind: "ready", inbox: result.data }
-        : { kind: "error", reason: result.reason },
-    );
-  }, [authFetch]);
-
   useEffect(() => {
-    void load();
-  }, [load, reload]);
+    let cancelled = false;
+    void fetchInbox(authFetch, { size: 50 }).then((result) => {
+      if (cancelled) return;
+      setState(
+        result.ok
+          ? { kind: "ready", inbox: result.data }
+          : { kind: "error", reason: result.reason },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, reload]);
 
   return (
     <Box component="section" aria-labelledby="dashboard-inbox" sx={{ mb: 3 }}>

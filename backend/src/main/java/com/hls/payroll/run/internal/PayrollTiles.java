@@ -125,7 +125,7 @@ class PayrollTiles implements TileSource {
     private TileResult locks(TileDefinition tile, TileContext ctx) {
         YearMonth month = ctx.month();
         List<UUID> teacherIds = teachers.activeTeachers().stream().map(TeacherDirectory.TeacherInfo::id).toList();
-        long teachersLocked = teacherIds.stream().filter(id -> teacherAttendance.isLocked(id, month)).count();
+        long teachersLocked = teacherAttendance.lockedTeachers(teacherIds, month).size();
         List<UUID> managerIds = managers.allManagers().stream()
                 .filter(ManagerQueries.ManagerRef::active)
                 .map(ManagerQueries.ManagerRef::id)

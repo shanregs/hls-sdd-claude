@@ -239,15 +239,15 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 ## Phase 12: Polish and Cross-Cutting
 
-- [ ] T060 [P] Systemic failure tests in `backend/src/test/java/com/hls/reporting/MissingAndFailingSourceTest.java` (SC-005): for every registered tile, with its source throwing, with it exceeding the time limit, and with its optional provider missing, the result is `ERROR`/`NOT_AVAILABLE`, never `OK` with 0; the other tiles of the area still return
-- [ ] T061 [P] Parity completeness test in `backend/src/test/java/com/hls/reporting/TileParityCoverageTest.java`: every key in `contracts/tile-catalog.md` is registered and has a parity test class (fails when a tile is added without one) (SC-003)
-- [ ] T062 [P] Performance check (SC-002): a test in `backend/src/test/java/com/hls/reporting/AreaPerformanceTest.java` loading each area on the demo-sized data set within 3 seconds, and assert a fixed number of queries per area
-- [ ] T063 [P] Frontend accessibility and layout pass in `frontend/src/features/dashboard/__tests__/` (axe checks on tiles, table, inbox; phone width without horizontal page scroll; light and dark theme tokens)
-- [ ] T064 [P] Add the dashboard requests (manifest, each area, tile, managers, inbox) with role variants to `postman/` collection
-- [ ] T065 [P] Demo data: ensure the demo seeders create the scenarios in `quickstart.md` prerequisites (overdue task, missed visit, Manager with no check-in past cut-off, Teacher absent with open substitution, pending Manager leave, payroll run awaiting approval) in the existing dev seeder under `backend/src/main/java/com/hls/` (find it from `backend/src/test/java/com/hls/DevSeedTest.java`) and extend `DevSeedTest`
-- [ ] T066 [P] Add a one-line "Dashboard figures: not cached" note to `docs/caching.md`; update the roadmap/status doc if one lists spec 028; apply the Principle VII PATCH to `.specify/memory/constitution.md` naming the `reporting` module and its SPI (version number `NEXT`, assigned at merge)
-- [ ] T067 Run the automated set from `quickstart.md`: `mvn -f backend/pom.xml test -Dtest='reporting.*,*Tiles*,*Approvals*,ArchitectureTest,ModulithTest'` (one class at a time if slow) and `npm --prefix frontend run test -- dashboard`; fix failures
-- [ ] T068 Manual walkthrough of `quickstart.md` sections 1 to 8 with the demo users (Director, Admin, Manager A and B, Teacher, System), including dark mode and phone width; record the result at the end of `quickstart.md`
+- [x] T060 [P] Systemic failure tests in `backend/src/test/java/com/hls/reporting/MissingAndFailingSourceTest.java` (SC-005): for every registered tile, with its source throwing, with it exceeding the time limit, and with its optional provider missing, the result is `ERROR`/`NOT_AVAILABLE`, never `OK` with 0; the other tiles of the area still return
+- [x] T061 [P] Parity completeness test in `backend/src/test/java/com/hls/reporting/TileParityCoverageTest.java`: every key in `contracts/tile-catalog.md` is registered and has a parity test class (fails when a tile is added without one) (SC-003)
+- [x] T062 [P] Performance check (SC-002): a test in `backend/src/test/java/com/hls/reporting/AreaPerformanceTest.java` loading each area on the demo-sized data set within 3 seconds, and assert a fixed number of queries per area
+- [x] T063 [P] Frontend accessibility and layout pass in `frontend/src/features/dashboard/__tests__/` (axe checks on tiles, table, inbox; phone width without horizontal page scroll; light and dark theme tokens)
+- [x] T064 [P] Add the dashboard requests (manifest, each area, tile, managers, inbox) with role variants to `postman/` collection
+- [x] T065 [P] Demo data: ensure the demo seeders create the scenarios in `quickstart.md` prerequisites (overdue task, missed visit, Manager with no check-in past cut-off, Teacher absent with open substitution, pending Manager leave, payroll run awaiting approval) in the existing dev seeder under `backend/src/main/java/com/hls/` (find it from `backend/src/test/java/com/hls/DevSeedTest.java`) and extend `DevSeedTest`
+- [x] T066 [P] Add a one-line "Dashboard figures: not cached" note to `docs/caching.md`; update the roadmap/status doc if one lists spec 028; apply the Principle VII PATCH to `.specify/memory/constitution.md` naming the `reporting` module and its SPI (version number `NEXT`, assigned at merge)
+- [x] T067 Run the automated set from `quickstart.md`: `mvn -f backend/pom.xml test -Dtest='reporting.*,*Tiles*,*Approvals*,ArchitectureTest,ModulithTest'` (one class at a time if slow) and `npm --prefix frontend run test -- dashboard`; fix failures
+- [ ] T068 (automated part done, see quickstart Results; browser part needs a person) Manual walkthrough of `quickstart.md` sections 1 to 8 with the demo users (Director, Admin, Manager A and B, Teacher, System), including dark mode and phone width; record the result at the end of `quickstart.md`
 
 ---
 

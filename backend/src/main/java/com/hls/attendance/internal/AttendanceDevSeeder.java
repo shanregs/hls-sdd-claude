@@ -136,7 +136,34 @@ public class AttendanceDevSeeder implements ApplicationRunner {
                 added += markOne(supervisor, info, span, day, today) ? 1 : 0;
             }
         }
-        return added;
+        return added + markOneAbsentToday(supervisor, spans, today);
+    }
+
+    /**
+     * One placed Teacher is absent today (the same one every run), which raises an open substitution requirement through the
+     * absence event, so the dashboard's "away today" and "uncovered" tiles have something to show (spec 028).
+     */
+    private int markOneAbsentToday(UUID supervisor, List<PlacementSpan> spans, LocalDate today) {
+        if (today.getDayOfWeek() == DayOfWeek.SUNDAY || TAMIL_NADU_HOLIDAYS_2026.containsKey(today)) {
+            return 0;
+        }
+        UUID teacher = spans.stream()
+                .filter(s -> !s.startsOn().isAfter(today) && (s.endsOn() == null || !s.endsOn().isBefore(today)))
+                .map(PlacementSpan::teacherId)
+                .min(java.util.Comparator.naturalOrder())
+                .orElse(null);
+        if (teacher == null || marks.hasMark(teacher, today)) {
+            return 0;
+        }
+        try {
+            // the notifying form on purpose: it publishes the absence that raises the substitution requirement
+            marks.setMark(
+                    supervisor, teacher, today, "A", BigDecimal.ONE, "Unwell (demo)", null, SetByKind.SUPERVISOR);
+            return 1;
+        } catch (RuntimeException e) {
+            log.debug("[DEV SEED] Could not mark a Teacher absent today: {}", e.getMessage());
+            return 0;
+        }
     }
 
     private boolean markOne(UUID supervisor, TeacherInfo info, PlacementSpan span, LocalDate day, LocalDate today) {

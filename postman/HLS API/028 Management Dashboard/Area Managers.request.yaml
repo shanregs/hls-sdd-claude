@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Managers
+description: "All tiles of the Managers area (tasks, visits, no check-in, on leave, pending requests, comparison table). One failing tile is an ERROR tile, never a failed area. A Manager sees the area limited to their own figures."
+url: "{{baseUrl}}/api/v1/dashboard/areas/MANAGERS"
+method: GET
+order: 2000

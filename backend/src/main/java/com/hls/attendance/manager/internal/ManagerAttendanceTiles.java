@@ -82,8 +82,11 @@ class ManagerAttendanceTiles implements TileSource, ManagerColumns {
     @Override
     public Map<UUID, Map<String, Long>> figures(TileContext ctx, Set<UUID> managerUserIds) {
         Map<UUID, UUID> managerIdByUser = new HashMap<>();
-        for (UUID userId : managerUserIds) {
-            managers.managerByUserId(userId).ifPresent(m -> managerIdByUser.put(userId, m.id()));
+        // One bulk read of the Managers rather than a lookup per Manager (spec 028 SC-002).
+        for (ManagerQueries.ManagerRef m : managers.allManagers()) {
+            if (managerUserIds.contains(m.userId())) {
+                managerIdByUser.put(m.userId(), m.id());
+            }
         }
         Map<UUID, Long> days = missed.missedDaysInMonth(ctx.month(), managerIdByUser.values());
         Map<UUID, Map<String, Long>> result = new HashMap<>();

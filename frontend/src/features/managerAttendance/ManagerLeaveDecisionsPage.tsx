@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -45,7 +46,12 @@ export function ManagerLeaveDecisionsPage() {
   const { authFetch } = useAuth();
   const canDecide = useGrantedActions(ROUTE).has("APPROVE");
 
-  const [filter, setFilter] = useState<Filter>("PENDING");
+  // The dashboard opens this list with ?status=PENDING or ?status=APPROVED (spec 028).
+  const [params] = useSearchParams();
+  const [filter, setFilter] = useState<Filter>(() => {
+    const wanted = params.get("status");
+    return wanted === "APPROVED" || wanted === "ALL" ? wanted : "PENDING";
+  });
   const [state, setState] = useState<State>({ kind: "loading" });
   const [leave, setLeave] = useState<ManagerLeaveRequest[]>([]);
   const [checkIns, setCheckIns] = useState<Regularization[]>([]);

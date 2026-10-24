@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Recruitment
+description: "Recruitment funnel, joining ratio and recruits ready to deploy. Organization-wide."
+url: "{{baseUrl}}/api/v1/dashboard/areas/RECRUITMENT"
+method: GET
+order: 4000

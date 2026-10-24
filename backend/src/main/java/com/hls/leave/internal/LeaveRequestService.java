@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,7 +122,9 @@ public class LeaveRequestService {
         LeaveRequest saved;
         try {
             saved = requests.saveAndFlush(request);
-        } catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException | PessimisticLockingFailureException e) {
+            // Two simultaneous overlapping submissions can also deadlock on the exclusion constraint
+            // (Postgres 40P01); the survivor is saved and the loser is refused like any other overlap.
             throw new ConflictException("These dates overlap another leave request of yours.");
         }
         audit.created(userId, saved);

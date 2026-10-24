@@ -25,4 +25,7 @@ public interface AttendanceReadApi {
 
     /** True while the Teacher-month is locked; a reopened month is not locked. */
     boolean isLocked(UUID teacherId, YearMonth month);
+
+    /** The given Teachers whose month is locked, in one query (spec 028 payroll.locks); a reopened month is not locked. */
+    java.util.Set<UUID> lockedTeachers(java.util.Collection<UUID> teacherIds, YearMonth month);
 }

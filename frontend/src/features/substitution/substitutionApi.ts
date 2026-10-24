@@ -93,10 +93,12 @@ export interface MyAssignment {
 
 export function listRequirements(
   authFetch: AuthFetch,
-  params: { status: string; page: number; size: number },
+  params: { status: string; page: number; size: number; from?: string; to?: string },
 ): Promise<ApiResult<PageOf<Requirement>>> {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
   query.set("page", String(params.page));
   query.set("size", String(params.size));
   return getJson(
