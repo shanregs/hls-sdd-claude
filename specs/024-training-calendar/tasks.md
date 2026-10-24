@@ -14,9 +14,9 @@ quickstart.md, and specs 005, 008, 016, 032, 035 (all on `main`).
 MY ATTENDANCE items for Teacher (no new sections); one C1 entry per session with the assigned Managers as attendees; Admin and
 Director seeded on `TRAINING_ATTENDANCE`; on a clash with a school mark the training row is saved and nothing is written to 008.
 
-**OPEN DECISION, NOT TO BE BUILT AROUND**: how a Manager's attended training day counts in Manager pay (spec 032). It is plan.md
-Open Item 1. Task **T080** is BLOCKED until the user decides. No other task depends on it, and no task may add a payroll or pay
-effect for training.
+**DECIDED 2026-10-24**: a Manager's attended training day counts as worked in Manager pay (spec 032; whole 1.0, half 0.5, only
+when there is no check-in). It is plan.md Open Item 1. Task **T080** is the 032 amendment and is now open to build. No other
+task depends on it, and no task other than T080 may add a payroll or pay effect for training.
 
 **Tests**: first-class tasks (Constitution Principle IX), written before the code they test: pattern date rules, flag
 derivation, repeat counting, the 12-month generation run (SC-001), 100-person assign and attendance passes (SC-002, SC-008),
@@ -25,12 +25,12 @@ matrix (SC-006), the 035 feed (SC-007), audit (SC-009), ArchUnit, frontend grant
 
 **Organization**: grouped by user story (spec.md US1-US7). Order: Setup, Foundational, US1 (sessions and registration, MVP), US2
 (patterns), US3 (assignment), US4 (attendance), US5 (exceptions), US6 (history), US7 (C1 feed, T-REPLACE, upcoming training,
-reminders), Blocked, Polish with the manual walkthrough last.
+reminders), the 032 amendment, Polish with the manual walkthrough last.
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: can run in parallel (different files, no dependency on an incomplete task)
-- **[Story]**: US1-US7; absent for Setup/Foundational/Blocked/Polish
+- **[Story]**: US1-US7; absent for Setup/Foundational/032 amendment/Polish
 
 ## Path Conventions
 
@@ -225,9 +225,9 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ---
 
-## Phase 10: BLOCKED (waiting for a user decision)
+## Phase 10: Spec 032 amendment (decided: attended training day counts as worked)
 
-- [ ] T080 **BLOCKED until the user decides plan.md Open Item 1 (Manager pay on a training day). Do not start, do not build around it.** Spec 032 amendment: whether and how a Manager's attended training day (`ManagerTrainingDays.attendedDays`, whole 1.0, half 0.5, only when there is no check-in) counts as worked in `ManagerMonth` and therefore in Manager payroll. When the user decides, write the 032 change, its tests (including a payroll figure for a Manager with a training day and no check-in) and the "Amended by 024" note; if the user decides the day stays unpaid, close this task with that answer in research.md
+- [ ] T080 **Decided (user, 2026-10-24): yes, it counts as worked.** Spec 032 amendment: a Manager's attended training day (`ManagerTrainingDays.attendedDays`, whole 1.0, half 0.5, only when there is no check-in) counts as worked in `ManagerMonth` and therefore in Manager payroll. Write the 032 change, its tests (including a payroll figure for a Manager with a training day and no check-in) and the "Amended by 024" note
 
 ---
 
@@ -240,7 +240,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 - [ ] T085 [P] Documentation: roadmap row 024 and the C1 entry in `docs/spec-roadmap.md`; constitution 2.5.11 PATCH with the Training row in the Default role access matrix and the navigation items in `.specify/memory/constitution.md`
 - [ ] T086 [P] "Amended by 024" notes in the specs of 035 (TrainingSource real, Training under "No Zone"), 032 (`managersOnLeaveOn`, `ManagerTrainingDays`, Field day link), 008 (training day on a non-working day counts in working days; "training days available" can now use expected days) and 015 (optional T-015)
 - [ ] T087 Run the full backend and frontend test suites once (all green; record any failure not caused by this work) and the quickstart timing checks for SC-002 and SC-008
-- [ ] T088 Manual walkthrough LAST: follow quickstart.md sections 1 to 6 in the browser as Admin, Director, Manager A, Manager B and Teachers; confirm the screen-reader and keyboard use of the attendance grid; record results in this file. T080 stays open unless decided
+- [ ] T088 Manual walkthrough LAST: follow quickstart.md sections 1 to 6 in the browser as Admin, Director, Manager A, Manager B and Teachers; confirm the screen-reader and keyboard use of the attendance grid; record results in this file. T080 (the 032 Manager-pay amendment) is built and checked separately
 
 ---
 
@@ -248,7 +248,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 - Setup first. Foundational blocks everything: migration T004, then entities T006; T007 to T012 are independent of each other.
 - US1 (MVP) needs Phase 2. US2 needs US1's `SessionService` (T019); its group snapshot step waits for `GroupResolver` (T034). US3 needs US1. US4 needs US3 (roster and `GroupResolver`) and T044 for Manager on-leave. US5 and US6 need US4. US7 needs US1 and US3; T062 and T063 need T061.
-- T080 depends only on a user decision and nothing depends on it.
+- T080 (the 032 Manager-pay amendment, decided) is independent and nothing depends on it.
 - Polish last; T088 last of all.
 
 ```text
@@ -257,7 +257,7 @@ Setup -> Foundational -> US1 -> US2
                                          \-> US6
                            \-> US7 (needs US3)
                  all -> Polish -> walkthrough
-                 T080 (blocked, independent)
+                 T080 (032 amendment, independent)
 ```
 
 ## Parallel Opportunities

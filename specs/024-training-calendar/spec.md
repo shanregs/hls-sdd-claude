@@ -313,7 +313,7 @@ Defaults chosen without asking the user; those marked **(open)** were either set
 - Q: What does the planned-activity feed return? -> A: One entry per session, the scheduling user as owner and the assigned Managers as attendees (FR-026 corrected).
 - Q: Which permission key records attendance? -> A: `TRAINING_ATTENDANCE`, seeded for Admin and Director (org-wide) as well as the Manager (Teachers placed under them).
 - Q: Clash with a school attendance mark? -> A: The training row is saved and the clash is shown; nothing is written to spec 008 and nothing is overwritten until a supervisor resolves the day in 008.
-- Open, not decided: how a Manager's attended training day counts in Manager pay (spec 032). See plan.md Open Item 2; no work is built around it.
+- Decided 2026-10-24: a Manager's attended training day counts as worked in Manager pay (spec 032), whole 1.0 or half 0.5, only when there is no check-in. See plan.md Open Item 1 and task T080.
 
 ## Remaining Defaults (not asked, taken as accepted)
 

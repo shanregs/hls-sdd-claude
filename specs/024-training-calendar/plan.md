@@ -136,7 +136,7 @@ See [research.md](research.md). Highlights:
   `TRAINING`, sub-kind the session type; add the `TRAINING` case to `linkFor` (module `TRAINING`, route `/operations/training`);
   extend `SourceAdaptersTest` and the 035 month fixture; the "Training is not included yet" note disappears.
 - **T-032**: add training sessions to `attendance.manager.internal.PlannedActivities.forDay` through
-  `attendance.api.ManagerTrainingDays`; the 032 read of attended training days waits for Open Item 1 (blocked).
+  `attendance.api.ManagerTrainingDays`; the 032 read of attended training days is decided in Open Item 1 (task T080).
 - **T-015** (optional, separate PR): offer training sessions as a link for a Training Stay claim (`LinkResolver`, `LinkKinds`).
 - **T-SPEC-NOTES**: "Amended by 024" notes in specs 035, 032, 015 and the roadmap C1 entry.
 
@@ -148,8 +148,7 @@ row is saved and nothing is written to 008.
 
 ## Open Items
 
-1. **OPEN DECISION: Manager pay on a training day (spec 032).** `ManagerMonth` counts a working day with no check-in and no
-   leave as unpaid. A Manager who attends training and does not check in would lose that day unless spec 032 treats an attended
-   training day as worked (whole 1.0, half 0.5, only when there is no check-in). The user has NOT decided. Until then 024 only
-   exposes the attended days through `ManagerTrainingDays` and builds nothing around the question; the 032 amendment is task
-   T-032-PAY in tasks.md, BLOCKED. It must be decided before a payroll run that includes a Manager training day.
+1. **DECIDED (2026-10-24): Manager pay on a training day (spec 032).** `ManagerMonth` counts a working day with no check-in and
+   no leave as unpaid. The user decided that spec 032 is amended so an attended training day counts as worked (whole 1.0,
+   half 0.5, only when there is no check-in). 024 exposes the attended days through `ManagerTrainingDays`; the 032 amendment
+   is task T080 in tasks.md and is now open to build. It must land before a payroll run that includes a Manager training day.
