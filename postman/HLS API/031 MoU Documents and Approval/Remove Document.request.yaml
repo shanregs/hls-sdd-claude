@@ -1,0 +1,12 @@
+$kind: http-request
+name: Remove Document
+description: "Hides a version with a reason (up to 300 characters); the bytes and history stay. Admin and Director with SCHOOL_CONTRACTS.EDIT."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/documents/{{documentId}}/remove"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "reason": "Wrong file" }
+order: 4000

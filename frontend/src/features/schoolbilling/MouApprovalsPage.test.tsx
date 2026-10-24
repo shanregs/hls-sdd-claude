@@ -76,7 +76,7 @@ describe("MouApprovalsPage (spec 031 US3)", () => {
       name: "MoUs waiting for approval",
     });
     expect(within(table).getByText("Demo School One")).toBeInTheDocument();
-    expect(within(table).getByText("02/10/2026 11:00 by Anita Admin")).toBeInTheDocument();
+    expect(within(table).getAllByText("02/10/2026 11:00 by Anita Admin")).toHaveLength(2);
     expect(within(table).getByText("Attached")).toBeInTheDocument();
     expect(within(table).getByText("No document")).toBeInTheDocument();
     expect(within(table).getByText("None")).toBeInTheDocument();

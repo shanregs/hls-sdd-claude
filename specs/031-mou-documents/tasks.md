@@ -90,9 +90,9 @@ MoU. No user story can start before these.
 - [X] T019 [US1] `MouDocumentService.upload`: scope and role checks, placeholder refusal, policy check, `FileStore.store(actor, "MOU_DOCUMENT", contractId, name, bytes)`, next `version_no`, `mou_document` row with copied name, type and size, event `DOCUMENT_ADDED` or `DOCUMENT_REPLACED`, Change History; keep the status unchanged here (the reset of an approved MoU is added in T030)
 - [X] T020 [US1] `MouDocumentService.remove` (reason required, Admin and Director only, `FileStore.remove`, removal columns on `mou_document`, event and audit) and `download` (scope, VIEW, version not removed, `FileStore.open`)
 - [X] T021 [US1] `MouApprovalQueries.detail` (documents with current mark and removal records, history, derived state, allowed actions, version) and `MouDocumentController` plus `GET /contracts/{id}/approval` in `B/schoolbilling/web`: multipart upload, download with `Content-Disposition: attachment` and `X-Content-Type-Options: nosniff`, remove as `POST .../remove`; guard calls per the grant table. Make T014, T016, T017 pass
-- [ ] T022 [P] [US1] `FE/ApprovalStatusChip.tsx` (text plus colour, all states and the "approved without document" and "approved (before approval step)" labels) and `FE/MouDocumentList.tsx` (versions, current mark, download through the auth fetch, removed rows with reason)
-- [ ] T023 [P] [US1] `FE/UploadMouDocument.tsx` (labelled file input, allowed types and size shown, error and progress states, focus management) and the remove dialog with a required reason
-- [ ] T024 [US1] Add a documents and approval panel to `FE/SchoolContractPage.tsx` per contract, driven by `actions` from the server; tests in `FE/MouDocumentPanel.test.tsx` per role (Admin sees upload and remove, Manager sees download only, Teacher and System none), loading, empty and error states, phone width
+- [X] T022 [P] [US1] `FE/ApprovalStatusChip.tsx` (text plus colour, all states and the "approved without document" and "approved (before approval step)" labels) and `FE/MouDocumentList.tsx` (versions, current mark, download through the auth fetch, removed rows with reason)
+- [X] T023 [P] [US1] `FE/UploadMouDocument.tsx` (labelled file input, allowed types and size shown, error and progress states, focus management) and the remove dialog with a required reason
+- [X] T024 [US1] Add a documents and approval panel to `FE/SchoolContractPage.tsx` per contract, driven by `actions` from the server; tests in `FE/MouDocumentPanel.test.tsx` per role (Admin sees upload and remove, Manager sees download only, Teacher and System none), loading, empty and error states, phone width
 
 **Checkpoint**: US1 independently demonstrable (quickstart section 1).
 
@@ -121,9 +121,9 @@ MoU. No user story can start before these.
 - [X] T034 [US2] `MouTermsService.amend` plus a narrow package-private method in `ContractService` that the service alone calls (asserts PENDING, takes the same lock, applies the accepted start-date rule through a repository query for the previous contract and earliest filled position); `PATCH /contracts/{id}/terms`. Make T027 pass
 - [X] T035 [US2] Add controller routes `POST /contracts/{id}/submit`, `/approve`, `/reject` to `MouApprovalController` with the guard per grant
 - [X] T036 [P] [US2] Add `MouSubmitted` and `MouDecided` to `B/schoolbilling/api`; add `MOU_SUBMITTED` and `MOU_DECIDED` to `NotificationType`; `MouEventListener` in `B/notification/internal`; texts in `MessageFactory` (title, message, link to the School page). Make T029 pass
-- [ ] T037 [P] [US2] `FE/DecisionDialogs.tsx` (approve confirm, reject with required reason, submit confirm, 409 "already decided" message and reload), `FE/ApprovalHistory.tsx` (oldest first, role, reasons, term changes, self decision marked)
-- [ ] T038 [P] [US2] `FE/AmendTermsDialog.tsx` (rate or position salaries, dates; only the fields that changed are sent; validation messages; shown only when `AMEND_TERMS` is in `actions`)
-- [ ] T039 [US2] Wire submit, approve, reject, amend and history into the panel of `SchoolContractPage.tsx`; tests `FE/MouApprovalPanel.test.tsx`: buttons follow `actions` per role, Admin never sees Approve, reject requires a reason, 409 handling, dates DD/MM/YYYY, keyboard and focus
+- [X] T037 [P] [US2] `FE/DecisionDialogs.tsx` (approve confirm, reject with required reason, submit confirm, 409 "already decided" message and reload), `FE/ApprovalHistory.tsx` (oldest first, role, reasons, term changes, self decision marked)
+- [X] T038 [P] [US2] `FE/AmendTermsDialog.tsx` (rate or position salaries, dates; only the fields that changed are sent; validation messages; shown only when `AMEND_TERMS` is in `actions`)
+- [X] T039 [US2] Wire submit, approve, reject, amend and history into the panel of `SchoolContractPage.tsx`; tests `FE/MouApprovalPanel.test.tsx`: buttons follow `actions` per role, Admin never sees Approve, reject requires a reason, 409 handling, dates DD/MM/YYYY, keyboard and focus
 
 **Checkpoint**: US1 and US2 together are the MVP (quickstart sections 1 and 2).
 
@@ -144,8 +144,8 @@ MoU. No user story can start before these.
 
 - [X] T042 [US3] Extend `ContractDtos` (`ContractListRow`, `ContractDto` with the `approval` block) and `ContractListService` with the two batch lookups (approval rows, current-document flags) and the `approval` and `document` filters; `ContractController` parameters. Make the list part of T040 pass
 - [X] T043 [US3] `MouApprovalQueries.pending` and `GET /approvals/pending` (grant `APPROVE`, scope rule). Make T041 pass
-- [ ] T044 [P] [US3] `FE/ContractsListPage.tsx`: two columns (approval chip, document state), two filters, "pending since"; update `ContractsListPage.test.tsx`
-- [ ] T045 [P] [US3] `FE/MouApprovalsPage.tsx` (pending list with School, Zone Manager, submitter, round, document state, link to the School page), route `/operations/school-contracts/approvals` in `App.tsx`, empty, loading and error states, phone width; `FE/MouApprovalsPage.test.tsx` per role
+- [X] T044 [P] [US3] `FE/ContractsListPage.tsx`: two columns (approval chip, document state), two filters, "pending since"; update `ContractsListPage.test.tsx`
+- [X] T045 [P] [US3] `FE/MouApprovalsPage.tsx` (pending list with School, Zone Manager, submitter, round, document state, link to the School page), route `/operations/school-contracts/approvals` in `App.tsx`, empty, loading and error states, phone width; `FE/MouApprovalsPage.test.tsx` per role
 
 **Checkpoint**: quickstart section 3 passes.
 
@@ -167,11 +167,11 @@ MoU. No user story can start before these.
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T049 [P] Postman collection additions for every new endpoint (upload, download, remove, submit, approve, reject, amend, pending list, approval detail) under `postman/`
-- [ ] T050 [P] Demo data in the `ContractDevSeeder`/dev seeder: a legacy MoU, a DRAFT with and without a document, a PENDING, a REJECTED, an APPROVED, a School with the "MoU pending" placeholder, a School with no Zone Manager; small sample files
-- [ ] T051 [P] Update docs: `docs/spec-roadmap.md` row 031; constitution (PATCH bump to the next patch after the highest merged, the School Contracts row of the default access matrix gains Approve for Director and Manager (own Schools), the OPERATIONS item "MoU Approvals"); a note in spec 012's contract docs that terms can be edited by the approver only through this path
-- [ ] T052 [P] Accessibility pass on the new screens (WCAG 2.2 AA: labels, status not by colour alone, focus order, dialog focus trap, 44 px targets at phone width) and loading, empty and error states (FR-019)
-- [ ] T053 **Re-check the migration number**: list `backend/src/main/resources/db/migration` on the latest `origin/main` and on every open implementation branch; if V100 is taken, rename `V100__create_mou_approval.sql` and update plan.md, data-model.md, research.md and this file before merging. Do this again immediately before the PR is marked ready
+- [X] T049 [P] Postman collection additions for every new endpoint (upload, download, remove, submit, approve, reject, amend, pending list, approval detail) under `postman/`
+- [X] T050 [P] Demo data in the `ContractDevSeeder`/dev seeder: a legacy MoU, a DRAFT with and without a document, a PENDING, a REJECTED, an APPROVED, a School with the "MoU pending" placeholder, a School with no Zone Manager; small sample files
+- [X] T051 [P] Update docs: `docs/spec-roadmap.md` row 031; constitution (PATCH bump to the next patch after the highest merged, the School Contracts row of the default access matrix gains Approve for Director and Manager (own Schools), the OPERATIONS item "MoU Approvals"); a note in spec 012's contract docs that terms can be edited by the approver only through this path
+- [X] T052 [P] Accessibility pass on the new screens (WCAG 2.2 AA: labels, status not by colour alone, focus order, dialog focus trap, 44 px targets at phone width) and loading, empty and error states (FR-019)
+- [X] T053 **Re-check the migration number**: list `backend/src/main/resources/db/migration` on the latest `origin/main` and on every open implementation branch; if V100 is taken, rename `V100__create_mou_approval.sql` and update plan.md, data-model.md, research.md and this file before merging. Do this again immediately before the PR is marked ready
 - [ ] T054 Full backend run (`mvn -o test`, Docker running) including `ModulithVerificationTest`; record the results in plan.md or quickstart.md; fix regressions in specs 012, 023, 027 and the permission tests
 - [ ] T055 Full frontend run (`npm test`, `npm run build`, lint) and record the result
 - [ ] T056 Manual walkthrough of quickstart.md sections 1 to 5 on the running app with each role (Admin, Director, Manager A, Manager B), at desktop and phone width; record the result; this is the last task before the PR

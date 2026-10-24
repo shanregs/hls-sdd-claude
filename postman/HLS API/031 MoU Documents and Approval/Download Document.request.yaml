@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download Document
+description: "The bytes of a version that is not removed, as an attachment. Needs SCHOOL_CONTRACTS.VIEW; out of scope is a 404."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/documents/{{documentId}}/file"
+method: GET
+order: 3000

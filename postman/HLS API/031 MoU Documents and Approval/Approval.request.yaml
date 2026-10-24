@@ -1,0 +1,6 @@
+$kind: http-request
+name: Approval
+description: "The full approval object: state, document versions, history and the actions allowed for the caller. Needs SCHOOL_CONTRACTS.VIEW."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/approval"
+method: GET
+order: 1000
