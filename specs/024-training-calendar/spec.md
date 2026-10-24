@@ -25,6 +25,8 @@ No questions were asked. The defaults below were taken from the project document
   register and 032 reads it to show the day as a training field day; 024 writes nothing into 032 records.
 - Q: What happens when a Teacher is already marked Present at school on the training day? → A: The system shows the clash and
   the half-day rules of spec 008 decide; nothing is overwritten silently and nothing is blocked.
+- Q: Should repeated unexcused absence create a Manager task or only mark the list? → A: Only mark the person as a repeat on
+  the exceptions list (2 unexcused absences in 6 months, set in System Settings); no task is created through spec 025.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -294,10 +296,9 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 1. **Assignment on open sessions**: may an Admin also assign people to an open weekend refresher, making them Required (default: yes), or are assignments for monthly sessions only?
 2. **Group assignment**: a snapshot on the day made (default), or a live rule that follows the group (new joiners added automatically)?
 3. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
-4. **Repeat non-compliance**: is "2 in 6 months" right, and should it create a task for the Manager (via spec 025) or only mark the list (default)?
-5. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
-6. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
-7. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
-8. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
-9. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
-10. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
+4. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
+5. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
+6. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
+7. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
+8. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
+9. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
