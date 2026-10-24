@@ -163,7 +163,7 @@ clock; use `findBy*` or an `act` with a short wait.
 
 - [X] T045 [P] Update `docs/running-mobile.md` (the new packages need a native rebuild, how to test offline with airplane mode, HEIC on a real phone) and the roadmap row for spec 036
 - [X] T046 [P] Add the 015 gaps G1 to G4 (research.md) as a short note for a later 015 amendment, without changing 015; confirm with the owner how Admin-only accounts (web-only per spec 018) are meant to read the spec 036 role table
-- [ ] T047 Run the full `npm run typecheck`, `npm run lint`, `npm test` and `npm run check:manifest` from `mobile/` and fix everything they report; run a search that no file in `MOB` imports a review endpoint (`/api/v1/expenses`)
+- [X] T047 Run the full `npm run typecheck`, `npm run lint`, `npm test` and `npm run check:manifest` from `mobile/` and fix everything they report; run a search that no file in `MOB` imports a review endpoint (`/api/v1/expenses`)
 - [ ] T048 Run the quickstart.md walkthrough (menu per role, raise online, category fields, HEIC and WebP, offline capture and sync with a kill during upload, refusal on sync, duplicate, server wins, shared phone, My Expenses tracking, TalkBack and themes) on an emulator and one real phone, and record the results in `specs/036-mobile-expenses/quickstart-results.md`
 
 ---
