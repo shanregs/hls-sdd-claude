@@ -260,6 +260,7 @@ export interface GridParams {
   schoolId?: string;
   managerId?: string;
   status?: string;
+  awayOn?: string;
 }
 
 export interface HistoryEntry {
@@ -284,6 +285,7 @@ function gridQuery(params: GridParams): string {
     schoolId: params.schoolId,
     managerId: params.managerId,
     status: params.status,
+    awayOn: params.awayOn,
   });
 }
 

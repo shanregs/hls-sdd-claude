@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -62,7 +62,12 @@ export function MarketingCalendar() {
     year: today.getFullYear(),
     month: today.getMonth(),
   });
-  const [mine, setMine] = useState(true);
+  // The dashboard opens this calendar with ?status=missed and/or ?attendeeUserId=... (spec 028).
+  const [params, setParams] = useSearchParams();
+  const statusFilter = params.get("status")?.toUpperCase() ?? "";
+  const attendeeFilter = params.get("attendeeUserId") ?? "";
+  const filtered = statusFilter !== "" || attendeeFilter !== "";
+  const [mine, setMine] = useState(!filtered);
   const [data, setData] = useState<ActivityList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{
@@ -88,7 +93,10 @@ export function MarketingCalendar() {
 
   const byDate = useMemo(() => {
     const map = new Map<string, { activities: Activity[]; drives: number }>();
-    data?.content.forEach((a) => {
+    data?.content
+      .filter((a) => statusFilter === "" || a.effectiveStatus === statusFilter)
+      .filter((a) => attendeeFilter === "" || a.attendees.some((p) => p.userId === attendeeFilter))
+      .forEach((a) => {
       const entry = map.get(a.date) ?? { activities: [], drives: 0 };
       entry.activities.push(a);
       map.set(a.date, entry);
@@ -99,7 +107,7 @@ export function MarketingCalendar() {
       map.set(d.date, entry);
     });
     return map;
-  }, [data]);
+  }, [data, statusFilter, attendeeFilter]);
 
   const step = (delta: number) =>
     setCursor((c) => {
@@ -170,6 +178,18 @@ export function MarketingCalendar() {
             label="My activities"
           />
         </Stack>
+        {filtered && (
+          <Alert
+            severity="info"
+            action={
+              <Button color="inherit" size="small" onClick={() => setParams({})}>
+                Show all
+              </Button>
+            }
+          >
+            {`Showing ${statusFilter ? statusFilter.toLowerCase() + " " : ""}activities${attendeeFilter ? " of one Manager" : ""}.`}
+          </Alert>
+        )}
         {error && (
           <Alert severity="error" role="alert">
             {error}
