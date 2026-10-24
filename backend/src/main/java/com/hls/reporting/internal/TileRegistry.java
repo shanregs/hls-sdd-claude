@@ -38,6 +38,9 @@ public class TileRegistry {
             for (TileDefinition definition : source.tiles()) {
                 // A grant naming a module that does not exist is a programming error: fail at start-up, not per request.
                 PermissionModule.valueOf(definition.permissionModule());
+                if (definition.ownRowModule() != null) {
+                    PermissionModule.valueOf(definition.ownRowModule());
+                }
                 if (keyed.put(definition.key(), new Entry(source, definition)) != null) {
                     throw new IllegalStateException("Duplicate dashboard tile key: " + definition.key());
                 }
@@ -61,7 +64,11 @@ public class TileRegistry {
         if (d.scope() == ScopeKind.ORG_WIDE_ONLY && managerOnly(roles)) {
             return false;
         }
-        return guard.isGranted(roles, PermissionModule.valueOf(d.permissionModule()), d.action());
+        if (guard.isGranted(roles, PermissionModule.valueOf(d.permissionModule()), d.action())) {
+            return true;
+        }
+        return d.ownRowModule() != null
+                && guard.isGranted(roles, PermissionModule.valueOf(d.ownRowModule()), d.ownRowAction());
     }
 
     /** The caller's tiles, ordered by area then {@code order}; a key appears once however many roles the caller holds. */

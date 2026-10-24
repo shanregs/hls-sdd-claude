@@ -43,7 +43,7 @@ class ManagerAttendanceTiles implements TileSource, ManagerColumns {
         return List.of(new TileDefinition(
                 KEY, Area.MANAGERS, 7, "Managers with no check-in", PeriodKind.TODAY, "MANAGER_ATTENDANCE",
                 PermissionAction.VIEW, ScopeKind.ALL, true,
-                Link.to("/operations/manager-attendance", "filter", "missing")));
+                Link.to("/operations/manager-attendance", "filter", "missing"), "MY_MANAGER_ATTENDANCE", PermissionAction.VIEW));
     }
 
     @Override

@@ -40,8 +40,8 @@ class ManagerLeaveTilesTest extends ManagerLeaveTestBase {
         assertThat(value(tile, "Leave")).isEqualTo(pendingLeave).isGreaterThanOrEqualTo(2);
         assertThat(value(tile, "Forgotten check-ins")).isEqualTo(pendingCheckIns);
 
-        // a Manager holds no Manager Leave View grant, so the tile is not theirs to read
-        assertThat(get(T + "managers.pendingRequests", one.token()).status()).isEqualTo(404);
+        // a Manager sees only their own pending request
+        assertThat(value(get(T + "managers.pendingRequests", one.token()), "Leave")).isEqualTo(1);
     }
 
     @Test
@@ -63,6 +63,6 @@ class ManagerLeaveTilesTest extends ManagerLeaveTestBase {
 
         assertThat(tile.status()).as(tile.body()).isEqualTo(200);
         assertThat(value(tile, "On leave")).isEqualTo(expected).isGreaterThanOrEqualTo(1);
-        assertThat(get(T + "managers.onLeaveToday", manager.token()).status()).isEqualTo(404);
+        assertThat(value(get(T + "managers.onLeaveToday", manager.token()), "On leave")).isEqualTo(1);
     }
 }

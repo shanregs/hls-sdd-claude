@@ -45,10 +45,10 @@ class ManagerLeaveTiles implements TileSource {
         return List.of(
                 new TileDefinition(ON_LEAVE, Area.MANAGERS, 8, "Managers on leave today", PeriodKind.TODAY, "MANAGER_LEAVE",
                         PermissionAction.VIEW, ScopeKind.ALL, true,
-                        Link.to("/operations/manager-leave", "status", "APPROVED")),
+                        Link.to("/operations/manager-leave", "status", "APPROVED"), "MY_MANAGER_ATTENDANCE", PermissionAction.VIEW),
                 new TileDefinition(PENDING, Area.MANAGERS, 9, "Manager requests awaiting a decision", PeriodKind.ALL_TIME,
                         "MANAGER_LEAVE", PermissionAction.VIEW, ScopeKind.ALL, true,
-                        Link.to("/operations/manager-leave", "status", "PENDING")));
+                        Link.to("/operations/manager-leave", "status", "PENDING"), "MY_MANAGER_ATTENDANCE", PermissionAction.VIEW));
     }
 
     private Set<UUID> allowed(TileContext ctx) {

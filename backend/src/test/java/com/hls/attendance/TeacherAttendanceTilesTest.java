@@ -44,8 +44,9 @@ class TeacherAttendanceTilesTest extends SubstitutionTestBase {
         assertThat(away(admin)).isGreaterThanOrEqualTo(1);
         assertThat(away(get(TILE + "?zoneId=" + w.zoneA(), w.admin()))).isEqualTo(1);
         assertThat(away(get(TILE + "?zoneId=" + w.zoneB(), w.admin()))).isEqualTo(0);
-        // Managers hold Teacher Attendance, not the Attendance module this tile is granted by
-        assertThat(get(TILE, w.managerA().token()).status()).isEqualTo(404);
+        // Managers see it through Teacher Attendance, limited to the Teachers of their own Schools
+        assertThat(away(get(TILE, w.managerA().token()))).isEqualTo(1);
+        assertThat(away(get(TILE, w.managerB().token()))).isEqualTo(0);
     }
 
     @Test

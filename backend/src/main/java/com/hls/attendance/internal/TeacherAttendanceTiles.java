@@ -58,7 +58,7 @@ class TeacherAttendanceTiles implements TileSource {
     public List<TileDefinition> tiles() {
         return List.of(new TileDefinition(
                 KEY, Area.ATTENDANCE_LEAVE, 1, "Teachers away today", PeriodKind.TODAY, "ATTENDANCE", PermissionAction.VIEW,
-                ScopeKind.ALL, true, Link.to("/operations/attendance", "filter", "away")));
+                ScopeKind.ALL, true, Link.to("/operations/attendance", "filter", "away"), "TEACHER_ATTENDANCE", PermissionAction.VIEW));
     }
 
     @Override

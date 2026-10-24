@@ -34,9 +34,9 @@ class ManagerAttendanceTilesTest extends ManagerAttendanceTestBase {
         assertThat(tile.status()).as(tile.body()).isEqualTo(200);
         assertThat(tile.map().get("state")).isEqualTo("OK");
         assertThat(value(tile)).isEqualTo(listOf(get(ATT + "/missed", admin)).size()).isGreaterThanOrEqualTo(1);
-        // a Manager holds no Manager Attendance grant, so the tile is not theirs to read
-        assertThat(get(TILE, missing.token()).status()).isEqualTo(404);
-        assertThat(here).isNotNull();
+        // a Manager sees the tile through their own attendance, and only their own row
+        assertThat(value(get(TILE, missing.token()))).isEqualTo(1);
+        assertThat(value(get(TILE, here.token()))).isEqualTo(0);
     }
 
     @Test
