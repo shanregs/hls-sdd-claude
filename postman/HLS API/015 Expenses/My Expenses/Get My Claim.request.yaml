@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get My Claim
+description: "One own claim with bills, link, history, payment and allowedActions. Someone else's claim is 404. Needs MY_EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}"
+method: GET
+order: 5000

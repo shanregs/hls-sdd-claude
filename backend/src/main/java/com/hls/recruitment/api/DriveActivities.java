@@ -11,4 +11,10 @@ import java.util.UUID;
 public interface DriveActivities {
 
     List<PlannedActivity> plannedBetween(LocalDate from, LocalDate to, UUID ownerUserId);
+
+    /**
+     * One entry per drive date in the range for every status: PLANNED, HELD, CANCELLED (spec 035). A null user means
+     * every drive; a given user matches the scheduler or an interviewer.
+     */
+    List<ActivityEntry> activitiesBetween(LocalDate from, LocalDate to, UUID userId);
 }

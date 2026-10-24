@@ -24,6 +24,9 @@ public interface SchoolDirectory {
 
     List<ZoneInfo> zones(Collection<UUID> zoneIds);
 
+    /** Every Zone, by name (spec 028 Dashboard Zone filter for Admin and Director; spec 015 area selector and budgets). */
+    List<ZoneInfo> allZones();
+
     Optional<PlaceInfo> place(UUID placeId);
 
     Optional<SchoolInfo> school(UUID schoolId);

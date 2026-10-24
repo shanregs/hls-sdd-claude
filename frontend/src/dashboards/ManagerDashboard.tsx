@@ -4,6 +4,7 @@ import { Alert, Box, Link, Paper, Typography } from "@mui/material";
 import { useAuth } from "../auth/useAuth";
 import { PlaceholderWidget } from "./PlaceholderWidget";
 import { PendingLeaveWidget } from "./PendingLeaveWidget";
+import { ManagementDashboard } from "../features/dashboard/ManagementDashboard";
 
 interface ScopeSummary {
   orgWide: boolean;
@@ -142,6 +143,9 @@ export function ManagerDashboard() {
         )}
         <PendingLeaveWidget />
         <PlaceholderWidget title="This month's attendance" />
+      </Box>
+      <Box sx={{ mt: 3 }}>
+        <ManagementDashboard title="My figures" />
       </Box>
     </Box>
   );

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Submit Claim
+description: "Draft or Rejected to Submitted. 409 with matches when a duplicate is found and confirmDuplicate is not true. Needs MY_EXPENSES.EDIT."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}/submit"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 0,
+      "confirmDuplicate": false
+    }
+order: 8000

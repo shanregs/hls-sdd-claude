@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Request
+description: "Needs VIEW. Includes live checks, history and the actions the caller may take. Out of scope is 404."
+url: "{{baseUrl}}/api/v1/transfers/{{requestId}}"
+method: GET
+order: 2000

@@ -56,7 +56,7 @@ specs/035-manager-activity-calendar/ spec.md plan.md research.md data-model.md q
 backend/src/main/java/com/hls/activitycalendar/
   api/       package-info only (nothing is exposed to other modules)
   internal/  ActivitySource (SPI), DriveSource, VisitSource, TaskSource, (TrainingSource added by 024), CalendarService,
-             StatusRules, ZoneResolver, PeopleDirectory, CalendarItem, CalendarSummary, NeedsAttention
+             StatusRules, CalendarZoneResolver, PeopleDirectory, CalendarItem, CalendarSummary, NeedsAttention
   web/       ActivityCalendarController (GET only), ActivityCalendarExceptionAdvice
 backend/src/main/java/com/hls/recruitment/api/        DriveActivities, MarketingActivities (+ activitiesBetween), ActivityEntry (new record)
 backend/src/main/java/com/hls/recruitment/internal/   DriveActivitiesImpl, CampusDrive (held_on), DriveService (record date changes, held_on), DriveDateChange (+ repository)

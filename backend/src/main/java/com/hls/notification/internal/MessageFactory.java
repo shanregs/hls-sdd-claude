@@ -96,6 +96,32 @@ public final class MessageFactory {
                 "/operations/teacher-performance/planned");
     }
 
+    private static String movement(String kind) {
+        return "REPLACEMENT".equals(kind) ? "replacement" : "transfer";
+    }
+
+    public static Text transferRequested(String kind, String teacherName, String fromSchool, LocalDate on) {
+        return new Text(
+                shorten("New " + movement(kind) + " request: " + teacherName, MAX_TITLE),
+                shorten(teacherName + " at " + fromSchool + ", effective " + date(on) + ".", MAX_MESSAGE),
+                "/operations/transfers");
+    }
+
+    public static Text transferDecided(String kind, String outcome, String teacherName, LocalDate on, UUID requestId) {
+        String verb = outcome.toLowerCase();
+        return new Text(
+                shorten("The " + movement(kind) + " for " + teacherName + " was " + verb, MAX_TITLE),
+                shorten("The " + movement(kind) + " for " + teacherName + " (effective " + date(on) + ") was " + verb + ".", MAX_MESSAGE),
+                "/operations/transfers/" + requestId);
+    }
+
+    public static Text transferApplied(String kind, String teacherName, LocalDate on, UUID requestId) {
+        return new Text(
+                shorten("The " + movement(kind) + " for " + teacherName + " took effect", MAX_TITLE),
+                shorten("The " + movement(kind) + " for " + teacherName + " took effect on " + date(on) + ".", MAX_MESSAGE),
+                "/operations/transfers/" + requestId);
+    }
+
     public static Text referralRecorded(String teacherName, String recommendation, UUID issueId) {
         return new Text(
                 shorten("Teacher referred: " + teacherName, MAX_TITLE),
@@ -231,6 +257,29 @@ public final class MessageFactory {
                 "Pay run returned",
                 "The pay run for " + monthName(month) + " was returned to draft" + because(reason) + ".",
                 "/operations/payroll/" + runId);
+    }
+
+    /** A claim waits for review (spec 015). Names the claimant, never an amount. */
+    public static Text expenseSubmitted(UUID claimId, String claimantName, boolean resubmitted) {
+        return new Text(
+                resubmitted ? "Expense claim resubmitted" : "Expense claim submitted",
+                claimantName + (resubmitted ? " resubmitted" : " submitted") + " an expense claim for review.",
+                "/operations/expenses/" + claimId);
+    }
+
+    public static Text expenseDecided(UUID claimId, String outcome, String reason) {
+        String what = "APPROVED".equals(outcome) ? "approved" : "rejected";
+        return new Text(
+                "Expense claim " + what,
+                "Your expense claim was " + what + because(reason) + ".",
+                "/operations/my-expenses/" + claimId);
+    }
+
+    public static Text expenseReversed(UUID claimId, String reason) {
+        return new Text(
+                "Expense approval reversed",
+                "The approval of your expense claim was reversed and it is back with the reviewers" + because(reason) + ".",
+                "/operations/my-expenses/" + claimId);
     }
 
     public static String attendanceLink(YearMonth month) {

@@ -1,0 +1,19 @@
+$kind: http-request
+name: Change Request
+description: "Changes a Pending request. Needs EDIT; requester or a decider."
+url: "{{baseUrl}}/api/v1/transfers/{{requestId}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": {{requestVersion}},
+      "effectiveOn": "2026-11-10"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('requestId', j.id); pm.collectionVariables.set('requestVersion', j.version); }"
+    language: text/javascript
+order: 8000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Remove Bill
+description: "Removes a bill with a required reason; the removal is recorded and the claim status is unchanged. Needs EXPENSES.APPROVE."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}/bills/{{billId}}"
+method: DELETE
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Shows another person"
+    }
+order: 8000

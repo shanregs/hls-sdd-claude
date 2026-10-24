@@ -15,8 +15,8 @@ import java.util.UUID;
 
 /**
  * A signed amount against a person that waits for a run to take it (spec 013b US4). Never deleted; once applied or
- * withdrawn it never changes (trigger). The three kinds other than {@code CORRECTION} are reserved for later specs and
- * nothing here creates them.
+ * withdrawn it never changes (trigger). {@code REIMBURSEMENT} is created through {@code ReimbursementIntake} for spec 015; the other
+ * two kinds besides {@code CORRECTION} are reserved for later specs.
  */
 @Entity
 @Table(name = "payroll_adjustment")
@@ -183,6 +183,11 @@ public class PayAdjustment {
 
     public String getWithdrawReason() {
         return withdrawReason;
+    }
+
+    /** The id of what created this adjustment in another module (spec 015: the claim id of a reimbursement). */
+    void sourcedFrom(String sourceRef) {
+        this.sourceRef = sourceRef;
     }
 
     void attachTo(UUID runId) {

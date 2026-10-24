@@ -1,0 +1,21 @@
+$kind: http-request
+name: Raise Transfer
+description: "201. Needs CREATE. 409 with problems[] when a rule refuses it."
+url: "{{baseUrl}}/api/v1/transfers/transfers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "teacherId": "{{teacherId}}",
+      "toSchoolId": "{{toSchoolId}}",
+      "effectiveOn": "2026-11-03",
+      "reasonCategory": "MANAGER_REBALANCING"
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('requestId', j.id); pm.collectionVariables.set('requestVersion', j.version); }"
+    language: text/javascript
+order: 3000

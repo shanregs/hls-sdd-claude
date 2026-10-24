@@ -189,7 +189,7 @@ public class AssignmentService {
      * The School's live contract covering {@code start}. When none does, creates a "MoU pending" contract from
      * that date (open-ended, or up to the day before the next contract) so the assignment has a home.
      */
-    private Contract contractFor(UUID actor, UUID schoolId, LocalDate start) {
+    Contract contractFor(UUID actor, UUID schoolId, LocalDate start) {
         Optional<Contract> covering = contracts.liveOn(schoolId, start);
         if (covering.isPresent()) {
             return covering.get();
@@ -218,7 +218,7 @@ public class AssignmentService {
      * The position to use: none under a pending contract; under an active MoU the named one, or for a
      * same-for-all contract the next vacant one. A position must belong to the contract and be vacant.
      */
-    private UUID resolvePosition(
+    UUID resolvePosition(
             Contract contract,
             UUID positionId,
             LocalDate start,

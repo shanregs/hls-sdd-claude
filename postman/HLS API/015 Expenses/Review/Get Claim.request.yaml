@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Claim
+description: "A claim with bills, link, history, allowedActions and payrollState (NONE, WAITING, HELD_BY_DRAFT, HELD_AWAITING_APPROVAL, APPLIED). Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}"
+method: GET
+order: 2000

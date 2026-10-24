@@ -27,14 +27,22 @@ import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
 import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistory";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
+import { TransfersPage } from "./features/transfers/TransfersPage";
 import { FeedbackPage } from "./features/performance/FeedbackPage";
 import { IssuePage, IssuesPage } from "./features/performance/IssuePage";
 import { ObservationForm } from "./features/performance/ObservationForm";
 import { ObservationsPage } from "./features/performance/ObservationsPage";
 import { PlannedPage } from "./features/performance/PlannedPage";
 import { TeacherPerformancePage } from "./features/performance/TeacherPerformancePage";
+import { BudgetVersusActualPage } from "./features/expenses/BudgetVersusActualPage";
+import { ClaimDetailPage } from "./features/expenses/ClaimDetailPage";
+import { ClaimFormPage } from "./features/expenses/ClaimFormPage";
+import { CostMeasuresPage } from "./features/expenses/CostMeasuresPage";
+import { ExpensesReviewPage } from "./features/expenses/ExpensesReviewPage";
+import { MyExpensesPage } from "./features/expenses/MyExpensesPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
+import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -371,6 +379,14 @@ export function App() {
           }
         />
         <Route
+          path="/operations/transfers"
+          element={
+            <RouteGuard>
+              <TransfersPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/operations/teacher-performance"
           element={
             <RouteGuard>
@@ -423,6 +439,78 @@ export function App() {
           element={
             <RouteGuard>
               <TeacherPerformancePage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/activity-calendar"
+          element={
+            <RouteGuard>
+              <ActivityCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-expenses"
+          element={
+            <RouteGuard>
+              <MyExpensesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-expenses/new"
+          element={
+            <RouteGuard>
+              <ClaimFormPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-expenses/:id/edit"
+          element={
+            <RouteGuard>
+              <ClaimFormPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-expenses/:id"
+          element={
+            <RouteGuard>
+              <ClaimDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/expenses"
+          element={
+            <RouteGuard>
+              <ExpensesReviewPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/expenses/budgets"
+          element={
+            <RouteGuard>
+              <BudgetVersusActualPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/expenses/costs"
+          element={
+            <RouteGuard>
+              <CostMeasuresPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/expenses/:id"
+          element={
+            <RouteGuard>
+              <ClaimDetailPage review />
             </RouteGuard>
           }
         />
