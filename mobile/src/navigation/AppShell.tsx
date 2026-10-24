@@ -7,7 +7,7 @@ import { buildMenu } from "../access/useMenu";
 import type { SignedInUser } from "../api/authApi";
 import type { LeaveStatus } from "../api/leaveApi";
 import type { TaskView } from "../api/tasksApi";
-import { useAuth } from "../auth/AuthProvider";
+import { useSignOutGuard } from "../auth/useSignOutGuard";
 import { ApplyLeaveScreen } from "../screens/ApplyLeaveScreen";
 import { AttendanceHistoryScreen } from "../screens/AttendanceHistoryScreen";
 import { DevicesScreen } from "../screens/DevicesScreen";
@@ -16,6 +16,8 @@ import { LeaveManagementScreen } from "../screens/LeaveManagementScreen";
 import { ManagerCheckInScreen } from "../screens/ManagerCheckInScreen";
 import { ManagerLeaveScreen } from "../screens/ManagerLeaveScreen";
 import { ManagerMonthScreen } from "../screens/ManagerMonthScreen";
+import { MyExpensesScreen } from "../screens/MyExpensesScreen";
+import { ExpenseOutboxProvider } from "../outbox/ExpenseOutboxProvider";
 import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
 import { TasksScreen } from "../screens/TasksScreen";
 import { VisitsScreen } from "../screens/VisitsScreen";
@@ -43,7 +45,9 @@ export function AppShell({ user }: { user: SignedInUser }) {
   return (
     <AccessModelProvider>
       <NotificationsProvider>
-        <ShellContent user={user} />
+        <ExpenseOutboxProvider userId={user.id}>
+          <ShellContent user={user} />
+        </ExpenseOutboxProvider>
       </NotificationsProvider>
     </AccessModelProvider>
   );
@@ -66,7 +70,7 @@ type Overlay = "none" | "devices" | "privacy" | "notAuthorized";
 
 function ShellContent({ user }: { user: SignedInUser }) {
   const { model, status, refresh, canOpen } = useAccessModel();
-  const { logout } = useAuth();
+  const { requestLogout, dialog: signOutDialog } = useSignOutGuard();
   const theme = useTheme();
   const [route, setRoute] = useState(HOME_ROUTE);
   const [overlay, setOverlay] = useState<Overlay>("none");
@@ -212,6 +216,9 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "tasks") {
     body = <TasksScreen initialView={routeState?.taskView} />;
     title = "My Tasks";
+  } else if (current === "myExpenses") {
+    body = <MyExpensesScreen />;
+    title = "My Expenses";
   } else if (current === "notifications") {
     body = <NotificationsScreen openRoute={openRoute} canOpen={canOpen} />;
     title = "Notifications";
@@ -231,6 +238,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
         <NotificationBell onOpen={() => openRoute(NOTIFICATIONS_ROUTE)} />
       </Appbar.Header>
       {body}
+      {signOutDialog}
 
       <Portal>
         <Modal
@@ -257,7 +265,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
                   label="Log out"
                   onPress={() => {
                     setDrawerOpen(false);
-                    void logout();
+                    requestLogout();
                   }}
                   accessibilityLabel="Log out"
                 />
@@ -270,7 +278,7 @@ function ShellContent({ user }: { user: SignedInUser }) {
                 label="Log out"
                 onPress={() => {
                   setDrawerOpen(false);
-                  void logout();
+                  requestLogout();
                 }}
                 accessibilityLabel="Log out"
               />

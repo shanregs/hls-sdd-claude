@@ -41,7 +41,7 @@ const config: ExpoConfig = {
     [
       "expo-image-picker",
       {
-        cameraPermission: "HLS uses the camera only when you choose Take a photo for a check-in.",
+        cameraPermission: "HLS uses the camera only when you choose to photograph a bill or take a check-in photo.",
         microphonePermission: false,
         photosPermission: false,
       },

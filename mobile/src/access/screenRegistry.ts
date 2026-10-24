@@ -18,7 +18,8 @@ export type ScreenKey =
   | "managerMonth"
   | "managerLeave"
   | "visits"
-  | "tasks";
+  | "tasks"
+  | "myExpenses";
 
 const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/dashboard": "home",
@@ -36,6 +37,7 @@ const SCREEN_BY_ROUTE: Readonly<Record<string, ScreenKey>> = {
   "/manager-attendance/me/leave": "managerLeave",
   "/marketing/calendar": "visits",
   "/operations/tasks": "tasks",
+  "/operations/my-expenses": "myExpenses",
 };
 
 export function screenFor(route: string): ScreenKey | undefined {
@@ -48,5 +50,7 @@ export const MANAGER_CHECK_IN_ROUTE = "/manager-attendance/me";
 /** The visit diary and the task list (spec 034): the menu items the server offers under MARKETING and OPERATIONS. */
 export const VISITS_ROUTE = "/marketing/calendar";
 export const TASKS_ROUTE = "/operations/tasks";
+/** The claimant's own expenses (spec 036). The review item "/operations/expenses" is deliberately not known to the app. */
+export const EXPENSES_ROUTE = "/operations/my-expenses";
 export const PROFILE_ROUTE = "/account/profile";
 export const NOTIFICATIONS_ROUTE = "/account/notifications";

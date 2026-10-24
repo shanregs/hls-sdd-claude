@@ -226,6 +226,23 @@ That signs in as the Manager, opens the menu and Profile, and logs out.
    and Windows Firewall must allow port 8080 on the private network.
 4. Run `npx expo run:android`.
 
+## 7a. Expenses with a bill photo and offline capture (spec 036)
+
+Spec 036 added native packages (`expo-image-manipulator`, `expo-file-system`, `expo-crypto`,
+`expo-document-picker`, `@react-native-community/netinfo`), so **rebuild the app once**
+(`npx expo run:android` from `mobile`); a plain reload does not load native code. Nothing new is asked of the phone:
+the camera permission is the same one used for check-in photos, and the gallery and PDF pickers are the system's.
+
+- **Try it offline**: open the emulator's quick settings and switch on *Airplane mode*, raise an expense with a photo
+  and choose Submit. It is saved as *Waiting to send*. Switch airplane mode off: within about 30 seconds it is sent once.
+  Close and reopen the app while a claim waits: it is still there. The app needs a connection to sign in, so keep the
+  connection on while reopening, or let the claim wait while you reopen.
+- **Several people on one phone**: *Log out* warns how many claims are not sent; they stay on the phone, encrypted, and are
+  sent only when the same person signs in again. Another person never sees them.
+- **HEIC and WebP**: use a real phone with HEIC photos switched on (camera settings) and pick one from the gallery. The
+  bill that reaches the server is always a jpg, at most 2000 pixels on the long side. A PDF is sent unchanged.
+- The emulator camera shows a test scene; that is enough to see the preview, Retake and Remove.
+
 ## 8. Troubleshooting
 
 | Problem | Fix |

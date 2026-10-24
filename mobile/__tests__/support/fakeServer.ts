@@ -21,6 +21,8 @@ export interface FakeReply {
   /** Raw bytes to send instead of a JSON body (an image), with the headers the test sets. */
   rawBody?: Uint8Array;
   headers?: Record<string, string>;
+  /** The server acted but its answer never reached the phone (a lost reply): the request fails like a dropped connection. */
+  drop?: boolean;
 }
 
 /** One part of a multipart upload as the fake server records it (spec 033: a check-in photo). */
@@ -102,6 +104,7 @@ export class FakeServer {
       request.params = matched?.params ?? {};
       this.calls.push(request);
       const reply: FakeReply = matched ? await matched.handler(request) : { status: 404, body: { message: "not found" } };
+      if (reply.drop) throw new TypeError("Network request failed");
       if (reply.status === 204) return new Response(null, { status: 204, headers: reply.headers });
       if (reply.rawBody) {
         return new Response(reply.rawBody as unknown as BodyInit, { status: reply.status, headers: reply.headers });

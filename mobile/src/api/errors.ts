@@ -3,6 +3,8 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status?: number,
+    /** The claims a duplicate warning (409) lists; empty for every other answer. */
+    readonly matches: string[] = [],
   ) {
     super(message);
     this.name = new.target.name;
