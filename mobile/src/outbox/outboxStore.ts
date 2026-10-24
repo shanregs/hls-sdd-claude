@@ -105,7 +105,7 @@ export interface ListedItems {
 export async function listItems(owner: string): Promise<ListedItems> {
   const items: OutboxItem[] = [];
   const unreadable: string[] = [];
-  let names: string[] = [];
+  let names: string[];
   try {
     names = await FileSystem.readDirectoryAsync(ownerDir(owner));
   } catch {
@@ -138,7 +138,7 @@ export async function readBill(owner: string, itemId: string, localId: string): 
 }
 
 /**
- * Decrypts a photo to a temporary file in the cache for an upload (the upload needs a file address), runs `use`, and
+ * Decrypts a photo to a temporary file in the cache for an upload (the upload needs a file address), runs `send`, and
  * deletes the temporary file afterwards, whether or not the upload worked.
  */
 export async function withBillFile<T>(
@@ -146,13 +146,13 @@ export async function withBillFile<T>(
   itemId: string,
   localId: string,
   fileName: string,
-  use: (uri: string) => Promise<T>,
+  send: (uri: string) => Promise<T>,
 ): Promise<T> {
   const plain = await readBill(owner, itemId, localId);
   const temp = `${FileSystem.cacheDirectory}outbox-${Crypto.randomUUID()}-${fileName}`;
   await FileSystem.writeAsStringAsync(temp, toBase64(plain), { encoding: FileSystem.EncodingType.Base64 });
   try {
-    return await use(temp);
+    return await send(temp);
   } finally {
     await FileSystem.deleteAsync(temp, { idempotent: true }).catch(() => undefined);
   }
