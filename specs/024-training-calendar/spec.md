@@ -17,6 +17,11 @@ No questions were asked. The defaults below were taken from the project document
 - Q: Which training is in this spec? → A: Weekend refresher sessions (open to register) and the standing monthly sessions (assigned). The one-month induction for new recruits stays in spec 016; this spec shows it as read-only history only.
 - Q: Is training paid? → A: No. Decided D2 (2026-10-05): training is unpaid. There is no stipend field, and payroll pays nothing for training days.
 
+### Session 2026-10-24
+
+- Q: Who may mark attendance for a training session? → A: Admin and Director for any session, and a Manager for the Teachers
+  placed under them. A Manager's own training attendance is still recorded by Admin or Director.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Schedule Weekend Refresher Sessions and Teachers Register (Priority: P1) 🎯 MVP
@@ -79,7 +84,7 @@ An Admin or Director assigns specific Teachers and Managers to a monthly session
 
 ### User Story 4 - Record Who Attended: Expected Versus Attended (Priority: P1)
 
-On the session day, the Admin or Director records attendance for the session's roster: Present, Absent (with a reason) or Excused, with a half day allowed for part attendance. A Teacher's Present mark is written as a training-day mark into their attendance record (spec 008) so it joins the monthly "training days attended" figure; a Manager's attendance is kept in the training register and is available to Manager attendance (spec 032). The session shows expected (assigned plus registered) against attended, with a count of each outcome. A mark can be corrected later; the earlier value stays in history.
+On the session day, the Admin or Director (or a Manager, for the Teachers placed under them) records attendance for the session's roster: Present, Absent (with a reason) or Excused, with a half day allowed for part attendance. A Teacher's Present mark is written as a training-day mark into their attendance record (spec 008) so it joins the monthly "training days attended" figure; a Manager's attendance is kept in the training register and is available to Manager attendance (spec 032). The session shows expected (assigned plus registered) against attended, with a count of each outcome. A mark can be corrected later; the earlier value stays in history.
 
 **Why this priority**: Expected versus attended is the measurable result of the module and feeds the training-day figures and the exceptions list.
 
@@ -195,7 +200,7 @@ Training sessions are planned activities. The training module exposes them throu
 
 **Attendance, expected versus attended**
 
-- **FR-014**: Admin and Director MUST be able to record, per session, one outcome per person on the roster: Present (whole or half day), Absent with a reason, or Excused with a reason; and to add walk-ins as Present.
+- **FR-014**: Admin and Director MUST be able to record, per session, one outcome per person on the roster: Present (whole or half day), Absent with a reason, or Excused with a reason; and to add walk-ins as Present. A Manager MUST be able to do the same only for Teachers placed under them (and to add them as walk-ins), and MUST NOT record or change attendance for other people, including their own.
 - **FR-015**: The system MUST show for every session the counts of expected (assigned plus registered), attended, absent, excused and walk-ins, and the attended-versus-expected rate for assigned people.
 - **FR-016**: A Teacher's Present outcome MUST be written as a training-day mark (whole or half) in the attendance records of spec 008, with no School, using the existing training status code; corrections MUST update that mark and keep the earlier value in history. Spec 008's month lock and re-open rules MUST apply.
 - **FR-017**: A Manager's Present outcome MUST be kept in the training register and MUST be available to Manager attendance (spec 032) to show the day as a training field day; this spec MUST NOT write into Manager attendance records itself (see Open Questions).
@@ -240,11 +245,11 @@ Training sessions are planned activities. The training module exposes them throu
 | -------- | --------------------- | --------------- | ---------- |
 | Admin    | OPERATIONS → Training Calendar, Training Exceptions | View, Create, Edit, Delete (drafts), Export | Org-wide |
 | Director | OPERATIONS → Training Calendar, Training Exceptions | View, Create, Edit, Delete (drafts), Export | Org-wide |
-| Manager (Zone Manager) | MY WORK → My Training (own required sessions, own Teachers' attendance and exceptions, own history) | View | Assigned (their Teachers) and own |
+| Manager (Zone Manager) | MY WORK → My Training (own required sessions, own Teachers' attendance and exceptions, own history) | View; record attendance for own Teachers | Assigned (their Teachers) and own |
 | Teacher  | MY TRAINING → Upcoming Training, My Training History | View; register and cancel own registration | Own |
 | System   | none | none | None |
 
-**New permission keys**: `TRAINING` (`VIEW`, `CREATE`, `EDIT`, `DELETE`, `EXPORT`: sessions, patterns, assignments, attendance, exceptions) and `TRAINING_REGISTRATION` (`VIEW`, `CREATE`, `EDIT`: a Teacher's own registration and history). Seeded: Admin and Director have `TRAINING` in full; the Zone Manager has `TRAINING` `VIEW` scoped as above and no write action; the Teacher has `TRAINING_REGISTRATION` `VIEW`, `CREATE`, `EDIT` on own records; System has neither. Only Admin, Director and System edit the role-to-permission matrix. The constitution's Default role access matrix gets a Training row when this spec merges.
+**New permission keys**: `TRAINING_ATTENDANCE` (`VIEW`, `EDIT`: record attendance for Teachers placed under the Manager), `TRAINING` (`VIEW`, `CREATE`, `EDIT`, `DELETE`, `EXPORT`: sessions, patterns, assignments, attendance, exceptions) and `TRAINING_REGISTRATION` (`VIEW`, `CREATE`, `EDIT`: a Teacher's own registration and history). Seeded: Admin and Director have `TRAINING` in full; the Zone Manager has `TRAINING` `VIEW` scoped as above and `TRAINING_ATTENDANCE` `VIEW` and `EDIT` limited to Teachers placed under them, and no other write action; the Teacher has `TRAINING_REGISTRATION` `VIEW`, `CREATE`, `EDIT` on own records; System has neither. Only Admin, Director and System edit the role-to-permission matrix. The constitution's Default role access matrix gets a Training row when this spec merges.
 
 ## Success Criteria *(mandatory)*
 
@@ -269,7 +274,7 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 - **Module**: the `training` module (already planned by 016 for induction) holds sessions, patterns, assignments, attendance and exceptions; it reads Teachers, Managers, Schools and Zones only through the public interfaces of spec 005, and writes training-day marks to spec 008 only through its public interface.
 - **Weekend refresher is open registration; monthly session is assigned**; either type may also have assignments (US3 scenario 7) **(open)**.
 - **Assignment is a snapshot** of a group on the day made, not a live rule **(open)**.
-- **Who records attendance**: Admin and Director only in version 1 **(open)**.
+- **Who records attendance**: Admin and Director for any session; a Manager for the Teachers placed under them. A Manager's own attendance is recorded by Admin or Director.
 - **Teacher attendance goes to 008 as a training-day mark with no School**, following the 016 pattern; **Manager** training attendance is kept in the training register and read by spec 032 rather than written into it **(open)**.
 - **Clash with school attendance on the same day**: warn the user and let the half-day rules of spec 008 decide; no automatic overwrite **(open)**.
 - **Non-compliance** means an assigned person marked Absent; registered no-shows are only shown **(open)**. The repeat threshold (2 in 6 months) and the reminder times (2 days and 1 day) are defaults held in System Settings. The 7-day missing-attendance flag is a default.
@@ -282,16 +287,15 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 
 ## Open Questions for the User
 
-1. **Who marks attendance?** Admin and Director only (default), or also the trainer or the Manager of the Teachers?
-2. **Manager training attendance**: keep it in the training register and let 032 read it (default), or write a training-type Field day into Manager attendance (032) directly?
-3. **Assignment on open sessions**: may an Admin also assign people to an open weekend refresher, making them Required (default: yes), or are assignments for monthly sessions only?
-4. **Group assignment**: a snapshot on the day made (default), or a live rule that follows the group (new joiners added automatically)?
-5. **Clash with school attendance**: when a Teacher is already marked Present at school on the training day, warn and follow 008's half-day rule (default), or block, or split automatically?
-6. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
-7. **Repeat non-compliance**: is "2 in 6 months" right, and should it create a task for the Manager (via spec 025) or only mark the list (default)?
-8. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
-9. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
-10. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
-11. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
-12. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
-13. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
+1. **Manager training attendance**: keep it in the training register and let 032 read it (default), or write a training-type Field day into Manager attendance (032) directly?
+2. **Assignment on open sessions**: may an Admin also assign people to an open weekend refresher, making them Required (default: yes), or are assignments for monthly sessions only?
+3. **Group assignment**: a snapshot on the day made (default), or a live rule that follows the group (new joiners added automatically)?
+4. **Clash with school attendance**: when a Teacher is already marked Present at school on the training day, warn and follow 008's half-day rule (default), or block, or split automatically?
+5. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
+6. **Repeat non-compliance**: is "2 in 6 months" right, and should it create a task for the Manager (via spec 025) or only mark the list (default)?
+7. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
+8. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
+9. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
+10. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
+11. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
+12. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
