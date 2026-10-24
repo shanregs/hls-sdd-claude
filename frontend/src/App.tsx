@@ -70,6 +70,7 @@ import { LeaveManagementPage } from "./features/leave/LeaveManagementPage";
 import { NotificationsPage } from "./features/notifications/NotificationsPage";
 import { ContractsListPage } from "./features/schoolbilling/ContractsListPage";
 import { SchoolContractPage } from "./features/schoolbilling/SchoolContractPage";
+import { MouApprovalsPage } from "./features/schoolbilling/MouApprovalsPage";
 import { CandidatesPage } from "./features/recruitment/CandidatesPage";
 import { DriveDetailPage } from "./features/recruitment/DriveDetailPage";
 import { DrivesPage } from "./features/recruitment/DrivesPage";
@@ -615,6 +616,14 @@ export function App() {
           element={
             <RouteGuard>
               <ContractsListPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/school-contracts/approvals"
+          element={
+            <RouteGuard>
+              <MouApprovalsPage />
             </RouteGuard>
           }
         />

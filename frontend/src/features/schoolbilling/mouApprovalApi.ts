@@ -7,7 +7,7 @@ import {
   type AuthFetch,
   type PageOf,
 } from "../common/masterDataApi";
-import type { SalaryMode } from "./schoolContractsApi";
+import type { ContractRow, SalaryMode } from "./schoolContractsApi";
 
 /** Spec 031 contracts/mou-approval-api.md. Dates are ISO; history times are instants. */
 
@@ -225,11 +225,16 @@ export function rejectMou(
   });
 }
 
+export interface AmendResult {
+  approval: Approval;
+  contract: ContractRow;
+}
+
 export function amendMouTerms(
   f: AuthFetch,
   contractId: string,
   input: AmendTermsInput,
-): Promise<ApiResult<Approval>> {
+): Promise<ApiResult<AmendResult>> {
   return sendJson(f, "PATCH", `${BASE}/contracts/${contractId}/terms`, input);
 }
 

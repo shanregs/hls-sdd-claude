@@ -20,6 +20,7 @@ import { useGrantedActions } from "../common/useGrantedActions";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { formatDate, formatRupees, todayIso } from "../teachers/formatters";
 import { ContractStatusChip } from "./ContractStatusChip";
+import { MouApprovalPanel } from "./MouApprovalPanel";
 import { MapTeachersDialog, type MappableTeacher } from "./MapTeachersDialog";
 import { MouFormDialog, type MouInitial } from "./MouFormDialog";
 import {
@@ -308,7 +309,12 @@ export function SchoolContractPage() {
             History
           </Typography>
           {history.map((c) => (
-            <ContractCard key={c.id} contract={c} heading="Earlier contract" />
+            <ContractCard
+              key={c.id}
+              contract={c}
+              heading="Earlier contract"
+              onTermsChanged={() => void load()}
+            />
           ))}
         </>
       )}
@@ -406,10 +412,12 @@ function ContractCard({
   contract,
   heading,
   actions,
+  onTermsChanged,
 }: {
   contract: ContractRow;
   heading: string;
   actions?: React.ReactNode;
+  onTermsChanged?: () => void;
 }) {
   const hls = contract.signatories.filter((s) => s.party === "HLS");
   const school = contract.signatories.filter((s) => s.party === "SCHOOL");
@@ -484,6 +492,12 @@ function ContractCard({
           <Stack direction="row" spacing={1}>
             {actions}
           </Stack>
+        )}
+        {contract.approval && contract.state === "ACTIVE" && (
+          <MouApprovalPanel
+            contract={contract}
+            onTermsChanged={onTermsChanged ?? (() => undefined)}
+          />
         )}
       </Stack>
     </Paper>
