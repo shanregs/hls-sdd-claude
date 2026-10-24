@@ -24,5 +24,13 @@ interface InductionBatchRepository extends JpaRepository<InductionBatch, UUID> {
             """)
     List<InductionBatch> openFrom(@Param("today") LocalDate today);
 
+    /** Batches that have not been cancelled and end between the dates (inclusive). */
+    @Query("""
+            select b from InductionBatch b
+            where b.status <> 'CANCELLED' and b.endsOn between :from and :to
+            order by b.endsOn, b.startsOn
+            """)
+    List<InductionBatch> endingBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     List<InductionBatch> findAllByOrderByStartsOnDesc();
 }

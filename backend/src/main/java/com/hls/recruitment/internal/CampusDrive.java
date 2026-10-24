@@ -55,6 +55,9 @@ public class CampusDrive {
     @Column(name = "user_id")
     private Set<UUID> interviewers = new HashSet<>();
 
+    @Column(name = "held_on")
+    private LocalDate heldOn;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -118,6 +121,10 @@ public class CampusDrive {
         return interviewers;
     }
 
+    public LocalDate getHeldOn() {
+        return heldOn;
+    }
+
     public Long getVersion() {
         return version;
     }
@@ -131,8 +138,9 @@ public class CampusDrive {
         this.interviewers.addAll(newInterviewers);
     }
 
-    public void markHeld() {
+    public void markHeld(LocalDate heldOn) {
         this.status = DriveStatus.HELD;
+        this.heldOn = heldOn;
     }
 
     public void cancel(String reason) {

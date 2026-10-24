@@ -1,0 +1,3 @@
+$kind: collection
+description: "Teacher observation and performance (spec 026). Observations with an optional Principal permission, Principal feedback, planned observations (Observation tasks), performance issues with corrective actions and referrals. Admin, Director and Manager: View, Create, Edit; a Manager reaches only Teachers placed at their Schools; Teacher and System get 403 on every endpoint. Run Password Login first. Collection variables: teacherId (shared), observationId and observationVersion, feedbackId and feedbackVersion, planId and planVersion, issueId and issueVersion."
+order: 26000

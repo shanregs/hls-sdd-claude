@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cost Per School
+description: "Approved Marketing plus Travel and Fuel linked to marketing visits, meetings, calls or campus drives, over Schools won in the period. state is OK or NO_SCHOOLS. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/costs/per-school?from=2026-10-01&to=2026-10-31&zoneId="
+method: GET
+order: 2000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Add Bill
+description: "Multipart form field file: jpg, png or pdf, at most 10 MB, at most 5 bills; only on a Draft or Rejected claim. Needs MY_EXPENSES.EDIT."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}/bills"
+method: POST
+body:
+  type: form-data
+  content:
+    - key: file
+      type: file
+      value: ""
+order: 10000

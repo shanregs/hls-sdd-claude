@@ -1,0 +1,17 @@
+$kind: http-request
+name: Record Paid Outside Payroll
+description: "Records an Approved, personally paid claim as paid outside payroll: paidOn (not in the future), mode CASH, BANK_TRANSFER, UPI or OTHER, reference up to 100 characters. Withdraws the payroll offer. Needs EXPENSES.PROCESS (Admin)."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}/record-paid"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 2,
+      "paidOn": "2026-10-22",
+      "mode": "BANK_TRANSFER",
+      "reference": "UTR123456"
+    }
+order: 7000

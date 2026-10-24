@@ -2,6 +2,7 @@ package com.hls.payroll.run.internal;
 
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.files.api.FileStore;
+import com.hls.payroll.api.PayrollAdjustmentApplied;
 import com.hls.payroll.api.PayrollRunApproved;
 import com.hls.payroll.run.internal.RunViews.RunView;
 import com.hls.school.api.ChangeRecorder;
@@ -195,7 +196,7 @@ public class ApprovalService {
             payslips.save(new Payslip(slip.lineId(), runId, file.id(), now));
         }
         recordPaidMonth(run, month, snapshot);
-        markAdjustmentsApplied(runId, snapshot);
+        markAdjustmentsApplied(run, snapshot);
 
         run.approve(actor, now);
         runs.flush();
@@ -220,7 +221,8 @@ public class ApprovalService {
         }
     }
 
-    private void markAdjustmentsApplied(UUID runId, Snapshot snapshot) {
+    private void markAdjustmentsApplied(PayRun run, Snapshot snapshot) {
+        UUID runId = run.getId();
         List<UUID> lineIds = snapshot.slips().stream().map(Slip::lineId).toList();
         if (lineIds.isEmpty()) {
             return;
@@ -231,7 +233,13 @@ public class ApprovalService {
                 .stream()
                 .collect(Collectors.toMap(PayAdjustment::getId, a -> a));
         for (LineAdjustment copy : copies) {
-            byId.get(copy.getAdjustmentId()).apply(runId, copy.getLineId());
+            PayAdjustment adjustment = byId.get(copy.getAdjustmentId());
+            adjustment.apply(runId, copy.getLineId());
+            if (adjustment.getSourceRef() != null) {
+                // spec 015: the module that asked for the adjustment settles its own record in this same transaction
+                publisher.publishEvent(new PayrollAdjustmentApplied(
+                        adjustment.getSourceRef(), adjustment.getKind().name(), runId, run.getMonth().atDay(1)));
+            }
         }
     }
 }

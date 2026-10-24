@@ -1,5 +1,6 @@
 package com.hls.recruitment.internal;
 
+import com.hls.designation.api.BusinessDate;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.identity.user.Role;
@@ -67,6 +68,8 @@ public class DriveService {
     private final com.hls.identity.user.RoleAssignmentRepository roleAssignments;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final DriveDateChangeRepository dateChanges;
+    private final BusinessDate businessDate;
 
     public DriveService(
             CampusDriveRepository drives,
@@ -75,7 +78,11 @@ public class DriveService {
             AppUserRepository users,
             com.hls.identity.user.RoleAssignmentRepository roleAssignments,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            DriveDateChangeRepository dateChanges,
+            BusinessDate businessDate) {
+        this.dateChanges = dateChanges;
+        this.businessDate = businessDate;
         this.drives = drives;
         this.colleges = colleges;
         this.candidates = candidates;
@@ -150,6 +157,7 @@ public class DriveService {
         changes.record(actor, "CAMPUS_DRIVE", id, "venue", drive.getVenue(), venue);
         changes.record(actor, "CAMPUS_DRIVE", id, "season", drive.getSeasonLabel(), season);
         changes.record(actor, "CAMPUS_DRIVE", id, "interviewers", sortedIds(drive.getInterviewers()), sortedIds(interviewers));
+        recordDateMoves(actor, drive, dates);
         drive.change(season, venue, dates, interviewers);
         drives.saveAndFlush(drive);
         return views(List.of(drive)).get(0);
@@ -169,7 +177,7 @@ public class DriveService {
                 if (before == DriveStatus.CANCELLED) {
                     throw new ConflictException("A cancelled drive cannot be marked held.");
                 }
-                drive.markHeld();
+                drive.markHeld(businessDate.today());
             }
             case "CANCELLED" -> {
                 String reason = Texts.clean(request.reason(), 300, "Reason");
@@ -183,6 +191,21 @@ public class DriveService {
         drives.saveAndFlush(drive);
         changes.record(actor, "CAMPUS_DRIVE", id, "status", before, drive.getStatus());
         return views(List.of(drive)).get(0);
+    }
+
+    /**
+     * Spec 035: a date change counts as a move only when the removed and added dates are equal in number; both sets are
+     * sorted and paired in date order. Adding or removing a date alone writes nothing.
+     */
+    private void recordDateMoves(UUID actor, CampusDrive drive, Set<LocalDate> newDates) {
+        List<LocalDate> removed = drive.getDates().stream().filter(d -> !newDates.contains(d)).sorted().toList();
+        List<LocalDate> added = newDates.stream().filter(d -> !drive.getDates().contains(d)).sorted().toList();
+        if (removed.isEmpty() || removed.size() != added.size()) {
+            return;
+        }
+        for (int i = 0; i < removed.size(); i++) {
+            dateChanges.save(new DriveDateChange(drive.getId(), removed.get(i), added.get(i), actor, clock.instant()));
+        }
     }
 
     CampusDrive find(UUID id) {

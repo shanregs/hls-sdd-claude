@@ -1,0 +1,14 @@
+$kind: http-request
+name: Approve Claim
+description: "Approves a Submitted claim. 403 for the claimant (you raised this claim); 409 naming who decided and when if already decided. A company-paid claim becomes Paid by company; a personally paid one is offered to the claimant's next pay run. Needs EXPENSES.APPROVE."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 1
+    }
+order: 4000

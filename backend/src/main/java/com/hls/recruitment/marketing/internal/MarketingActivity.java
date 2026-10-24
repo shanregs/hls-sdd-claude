@@ -60,6 +60,9 @@ public class MarketingActivity {
     @Column(name = "user_id")
     private Set<UUID> attendees = new HashSet<>();
 
+    @Column(name = "completed_on")
+    private LocalDate completedOn;
+
     @Column(name = "created_by", nullable = false)
     private UUID createdBy;
 
@@ -140,12 +143,17 @@ public class MarketingActivity {
         return createdBy;
     }
 
+    public LocalDate getCompletedOn() {
+        return completedOn;
+    }
+
     public Long getVersion() {
         return version;
     }
 
-    public void complete(String outcome, String notes, LocalDate followUpOn) {
+    public void complete(String outcome, String notes, LocalDate followUpOn, LocalDate completedOn) {
         this.status = ActivityStatus.COMPLETED;
+        this.completedOn = completedOn;
         this.outcome = outcome;
         if (notes != null) {
             this.notes = notes;

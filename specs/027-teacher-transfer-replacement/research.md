@@ -153,3 +153,10 @@ effect, the same set.
 
 Pay, billing, exit, SMS and mobile stay out of scope. Payroll's monthly divisor behaviour in a transfer month is unchanged
 (spec assumption); this spec only guarantees consecutive non-overlapping spans.
+
+### Names confirmed at implementation (T001)
+
+- `teacher.api.TeacherPlacementSource` (`historyOf`, `currentOf`, `spansOverlapping`, `teachersAssignedDuring`), `schoolbilling.internal.AssignmentService` (`assign`, `cancelPending`, `endForExit`; `contractFor` and `resolvePosition` made package-private for reuse by `PlacementMovesImpl`), `SchoolContracts.occupancyOf`.
+- `attendance_mark`, `attendance_mark_history`, `attendance.internal.TeacherMonthLock.isLocked`; `substitution.api.SubstitutionNeeded` and `SubstitutionEnded`.
+- `organization.api.ScopeQueries` and `ManagerQueries`, `school.api.ChangeRecorder`, `designation.api.BusinessDate`.
+- Highest migration on `main` was V60 (026); 035 took V70, so this spec uses **V80**. REST base path follows the repo convention `/api/v1/transfers` (the contract says `/api/transfers`).

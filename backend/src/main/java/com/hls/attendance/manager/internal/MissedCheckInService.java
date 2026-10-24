@@ -10,7 +10,10 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -133,6 +136,51 @@ public class MissedCheckInService {
             }
         }
         return raised;
+    }
+
+    /**
+     * Working days of the month on which each given Manager missed the check-in, counting only days already past (today
+     * once the cut-off has passed). One query for the records and one for the working days, however many Managers.
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, Long> missedDaysInMonth(YearMonth month, Collection<UUID> managerIds) {
+        LocalDate today = business.today();
+        LocalDate last = month.atEndOfMonth().isAfter(today) ? today : month.atEndOfMonth();
+        if (managerIds.isEmpty() || last.isBefore(month.atDay(1))) {
+            return Map.of();
+        }
+        boolean todayCounts = last.equals(today) && now().isAfter(cutoff());
+        LocalDate through = last.equals(today) && !todayCounts ? today.minusDays(1) : last;
+        List<LocalDate> working = workingCalendar.workingDays(null, month.atDay(1), through);
+        if (working.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, ManagerEmployment> employment = managers.employment(managerIds);
+        Map<String, ManagerDay> rows = new HashMap<>();
+        for (ManagerDay d : days.findByManagerIdInAndDayDateBetween(managerIds, month.atDay(1), through)) {
+            rows.put(d.getManagerId() + "|" + d.getDayDate(), d);
+        }
+        Map<UUID, Long> result = new HashMap<>();
+        for (UUID id : managerIds) {
+            long missed = 0;
+            for (LocalDate date : working) {
+                if (!employedOn(employment.get(id), date)) {
+                    continue;
+                }
+                ManagerDay row = rows.get(id + "|" + date);
+                if (row == null || (!row.hasCheckIn() && !row.hasLeave())) {
+                    missed++;
+                }
+            }
+            result.put(id, missed);
+        }
+        return result;
+    }
+
+    /** True when the date is not a working day (weekly off or holiday). */
+    @Transactional(readOnly = true)
+    public boolean isNonWorkingDay(LocalDate date) {
+        return workingCalendar.workingDays(null, date, date).isEmpty();
     }
 
     // ------------------------------------------------------------------ helpers

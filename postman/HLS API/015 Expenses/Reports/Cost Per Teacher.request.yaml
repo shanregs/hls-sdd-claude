@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cost Per Teacher
+description: "Approved Training Stay of batches ending in the period over the Teachers who completed them. state is OK or NO_TEACHERS. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/costs/per-teacher?from=2026-10-01&to=2026-10-31&batchId="
+method: GET
+order: 3000

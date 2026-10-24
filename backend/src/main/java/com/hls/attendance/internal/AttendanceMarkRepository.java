@@ -13,6 +13,8 @@ public interface AttendanceMarkRepository extends JpaRepository<AttendanceMark, 
 
     Optional<AttendanceMark> findByTeacherIdAndMarkDate(UUID teacherId, LocalDate markDate);
 
+    List<AttendanceMark> findByTeacherIdAndMarkDateGreaterThanEqual(UUID teacherId, LocalDate from);
+
     List<AttendanceMark> findByTeacherIdAndMarkDateBetween(UUID teacherId, LocalDate from, LocalDate to);
 
     List<AttendanceMark> findByTeacherIdInAndMarkDateBetween(

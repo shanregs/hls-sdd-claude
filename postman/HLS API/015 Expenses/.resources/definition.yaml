@@ -1,0 +1,3 @@
+$kind: collection
+description: "Expenses (spec 015): My Expenses (raise, edit, submit, withdraw, bills, links), Review (queue, approve, reject, reverse, record paid outside payroll, remove a bill), Budgets (budget versus actual, set, history) and Reports (pending ageing, cost per School and per Teacher, CSV). Needs EXPENSES (Admin and Director only) and MY_EXPENSES (Admin, Director, Manager, Teacher); System gets 403 everywhere. Collection variables: claimId, billId, budgetId, zoneId, activityId, clientRequestId."
+order: 15000

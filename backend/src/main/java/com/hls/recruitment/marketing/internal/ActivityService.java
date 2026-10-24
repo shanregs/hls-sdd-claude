@@ -1,5 +1,6 @@
 package com.hls.recruitment.marketing.internal;
 
+import com.hls.designation.api.BusinessDate;
 import com.hls.files.api.FileStore;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
@@ -91,6 +92,7 @@ public class ActivityService {
     private final ApplicationEventPublisher events;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public ActivityService(
             MarketingActivityRepository activities,
@@ -105,7 +107,9 @@ public class ActivityService {
             ObjectProvider<DriveActivities> drives,
             ApplicationEventPublisher events,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
+        this.businessDate = businessDate;
         this.activities = activities;
         this.dateHistory = dateHistory;
         this.attachments = attachments;
@@ -193,7 +197,7 @@ public class ActivityService {
         if (followUp != null && followUp.isBefore(activity.getActivityDate())) {
             throw new InvalidInputException("The follow-up date cannot be before the visit.");
         }
-        activity.complete(outcome, Texts.clean(request.notes(), 1000, "Notes"), followUp);
+        activity.complete(outcome, Texts.clean(request.notes(), 1000, "Notes"), followUp, businessDate.today());
         activities.saveAndFlush(activity);
         changes.record(actor, "MARKETING_ACTIVITY", id, "status", ActivityStatus.PLANNED, ActivityStatus.COMPLETED);
         changes.record(actor, "MARKETING_ACTIVITY", id, "followUpOn", null, followUp);

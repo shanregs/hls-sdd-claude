@@ -52,7 +52,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void teacherSeesMyAttendanceInTheOperationsSlotBeforeAccount() {
         assertThat(sectionsFor(Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "OPERATIONS", "LEAVE", "ACCOUNT");
     }
 
     @Test

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Teacher Movements
+description: "A Teacher's placement lines. Needs VIEW."
+url: "{{baseUrl}}/api/v1/transfers/teachers/{{teacherId}}/movements"
+method: GET
+order: 12000
