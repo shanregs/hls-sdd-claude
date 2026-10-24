@@ -12,7 +12,7 @@
 
 ### Session 2026-10-23
 
-Decided in advance (roadmap decision D5 and the 012 spec); the rest are documented defaults listed under "Open questions".
+Decided in advance (roadmap decision D5 and the 012 spec); the rest were settled with the user on 2026-10-24.
 
 - Q: Who approves a signed MoU? → A: The **Director or the Zone Manager** (D5). The audit trail records the approver. An Admin cannot approve.
 - Q: Which Zone Manager? → A: The Zone Manager of the MoU's School (spec 005), read from there. A Zone Manager cannot approve a MoU of a School outside their Zone.
@@ -27,6 +27,12 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 - Q: Can a Director approve a MoU they recorded and submitted themselves? → A: Yes. It is allowed, and the audit trail records both actions.
 - Q: Should approval block anything here, such as Teacher mapping or attendance? → A: No. Nothing is blocked; billing, incentives and marketing read the state and apply their own rules.
 - Q: Should the Admin also be told when a MoU is decided? → A: Yes. Approvers are told on submission, the submitter on the decision, and Admin also on approval or rejection (not on submission).
+
+### Session 2026-10-24 (second round)
+
+- Q: Is a signed document mandatory before submission? -> A: No, optional. A MoU may be submitted and approved without one; the state "approved without document" makes the gap visible to billing (022), incentives (030) and the School Contracts list.
+- Q: File limits? -> A: PDF, JPG and PNG, up to 10 MB each.
+- Q: Can the approver edit terms found wrong during approval? -> A: Yes, commercial terms only (amounts, dates, rates), audited with old and new values; not signatories or mapping. See FR-012.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -50,7 +56,7 @@ After a MoU is recorded (spec 012), an Admin or Director uploads the signed docu
 
 ### User Story 2 - Approve or reject a MoU (Priority: P1)
 
-A MoU that has its signed document is submitted for approval. The Director or the School's Zone Manager reviews the terms and the document and approves it, or rejects it with a reason. A rejected MoU goes back to the Admin or Director who recorded it; they correct the document (or, when the terms are wrong, record a new MoU under spec 012) and resubmit it. Every step is audited with the approver.
+A MoU is submitted for approval, normally with its signed document attached (the document is optional). The Director or the School's Zone Manager reviews the terms and the document and approves it, or rejects it with a reason. A rejected MoU goes back to the Admin or Director who recorded it; they correct the document and resubmit it. The approver may also correct the commercial terms during approval (FR-012). Every step is audited with the approver.
 
 **Why this priority**: D5 makes approval the control over contracts that billing and incentives rely on.
 
@@ -58,7 +64,7 @@ A MoU that has its signed document is submitted for approval. The Director or th
 
 **Acceptance Scenarios**:
 
-1. **Given** a MoU with a current document, **When** an Admin or Director submits it, **Then** its status is "pending approval" and the approvers can see it in their pending list.
+1. **Given** a MoU with real terms (a document is optional), **When** an Admin or Director submits it, **Then** its status is "pending approval" and the approvers can see it in their pending list.
 2. **Given** a MoU with no document, **When** it is submitted, **Then** it is refused with "attach the signed document first".
 3. **Given** a pending MoU, **When** the Director or the School's Zone Manager approves it, **Then** it is "approved" with the approver and time recorded.
 4. **Given** a pending MoU, **When** an approver rejects it, **Then** a reason is required, the status is "rejected", and the reason is shown to the person who submitted it.
@@ -127,13 +133,13 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 
 **Approval**
 
-- **FR-006**: A MoU MUST carry an approval status: *no document*, *ready to submit* (has a document), *pending approval*, *approved* or *rejected*, following the shared approval pattern (C3).
-- **FR-007**: An Admin or Director MUST be able to submit a MoU for approval only when it has a current document and real terms (not a "MoU pending" placeholder) and is not cancelled.
+- **FR-006**: A MoU MUST carry an approval status: *draft* (not yet submitted, with or without a document), *pending approval*, *approved*, *approved without document* or *rejected*, following the shared approval pattern (C3).
+- **FR-007**: An Admin or Director MUST be able to submit a MoU for approval only when it has real terms (not a "MoU pending" placeholder) and is not cancelled.
 - **FR-008**: Only the Director, or the Zone Manager of the MoU's School, MAY approve or reject (D5). Admin, Teacher and System MUST NOT. Either permitted role's decision settles the MoU.
 - **FR-009**: Rejection MUST require a reason. The reason, the approver and the time MUST be kept and shown to the submitter.
 - **FR-010**: A rejected MoU MUST be resubmittable after the document is corrected; each submission and decision MUST stay in the MoU's approval history.
 - **FR-011**: A decision MUST be taken once: concurrent decisions on the same submission MUST result in exactly one recorded decision.
-- **FR-012**: Approval MUST NOT change the MoU's terms, signatories or mapping (spec 012 rule: a MoU is never edited). When the terms are wrong, a new MoU is recorded and goes through approval on its own.
+- **FR-012**: The approver (Director, or the Zone Manager of the MoU's School) MAY correct the MoU's **commercial terms** (amounts, dates, rates) while it is pending approval. Signatories and the School/Teacher mapping MUST NOT be changed this way. Each change MUST be audited with old and new values and shown in the approval history. This is a deliberate exception to the spec 012 rule that a MoU is never edited; the plan must add a narrowly scoped edit path to 012's Contract and keep it unavailable outside pending approval.
 - **FR-013**: Teacher mapping, attendance and the School Contracts list under spec 012 MUST keep working whatever the approval status is. This spec does not block them.
 
 **Visibility and integration**
@@ -167,7 +173,7 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 ### Measurable Outcomes
 
 - **SC-001**: An Admin can attach a signed document and submit a MoU for approval in under 2 minutes.
-- **SC-002**: No MoU can reach "approved" without a current document and a decision by the Director or the School's Zone Manager; proved by tests for every role.
+- **SC-002**: No MoU can reach "approved" or "approved without document" without a decision by the Director or the School's Zone Manager; proved by tests for every role.
 - **SC-003**: A Zone Manager sees, opens and decides on none of another Zone's MoU documents or approvals; proved by a test for every endpoint, including file download.
 - **SC-004**: Every upload, removal, submission and decision has an audit entry with actor and prior and new values.
 - **SC-005**: Two simultaneous decisions on one submission record exactly one decision.
@@ -184,9 +190,3 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 - A single current document per MoU, with earlier versions kept; multiple unrelated attachments (annexures) are not modelled.
 - Mobile screens, e-signature, generation of MoU text from a template, and expiry or renewal reminders are out of scope.
 - The constitution's default role access matrix gets its row update when this spec merges, as with 012.
-
-## Open questions for the user (defaults used above; for `/speckit-clarify`)
-
-1. **Is a document mandatory for approval?** Default yes (cannot submit without one).
-2. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-3. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
