@@ -27,6 +27,8 @@ No questions were asked. The defaults below were taken from the project document
   the half-day rules of spec 008 decide; nothing is overwritten silently and nothing is blocked.
 - Q: Should repeated unexcused absence create a Manager task or only mark the list? → A: Only mark the person as a repeat on
   the exceptions list (2 unexcused absences in 6 months, set in System Settings); no task is created through spec 025.
+- Q: Web only, or phone screens too? → A: Web only in this spec. Phone screens (register, upcoming training, history) are a
+  later mobile spec on the same server contracts.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -298,7 +300,6 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 3. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
 4. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
 5. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
-6. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
-7. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
-8. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
-9. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
+6. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
+7. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
+8. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
