@@ -140,8 +140,8 @@ migration backfill              -> APPROVED_LEGACY (never changes)
 
 - Submit needs real terms (not RATE_PENDING) and not CANCELLED (FR-007); it needs **no** document (decision 1.7).
 - A new document version on DRAFT, PENDING or REJECTED leaves the status as it is (history entry only); on APPROVED it resets to
-  PENDING and notifies the approvers as a submission; on APPROVED_LEGACY it changes nothing (open item 4).
-- Removing a document never changes the status (open item 2).
+  PENDING and notifies the approvers as a submission; on APPROVED_LEGACY it changes nothing (accepted default, see spec Clarifications).
+- Removing a document never changes the status (accepted default, see spec Clarifications).
 - A cancelled contract can be neither submitted nor decided; its documents stay readable (spec edge case).
 - A MoU that is ended or replaced keeps its approval row; the next MoU has its own (spec edge case).
 - A pending MoU whose contract is cancelled or ended meanwhile: the decision is refused when the contract is CANCELLED
@@ -166,7 +166,7 @@ could disagree).
 
 **Decision**: `PATCH /api/v1/school-contracts/contracts/{id}/terms` (grant `APPROVE`, same scope and lock as a decision, only
 while PENDING). Editable: `rate` (SAME_FOR_ALL), the `salary` of each position (PER_TEACHER; for SAME_FOR_ALL the rate edit
-also sets every position's salary to the new rate), `signedOn`, `endsOn`, and `startsOn` under open item 3. Not editable:
+also sets every position's salary to the new rate), `signedOn`, `endsOn`, and `startsOn` under the accepted start-date rule. Not editable:
 signatories, `teacher_count`, `salary_mode`, titles, the School and the Teacher mapping. The same validations as
 `ContractService.validate` apply (above zero, two decimals, at most 10,000,000, signed date not in the future). Each changed
 field is written to Change History (`CONTRACT`, field, old, new) and one `TERMS_AMENDED` event with the list; the contract and the
@@ -182,7 +182,7 @@ changing it would add or remove positions and break mappings.
 (loses the guarantee for every other case); replace the contract with a new row (loses the pending approval, which the spec
 rules out for this path, and 012's create ends the previous MoU).
 
-Start-date rule (open item 3): `startsOn` may change only if no earlier contract of the School ends on the day before the old
+Start-date rule (accepted default, see spec Clarifications): `startsOn` may change only if no earlier contract of the School ends on the day before the old
 start (otherwise a gap or an overlap would appear, and the exclusion constraint `ex_contract_school_dates` would catch only the
 overlap) and no assignment on the contract's positions starts before the new date. If either fails the answer is a 409 saying
 to reject the MoU and record a new one.

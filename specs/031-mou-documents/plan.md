@@ -122,20 +122,10 @@ public interface is a new `MouApprovals` interface (not a change to `ContractVie
 
 ## Open Items (need a decision, not guessed)
 
-All have a plan default that the tasks follow unless told otherwise; none blocks planning.
+The user accepted the plan defaults for the former items 1 to 4 (recorded in spec.md, Clarifications, "plan defaults accepted"):
+the spec scenario was corrected, removing a document keeps an approved MoU approved, the approver edits signed and end dates (start
+date only under the gapless-chain rule), and a document never changes a legacy MoU's status. Remaining:
 
-1. **Spec text conflict on a mandatory document.** The spec's clarifications (2026-10-24, second round) make the document
-   optional and add the state "approved without document", but User Story 2 scenario 2 ("refused with attach the signed document
-   first") and the story intro ("normally with its signed document") still read as mandatory. The plan follows the clarification:
-   submit never needs a document. The scenario should be corrected in spec.md; the earlier brief that listed "document mandatory
-   before submit" as an open default is superseded by the clarification.
-2. **Removing the current document of an APPROVED MoU.** Plan default: the MoU stays approved and shows "approved without
-   document" (only a replacement resets to pending, FR-002). Alternative: reset to pending. Confirm.
-3. **Which "dates" the approver may edit (FR-012).** Plan default: signed date, end date, and start date only when no Teacher
-   position of the MoU has been filled before the new start and no earlier MoU of the School ends the day before the old start
-   (so the chain of MoUs stays gapless). Otherwise "reject and record a new MoU".
-4. **Documents on a pre-existing MoU.** Plan default: attaching or replacing a document on an "approved (before approval step)"
-   MoU never changes its status (the spec says only that a document can still be attached). Alternative: reset to pending on
-   replacement, as for a newly approved MoU.
-5. **Self approval differs from 015 and 027.** Intentional (clarified, D5). Recorded so a reviewer does not "fix" it to match.
-6. **Migration number.** V100 is a choice inside the free range above V90; re-check at implementation.
+1. **Self approval differs from 015 and 027.** Intentional (clarified, D5). Recorded so a reviewer does not "fix" it to match.
+2. **Migration number.** V100 is a choice inside the free range above V90; re-check at implementation (task T001 and the final
+   merge task).

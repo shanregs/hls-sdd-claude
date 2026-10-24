@@ -34,6 +34,12 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest were settled
 - Q: File limits? -> A: PDF, JPG and PNG, up to 10 MB each.
 - Q: Can the approver edit terms found wrong during approval? -> A: Yes, commercial terms only (amounts, dates, rates), audited with old and new values; not signatories or mapping. See FR-012.
 
+### Session 2026-10-24 (plan defaults accepted)
+
+- Q: Removing the current document of an approved MoU? -> A: The MoU stays approved and shows "approved without document"; only replacing a document resets it to pending.
+- Q: Which dates may the approver edit (FR-012)? -> A: Signed date and end date; the start date only if the chain of the School's MoUs stays gapless and no position was filled before the new start date. Otherwise reject and record a new MoU.
+- Q: Does attaching or replacing a document change a pre-existing MoU's status? -> A: No. An "approved (before approval step)" MoU keeps that status.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Attach the signed MoU document (Priority: P1) 🎯 MVP
@@ -65,7 +71,7 @@ A MoU is submitted for approval, normally with its signed document attached (the
 **Acceptance Scenarios**:
 
 1. **Given** a MoU with real terms (a document is optional), **When** an Admin or Director submits it, **Then** its status is "pending approval" and the approvers can see it in their pending list.
-2. **Given** a MoU with no document, **When** it is submitted, **Then** it is refused with "attach the signed document first".
+2. **Given** a MoU with real terms but no document, **When** it is submitted, **Then** it is accepted as "pending approval" (the document is optional); if approved it shows "approved without document".
 3. **Given** a pending MoU, **When** the Director or the School's Zone Manager approves it, **Then** it is "approved" with the approver and time recorded.
 4. **Given** a pending MoU, **When** an approver rejects it, **Then** a reason is required, the status is "rejected", and the reason is shown to the person who submitted it.
 5. **Given** a rejected MoU, **When** a new document version is uploaded and the MoU is resubmitted, **Then** the status returns to "pending approval" and the earlier rejection stays in the history.
