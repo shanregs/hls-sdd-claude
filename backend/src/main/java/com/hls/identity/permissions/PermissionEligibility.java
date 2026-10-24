@@ -57,7 +57,10 @@ public final class PermissionEligibility {
             PermissionModule.TEACHER_PERFORMANCE,
             PermissionModule.EXPENSES,
             PermissionModule.MY_EXPENSES,
-            PermissionModule.TEACHER_TRANSFERS);
+            PermissionModule.TEACHER_TRANSFERS,
+            PermissionModule.TRAINING,
+            PermissionModule.TRAINING_ATTENDANCE,
+            PermissionModule.TRAINING_REGISTRATION);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -126,6 +129,15 @@ public final class PermissionEligibility {
     static final Map<PermissionModule, Set<Role>> TEACHER_TRANSFERS_MODULES = Map.of(
             PermissionModule.TEACHER_TRANSFERS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
+    /**
+     * Training calendar (spec 024): Admin and Director run it, a Manager may be granted View only; the attendance register is
+     * for the three staff roles; registration is the Teacher's own and nobody else's. System holds none of it.
+     */
+    static final Map<PermissionModule, Set<Role>> TRAINING_MODULES = Map.of(
+            PermissionModule.TRAINING, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.TRAINING_ATTENDANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.TRAINING_REGISTRATION, EnumSet.of(Role.TEACHER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -156,6 +168,13 @@ public final class PermissionEligibility {
         Set<Role> transfersOnly = TEACHER_TRANSFERS_MODULES.get(module);
         if (transfersOnly != null && !transfersOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> trainingOnly = TRAINING_MODULES.get(module);
+        if (trainingOnly != null && !trainingOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        if (role == Role.MANAGER && module == PermissionModule.TRAINING) {
+            return EnumSet.of(PermissionAction.VIEW);
         }
         if (role == Role.ADMIN && module == PermissionModule.TEACHER_TRANSFERS) {
             return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
