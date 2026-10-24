@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -56,6 +56,8 @@ type Rows =
   | { kind: "error"; reason: string }
   | { kind: "ready"; rows: TaskRow[] };
 
+const TASK_VIEWS: TaskView[] = ["today", "upcoming", "overdue", "awaiting", "done", "all"];
+
 /**
  * OPERATIONS -> My Tasks (Manager) or Manager Tasks (Admin, Director), spec 025 US1 and US2: the Today, Upcoming, Overdue,
  * Awaiting verification and Done lists with counts, a create form, and for management filters by Manager and type.
@@ -66,8 +68,15 @@ export function TasksPage() {
   const management = Boolean(
     accessModel?.roles.some((r) => r === "ADMIN" || r === "DIRECTOR"),
   );
-  const [view, setView] = useState<TaskView>("today");
-  const [assignee, setAssignee] = useState("");
+  // The dashboard opens this list with ?view=overdue&assigneeUserId=... (spec 028).
+  const [params] = useSearchParams();
+  const [view, setView] = useState<TaskView>(() => {
+    const wanted = params.get("view");
+    return wanted !== null && TASK_VIEWS.includes(wanted as TaskView)
+      ? (wanted as TaskView)
+      : "today";
+  });
+  const [assignee, setAssignee] = useState(() => params.get("assigneeUserId") ?? "");
   const [type, setType] = useState("");
   const [rows, setRows] = useState<Rows>({ kind: "loading" });
   const [summary, setSummary] = useState<TaskSummary | null>(null);

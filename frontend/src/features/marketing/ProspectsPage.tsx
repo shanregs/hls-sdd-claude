@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -43,7 +43,9 @@ export function ProspectsPage() {
   const actions = useGrantedActions(ROUTE);
   const [state, setState] = useState<State>({ kind: "loading" });
   const [query, setQuery] = useState("");
-  const [stage, setStage] = useState("");
+  // The dashboard opens this list with ?stage=FINAL_STAGE (spec 028).
+  const [params] = useSearchParams();
+  const [stage, setStage] = useState(() => params.get("stage") ?? "");
   const [page, setPage] = useState(0);
   const [adding, setAdding] = useState(false);
 
