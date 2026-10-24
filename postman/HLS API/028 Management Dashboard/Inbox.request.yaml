@@ -1,0 +1,6 @@
+$kind: http-request
+name: Inbox
+description: "Approvals waiting for the caller, oldest first, with totals per kind. Kinds depend on the caller's Approve grants: MANAGER_LEAVE, FORGOTTEN_CHECK_IN, FINAL_STAGE_PROSPECT, PAYROLL_RUN, TASK_VERIFICATION."
+url: "{{baseUrl}}/api/v1/dashboard/inbox?page=0&size=50"
+method: GET
+order: 12000

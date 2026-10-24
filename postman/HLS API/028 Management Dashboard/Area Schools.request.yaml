@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Schools
+description: "Pipeline stages, Final Stage awaiting review, visits, win and loss, demand and supply."
+url: "{{baseUrl}}/api/v1/dashboard/areas/SCHOOLS"
+method: GET
+order: 3000

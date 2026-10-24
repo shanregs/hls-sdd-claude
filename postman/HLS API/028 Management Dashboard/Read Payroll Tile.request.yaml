@@ -1,0 +1,6 @@
+$kind: http-request
+name: Read Payroll Tile
+description: "payroll.locks: Teachers and Managers with attendance locked for the month. 404 without Payroll View."
+url: "{{baseUrl}}/api/v1/dashboard/areas/PAYROLL/tiles/payroll.locks?period=2026-10"
+method: GET
+order: 10000

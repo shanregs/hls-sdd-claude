@@ -1,0 +1,3 @@
+$kind: collection
+description: "Management dashboard (spec 028), read-only. Every tile is granted by its owning module's View grant, so each caller sees only their tiles: Admin and Director see all; a Manager sees only tiles that are not organization-wide and, for attendance and leave tiles, only their own row; Teacher and System get an empty manifest and 404 on every area, tile, managers and inbox request. Payroll tiles need Payroll View. An unknown area, tile or an unreachable Zone is 404; a bad period is 400; no token is 401. There is no write endpoint (405). Areas: MANAGERS, SCHOOLS, RECRUITMENT, TEACHERS, ATTENDANCE_LEAVE, PAYROLL. Collection variables: zoneId."
+order: 28000

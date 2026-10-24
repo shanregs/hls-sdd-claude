@@ -1,0 +1,6 @@
+$kind: http-request
+name: Inbox By Kind
+description: "The inbox narrowed to one kind."
+url: "{{baseUrl}}/api/v1/dashboard/inbox?kind=MANAGER_LEAVE"
+method: GET
+order: 13000
