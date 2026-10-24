@@ -20,8 +20,15 @@ send itself when the signal returns. It adds screens only. Every rule (categorie
 
 ### Session 2026-10-23
 
-No questions were asked in this session. The points below were decided with documented defaults (see Assumptions) and are
-listed under **Open Questions for the User** for confirmation before planning.
+No questions were asked in this session. The points not answered below were decided with documented defaults (see
+Assumptions) and are listed under **Open Questions for the User** for confirmation before planning.
+
+### Session 2026-10-24
+
+- Q: Should Admin and Director be able to approve or reject claims from the phone in version 1? → A: No. Phones raise and
+  track claims only; approvers keep using the web.
+- Q: Does 015 seed My Expenses for the Teacher on the mobile menu, or must 036 add it? → A: 015 seeds it (015 task T006,
+  `NavigationCatalog`); 036 adds no menu entry. 036 depends on 015 being merged.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -131,31 +138,6 @@ no expense entry. Entries and actions come only from the server's menu and `allo
 
 ---
 
-### User Story 5 - Review Pending Claims on the Phone (Priority: P3)
-
-Where the server's menu offers Expenses to the user (Admin and Director), the approver sees submitted claims in their scope,
-oldest first, opens one to see the bill photo, details and link, and approves, or rejects with a required reason. A user
-never sees approve or reject on a claim they raised. Budgets, ageing, cost views, payment recording and export stay on the
-web.
-
-**Why this priority**: useful to approvers on the move but not needed to capture or track claims; it can be dropped without
-affecting Stories 1 to 4.
-
-**Independent Test**: as a Director, open a Submitted claim of a Manager with a bill, view the photo and approve; reject
-another with a reason; confirm neither button appears on the Director's own claim.
-
-**Acceptance Scenarios**:
-
-1. **Given** submitted claims, **When** the approver opens the review list, **Then** they are shown oldest first with
-   claimant, category, area, amount and age.
-2. **Given** a claim opened, **When** the approver views the bill, **Then** the photo or pdf opens full screen with zoom.
-3. **Given** the approver rejects, **When** no reason is entered, **Then** the action is blocked until a reason is given.
-4. **Given** a claim already decided elsewhere, **When** the approver acts, **Then** the server's refusal naming who decided
-   and when is shown in plain language and the list refreshes.
-5. **Given** there is no amount limit in 015, **Then** the app applies no amount limit either.
-
----
-
 ### Edge Cases
 
 - A photo larger than 10 MB after conversion: the app lowers its quality or size until it fits, or refuses with the reason.
@@ -224,46 +206,25 @@ another with a reason; confirm neither button appears on the Director's own clai
   for the Teacher, Manager, Admin and Director; System MUST NOT see any expense entry.
 - **FR-020**: This spec MUST add no new permission keys and no new server rules; it uses `MY_EXPENSES` and `EXPENSES` from 015.
 
-**Review (lowest priority)**
+**Review (out of scope in this version)**
 
-- **FR-021**: Where the server offers Expenses to the user, the app MUST list submitted claims oldest first, show the bill,
-  and let the approver approve or reject (reason required), with buttons driven by `allowedActions`; a user MUST NOT be
-  offered approval of their own claim.
+- **FR-021**: Approving, rejecting and every other review action MUST NOT be on the phone in this version; approvers use the
+  web. The app MUST NOT show the Expenses (review) menu entry even where the server's menu offers it to Admin or Director.
 - **FR-022**: Budget versus actual, ageing, per-School and per-Teacher cost, payment recording, reversal and export MUST NOT
   be on the phone in this version.
-
-**Cross-cutting**
-
-- **FR-023**: Every request MUST carry the device location or the reason it is missing, as in spec 018; location never blocks
-  an action.
-- **FR-024**: Amounts MUST show in rupees with Indian digit grouping and dates as DD/MM/YYYY; screens MUST be readable at
-  large font sizes and usable with a screen reader.
-- **FR-025**: Server refusals, permission refusals and network errors MUST be shown in plain language and MUST NOT lose what
-  the user entered.
-- **FR-026**: OCR or automatic reading of bills, push notifications, other offline features and iOS are out of scope.
-
-### Key Entities
-
-- **Expense claim**: owned by spec 015; the app shows and edits it only through the 015 APIs.
-- **Bill**: an image or pdf stored with the claim in the shared file store; on the phone a bill is first a local file.
-- **Waiting draft**: the phone's own record of a claim not yet accepted by the server: its fields, its photos, its client
-  request identity, its owner, its state (waiting, sending, refused with a reason) and its capture time. It exists only on
-  the phone until the server accepts it.
-- **Link option**: a visit, drive, task or induction batch offered by the server for a category and date.
 
 ## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
 
 | Role | Menu (section → item) | Default actions | Data scope |
 | ---- | --------------------- | --------------- | ---------- |
-| Admin | OPERATIONS → My Expenses; OPERATIONS → Expenses (review list only on the phone) | My Expenses: View, Create, Edit, Delete; Expenses: View, Approve (as 015 grants) | Own claims; org-wide for review |
-| Director | OPERATIONS → My Expenses; OPERATIONS → Expenses (review list only on the phone) | As Admin, without Process | Own claims; org-wide for review |
+| Admin | OPERATIONS → My Expenses (Expenses review stays on the web) | My Expenses: View, Create, Edit, Delete | Own claims |
+| Director | OPERATIONS → My Expenses (Expenses review stays on the web) | As Admin | Own claims |
 | Manager | OPERATIONS → My Expenses | View, Create, Edit (own Draft and Rejected), Delete (own Draft) | Own |
 | Teacher | OPERATIONS → My Expenses (added to the Teacher menu) | As Manager | Own |
 | System | none (System MUST NOT see business data) | none | None |
 
 No new permission keys: this spec uses `MY_EXPENSES` and `EXPENSES` added by spec 015. Only Admin, Director and System edit
-the role matrix. The Teacher menu entry is seeded by this spec only if 015 has not already seeded it for the mobile menu
-(see Open Questions). The mobile client reads entries and `allowedActions` from the server and hard-codes none.
+the role matrix. The Teacher menu entry is seeded by spec 015 (task T006), not by this spec. The mobile client reads entries and `allowedActions` from the server and hard-codes none.
 
 ## Success Criteria *(mandatory)*
 
@@ -296,8 +257,7 @@ the role matrix. The Teacher menu entry is seeded by this spec only if 015 has n
 - Duplicate detection is the server's (same claimant, date, amount, category) plus the client request identity on retry; the
   app does not compare photos.
 - A sync conflict is decided by the server's `version` check: the server wins, the user sees the reason and current values.
-- The phone approver view is included as the lowest-priority story, reading from the web Expenses permission; it can be
-  removed to leave web-only review.
+- Review (approve, reject, payment, reports) is web-only in this version; a phone approver view can be a later spec.
 - There is no limit on the number of waiting drafts other than phone storage.
 - Language and format follow spec 018 (English, rupees, DD/MM/YYYY).
 
@@ -305,10 +265,8 @@ the role matrix. The Teacher menu entry is seeded by this spec only if 015 has n
 
 1. **Draft storage on sign-out**: keep a signed-out user's unsent drafts on the phone (default, hidden from others, sent after
    the same user signs in) or delete them at sign-out?
-2. **Phone approval**: keep Story 5 (approve or reject on the phone, Director and Admin) in version 1 (default), or web-only?
-3. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
-4. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
-5. **Sync conflict**: confirm the server wins when a claim was edited on the web while a draft waits.
-6. **Teacher menu seed**: confirm 015 seeds My Expenses for Teacher on the mobile menu, or whether 036 must add it.
-7. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
+2. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
+3. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
+4. **Sync conflict**: confirm the server wins when a claim was edited on the web while a draft waits.
+5. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
    caught?
