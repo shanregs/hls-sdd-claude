@@ -23,6 +23,8 @@ No questions were asked. The defaults below were taken from the project document
   placed under them. A Manager's own training attendance is still recorded by Admin or Director.
 - Q: Should a Manager's training attendance be written into Manager attendance (032)? → A: No. It stays in the training
   register and 032 reads it to show the day as a training field day; 024 writes nothing into 032 records.
+- Q: What happens when a Teacher is already marked Present at school on the training day? → A: The system shows the clash and
+  the half-day rules of spec 008 decide; nothing is overwritten silently and nothing is blocked.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -96,7 +98,7 @@ On the session day, the Admin or Director (or a Manager, for the Teachers placed
 
 1. **Given** a session on its date, **When** attendance is recorded, **Then** every person on the roster has exactly one outcome (Present, Absent, Excused) and the session shows expected, attended, absent and excused counts.
 2. **Given** a Teacher marked Present (whole day), **When** their attendance for the month is opened in spec 008, **Then** the day shows as a training day with the same weight rules as any training day, with no School needed.
-3. **Given** a Teacher already marked Present at their School for that day, **When** training attendance is recorded, **Then** the system shows the clash to the user and does not silently overwrite; the half-day rules of spec 008 decide (see Open Questions).
+3. **Given** a Teacher already marked Present at their School for that day, **When** training attendance is recorded, **Then** the system shows the clash to the user and does not silently overwrite; the half-day rules of spec 008 decide.
 4. **Given** a month locked in spec 008, **When** training attendance for a day in it is recorded or corrected, **Then** the system follows the same lock and re-open rules as 008 and says so.
 5. **Given** a recorded outcome, **When** a user corrects it, **Then** the new outcome replaces it, the earlier outcome, who changed it and when stay visible, and the Teacher's training-day mark in 008 is updated to match.
 6. **Given** attendance is not recorded within 7 days after the session date, **When** the Admin opens the session, **Then** it is flagged "Attendance not recorded".
@@ -291,12 +293,11 @@ Defaults chosen without asking the user; those marked **(open)** are repeated in
 
 1. **Assignment on open sessions**: may an Admin also assign people to an open weekend refresher, making them Required (default: yes), or are assignments for monthly sessions only?
 2. **Group assignment**: a snapshot on the day made (default), or a live rule that follows the group (new joiners added automatically)?
-3. **Clash with school attendance**: when a Teacher is already marked Present at school on the training day, warn and follow 008's half-day rule (default), or block, or split automatically?
-4. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
-5. **Repeat non-compliance**: is "2 in 6 months" right, and should it create a task for the Manager (via spec 025) or only mark the list (default)?
-6. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
-7. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
-8. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
-9. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
-10. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
-11. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
+3. **Registered no-show at a weekend refresher**: only shown (default), or also an exception?
+4. **Repeat non-compliance**: is "2 in 6 months" right, and should it create a task for the Manager (via spec 025) or only mark the list (default)?
+5. **Make-up sessions**: close an exception as "made up" by linking any later session (default), or is a separate make-up session type needed?
+6. **Certificates**: is a text note per attendance enough (default), or is an issued, printable certificate needed for some sessions?
+7. **Mobile**: web first, with phone screens in a later mobile spec (default), or part of this spec?
+8. **Pattern rules**: nth weekday and fixed day of month (default); are weekly or fortnightly patterns needed?
+9. **Trainers**: free-text name and contact (default), or a managed list of trainers (and should trainers have a login)?
+10. **Training cost**: confirm food and stay for sessions stay in Expenses (015), linked to the session, with no cost kept here (default).
