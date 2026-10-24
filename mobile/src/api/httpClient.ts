@@ -195,8 +195,13 @@ function toError(response: ParsedResponse): ApiError {
     }
     case 429:
       return new RateLimitedError(messageOf(data, "Too many requests, try again shortly."), response.retryAfter);
-    default:
-      return new ApiError(messageOf(data, `Request failed (${status}).`), status);
+    default: {
+      const matches =
+        status === 409 && data && typeof data === "object" && "matches" in data && Array.isArray(data.matches)
+          ? (data.matches as string[])
+          : [];
+      return new ApiError(messageOf(data, `Request failed (${status}).`), status, matches);
+    }
   }
 }
 
