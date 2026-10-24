@@ -32,14 +32,6 @@ public class SchoolDirectoryImpl implements SchoolDirectory {
     }
 
     @Override
-    public List<ZoneInfo> allZones() {
-        return zoneRepository.findAll().stream()
-                .map(z -> new ZoneInfo(z.getId(), z.getName()))
-                .sorted(java.util.Comparator.comparing(ZoneInfo::name, String.CASE_INSENSITIVE_ORDER))
-                .toList();
-    }
-
-    @Override
     public Optional<ZoneInfo> zoneByName(String name) {
         return zoneRepository.findByNameIgnoreCase(name).map(z -> new ZoneInfo(z.getId(), z.getName()));
     }

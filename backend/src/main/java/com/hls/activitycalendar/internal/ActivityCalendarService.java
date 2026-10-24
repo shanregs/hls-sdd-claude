@@ -89,7 +89,7 @@ public class ActivityCalendarService {
 
     private final Map<String, ActivitySource> sources = new HashMap<>();
     private final PeopleDirectory directory;
-    private final ZoneResolver zoneResolver;
+    private final CalendarZoneResolver calendarZoneResolver;
     private final BusinessDate businessDate;
     private final PermissionGuard guard;
     private final TransactionTemplate isolated;
@@ -101,7 +101,7 @@ public class ActivityCalendarService {
             SchoolDirectory schools,
             List<ActivitySource> sourceBeans,
             PeopleDirectory directory,
-            ZoneResolver zoneResolver,
+            CalendarZoneResolver calendarZoneResolver,
             BusinessDate businessDate,
             PermissionGuard guard,
             PlatformTransactionManager transactionManager) {
@@ -111,7 +111,7 @@ public class ActivityCalendarService {
         this.managerQueries = managerQueries;
         this.schools = schools;
         this.directory = directory;
-        this.zoneResolver = zoneResolver;
+        this.calendarZoneResolver = calendarZoneResolver;
         this.businessDate = businessDate;
         this.guard = guard;
         // each source runs in its own read-only transaction, so one failing source cannot poison the others
@@ -285,7 +285,7 @@ public class ActivityCalendarService {
             userIds.addAll(e.attendeeUserIds());
         }
         People people = directory.load(userIds);
-        ZoneResolver.Resolution zones = zoneResolver.resolve(entries, people);
+        CalendarZoneResolver.Resolution zones = calendarZoneResolver.resolve(entries, people);
         LocalDate today = businessDate.today();
         Map<String, Boolean> mayView = new HashMap<>();
 

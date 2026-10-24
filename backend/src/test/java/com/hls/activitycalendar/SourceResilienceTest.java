@@ -14,7 +14,7 @@ import com.hls.activitycalendar.internal.PeopleDirectory;
 import com.hls.activitycalendar.internal.PeopleDirectory.People;
 import com.hls.activitycalendar.internal.SourceReport;
 import com.hls.activitycalendar.internal.TrainingSource;
-import com.hls.activitycalendar.internal.ZoneResolver;
+import com.hls.activitycalendar.internal.CalendarZoneResolver;
 import com.hls.designation.api.BusinessDate;
 import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.user.Role;
@@ -55,8 +55,8 @@ class SourceResilienceTest {
     private static ActivityCalendarService service(ActivitySource... sources) {
         PeopleDirectory directory = mock(PeopleDirectory.class);
         when(directory.load(any())).thenReturn(new People(Map.of(MANAGER, "Asha"), Set.of(MANAGER), new HashMap<>()));
-        ZoneResolver zones = mock(ZoneResolver.class);
-        when(zones.resolve(any(), any())).thenReturn(mock(ZoneResolver.Resolution.class));
+        CalendarZoneResolver zones = mock(CalendarZoneResolver.class);
+        when(zones.resolve(any(), any())).thenReturn(mock(CalendarZoneResolver.Resolution.class));
         BusinessDate businessDate = mock(BusinessDate.class);
         when(businessDate.today()).thenReturn(TODAY);
         return new ActivityCalendarService(

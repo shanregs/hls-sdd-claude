@@ -6,10 +6,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.hls.activitycalendar.internal.CalendarEntry;
+import com.hls.activitycalendar.internal.CalendarZoneResolver;
 import com.hls.activitycalendar.internal.PeopleDirectory;
 import com.hls.activitycalendar.internal.PeopleDirectory.People;
 import com.hls.activitycalendar.internal.ZoneRef;
-import com.hls.activitycalendar.internal.ZoneResolver;
 import com.hls.identity.user.Role;
 import com.hls.identity.user.UserAdminService;
 import com.hls.organization.api.ManagerQueries;
@@ -28,7 +28,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /** Spec 035 T028 (FR-014): own Zone first, then the owner's current Zone, else none. */
-class ZoneResolverTest {
+class CalendarZoneResolverTest {
 
     private static final UUID OWN_ZONE = UUID.randomUUID();
     private static final UUID SCHOOL_ZONE = UUID.randomUUID();
@@ -40,11 +40,11 @@ class ZoneResolverTest {
 
     private final SchoolDirectory schools = mock(SchoolDirectory.class);
     private final ProspectZones prospectZones = mock(ProspectZones.class);
-    private final ZoneResolver resolver = new ZoneResolver(prospectZones, schools);
+    private final CalendarZoneResolver resolver = new CalendarZoneResolver(prospectZones, schools);
     private final People people =
             new People(Map.of(OWNER, "Owner"), Set.of(OWNER), Map.of(OWNER, new ZoneRef(OWNER_ZONE, "Owner Zone")));
 
-    ZoneResolverTest() {
+    CalendarZoneResolverTest() {
         when(schools.zones(anyCollection())).thenAnswer(inv -> {
             java.util.Collection<UUID> ids = inv.getArgument(0);
             return ids.stream()

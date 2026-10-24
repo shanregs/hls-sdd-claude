@@ -164,13 +164,12 @@ public final class PermissionEligibility {
         if (payrollOnly != null && !payrollOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
-<<<<<<< HEAD
         Set<Role> calendarOnly = ACTIVITY_CALENDAR_MODULES.get(module);
         if (calendarOnly != null && !calendarOnly.contains(role)) {
-=======
+            return EnumSet.noneOf(PermissionAction.class);
+        }
         Set<Role> expensesOnly = EXPENSES_MODULES.get(module);
         if (expensesOnly != null && !expensesOnly.contains(role)) {
->>>>>>> origin/main
             return EnumSet.noneOf(PermissionAction.class);
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {

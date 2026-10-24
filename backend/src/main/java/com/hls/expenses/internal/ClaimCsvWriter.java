@@ -1,5 +1,6 @@
 package com.hls.expenses.internal;
 
+import com.hls.school.api.ChangeRecorder;
 import com.hls.school.api.NotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import com.hls.school.api.ChangeRecorder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;

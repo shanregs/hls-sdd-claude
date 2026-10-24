@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * School or prospect it is linked to) first, then the owner's current Zone, else none ("No Zone"). Bulk lookups only.
  */
 @Component
-public class ZoneResolver {
+public class CalendarZoneResolver {
 
     /** The Zone of each entry, by entry; null when it has none. */
     public static final class Resolution {
@@ -36,7 +36,7 @@ public class ZoneResolver {
     private final ProspectZones prospectZones;
     private final SchoolDirectory schools;
 
-    public ZoneResolver(ProspectZones prospectZones, SchoolDirectory schools) {
+    public CalendarZoneResolver(ProspectZones prospectZones, SchoolDirectory schools) {
         this.prospectZones = prospectZones;
         this.schools = schools;
     }

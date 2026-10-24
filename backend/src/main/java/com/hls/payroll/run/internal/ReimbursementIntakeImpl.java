@@ -1,9 +1,9 @@
 package com.hls.payroll.run.internal;
 
+import com.hls.organization.api.ManagerQueries;
 import com.hls.payroll.api.PayRules.Kind;
 import com.hls.payroll.api.ReimbursementIntake;
 import com.hls.payroll.internal.PersonDirectory;
-import com.hls.organization.api.ManagerQueries;
 import com.hls.school.api.ChangeRecorder;
 import com.hls.teacher.api.TeacherDirectory;
 import java.math.BigDecimal;
