@@ -232,8 +232,8 @@ the screens they link to, and open a tile to land on the matching list with the 
 **Independent Test**: a Manager sees only figures that equal what their scoped lists show; the Manager-by-Manager table, payroll and approvals are absent.
 
 - [ ] T057 [P] [US9] Backend tests in `backend/src/test/java/com/hls/reporting/ManagerScopeTest.java` (SC-004): Manager A sees only Zone 1 figures and own tasks, visits and check-in; no comparison tile, payroll area (404) or inbox (403); Zone 2 as `zoneId` is 404; a user with Manager and Director roles sees the Director's tiles once; Teacher and System manifests are empty
-- [ ] T058 [P] [US9] Update `frontend/src/dashboards/ManagerDashboard.test.tsx` so the existing three count cards still render unchanged and scoped tiles render below them, with no comparison table, payroll area or inbox
-- [ ] T059 [US9] Edit `frontend/src/dashboards/ManagerDashboard.tsx` to keep the existing cards and render `ManagementDashboard` (manifest-driven, so only permitted tiles appear) below them without testing role names for the new section (depends on T015, T058)
+- [x] T058 [P] [US9] Update `frontend/src/dashboards/ManagerDashboard.test.tsx` so the existing three count cards still render unchanged and scoped tiles render below them, with no comparison table, payroll area or inbox
+- [x] T059 [US9] Edit `frontend/src/dashboards/ManagerDashboard.tsx` to keep the existing cards and render `ManagementDashboard` (manifest-driven, so only permitted tiles appear) below them without testing role names for the new section (depends on T015, T058)
 
 ---
 

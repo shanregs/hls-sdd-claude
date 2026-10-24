@@ -34,9 +34,14 @@ export function ManagementDashboard({ title }: { title: string }) {
       const result = await fetchManifest(authFetch);
       if (cancelled) return;
       setState(
-        result.ok
+        result.ok && Array.isArray(result.data?.areas)
           ? { kind: "ready", manifest: result.data }
-          : { kind: "error", reason: result.reason },
+          : {
+              kind: "error",
+              reason: result.ok
+                ? "Could not load the Dashboard. Please try again."
+                : result.reason,
+            },
       );
     })();
     return () => {
