@@ -46,6 +46,8 @@ export interface BaseSnapshot {
   amount: string;
   categoryLabel: string;
   note: string | null;
+  /** The server's version of the claim when this was read. */
+  version?: number;
 }
 
 export interface OutboxItem {

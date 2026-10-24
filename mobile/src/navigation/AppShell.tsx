@@ -16,6 +16,8 @@ import { LeaveManagementScreen } from "../screens/LeaveManagementScreen";
 import { ManagerCheckInScreen } from "../screens/ManagerCheckInScreen";
 import { ManagerLeaveScreen } from "../screens/ManagerLeaveScreen";
 import { ManagerMonthScreen } from "../screens/ManagerMonthScreen";
+import { MyExpensesScreen } from "../screens/MyExpensesScreen";
+import { ExpenseOutboxProvider } from "../outbox/ExpenseOutboxProvider";
 import { MyLeaveHistoryScreen } from "../screens/MyLeaveHistoryScreen";
 import { TasksScreen } from "../screens/TasksScreen";
 import { VisitsScreen } from "../screens/VisitsScreen";
@@ -43,7 +45,9 @@ export function AppShell({ user }: { user: SignedInUser }) {
   return (
     <AccessModelProvider>
       <NotificationsProvider>
-        <ShellContent user={user} />
+        <ExpenseOutboxProvider userId={user.id}>
+          <ShellContent user={user} />
+        </ExpenseOutboxProvider>
       </NotificationsProvider>
     </AccessModelProvider>
   );
@@ -212,6 +216,9 @@ function ShellContent({ user }: { user: SignedInUser }) {
   } else if (current === "tasks") {
     body = <TasksScreen initialView={routeState?.taskView} />;
     title = "My Tasks";
+  } else if (current === "myExpenses") {
+    body = <MyExpensesScreen />;
+    title = "My Expenses";
   } else if (current === "notifications") {
     body = <NotificationsScreen openRoute={openRoute} canOpen={canOpen} />;
     title = "Notifications";
