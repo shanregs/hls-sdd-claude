@@ -47,7 +47,7 @@ public class SchoolDirectoryImpl implements SchoolDirectory {
     public List<ZoneInfo> allZones() {
         return zoneRepository.findAll().stream()
                 .map(z -> new ZoneInfo(z.getId(), z.getName()))
-                .sorted(java.util.Comparator.comparing(z -> z.name().toLowerCase(java.util.Locale.ROOT)))
+                .sorted(java.util.Comparator.comparing(ZoneInfo::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }
 
