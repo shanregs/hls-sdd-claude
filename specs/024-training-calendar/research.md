@@ -106,7 +106,7 @@ mark with the larger share and a note", set by a supervisor. The spec says the s
 rules decide. Therefore 024 never overwrites: the row shows "Clash with school attendance: Present at <School>, 1.00 day".
 A supervisor resolves the day in 008 (change or clear the school mark); then `POST .../entries/{id}/sync` retries the write
 (also tried by the nightly reconcile job for clashes up to 31 days old). Until then the training outcome is in the register and
-the history but not in the 008 rollup. (Open Item 5.)
+the history but not in the 008 rollup. (Accepted 2026-10-24.)
 
 **Corrections** replace the entry value, append to `training_attendance_history`, and update or clear the 008 mark by the same
 path. Rows already `WRITTEN` that are corrected in a locked month are refused.
@@ -187,7 +187,7 @@ Manager" cannot occur. One entry per Manager with the same id would make 035's k
 session on the org-wide calendar and need dedupe code in 035 (which already dedupes for multi-date drives by `kind:id`, so
 org totals would hold, but the item list would not). The drive precedent (owner = `scheduledBy`, attendees = interviewers) gives
 the same per-Manager visibility with one entry; 035's summaries count only Manager people so the Admin owner never appears as a
-Manager. (Open Item 3.)
+Manager. (Accepted 2026-10-24.)
 
 **Zone**: a session has no Zone. `zoneId` is null, so 035 shows Training under "No Zone" and a Zone filter hides it. Setting the
 Zone of the assigned Managers when they share one is possible later; it is not done now because it would change with every
@@ -232,7 +232,7 @@ FR-026's "without any change to how they read other kinds".
   `TRAINING_ATTENDANCE` Admin, Director, Manager (View, Edit). `TRAINING_REGISTRATION` Teacher only. System none (all three are
   added to `BUSINESS_MODULES`). Seeds follow `seedTeacherTransfers`. `AccessModelService` data scope: `TRAINING` and
   `TRAINING_ATTENDANCE` ORG_WIDE for Admin and Director, ASSIGNED for Manager; `TRAINING_REGISTRATION` OWN.
-- **Navigation (gap, Open Item 1)**: the spec's "MY WORK" and "MY TRAINING" sections do not exist. Using them would change the
+- **Navigation (gap, accepted 2026-10-24)**: the spec's "MY WORK" and "MY TRAINING" sections do not exist. Using them would change the
   fixed section order tested by `NavigationSectionOrderTest` (spec 002 FR-008a). Default: OPERATIONS "Training Calendar"
   (`/operations/training`) and "Training Exceptions" (`/operations/training/exceptions`) for Admin and Director; OPERATIONS "My
   Training" (`/operations/my-training`) for Manager, next to My Tasks; MY ATTENDANCE "Upcoming Training"
@@ -268,16 +268,16 @@ FR-026's "without any change to how they read other kinds".
 | --- | --- | --- |
 | G1 | `TrainingSource` in 035 is a placeholder with `available() == false`, no entries, and `linkFor` has no TRAINING case. | Task T-REPLACE (plan.md): real source, link case, tests. The comment in the placeholder says "this one is removed". |
 | G2 | The spec says 035 and 032 read training "without any change". In code, 032 `PlannedActivities` and 015 `LinkResolver` take their three feeds by constructor and 035 needs a source bean. | 035: a bean replacing a bean (no change to how it reads others). 032: one more list in `forDay` through the new port (T-032). 015: optional T-015. |
-| G3 | Spec 032 has no read of training attendance and its `ManagerMonth` has no training field; a Manager at training without a check-in is an unpaid day. | Port `ManagerTrainingDays` offered; the payroll effect needs the user's decision (Open Item 2). Nothing from 024 writes into 032 (decided). |
+| G3 | Spec 032 has no read of training attendance and its `ManagerMonth` has no training field; a Manager at training without a check-in is an unpaid day. | Port `ManagerTrainingDays` offered; the payroll effect needs the user's decision (Open Item 1). Nothing from 024 writes into 032 (decided). |
 | G4 | No read of "Managers on leave on date" in `attendance.api`. | Additive `ManagerAttendanceReadApi.managersOnLeaveOn` (section 6), amendment recorded in 032. |
 | G5 | `TrainingAttendance.markTrainingDay` throws on a clash and on a locked month; catching would poison the transaction. | Read first with `AttendanceReadApi` (section 4); clash saved with the 008 write held back. |
 | G6 | 008 counts a training mark on a non-working day into `workingDays` and `weightedTotal`; 008's note says available equals attended. | No pay effect (payroll uses Loss-of-Pay). Recorded as a 008 follow-up. |
 | G7 | The spec says the training mark has "no School"; code attaches the placement School when there is one. | Harmless; read as "does not need a School". |
-| G8 | Navigation sections MY WORK and MY TRAINING do not exist and the order is tested. | Open Item 1 with a default. |
+| G8 | Navigation sections MY WORK and MY TRAINING do not exist and the order is tested. | Accepted 2026-10-24. |
 | G9 | System Settings are a code catalog read through `identity.policy.RuntimeSettings`; no business module reads settings. | New `SettingKey`s and a `training.api.TrainingSettings` port implemented by `settings` (section 8). |
 | G10 | No Teacher-exit or Manager-change event. | Daily `ReconcileJob` (as 026), reads ignore such people. |
-| G11 | FR-026 "per assigned or registered Manager" cannot be built (only Teachers register; 035 keys by kind, id, date). | One entry per session, attendees = assigned Managers (Open Item 3). |
-| G12 | `TRAINING_ATTENDANCE` is described for the Manager only, while Admin and Director record "for any session". | Seeded for Admin and Director too (Open Item 4). |
+| G11 | FR-026 "per assigned or registered Manager" cannot be built (only Teachers register; 035 keys by kind, id, date). | One entry per session, attendees = assigned Managers. |
+| G12 | `TRAINING_ATTENDANCE` is described for the Manager only, while Admin and Director record "for any session". | Seeded for Admin and Director too. |
 | G13 | Spec edge case "fifth Saturday" is not a supported rule (rules are first to fourth or last). | Read as "last"; the preview says so. |
 | G14 | `activitycalendar` shows a session as Missed when its date has passed and it is not Held; Held is set by the first saved attendance. | Intended; the "attendance not recorded" flag on the session matches the 035 Missed state. |
 | G15 | A Training session has no Zone, so 035 lists it under "No Zone" and a Zone filter hides it. | Accepted limitation; noted in the 035 spec amendment note. |

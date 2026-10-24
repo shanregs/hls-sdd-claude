@@ -228,7 +228,7 @@ Training sessions are planned activities. The training module exposes them throu
 
 **Planned-activity contract and notifications**
 
-- **FR-026**: The training module MUST expose its sessions through the planned-activity contract (C1) as kind Training: one entry per assigned or registered Manager, with id, owner Manager, date, venue as place, status (planned, held, cancelled) and, for a moved session, the earlier date. It MUST be readable by spec 035 and spec 032 without any change to how they read other kinds.
+- **FR-026**: The training module MUST expose its sessions through the planned-activity contract (C1) as kind Training: one entry per session (never one per Manager), with the session id, the scheduling user as owner, the assigned Managers as attendees, date, venue as place, status (planned, held, cancelled) and, for a moved session, the earlier date. Teachers are not in the feed. It MUST be readable by spec 035 as one more source, and by spec 032 for the Field day link, without any change to how they read other kinds.
 - **FR-027**: The system MUST send notifications (spec 010) for: new assignment, assignment removed, session moved or cancelled, a reminder 2 days and 1 day before (defaults, set in System Settings), registration confirmed, and a new exception to Admin and Director. Notices to Teachers MUST also be visible in the mobile notification list (spec 021).
 
 **Access, audit and privacy**
@@ -306,6 +306,14 @@ Defaults chosen without asking the user; those marked **(open)** were either set
 - Q: Pattern rules? -> A: Nth weekday of the month (first to fourth, or last) and a fixed day of the month; no weekly or fortnightly patterns.
 - Q: Trainers? -> A: Free-text name and optional contact; trainers do not log in and there is no managed list.
 - Q: Training cost (food, stay)? -> A: Stays in Expenses (spec 015), linked to the session; no cost is kept in the training module.
+
+### Session 2026-10-24 (plan defaults accepted)
+
+- Q: Navigation sections? -> A: No new sections. Admin, Director and Manager get OPERATIONS items (Training Calendar and Training Exceptions; My Training for the Manager); the Teacher gets MY ATTENDANCE items (Upcoming Training, My Training History).
+- Q: What does the planned-activity feed return? -> A: One entry per session, the scheduling user as owner and the assigned Managers as attendees (FR-026 corrected).
+- Q: Which permission key records attendance? -> A: `TRAINING_ATTENDANCE`, seeded for Admin and Director (org-wide) as well as the Manager (Teachers placed under them).
+- Q: Clash with a school attendance mark? -> A: The training row is saved and the clash is shown; nothing is written to spec 008 and nothing is overwritten until a supervisor resolves the day in 008.
+- Open, not decided: how a Manager's attended training day counts in Manager pay (spec 032). See plan.md Open Item 2; no work is built around it.
 
 ## Remaining Defaults (not asked, taken as accepted)
 

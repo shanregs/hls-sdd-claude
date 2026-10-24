@@ -136,28 +136,20 @@ See [research.md](research.md). Highlights:
   `TRAINING`, sub-kind the session type; add the `TRAINING` case to `linkFor` (module `TRAINING`, route `/operations/training`);
   extend `SourceAdaptersTest` and the 035 month fixture; the "Training is not included yet" note disappears.
 - **T-032**: add training sessions to `attendance.manager.internal.PlannedActivities.forDay` through
-  `attendance.api.ManagerTrainingDays`; the 032 read of attended training days waits for Open Item 2.
+  `attendance.api.ManagerTrainingDays`; the 032 read of attended training days waits for Open Item 1 (blocked).
 - **T-015** (optional, separate PR): offer training sessions as a link for a Training Stay claim (`LinkResolver`, `LinkKinds`).
 - **T-SPEC-NOTES**: "Amended by 024" notes in specs 035, 032, 015 and the roadmap C1 entry.
 
-## Open Items (need the user's decision; defaults are used until decided)
+## Decisions accepted on 2026-10-24 (recorded in spec.md Clarifications)
 
-1. **Navigation sections.** The spec names MY WORK (Manager) and MY TRAINING (Teacher), but the catalog has neither and the
-   section order is fixed and tested (spec 002 FR-008a). Default: Admin and Director OPERATIONS items Training Calendar and
-   Training Exceptions; Manager OPERATIONS item My Training; Teacher MY ATTENDANCE items Upcoming Training and My Training
-   History (next to My Substitutions). Confirm, or approve new sections (a spec 002 change).
-2. **Manager pay on a training day.** `ManagerMonth` counts a working day with no check-in and no leave as unpaid. A Manager
-   who attends training and does not check in would lose that day unless spec 032 treats an attended training day as worked.
-   The spec says 032 "reads it to show the day as a training field day"; the payroll effect is not stated. Default: 024 exposes
-   the attended days through `ManagerTrainingDays` and does nothing else; 032 must adopt it by its own amendment before a
-   payroll run that includes a Manager training day. Confirm that 032 should count an attended day as worked (whole 1.0, half
-   0.5, only when there is no check-in).
-3. **FR-026 wording.** "One entry per assigned or registered Manager" cannot be built as written: only Teachers register, and
-   035 keys an item by kind, id and date, so one entry per Manager would collide. Default: one entry per session, owner the
-   scheduler, attendees the assigned Managers. Confirm and let the spec text be corrected.
-4. **Admin and Director on `TRAINING_ATTENDANCE`.** The spec seeds `TRAINING_ATTENDANCE` for the Manager and lists attendance
-   under `TRAINING`. Default: attendance endpoints need `TRAINING_ATTENDANCE` (Admin and Director seeded full), so one key
-   governs recording for everyone. Confirm.
-5. **Clash resolution.** On a clash with a school mark the training row is saved and the 008 write is held back until a
-   supervisor resolves the day in 008 (one mark per day; 008's split-day rule). Default as stated; confirm this reading of
-   "the half-day rules of spec 008 decide".
+Navigation (OPERATIONS items for Admin, Director and Manager; MY ATTENDANCE items for Teacher), one C1 entry per session with the
+assigned Managers as attendees (FR-026 corrected), Admin and Director seeded on `TRAINING_ATTENDANCE`, and on a clash the training
+row is saved and nothing is written to 008.
+
+## Open Items
+
+1. **OPEN DECISION: Manager pay on a training day (spec 032).** `ManagerMonth` counts a working day with no check-in and no
+   leave as unpaid. A Manager who attends training and does not check in would lose that day unless spec 032 treats an attended
+   training day as worked (whole 1.0, half 0.5, only when there is no check-in). The user has NOT decided. Until then 024 only
+   exposes the attended days through `ManagerTrainingDays` and builds nothing around the question; the 032 amendment is task
+   T-032-PAY in tasks.md, BLOCKED. It must be decided before a payroll run that includes a Manager training day.

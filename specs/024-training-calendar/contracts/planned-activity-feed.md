@@ -21,7 +21,7 @@ List<ActivityEntry> activitiesBetween(LocalDate from, LocalDate to, UUID userId)
 
 - One entry per session. `kind` = `TRAINING`; `subKind` = `WEEKEND` or `MONTHLY`; `id` = session id.
 - `ownerUserId` = the user who created the session (Admin or Director); `attendeeUserIds` = user ids of the assigned
-  (REQUIRED) Managers. Teachers are never in the feed. Plan open item 3 (FR-026 wording).
+  (REQUIRED) Managers. Teachers are never in the feed. FR-026 as corrected.
 - `place` = venue text (a virtual link is returned as the word "Online"; the link itself is not exposed).
 - `status` = `PLANNED` (published, not held), `HELD`, `CANCELLED`. 035's `StatusRules` already maps HELD to Done and CANCELLED.
 - `completedOn` = the session date for HELD, else null. `originalDate` = oldest `date` before-value in
@@ -55,7 +55,7 @@ List<TrainingSessionRef> assignedSessionsOn(UUID managerUserId, LocalDate date);
 Map<LocalDate, BigDecimal> attendedDays(UUID managerId, LocalDate from, LocalDate to);      // 1.00 or 0.50 per Present day
 ```
 
-032 `PlannedActivities.forDay` adds `assignedSessionsOn` (kind `TRAINING`). What 032 does with `attendedDays` is Open Item 2;
+032 `PlannedActivities.forDay` adds `assignedSessionsOn` (kind `TRAINING`). What 032 does with `attendedDays` is Open Item 1;
 024 writes nothing into 032 records.
 
 ## 4. `ManagerAttendanceReadApi.managersOnLeaveOn` (additive, 032)
@@ -94,4 +94,4 @@ touches another module's `internal`; `attendance` does not depend on `training`.
 
 `PermissionModule`: `TRAINING(VIEW, CREATE, EDIT, DELETE, EXPORT)`, `TRAINING_ATTENDANCE(VIEW, EDIT)`,
 `TRAINING_REGISTRATION(VIEW, CREATE, EDIT)`. Seeds: Admin and Director full on the first two; Manager `TRAINING` View and
-`TRAINING_ATTENDANCE` View, Edit; Teacher `TRAINING_REGISTRATION` View, Create, Edit; System none. Navigation per plan open item 1.
+`TRAINING_ATTENDANCE` View, Edit; Teacher `TRAINING_REGISTRATION` View, Create, Edit; System none. Navigation.
