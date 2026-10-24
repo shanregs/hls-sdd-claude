@@ -208,8 +208,8 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 **Independent Test**: a test tile added in the test setup appears under its area for a user who holds its permission, is absent for one who does not, and no other tile changes.
 
-- [ ] T052 [US7] Test in `backend/src/test/java/com/hls/reporting/TileExtensibilityTest.java` (SC-006): register a test `TileSource` (and a test `ManagerColumns` and `ApprovalSource`) through a test configuration only; assert it appears in the right area/order for a permitted user, is absent from manifest and 404 on direct request for one without the grant, a duplicate key fails start-up, and every other tile's result is byte-for-byte unchanged
-- [ ] T053 [P] [US7] Document the extension recipe (how a later spec adds a `*Tiles` class, the tile catalog row, the parity test) in `specs/028-management-dashboard/quickstart.md` section 7 and in the `reporting.api` `package-info.java`
+- [x] T052 [US7] Test in `backend/src/test/java/com/hls/reporting/TileExtensibilityTest.java` (SC-006): register a test `TileSource` (and a test `ManagerColumns` and `ApprovalSource`) through a test configuration only; assert it appears in the right area/order for a permitted user, is absent from manifest and 404 on direct request for one without the grant, a duplicate key fails start-up, and every other tile's result is byte-for-byte unchanged
+- [x] T053 [P] [US7] Document the extension recipe (how a later spec adds a `*Tiles` class, the tile catalog row, the parity test) in `specs/028-management-dashboard/quickstart.md` section 7 and in the `reporting.api` `package-info.java`
 
 ---
 
@@ -219,7 +219,7 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 **Independent Test**: choose one Zone; every tile that can be split by Zone changes to that Zone's figures, and tiles that cannot be split say so.
 
-- [ ] T054 [P] [US8] Backend tests in `backend/src/test/java/com/hls/reporting/ZonePeriodFilterTest.java`: Zone changes only zone-aware tiles and sets `organizationWide: true` on the others; `period` changes `MONTH` tiles and is ignored by `TODAY` tiles; an unreachable Zone is 404; the Manager comparison and inbox respect the Zone/period
+- [x] T054 [P] [US8] Backend tests in `backend/src/test/java/com/hls/reporting/ZonePeriodFilterTest.java`: Zone changes only zone-aware tiles and sets `organizationWide: true` on the others; `period` changes `MONTH` tiles and is ignored by `TODAY` tiles; an unreachable Zone is 404; the Manager comparison and inbox respect the Zone/period
 - [x] T055 [P] [US8] Frontend tests in `frontend/src/features/dashboard/__tests__/DashboardFilters.test.tsx`: Zone picker lists only manifest zones, month picker defaults to the current month, changing either reloads all areas, "organization-wide" label shown
 - [x] T056 [US8] Create `frontend/src/features/dashboard/DashboardFilters.tsx` (Zone select with "All Zones", month input) and wire it into `ManagementDashboard.tsx` and `dashboardApi.ts` (depends on T015)
 
@@ -231,7 +231,7 @@ the screens they link to, and open a tile to land on the matching list with the 
 
 **Independent Test**: a Manager sees only figures that equal what their scoped lists show; the Manager-by-Manager table, payroll and approvals are absent.
 
-- [ ] T057 [P] [US9] Backend tests in `backend/src/test/java/com/hls/reporting/ManagerScopeTest.java` (SC-004): Manager A sees only Zone 1 figures and own tasks, visits and check-in; no comparison tile, payroll area (404) or inbox (403); Zone 2 as `zoneId` is 404; a user with Manager and Director roles sees the Director's tiles once; Teacher and System manifests are empty
+- [x] T057 [P] [US9] Backend tests in `backend/src/test/java/com/hls/reporting/ManagerScopeTest.java` (SC-004): Manager A sees only Zone 1 figures and own tasks, visits and check-in; no comparison tile, payroll area (404) or inbox (403); Zone 2 as `zoneId` is 404; a user with Manager and Director roles sees the Director's tiles once; Teacher and System manifests are empty
 - [x] T058 [P] [US9] Update `frontend/src/dashboards/ManagerDashboard.test.tsx` so the existing three count cards still render unchanged and scoped tiles render below them, with no comparison table, payroll area or inbox
 - [x] T059 [US9] Edit `frontend/src/dashboards/ManagerDashboard.tsx` to keep the existing cards and render `ManagementDashboard` (manifest-driven, so only permitted tiles appear) below them without testing role names for the new section (depends on T015, T058)
 
