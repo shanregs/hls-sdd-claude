@@ -103,6 +103,7 @@ public class PermissionMatrixService {
         seedPayroll();
         seedSchoolWorkingDays();
         seedTeacherPerformance();
+        seedTeacherTransfers();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -264,6 +265,19 @@ public class PermissionMatrixService {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
             for (PermissionAction action : PermissionModule.TEACHER_PERFORMANCE.actions()) {
                 seed(role, PermissionModule.TEACHER_PERFORMANCE, action, true);
+            }
+        }
+        grants.invalidateAround();
+    }
+
+    /** Transfers and replacements defaults (spec 027): Admin raises and changes; Director and Manager also approve. */
+    private void seedTeacherTransfers() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+            for (PermissionAction action : PermissionModule.TEACHER_TRANSFERS.actions()) {
+                if (role == Role.ADMIN && action == PermissionAction.APPROVE) {
+                    continue;
+                }
+                seed(role, PermissionModule.TEACHER_TRANSFERS, action, true);
             }
         }
         grants.invalidateAround();

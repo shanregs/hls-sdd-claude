@@ -32,6 +32,13 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.8 (PATCH, spec 027): the Default role access matrix gains a Transfers and Replacements row. Admin holds View, Create and
+    Edit (never Approve); Director and Manager hold View, Create, Edit and Approve; nobody decides a request they raised. A Manager
+    reads requests where the leaving or receiving School is theirs and acts only for the leaving School; Teacher and System have no
+    access. The navigation model gains the OPERATIONS item Transfers & Replacements. Principle VII holds: the feature is the
+    `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
+    their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
+    parallel specs merges first.
   - 2.5.7 (PATCH, spec 026): the Default role access matrix gains a Teacher Performance row (observations, Principal feedback,
     performance issues, corrective actions and referrals). Admin, Director and Manager hold View, Create and Edit; nobody holds
     Approve or Delete, because the transfer decision belongs to spec 027. A Manager reaches only the Teachers placed at their
@@ -372,6 +379,7 @@ kept intentionally lightweight for v1.
   | Manager Leave (decide Managers' leave and forgotten check-ins) | View, Approve | View, Approve | — | — | — |
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
+  | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
@@ -420,4 +428,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.7 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-21
+**Version**: 2.5.8 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-21
