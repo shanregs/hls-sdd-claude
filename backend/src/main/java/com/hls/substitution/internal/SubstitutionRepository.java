@@ -18,6 +18,15 @@ public interface SubstitutionRepository extends JpaRepository<SubstitutionRequir
 
     Optional<SubstitutionRequirement> findByTeacherIdAndDutyDate(UUID teacherId, LocalDate dutyDate);
 
+    /** Requirements of the absent Teacher on or after the date that are not cancelled (spec 027 relocation). */
+    @Query("""
+            select r from SubstitutionRequirement r
+            where r.teacherId = :teacherId and r.dutyDate >= :from
+              and r.status <> com.hls.substitution.internal.RequirementStatus.CANCELLED
+            order by r.dutyDate
+            """)
+    List<SubstitutionRequirement> liveFrom(@Param("teacherId") UUID teacherId, @Param("from") LocalDate from);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from SubstitutionRequirement r where r.id = :id")
     Optional<SubstitutionRequirement> findByIdForUpdate(@Param("id") UUID id);

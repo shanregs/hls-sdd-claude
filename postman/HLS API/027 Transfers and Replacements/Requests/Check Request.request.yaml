@@ -1,0 +1,17 @@
+$kind: http-request
+name: Check Request
+description: "Dry run. Writes nothing; returns ok and problems[]. Needs CREATE."
+url: "{{baseUrl}}/api/v1/transfers/check"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "kind": "TRANSFER",
+      "teacherId": "{{teacherId}}",
+      "toSchoolId": "{{toSchoolId}}",
+      "effectiveOn": "2026-11-03"
+    }
+order: 5000

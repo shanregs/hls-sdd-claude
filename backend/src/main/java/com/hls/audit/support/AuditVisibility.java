@@ -45,6 +45,7 @@ public class AuditVisibility {
             Map.entry("EXPENSE_CLAIM", PermissionModule.EXPENSES),
             Map.entry("EXPENSE_BUDGET", PermissionModule.EXPENSES),
             Map.entry("EXPENSE_EXPORT", PermissionModule.EXPENSES),
+            Map.entry("MOVEMENT_REQUEST", PermissionModule.TEACHER_TRANSFERS),
             Map.entry("PAYROLL_RUN", PermissionModule.PAYROLL),
             Map.entry("PAYROLL_ADJUSTMENT", PermissionModule.PAYROLL),
             Map.entry("PAYROLL_PAYMENT", PermissionModule.PAYROLL),

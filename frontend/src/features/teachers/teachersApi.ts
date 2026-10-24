@@ -67,6 +67,8 @@ export interface TeacherListParams {
   query: string;
   status: "" | TeacherStatus;
   missingDesignation?: boolean;
+  /** Spec 027: only Teachers who were transferred or replaced. */
+  movement?: "" | "TRANSFERRED" | "REPLACED";
   page: number;
   size: number;
 }
@@ -81,6 +83,7 @@ export function listTeachers(
       query: params.query.trim(),
       status: params.status,
       missingDesignation: params.missingDesignation || undefined,
+      movement: params.movement || undefined,
       page: params.page,
       size: params.size,
     })}`,

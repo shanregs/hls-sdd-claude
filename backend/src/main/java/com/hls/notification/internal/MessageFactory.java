@@ -96,6 +96,32 @@ public final class MessageFactory {
                 "/operations/teacher-performance/planned");
     }
 
+    private static String movement(String kind) {
+        return "REPLACEMENT".equals(kind) ? "replacement" : "transfer";
+    }
+
+    public static Text transferRequested(String kind, String teacherName, String fromSchool, LocalDate on) {
+        return new Text(
+                shorten("New " + movement(kind) + " request: " + teacherName, MAX_TITLE),
+                shorten(teacherName + " at " + fromSchool + ", effective " + date(on) + ".", MAX_MESSAGE),
+                "/operations/transfers");
+    }
+
+    public static Text transferDecided(String kind, String outcome, String teacherName, LocalDate on, UUID requestId) {
+        String verb = outcome.toLowerCase();
+        return new Text(
+                shorten("The " + movement(kind) + " for " + teacherName + " was " + verb, MAX_TITLE),
+                shorten("The " + movement(kind) + " for " + teacherName + " (effective " + date(on) + ") was " + verb + ".", MAX_MESSAGE),
+                "/operations/transfers/" + requestId);
+    }
+
+    public static Text transferApplied(String kind, String teacherName, LocalDate on, UUID requestId) {
+        return new Text(
+                shorten("The " + movement(kind) + " for " + teacherName + " took effect", MAX_TITLE),
+                shorten("The " + movement(kind) + " for " + teacherName + " took effect on " + date(on) + ".", MAX_MESSAGE),
+                "/operations/transfers/" + requestId);
+    }
+
     public static Text referralRecorded(String teacherName, String recommendation, UUID issueId) {
         return new Text(
                 shorten("Teacher referred: " + teacherName, MAX_TITLE),

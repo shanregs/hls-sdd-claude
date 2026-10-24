@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.7 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.7)
+Version change: 1.7.0 → 2.5.9 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.9)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,7 +32,14 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
-  - 2.5.x (PATCH, spec 015; numbered when merged): the Default role access matrix gains two rows. Expenses (review, approve,
+  - 2.5.8 (PATCH, spec 027): the Default role access matrix gains a Transfers and Replacements row. Admin holds View, Create and
+    Edit (never Approve); Director and Manager hold View, Create, Edit and Approve; nobody decides a request they raised. A Manager
+    reads requests where the leaving or receiving School is theirs and acts only for the leaving School; Teacher and System have no
+    access. The navigation model gains the OPERATIONS item Transfers & Replacements. Principle VII holds: the feature is the
+    `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
+    their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
+    parallel specs merges first.
+  - 2.5.9 (PATCH, spec 015): the Default role access matrix gains two rows. Expenses (review, approve,
     pay, budgets, cost measures, export): Admin holds View, Create, Edit, Approve, Process and Export; Director holds the same
     but never Process (recording a payment outside payroll); Manager, Teacher and System have no access and cannot be granted
     any. My Expenses (a person's own claims): Admin, Director, Manager and Teacher hold View, Create, Edit and Delete on their
@@ -381,6 +388,7 @@ kept intentionally lightweight for v1.
   | Manager Leave (decide Managers' leave and forgotten check-ins) | View, Approve | View, Approve | — | — | — |
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
+  | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
   | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
@@ -431,4 +439,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.7 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-21
+**Version**: 2.5.9 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24
