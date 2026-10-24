@@ -20,8 +20,7 @@ send itself when the signal returns. It adds screens only. Every rule (categorie
 
 ### Session 2026-10-23
 
-No questions were asked in this session. The points not answered below were decided with documented defaults (see
-Assumptions) and are listed under **Open Questions for the User** for confirmation before planning.
+No questions were asked in this session. The points not answered were decided with documented defaults (see Assumptions); the last two were confirmed on 2026-10-24.
 
 ### Session 2026-10-24
 
@@ -35,6 +34,8 @@ Assumptions) and are listed under **Open Questions for the User** for confirmati
   phone shows the reason and the current values and the claimant re-applies changes by hand.
 - Q: Should the app also catch the same bill photo sent twice? → A: No. The server's date, amount and category warning plus
   the retry request identity are enough; there is no photo check on the phone.
+- Q: Photo limits? -> A: Confirmed: the limits from spec 015 (10 MB, up to 5 bills, jpg/png/pdf) and photos downscaled to about 2000 pixels on the long edge before sending.
+- Q: Date cap on the phone? -> A: Confirmed: the phone only echoes the server's 60-day rule and relies on the server's check; there is no stricter local cap.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -266,8 +267,3 @@ the role matrix. The Teacher menu entry is seeded by spec 015 (task T006), not b
 - Review (approve, reject, payment, reports) is web-only in this version; a phone approver view can be a later spec.
 - There is no limit on the number of waiting drafts other than phone storage.
 - Language and format follow spec 018 (English, rupees, DD/MM/YYYY).
-
-## Open Questions for the User
-
-1. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
-2. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
