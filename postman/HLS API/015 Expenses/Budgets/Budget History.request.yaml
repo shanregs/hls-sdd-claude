@@ -1,0 +1,6 @@
+$kind: http-request
+name: Budget History
+description: "Who changed a budget and when, newest first. Needs EXPENSES.VIEW."
+url: "{{baseUrl}}/api/v1/expenses/budgets/{{budgetId}}/history"
+method: GET
+order: 4000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Withdraw Claim
+description: "Submitted back to Draft before any decision. Needs MY_EXPENSES.EDIT."
+url: "{{baseUrl}}/api/v1/my-expenses/{{claimId}}/withdraw"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 1
+    }
+order: 9000

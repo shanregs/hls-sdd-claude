@@ -107,4 +107,18 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(get("/api/v1/teacher-performance/feedback", director.token()).body()).contains("Demo Principal");
         assertThat(get("/api/v1/teacher-performance/plans", director.token()).body()).contains("FOLLOW_UP", "SCHOOL_FEEDBACK");
     }
+
+    @Test
+    void expensesDemoDataHasClaimsInEveryStatusAndAnApprovedClaimWaitingForPayroll() {
+        Signed manager = signIn(null, "9800000003", "Password123!");
+
+        Resp mine = get("/api/v1/my-expenses?size=100", manager.token());
+        assertThat(mine.status()).as(mine.body()).isEqualTo(200);
+        assertThat(mine.body()).contains("\"status\":\"DRAFT\"", "\"status\":\"SUBMITTED\"", "\"status\":\"APPROVED\"",
+                "\"status\":\"REJECTED\"", "\"status\":\"PAID_BY_COMPANY\"");
+        assertThat(mine.map().get("owed")).isNotEqualTo("0.00");
+        Signed director = signIn(null, "9800000002", "Password123!");
+        assertThat(get("/api/v1/expenses/budgets?month=" + java.time.YearMonth.from(java.time.LocalDate.now().minusDays(1)), director.token()).body())
+                .contains("20000.00");
+    }
 }

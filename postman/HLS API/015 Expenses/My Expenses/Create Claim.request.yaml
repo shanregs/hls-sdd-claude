@@ -1,0 +1,28 @@
+$kind: http-request
+name: Create Claim
+description: "Creates a Draft, or submits at once with submit true. A repeat clientRequestId returns the first claim with 200. Amount is positive with at most two decimals; Submit enforces the 60-day window, a bill or noBillReason, a reason for Other and a batch for Training Stay. 409 with matches when the same date, amount and category exists and confirmDuplicate is false. Needs MY_EXPENSES.CREATE."
+url: "{{baseUrl}}/api/v1/my-expenses"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "clientRequestId": "{{clientRequestId}}",
+      "expenseDate": "2026-10-20",
+      "amount": "850.00",
+      "category": "TRAVEL_FUEL",
+      "zoneId": null,
+      "note": "Fuel for the Green Valley visit",
+      "paidBy": "CLAIMANT",
+      "reason": null,
+      "noBillReason": null,
+      "link": {
+        "kind": "SCHOOL_VISIT",
+        "ref": "{{activityId}}"
+      },
+      "confirmDuplicate": false,
+      "submit": false
+    }
+order: 4000

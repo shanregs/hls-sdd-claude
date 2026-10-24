@@ -464,3 +464,8 @@ right are shown the menu item; every endpoint checks it on the server.
   scope; arrears are done through adjustments.
 - One approver per run is enough; there is no multi-level approval.
 - Notifications use the existing in-app notification feature (spec 010); no email or SMS is sent.
+
+> **Amendment (spec 015, Expenses):** the reserved kind `REIMBURSEMENT` is created by spec 015 through the additive
+> `payroll.api.ReimbursementIntake` (offer, withdraw, status) with `source_ref` set to the claim id, never by hand. Approving a
+> run publishes `payroll.api.PayrollAdjustmentApplied` once per applied adjustment that has a `source_ref`, in the approval
+> transaction, so the claim becomes Paid with payroll together with the run. Nothing here changes an approved run.

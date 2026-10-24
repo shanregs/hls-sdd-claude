@@ -1,0 +1,15 @@
+$kind: http-request
+name: Reverse Approval
+description: "Returns an Approved claim to Submitted with a required reason and withdraws the payroll offer. 409 when paid or held by a pay run awaiting approval. Needs EXPENSES.APPROVE or EXPENSES.PROCESS."
+url: "{{baseUrl}}/api/v1/expenses/{{claimId}}/reverse"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": 2,
+      "reason": "Wrong category"
+    }
+order: 6000
