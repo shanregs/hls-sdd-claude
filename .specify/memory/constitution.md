@@ -39,6 +39,13 @@ Modified principles:
     `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
     their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
     parallel specs merges first.
+  - NEXT (PATCH, spec 028; number assigned at merge): the Default role access matrix is unchanged; the dashboard grants each tile
+    through the View grant of the module that owns its figure (a Manager's own-row tiles through the My Manager Attendance View
+    grant), so no module is added to the matrix. Principle VII holds: the feature is the `reporting` module. It owns no
+    transactional data and exposes only an SPI in `reporting.api` (`TileSource`, `ManagerColumns`, `ApprovalSource`); each owning
+    module implements it in its own `internal` package and reads its own data, and `reporting` reads nothing but that SPI, the
+    permission guard and the zone scope. A source that fails or is slow shows one error tile, never a zero. No principle
+    changes.
   - 2.5.10 (PATCH, spec 035): the Default role access matrix gains an Activity Calendar row (read-only view of planned
     versus done, missed and rescheduled drives, visits, calls, meetings and tasks). Admin and Director hold View for every
     Manager; a Manager holds View for their own activities only; Teacher and System have no access and cannot be granted
