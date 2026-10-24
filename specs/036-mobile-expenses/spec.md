@@ -29,6 +29,8 @@ Assumptions) and are listed under **Open Questions for the User** for confirmati
   track claims only; approvers keep using the web.
 - Q: Does 015 seed My Expenses for the Teacher on the mobile menu, or must 036 add it? → A: 015 seeds it (015 task T006,
   `NavigationCatalog`); 036 adds no menu entry. 036 depends on 015 being merged.
+- Q: What happens to a person's unsent drafts when they sign out? → A: They stay on the phone, hidden from everyone else, and
+  are sent after the same user signs in again; the user is warned at sign-out that unsent claims remain.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -263,10 +265,8 @@ the role matrix. The Teacher menu entry is seeded by spec 015 (task T006), not b
 
 ## Open Questions for the User
 
-1. **Draft storage on sign-out**: keep a signed-out user's unsent drafts on the phone (default, hidden from others, sent after
-   the same user signs in) or delete them at sign-out?
-2. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
-3. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
-4. **Sync conflict**: confirm the server wins when a claim was edited on the web while a draft waits.
-5. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
+1. **Photo limits**: confirm the 10 MB, 5 bills, jpg/png/pdf limits from 015 and the default long edge of about 2000 pixels.
+2. **Date cap on the phone**: confirm that the phone only echoes the server's 60-day rule rather than a stricter local cap.
+3. **Sync conflict**: confirm the server wins when a claim was edited on the web while a draft waits.
+4. **Duplicate photo**: is the server's date, amount and category warning enough, or should the same photo sent twice also be
    caught?
