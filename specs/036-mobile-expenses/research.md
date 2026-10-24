@@ -213,3 +213,23 @@ they are the claimant's own.
 Approve, reject and any review action; viewing other people's claims; budgets, ageing, cost measures, payment recording and export;
 background sync; notification deep links to a claim; opening PDF bills in an external viewer; removing a bill from a Submitted claim
 (an approver action on the web); iOS.
+
+## Note for a later 015 amendment (T046)
+
+Recorded during implementation; spec 015 and the backend are **not** changed by this spec. No new gap was found beyond G1 to G5,
+and none blocks 036. The suggested changes, in order of value to the phone:
+
+1. **G4** Add `decisionReason` and `decidedAt` to the list `Row`, so a Rejected claim can say why on the list card without
+   opening it (the phone now shows the decision on the detail only).
+2. **G3** Accept a client bill id (`X-Client-Request-Id` or `clientBillId`) on `POST /my-expenses/{id}/bills`, so a lost reply
+   followed by a retry cannot add the same bill twice; the phone relies on a unique generated file name and a read of the
+   claim before each upload, which is correct unless two uploads of the same claim race.
+3. **G1** `GET /my-expenses/categories` with key, label and flags, so a new category needs no app update.
+4. **G2** Add `GET /my-expenses/areas` to `contracts/expenses-api.md` (it exists in `MyExpensesController`).
+
+Confirm with the owner: spec 018 makes an Admin-only account web-only on the phone, so the Admin row of spec 036's role table
+applies only to an Admin who also holds Teacher, Manager or Director; the phone never offers My Expenses to an Admin-only
+account. The app does not read roles at all, so nothing in the code depends on the answer.
+
+Facts confirmed against the merged 015 code while implementing: the duplicate answer's `matches` is a list of claim ids (strings),
+the bill is accepted or refused by file name extension, and a repeated `clientRequestId` with a different body answers 409.
