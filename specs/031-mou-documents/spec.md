@@ -24,6 +24,7 @@ Decided in advance (roadmap decision D5 and the 012 spec); the rest are document
 - Q: Is one approval enough, or must both the Director and the Zone Manager approve? → A: One is enough: the Director or the School's Zone Manager. No second step.
 - Q: If the document is replaced after a MoU is approved, does the approval stay? → A: No. The MoU goes back to pending and needs approval again; it does not count as approved until then.
 - Q: What happens to MoUs recorded in spec 012 before this approval step exists? → A: They count as approved but are labelled "approved (before approval step)"; a document can still be attached later.
+- Q: Can a Director approve a MoU they recorded and submitted themselves? → A: Yes. It is allowed, and the audit trail records both actions.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -62,7 +63,7 @@ A MoU that has its signed document is submitted for approval. The Director or th
 5. **Given** a rejected MoU, **When** a new document version is uploaded and the MoU is resubmitted, **Then** the status returns to "pending approval" and the earlier rejection stays in the history.
 6. **Given** an Admin, **When** they try to approve, **Then** the action is not offered and the server refuses it.
 7. **Given** two approvers acting on the same pending MoU at once, **When** both submit, **Then** exactly one decision is recorded and the other is told it was already decided.
-8. **Given** a Director who recorded and submitted a MoU, **When** the same Director approves it, **Then** the approval is allowed and the audit records both actions (see open questions).
+8. **Given** a Director who recorded and submitted a MoU, **When** the same Director approves it, **Then** the approval is allowed and the audit records both actions.
 
 ---
 
@@ -186,7 +187,6 @@ Billing (spec 022), incentives (spec 030) and the marketing pipeline (spec 023) 
 
 1. **Does approval gate anything here?** Default: no. Mapping, attendance and listing continue regardless; billing (022) and incentives (030) decide for themselves. Alternative: block Teacher mapping until approved.
 2. **Is a document mandatory for approval?** Default yes (cannot submit without one).
-3. **Can a Director approve a MoU they recorded themselves?** Default yes, audited. Alternative: another approver required.
-4. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
-5. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
-6. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
+3. **File limits**: default PDF, JPG, PNG up to 10 MB each; confirm or change.
+4. **Notifications**: default to notify approvers on submission and the submitter on decision; confirm whether the Admin should also be told.
+5. **Wrong terms found during approval**: default is to reject and record a new MoU under 012 (no edits). Confirm there is no need to edit terms during approval.
