@@ -76,6 +76,15 @@ class AttendanceReadApiImpl implements AttendanceReadApi {
         return monthLock.isLocked(teacherId, month);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Set<UUID> lockedTeachers(java.util.Collection<UUID> teacherIds, YearMonth month) {
+        if (teacherIds.isEmpty()) {
+            return java.util.Set.of();
+        }
+        return monthLock.lockedAmong(teacherIds, month);
+    }
+
     /** Checked up front rather than by catching a not-found exception, which would poison the caller's transaction. */
     private Optional<TeacherMonthView> month(UUID teacherId, YearMonth month) {
         if (teachers.teacherInfo(List.of(teacherId)).isEmpty()) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -27,10 +28,20 @@ import {
 
 const PAGE_SIZE = 25;
 
+function localIsoDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${date}`;
+}
+
 /** OPERATIONS -> Substitutions (spec 017a): the requirements in the caller's scope. */
 export function SubstitutionsPage() {
   const { authFetch } = useAuth();
-  const [status, setStatus] = useState("");
+  // The dashboard opens this list with ?date=today&status=... (spec 028).
+  const [params] = useSearchParams();
+  const [status, setStatus] = useState(() => params.get("status") ?? "");
+  const [day] = useState(() => (params.get("date") === "today" ? localIsoDate() : ""));
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<Requirement[] | null>(null);
   const [total, setTotal] = useState(0);
@@ -39,7 +50,13 @@ export function SubstitutionsPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = await listRequirements(authFetch, { status, page, size: PAGE_SIZE });
+      const result = await listRequirements(authFetch, {
+        status,
+        page,
+        size: PAGE_SIZE,
+        from: day || undefined,
+        to: day || undefined,
+      });
       if (cancelled) return;
       if (result.ok) {
         setRows(result.data.content);
@@ -52,7 +69,7 @@ export function SubstitutionsPage() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, status, page]);
+  }, [authFetch, status, page, day]);
 
   return (
     <Box>

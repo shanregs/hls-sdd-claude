@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -54,7 +55,12 @@ export function LeaveManagementPage() {
   const { authFetch } = useAuth();
   const granted = useGrantedActions("/operations/leave");
   const canDecide = granted.has("APPROVE");
-  const [status, setStatus] = useState<LeaveStatus | "">("PENDING");
+  // The dashboard opens this list with ?status=PENDING (spec 028).
+  const [params] = useSearchParams();
+  const [status, setStatus] = useState<LeaveStatus | "">(() => {
+    const wanted = params.get("status");
+    return wanted === "APPROVED" || wanted === "REJECTED" || wanted === "CANCELLED" ? wanted : "PENDING";
+  });
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<LeaveRequestView[] | null>(null);
   const [total, setTotal] = useState(0);

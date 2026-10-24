@@ -64,12 +64,43 @@ class PayrollRunDevSeeder implements ApplicationRunner {
         }
         LocalDate today = calendar.businessToday();
         YearMonth last = YearMonth.from(today).minusMonths(1);
-        if (!runs.findByMonthOrderByKindAscSequenceAsc(last.atDay(1)).isEmpty()) {
+        if (runs.findByMonthOrderByKindAscSequenceAsc(last.atDay(1)).isEmpty()) {
+            int locked = lockTeachers(last);
+            runService.start(admin.getId(), last.toString(), false);
+            log.info("[DEV SEED] Payroll run demo data ready: {} Teacher month(s) locked, a draft run for {} started.", locked, last);
+        }
+        seedAwaitingApproval(admin.getId(), last.minusMonths(1));
+    }
+
+    /**
+     * A second run, for the month before last, computed and sent for approval, so the Director's inbox and the dashboard have a
+     * pay run awaiting a decision (spec 028). Waits briefly for the background computation; if it is not done the run stays a draft.
+     */
+    private void seedAwaitingApproval(UUID admin, YearMonth month) {
+        if (!runs.findByMonthOrderByKindAscSequenceAsc(month.atDay(1)).isEmpty()) {
             return;
         }
-        int locked = lockTeachers(last);
-        runService.start(admin.getId(), last.toString(), false);
-        log.info("[DEV SEED] Payroll run demo data ready: {} Teacher month(s) locked, a draft run for {} started.", locked, last);
+        lockTeachers(month);
+        UUID runId = runService.start(admin, month.toString(), false).id();
+        for (int i = 0; i < 60; i++) {
+            PayRun run = runs.findById(runId).orElse(null);
+            if (run != null && run.getComputeState() == PayRun.ComputeState.DONE) {
+                try {
+                    runService.submit(admin, runId);
+                    log.info("[DEV SEED] Payroll run for {} is awaiting approval.", month);
+                } catch (RuntimeException e) {
+                    log.warn("[DEV SEED] The run for {} could not be sent for approval: {}", month, e.getMessage());
+                }
+                return;
+            }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        log.warn("[DEV SEED] The run for {} did not finish computing; it stays a draft.", month);
     }
 
     /** Locks the month for each Teacher with a salary whose month is still open; a month already locked is left alone. */

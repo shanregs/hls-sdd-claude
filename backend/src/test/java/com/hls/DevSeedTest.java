@@ -121,4 +121,44 @@ class DevSeedTest extends IntegrationTestBase {
         assertThat(get("/api/v1/expenses/budgets?month=" + java.time.YearMonth.from(java.time.LocalDate.now().minusDays(1)), director.token()).body())
                 .contains("20000.00");
     }
+
+    @SuppressWarnings("unchecked")
+    private long tileValue(String token, String area, String key, String period, String label) {
+        Resp tile = get("/api/v1/dashboard/areas/" + area + "/tiles/" + key + "?period=" + period, token);
+        assertThat(tile.status()).as(tile.body()).isEqualTo(200);
+        assertThat(tile.map().get("state")).as(key + " " + tile.body()).isEqualTo("OK");
+        return ((java.util.List<java.util.Map<String, Object>>) tile.map().get("values")).stream()
+                .filter(v -> label == null || label.equals(v.get("label")))
+                .map(v -> ((Number) v.get("value")).longValue())
+                .findFirst()
+                .orElseThrow();
+    }
+
+    /** Spec 028 quickstart prerequisites: every dashboard scenario has demo data behind it. */
+    @Test
+    void dashboardDemoDataCoversOverdueMissedVisitPendingLeaveAbsentTeacherAndRunAwaitingApproval() {
+        Signed director = signIn(null, "9800000002", "Password123!");
+        String token = director.token();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        String month = java.time.YearMonth.from(today).toString();
+
+        assertThat(tileValue(token, "MANAGERS", "managers.tasks.overdue", month, null)).isGreaterThanOrEqualTo(1);
+        assertThat(tileValue(token, "MANAGERS", "managers.pendingRequests", month, "Leave")).isGreaterThanOrEqualTo(1);
+        String visitMonth = java.time.YearMonth.from(today.minusDays(2)).toString();
+        assertThat(tileValue(token, "SCHOOLS", "schools.visits", visitMonth, "Missed")).isGreaterThanOrEqualTo(1);
+
+        Resp inbox = get("/api/v1/dashboard/inbox?kind=PAYROLL_RUN", token);
+        assertThat(inbox.status()).as(inbox.body()).isEqualTo(200);
+        assertThat(inbox.body()).contains("PAYROLL_RUN");
+
+        // the absence is marked on working days only; on a Sunday or holiday the tile says so instead
+        if (today.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
+            Resp away = get("/api/v1/dashboard/areas/ATTENDANCE_LEAVE/tiles/attendance.awayToday", token);
+            assertThat(away.status()).as(away.body()).isEqualTo(200);
+            assertThat(away.map().get("state")).isIn("OK", "NOT_WORKING_DAY");
+            if ("OK".equals(away.map().get("state"))) {
+                assertThat(tileValue(token, "TEACHERS", "operations.substitutions", month, "Open")).isGreaterThanOrEqualTo(1);
+            }
+        }
+    }
 }

@@ -236,6 +236,17 @@ describe("Task lists (spec 025 US1, US2)", () => {
     );
   });
 
+  it("opens on the view and Manager named in the link from the dashboard (spec 028)", async () => {
+    grant("ADMIN", "Manager Tasks");
+    renderAt("/operations/tasks?view=overdue&assigneeUserId=u-1");
+    await screen.findByText("Visit Green Valley School");
+    const listCalls = authFetch.mock.calls
+      .map(([u]) => String(u))
+      .filter((u) => u.includes("/api/v1/tasks?"));
+    expect(listCalls.length).toBeGreaterThan(0);
+    expect(listCalls.every((u) => u.includes("view=overdue") && u.includes("assigneeUserId=u-1"))).toBe(true);
+  });
+
   it("shows an empty state and an error state", async () => {
     mockList([]);
     const { unmount } = renderAt("/operations/tasks");

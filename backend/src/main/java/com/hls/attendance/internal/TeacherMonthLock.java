@@ -32,4 +32,12 @@ public class TeacherMonthLock {
                 .map(m -> m.getState() == MonthState.LOCKED)
                 .orElse(false);
     }
+
+    /** The Teachers among those given whose month is LOCKED, in one query. */
+    public java.util.Set<UUID> lockedAmong(java.util.Collection<UUID> teacherIds, YearMonth month) {
+        return months.findByTeacherIdInAndYearMonth(teacherIds, month.toString()).stream()
+                .filter(m -> m.getState() == MonthState.LOCKED)
+                .map(TeacherMonth::getTeacherId)
+                .collect(java.util.stream.Collectors.toSet());
+    }
 }

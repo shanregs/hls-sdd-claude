@@ -75,3 +75,9 @@ reachable by keyboard with the figure and label read together.
 mvn -f backend/pom.xml test -Dtest='reporting.*,*Tiles*,*Approvals*,ArchitectureTest,ModulithTest'
 npm --prefix frontend run test -- dashboard
 ```
+
+## Results (2026-10-24)
+
+Automated (T067): backend `reporting.*`, `*Tiles*`, `*Approvals*`, `ApplicationModulesTest`, `ArchitectureRulesTest`, `AttendanceReadApiTest`, `MonthLockTest`, `DevSeedTest` all pass (76 + 14 + 9 tests). Frontend full run: 104 of 105 files pass; `a11y.test.tsx` (LoginHistoryPage) failed once under machine load and passed when rerun alone. Lint: 0 errors, 6 pre-existing warnings.
+
+Walkthrough (T068), done through tests as far as possible: sections 1 to 7 are covered by the parity, failure, scope, extensibility, performance (statements per area stay constant), demo-data and accessibility tests. NEEDS A HUMAN: section 8 in a browser (dark mode, phone width, real contrast; jsdom cannot check colour contrast), clicking each tile through to its list, and the destination filters that are not yet wired (Marketing calendar status and attendee, Teacher attendance `filter=away`, Manager attendance `filter=missing`, induction `view=readyToDeploy`, payroll `tab=owed`). Wired now: tasks (view, assignee), Manager leave and Teacher leave (status), prospects (stage), substitutions (date, status).

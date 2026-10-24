@@ -96,6 +96,10 @@ public class MarketingDevSeeder implements ApplicationRunner {
                 visit.id(),
                 new ActivityService.CompleteRequest("Met the principal. Interested in 6 Teachers; wants a proposal.", null, today.minusDays(3), null));
 
+        // A visit the demo Manager planned two days ago and never completed: the Managers area shows it as missed (spec 028).
+        users.findByPhone("9800000003").ifPresent(manoj -> activities.plan(
+                admin.getId(), adminRoles, new ActivityService.PlanRequest(contacted, null, "VISIT", today.minusDays(2), List.of(manoj.getId()), "Follow-up visit")));
+
         UUID negotiating = create(admin, adminRoles, zoneId, "Lakeview International School", "ICSE", "Ms Fernandes", 3);
         proposals.create(admin.getId(), adminRoles, negotiating, proposal(3, "16000"));
         pipeline.move(admin.getId(), adminRoles, negotiating, new PipelineService.StageRequest("NEGOTIATION", null, null));

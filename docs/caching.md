@@ -4,6 +4,8 @@ Small, read-mostly tables are kept in memory so that a request does not query th
 else (marks, leave requests, notifications, sessions, one-time codes, audit and the Teacher-month lock state) is
 always read from the database, because it changes all the time or must be exact.
 
+Dashboard figures: not cached. Every tile is read from its owning module when the page loads or is refreshed (spec 028), so a figure is never older than the "figures taken at" time shown with it.
+
 ## What is cached
 
 | Cache name | Table | Where | Why | Invalidated by |

@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.10 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.10)
+Version change: 1.7.0 → 2.5.11 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.11)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -39,6 +39,13 @@ Modified principles:
     `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
     their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
     parallel specs merges first.
+  - 2.5.11 (PATCH, spec 028): the Default role access matrix is unchanged; the dashboard grants each tile
+    through the View grant of the module that owns its figure (a Manager's own-row tiles through the My Manager Attendance View
+    grant), so no module is added to the matrix. Principle VII holds: the feature is the `reporting` module. It owns no
+    transactional data and exposes only an SPI in `reporting.api` (`TileSource`, `ManagerColumns`, `ApprovalSource`); each owning
+    module implements it in its own `internal` package and reads its own data, and `reporting` reads nothing but that SPI, the
+    permission guard and the zone scope. A source that fails or is slow shows one error tile, never a zero. No principle
+    changes.
   - 2.5.10 (PATCH, spec 035): the Default role access matrix gains an Activity Calendar row (read-only view of planned
     versus done, missed and rescheduled drives, visits, calls, meetings and tasks). Admin and Director hold View for every
     Manager; a Manager holds View for their own activities only; Teacher and System have no access and cannot be granted
@@ -447,4 +454,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.10 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24
+**Version**: 2.5.11 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24
