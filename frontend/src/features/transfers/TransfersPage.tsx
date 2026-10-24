@@ -82,7 +82,11 @@ export function TransfersPage() {
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
-        sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mb: 2 }}
+        sx={{
+          alignItems: { sm: "center" },
+          justifyContent: "space-between",
+          mb: 2,
+        }}
       >
         <Typography variant="h5" component="h1">
           Transfers and Replacements
@@ -133,7 +137,9 @@ export function TransfersPage() {
         />
       </Stack>
 
-      {rows.kind === "loading" && <CircularProgress aria-label="Loading requests" />}
+      {rows.kind === "loading" && (
+        <CircularProgress aria-label="Loading requests" />
+      )}
       {rows.kind === "error" && <Alert severity="error">{rows.reason}</Alert>}
       {rows.kind === "ready" && rows.rows.length === 0 && (
         <Typography color="text.secondary">No requests here.</Typography>
@@ -177,8 +183,12 @@ export function TransfersPage() {
         </TableContainer>
       )}
 
-      {transferring && <TransferForm onClose={() => setTransferring(false)} onSaved={saved} />}
-      {replacing && <ReplacementForm onClose={() => setReplacing(false)} onSaved={saved} />}
+      {transferring && (
+        <TransferForm onClose={() => setTransferring(false)} onSaved={saved} />
+      )}
+      {replacing && (
+        <ReplacementForm onClose={() => setReplacing(false)} onSaved={saved} />
+      )}
       {open && (
         <RequestDetail
           request={open}

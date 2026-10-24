@@ -100,20 +100,38 @@ export function ReplacementForm({
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="replacement-title">
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="replacement-title"
+    >
       <DialogTitle id="replacement-title">Replace a Teacher</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {problem && <Alert severity="error">{problem}</Alert>}
-          <SchoolSelect label="School" value={schoolId} onChange={setSchoolId} />
-          <TeacherSelect label="Teacher to replace" value={teacherId} onChange={setTeacherId} placedOnly />
+          <SchoolSelect
+            label="School"
+            value={schoolId}
+            onChange={setSchoolId}
+          />
+          <TeacherSelect
+            label="Teacher to replace"
+            value={teacherId}
+            onChange={setTeacherId}
+            placedOnly
+          />
           <TextField
             label="Effective date"
             type="date"
             required
             value={effectiveOn}
             onChange={(e) => setEffectiveOn(e.target.value)}
-            slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: todayIso() } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { min: todayIso() },
+            }}
             helperText={effectiveOn ? formatDate(effectiveOn) : undefined}
           />
           <TextField
@@ -142,7 +160,12 @@ export function ReplacementForm({
             required={false}
             allowNone
           />
-          <TextField select label="Reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+          <TextField
+            select
+            label="Reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          >
             {Object.entries(REASON_LABELS).map(([value, label]) => (
               <MenuItem key={value} value={value}>
                 {label}
@@ -169,7 +192,11 @@ export function ReplacementForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" disabled={busy} onClick={() => void submit()}>
+        <Button
+          variant="contained"
+          disabled={busy}
+          onClick={() => void submit()}
+        >
           Request replacement
         </Button>
       </DialogActions>

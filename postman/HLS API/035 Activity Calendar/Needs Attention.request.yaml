@@ -1,0 +1,6 @@
+$kind: http-request
+name: Needs Attention
+description: "Missed and rescheduled items for the period (up to 93 days, default the current month), grouped by Manager, oldest first, with daysLate or daysMoved. A Manager sees only their own group. 400 for a range over 93 days."
+url: "{{baseUrl}}/api/v1/activity-calendar/needs-attention?from=2026-10-01&to=2026-10-31"
+method: GET
+order: 3000

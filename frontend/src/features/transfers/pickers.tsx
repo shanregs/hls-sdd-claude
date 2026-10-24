@@ -101,7 +101,9 @@ export function SchoolSelect({
       error={Boolean(problem)}
       helperText={problem ?? undefined}
     >
-      {allowNone && <MenuItem value="">None (the Teacher is available)</MenuItem>}
+      {allowNone && (
+        <MenuItem value="">None (the Teacher is available)</MenuItem>
+      )}
       {schools
         .filter((s) => s.id !== exclude)
         .map((s) => (

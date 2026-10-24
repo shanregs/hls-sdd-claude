@@ -1,7 +1,6 @@
 package com.hls.reporting.internal;
 
 import com.hls.identity.permissions.PermissionGuard;
-import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.reporting.api.ApprovalSource;
 import com.hls.reporting.api.Area;

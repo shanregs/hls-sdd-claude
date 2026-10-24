@@ -15,11 +15,7 @@ const BASE = "/api/v1/transfers";
 
 export type MovementKind = "TRANSFER" | "REPLACEMENT";
 export type MovementStatus =
-  | "PENDING"
-  | "APPROVED"
-  | "APPLIED"
-  | "REJECTED"
-  | "CANCELLED";
+  "PENDING" | "APPROVED" | "APPLIED" | "REJECTED" | "CANCELLED";
 export type MovementAction = "APPROVE" | "REJECT" | "CANCEL" | "CHANGE";
 
 export const KIND_LABELS: Record<MovementKind, string> = {

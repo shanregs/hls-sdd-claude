@@ -188,3 +188,7 @@ The constitution's default access matrix gains a Manager Tasks row (PATCH 2.5.3)
 - The activity calendar view (035), the dashboard widgets (028) and the mobile screens (034) are separate specs that read the interfaces defined here.
 - Bulk and recurring tasks are out of scope.
 - Specs 022, 026 and 029 call the interface in their own specs; this spec only provides it and the 023 listener.
+
+## Amended by 035
+
+Spec 035 (Manager Activity Calendar) added `activitiesBetween` on the task feed additively (no schema change). `plannedBetween` and its `PlannedActivity` values are unchanged; the regression test is `TaskPlannedBetweenUnchangedTest`.

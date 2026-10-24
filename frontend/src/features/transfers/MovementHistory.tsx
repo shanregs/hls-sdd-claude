@@ -64,7 +64,8 @@ export function MovementHistory({
   if (!allowed) return null;
   if (state.kind === "loading")
     return <CircularProgress aria-label="Loading movement history" />;
-  if (state.kind === "error") return <Alert severity="error">{state.reason}</Alert>;
+  if (state.kind === "error")
+    return <Alert severity="error">{state.reason}</Alert>;
   if (state.lines.length === 0)
     return <Typography color="text.secondary">No movements yet.</Typography>;
   return (

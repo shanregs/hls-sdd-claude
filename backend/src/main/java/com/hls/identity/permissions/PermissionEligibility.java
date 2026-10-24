@@ -53,6 +53,7 @@ public final class PermissionEligibility {
             PermissionModule.MY_MANAGER_ATTENDANCE,
             PermissionModule.SCHOOL_WORKING_DAYS,
             PermissionModule.PAYROLL,
+            PermissionModule.ACTIVITY_CALENDAR,
             PermissionModule.TEACHER_PERFORMANCE,
             PermissionModule.EXPENSES,
             PermissionModule.MY_EXPENSES,
@@ -98,6 +99,10 @@ public final class PermissionEligibility {
     /** Payroll run (spec 013b): pay is for Admin and Director only; no other role can be granted any of it. */
     static final Map<PermissionModule, Set<Role>> PAYROLL_MODULES =
             Map.of(PermissionModule.PAYROLL, EnumSet.of(Role.ADMIN, Role.DIRECTOR));
+
+    /** Activity calendar (spec 035): read-only, for Admin, Director and Manager (a Manager sees only their own items). */
+    static final Map<PermissionModule, Set<Role>> ACTIVITY_CALENDAR_MODULES =
+            Map.of(PermissionModule.ACTIVITY_CALENDAR, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER));
 
     /**
      * Teacher performance (spec 026): observations, Principal feedback and issues are for staff roles only; a Teacher never
@@ -157,6 +162,10 @@ public final class PermissionEligibility {
         }
         Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
         if (payrollOnly != null && !payrollOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
+        }
+        Set<Role> calendarOnly = ACTIVITY_CALENDAR_MODULES.get(module);
+        if (calendarOnly != null && !calendarOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
         }
         Set<Role> expensesOnly = EXPENSES_MODULES.get(module);

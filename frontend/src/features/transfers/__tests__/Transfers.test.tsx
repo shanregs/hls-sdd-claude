@@ -87,30 +87,53 @@ describe("RequestDetail", () => {
         onChanged={() => {}}
       />,
     );
-    expect(screen.getByRole("button", { name: "Cancel request" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Cancel request" }),
+    ).toBeVisible();
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
   });
 
   it("shows the checks and the history with dates as DD/MM/YYYY", () => {
     render(
-      <RequestDetail request={REQUEST} onClose={() => {}} onChanged={() => {}} />,
+      <RequestDetail
+        request={REQUEST}
+        onClose={() => {}}
+        onChanged={() => {}}
+      />,
     );
-    expect(screen.getByText(/Problem: The receiving School is inactive/)).toBeVisible();
+    expect(
+      screen.getByText(/Problem: The receiving School is inactive/),
+    ).toBeVisible();
     expect(screen.getByText(/Effective: 03\/11\/2026/)).toBeVisible();
     expect(screen.getByText(/raised by Meera Manager/)).toBeVisible();
   });
 
   it("requires a reason to reject and sends the version", async () => {
-    authFetch.mockResolvedValue(json({ ...REQUEST, status: "REJECTED", actions: [] }));
+    authFetch.mockResolvedValue(
+      json({ ...REQUEST, status: "REJECTED", actions: [] }),
+    );
     const onChanged = vi.fn();
-    render(<RequestDetail request={REQUEST} onClose={() => {}} onChanged={onChanged} />);
+    render(
+      <RequestDetail
+        request={REQUEST}
+        onClose={() => {}}
+        onChanged={onChanged}
+      />,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Reject" }));
-    await userEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Confirm rejection" }),
+    );
     expect(screen.getByText("Give a reason.")).toBeVisible();
     expect(authFetch).not.toHaveBeenCalled();
-    await userEvent.type(screen.getByLabelText(/Reason for rejecting/), "Not needed");
-    await userEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));
+    await userEvent.type(
+      screen.getByLabelText(/Reason for rejecting/),
+      "Not needed",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Confirm rejection" }),
+    );
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
     const [url, init] = authFetch.mock.calls[0];
     expect(url).toBe("/api/v1/transfers/r1/reject");
@@ -118,17 +141,37 @@ describe("RequestDetail", () => {
   });
 
   it("requires a reason to cancel", async () => {
-    render(<RequestDetail request={REQUEST} onClose={() => {}} onChanged={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Cancel request" }));
-    await userEvent.click(screen.getByRole("button", { name: "Confirm cancellation" }));
+    render(
+      <RequestDetail
+        request={REQUEST}
+        onClose={() => {}}
+        onChanged={() => {}}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Cancel request" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Confirm cancellation" }),
+    );
     expect(screen.getByText("Give a reason.")).toBeVisible();
   });
 
   it("asks to reload when the version changed", async () => {
-    authFetch.mockResolvedValue(json({ reason: "This request changed. Reload and try again." }, 409));
-    render(<RequestDetail request={REQUEST} onClose={() => {}} onChanged={() => {}} />);
+    authFetch.mockResolvedValue(
+      json({ reason: "This request changed. Reload and try again." }, 409),
+    );
+    render(
+      <RequestDetail
+        request={REQUEST}
+        onClose={() => {}}
+        onChanged={() => {}}
+      />,
+    );
     await userEvent.click(screen.getByRole("button", { name: "Approve" }));
-    expect(await screen.findByText("This request changed, reload")).toBeVisible();
+    expect(
+      await screen.findByText("This request changed, reload"),
+    ).toBeVisible();
   });
 });
 
@@ -137,7 +180,13 @@ describe("TransferForm", () => {
     authFetch.mockImplementation(async (url: string) => {
       if (url.startsWith("/api/v1/teachers"))
         return json({
-          content: [{ id: "t1", name: "Asha Teacher", school: { id: "s1", name: "Green Valley" } }],
+          content: [
+            {
+              id: "t1",
+              name: "Asha Teacher",
+              school: { id: "s1", name: "Green Valley" },
+            },
+          ],
           page: 0,
           size: 200,
           totalElements: 1,
@@ -152,25 +201,35 @@ describe("TransferForm", () => {
           size: 200,
           totalElements: 2,
         });
-      if (url.includes("/vacancies")) return json([{ positionId: "p1", number: 2, salary: null }]);
+      if (url.includes("/vacancies"))
+        return json([{ positionId: "p1", number: 2, salary: null }]);
       if (url.endsWith("/check"))
-        return json({ ok: false, problems: ["That position is already filled on those dates."] });
+        return json({
+          ok: false,
+          problems: ["That position is already filled on those dates."],
+        });
       return json({});
     });
   });
 
   it("asks for the required fields and a note for a School request", async () => {
     render(<TransferForm onClose={() => {}} onSaved={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Request transfer" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Request transfer" }),
+    );
     expect(screen.getByText("Choose the Teacher.")).toBeVisible();
   });
 
   it("shows the problems from the server check and lists vacant positions", async () => {
     render(<TransferForm onClose={() => {}} onSaved={() => {}} />);
     await userEvent.click(screen.getByLabelText(/^Teacher/));
-    await userEvent.click(await screen.findByRole("option", { name: /Asha Teacher/ }));
+    await userEvent.click(
+      await screen.findByRole("option", { name: /Asha Teacher/ }),
+    );
     await userEvent.click(screen.getByLabelText(/Receiving School/));
-    await userEvent.click(await screen.findByRole("option", { name: "Hill View" }));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Hill View" }),
+    );
     const date = screen.getByLabelText(/Effective date/);
     await userEvent.type(date, "2099-01-05");
     expect(await screen.findByText(/already filled/)).toBeVisible();
@@ -179,7 +238,13 @@ describe("TransferForm", () => {
 
   it("is reachable by keyboard: fields are labelled and focusable", () => {
     render(<TransferForm onClose={() => {}} onSaved={() => {}} />);
-    for (const label of [/^Teacher/, /Receiving School/, /Effective date/, /^Reason/, /Note/]) {
+    for (const label of [
+      /^Teacher/,
+      /Receiving School/,
+      /Effective date/,
+      /^Reason/,
+      /Note/,
+    ]) {
       const field = screen.getByLabelText(label);
       field.focus();
       expect(field).toHaveFocus();
@@ -190,35 +255,56 @@ describe("TransferForm", () => {
 describe("ReplacementForm", () => {
   it("shows the free candidates and the optional destination", async () => {
     authFetch.mockImplementation(async (url: string) => {
-      if (url.startsWith("/api/v1/teachers")) return json({ content: [], page: 0, size: 200, totalElements: 0 });
+      if (url.startsWith("/api/v1/teachers"))
+        return json({ content: [], page: 0, size: 200, totalElements: 0 });
       if (url.startsWith("/api/v1/schools"))
-        return json({ content: [{ id: "s1", name: "Green Valley" }], page: 0, size: 200, totalElements: 1 });
-      if (url.includes("/candidates")) return json([{ id: "c1", name: "Free Teacher", status: "ACTIVE" }]);
+        return json({
+          content: [{ id: "s1", name: "Green Valley" }],
+          page: 0,
+          size: 200,
+          totalElements: 1,
+        });
+      if (url.includes("/candidates"))
+        return json([{ id: "c1", name: "Free Teacher", status: "ACTIVE" }]);
       return json({ ok: true, problems: [] });
     });
     render(<ReplacementForm onClose={() => {}} onSaved={() => {}} />);
-    expect(screen.getByLabelText(/Where the replaced Teacher goes/)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/Where the replaced Teacher goes/),
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText(/^School/));
-    await userEvent.click(await screen.findByRole("option", { name: "Green Valley" }));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Green Valley" }),
+    );
     await userEvent.type(screen.getByLabelText(/Effective date/), "2099-01-05");
     await waitFor(() =>
-      expect(authFetch.mock.calls.some((c) => String(c[0]).includes("/candidates"))).toBe(true),
+      expect(
+        authFetch.mock.calls.some((c) => String(c[0]).includes("/candidates")),
+      ).toBe(true),
     );
     await userEvent.click(screen.getByLabelText(/Replacement Teacher/));
-    expect(await screen.findByRole("option", { name: "Free Teacher" })).toBeVisible();
+    expect(
+      await screen.findByRole("option", { name: "Free Teacher" }),
+    ).toBeVisible();
   });
 
   it("asks for the Teacher to replace first", async () => {
-    authFetch.mockResolvedValue(json({ content: [], page: 0, size: 200, totalElements: 0 }));
+    authFetch.mockResolvedValue(
+      json({ content: [], page: 0, size: 200, totalElements: 0 }),
+    );
     render(<ReplacementForm onClose={() => {}} onSaved={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Request replacement" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Request replacement" }),
+    );
     expect(screen.getByText("Choose the Teacher to replace.")).toBeVisible();
   });
 });
 
 describe("TransfersPage", () => {
   function listing(rows: MovementRequest[]) {
-    authFetch.mockImplementation(async () => json({ content: rows, page: 0, size: 50, totalElements: rows.length }));
+    authFetch.mockImplementation(async () =>
+      json({ content: rows, page: 0, size: 50, totalElements: rows.length }),
+    );
   }
 
   it("defaults to Pending and Approved and shows the rows", async () => {
@@ -233,9 +319,15 @@ describe("TransfersPage", () => {
     render(<TransfersPage />);
     expect(await screen.findByText("No requests here.")).toBeVisible();
     await userEvent.click(screen.getByLabelText("Status"));
-    await userEvent.click(await screen.findByRole("option", { name: "Rejected" }));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Rejected" }),
+    );
     await waitFor(() =>
-      expect(authFetch.mock.calls.some((c) => String(c[0]).includes("status=REJECTED"))).toBe(true),
+      expect(
+        authFetch.mock.calls.some((c) =>
+          String(c[0]).includes("status=REJECTED"),
+        ),
+      ).toBe(true),
     );
   });
 
@@ -250,15 +342,23 @@ describe("TransfersPage", () => {
     listing([]);
     render(<TransfersPage />);
     await screen.findByText("No requests here.");
-    expect(screen.queryByRole("button", { name: "Request a transfer" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Replace a Teacher" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Request a transfer" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Replace a Teacher" }),
+    ).toBeNull();
   });
 
   it("shows both create buttons with CREATE", async () => {
     listing([]);
     render(<TransfersPage />);
-    expect(await screen.findByRole("button", { name: "Request a transfer" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Replace a Teacher" })).toBeVisible();
+    expect(
+      await screen.findByRole("button", { name: "Request a transfer" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Replace a Teacher" }),
+    ).toBeVisible();
   });
 });
 
@@ -298,9 +398,17 @@ describe("MovementHistory", () => {
     authFetch.mockResolvedValue(json(LINES));
     render(<MovementHistory teacherId="t1" />);
     const list = await screen.findByRole("list", { name: "Movement history" });
-    expect(within(list).getByText(/01\/04\/2026 to 02\/11\/2026 - Initial assignment/)).toBeVisible();
-    expect(within(list).getByText(/03\/11\/2026 to now - Transfer/)).toBeVisible();
-    expect(authFetch.mock.calls[0][0]).toBe("/api/v1/transfers/teachers/t1/movements");
+    expect(
+      within(list).getByText(
+        /01\/04\/2026 to 02\/11\/2026 - Initial assignment/,
+      ),
+    ).toBeVisible();
+    expect(
+      within(list).getByText(/03\/11\/2026 to now - Transfer/),
+    ).toBeVisible();
+    expect(authFetch.mock.calls[0][0]).toBe(
+      "/api/v1/transfers/teachers/t1/movements",
+    );
   });
 
   it("is hidden without the View grant", () => {

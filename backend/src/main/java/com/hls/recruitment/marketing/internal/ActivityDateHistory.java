@@ -50,6 +50,10 @@ public class ActivityDateHistory {
         return oldDate;
     }
 
+    public Instant getChangedAt() {
+        return changedAt;
+    }
+
     public LocalDate getNewDate() {
         return newDate;
     }

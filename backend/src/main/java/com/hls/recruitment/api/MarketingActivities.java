@@ -8,4 +8,10 @@ import java.util.UUID;
 public interface MarketingActivities {
 
     List<PlannedActivity> plannedBetween(LocalDate from, LocalDate to, UUID ownerUserId);
+
+    /**
+     * Every visit, call and meeting dated in the range with status PLANNED, COMPLETED and CANCELLED (spec 035). A null
+     * user means everyone's; a given user matches creator or attendee.
+     */
+    List<ActivityEntry> activitiesBetween(LocalDate from, LocalDate to, UUID userId);
 }

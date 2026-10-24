@@ -48,9 +48,7 @@ export function RequestDetail({
   const can = (a: string) => (request.actions as string[]).includes(a);
 
   async function run(
-    action: () => Promise<
-      Awaited<ReturnType<typeof approveRequest>>
-    >,
+    action: () => Promise<Awaited<ReturnType<typeof approveRequest>>>,
   ) {
     setBusy(true);
     setProblem(null);
@@ -60,7 +58,11 @@ export function RequestDetail({
       setMode(null);
       onChanged(result.data);
     } else {
-      setProblem(result.status === 409 && /changed/i.test(result.reason) ? STALE : result.reason);
+      setProblem(
+        result.status === 409 && /changed/i.test(result.reason)
+          ? STALE
+          : result.reason,
+      );
     }
   }
 
@@ -81,11 +83,22 @@ export function RequestDetail({
       setProblem("Choose today or a later date.");
       return;
     }
-    void run(() => changeRequest(authFetch, request.id, { version: request.version, effectiveOn: date }));
+    void run(() =>
+      changeRequest(authFetch, request.id, {
+        version: request.version,
+        effectiveOn: date,
+      }),
+    );
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="request-title">
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby="request-title"
+    >
       <DialogTitle id="request-title">
         {KIND_LABELS[request.kind]}: {request.teacher.name}
       </DialogTitle>
@@ -100,16 +113,20 @@ export function RequestDetail({
             {request.kind === "TRANSFER"
               ? `From ${request.fromSchool.name} to ${request.toSchool.name}`
               : `At ${request.fromSchool.name}, replaced by ${request.replacementTeacher?.name ?? ""}`}
-            {request.position?.number ? `, position ${request.position.number}` : ""}
+            {request.position?.number
+              ? `, position ${request.position.number}`
+              : ""}
           </Typography>
           {request.outgoingDestinationSchool && (
             <Typography>
-              {request.teacher.name} then goes to {request.outgoingDestinationSchool.name}
+              {request.teacher.name} then goes to{" "}
+              {request.outgoingDestinationSchool.name}
             </Typography>
           )}
           <Typography>Effective: {formatDate(request.effectiveOn)}</Typography>
           <Typography>
-            Reason: {REASON_LABELS[request.reasonCategory] ?? request.reasonCategory}
+            Reason:{" "}
+            {REASON_LABELS[request.reasonCategory] ?? request.reasonCategory}
             {request.note ? ` - ${request.note}` : ""}
           </Typography>
           <Typography>
@@ -127,7 +144,9 @@ export function RequestDetail({
               <List dense aria-label="Checks">
                 {request.checks.map((c) => (
                   <ListItem key={c.text}>
-                    <ListItemText primary={`${c.ok ? "OK" : "Problem"}: ${c.text}`} />
+                    <ListItemText
+                      primary={`${c.ok ? "OK" : "Problem"}: ${c.text}`}
+                    />
                   </ListItem>
                 ))}
               </List>
@@ -155,12 +174,19 @@ export function RequestDetail({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: todayIso() } }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { min: todayIso() },
+              }}
             />
           )}
           {(mode === "reject" || mode === "cancel") && (
             <TextField
-              label={mode === "reject" ? "Reason for rejecting" : "Reason for cancelling"}
+              label={
+                mode === "reject"
+                  ? "Reason for rejecting"
+                  : "Reason for cancelling"
+              }
               required
               multiline
               minRows={2}
@@ -190,7 +216,11 @@ export function RequestDetail({
           <Button
             variant="contained"
             disabled={busy}
-            onClick={() => void run(() => approveRequest(authFetch, request.id, request.version))}
+            onClick={() =>
+              void run(() =>
+                approveRequest(authFetch, request.id, request.version),
+              )
+            }
           >
             Approve
           </Button>
@@ -201,7 +231,12 @@ export function RequestDetail({
           </Button>
         )}
         {(mode === "reject" || mode === "cancel") && (
-          <Button variant="contained" color="error" disabled={busy} onClick={submitReason}>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={busy}
+            onClick={submitReason}
+          >
             {mode === "reject" ? "Confirm rejection" : "Confirm cancellation"}
           </Button>
         )}

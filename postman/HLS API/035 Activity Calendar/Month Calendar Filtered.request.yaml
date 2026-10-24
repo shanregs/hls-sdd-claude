@@ -1,0 +1,6 @@
+$kind: http-request
+name: Month Calendar Filtered
+description: "The same calendar narrowed to one Manager, Zone, kind and status. A Manager passing a managerId that is not their own gets 404."
+url: "{{baseUrl}}/api/v1/activity-calendar?month=2026-10&managerId={{managerUserId}}&zoneId={{zoneId}}&kind=TASK&status=MISSED"
+method: GET
+order: 2000

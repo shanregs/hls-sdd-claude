@@ -1,0 +1,3 @@
+$kind: collection
+description: "Activity Calendar (spec 035), read-only. Needs the ACTIVITY_CALENDAR module: Admin and Director View every Manager; a Manager sees only their own items (owned, attended or assigned) and gets 404 for another managerId; Teacher and System get 403 on every endpoint. There is no POST, PUT, PATCH or DELETE (405). Collection variables: managerUserId, zoneId."
+order: 35000

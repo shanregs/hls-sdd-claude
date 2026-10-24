@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface ActivityDateHistoryRepository extends JpaRepository<ActivityDateHistory, UUID> {
 
     List<ActivityDateHistory> findByActivityIdOrderByNewDateAsc(UUID activityId);
+
+    List<ActivityDateHistory> findByActivityIdIn(java.util.Collection<UUID> activityIds);
 }

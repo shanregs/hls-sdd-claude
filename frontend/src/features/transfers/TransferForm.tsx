@@ -98,15 +98,39 @@ export function TransferForm({
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="transfer-title">
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="transfer-title"
+    >
       <DialogTitle id="transfer-title">Request a transfer</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {problem && <Alert severity="error">{problem}</Alert>}
-          <TeacherSelect label="Teacher" value={teacherId} onChange={setTeacherId} placedOnly />
-          <SchoolSelect label="Receiving School" value={toSchoolId} onChange={(v) => { setToSchoolId(v); setPositionId(""); }} />
+          <TeacherSelect
+            label="Teacher"
+            value={teacherId}
+            onChange={setTeacherId}
+            placedOnly
+          />
+          <SchoolSelect
+            label="Receiving School"
+            value={toSchoolId}
+            onChange={(v) => {
+              setToSchoolId(v);
+              setPositionId("");
+            }}
+          />
           {vacancies.length > 0 && (
-            <TextField select label="Position" value={positionId} onChange={(e) => setPositionId(e.target.value)} helperText="Leave empty to use the next vacant position">
+            <TextField
+              select
+              label="Position"
+              value={positionId}
+              onChange={(e) => setPositionId(e.target.value)}
+              helperText="Leave empty to use the next vacant position"
+            >
               <MenuItem value="">Next vacant position</MenuItem>
               {vacancies.map((v) => (
                 <MenuItem key={v.positionId} value={v.positionId}>
@@ -121,10 +145,18 @@ export function TransferForm({
             required
             value={effectiveOn}
             onChange={(e) => setEffectiveOn(e.target.value)}
-            slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: todayIso() } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { min: todayIso() },
+            }}
             helperText={effectiveOn ? formatDate(effectiveOn) : undefined}
           />
-          <TextField select label="Reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+          <TextField
+            select
+            label="Reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          >
             {Object.entries(REASON_LABELS).map(([value, label]) => (
               <MenuItem key={value} value={value}>
                 {label}
@@ -151,7 +183,11 @@ export function TransferForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" disabled={busy} onClick={() => void submit()}>
+        <Button
+          variant="contained"
+          disabled={busy}
+          onClick={() => void submit()}
+        >
           Request transfer
         </Button>
       </DialogActions>
