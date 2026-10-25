@@ -43,6 +43,8 @@ import { MyExpensesPage } from "./features/expenses/MyExpensesPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
+import { TrainingCalendarPage } from "./features/training/TrainingCalendarPage";
+import { UpcomingTrainingPage } from "./features/training/UpcomingTrainingPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -447,6 +449,30 @@ export function App() {
           element={
             <RouteGuard>
               <ActivityCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/training"
+          element={
+            <RouteGuard>
+              <TrainingCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-training"
+          element={
+            <RouteGuard>
+              <TrainingCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/training"
+          element={
+            <RouteGuard>
+              <UpcomingTrainingPage />
             </RouteGuard>
           }
         />
