@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * Teachers placed under them today (from {@link TeacherScopeQueries}, never re-implemented here) and their own Manager
  * record. A Teacher reaches only their own record. Anything out of scope answers "not found".
  */
-@Component
+@Component("trainingTrainingScope")
 public class TrainingScope {
 
     /** What a caller may reach. {@code teacherIds} is meaningful only when {@code orgWide} is false. */

@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the session row, so two simultaneous requests can never pass it (Constitution Principle VIII); the (session, Teacher) row
  * is unique, so registering twice is one registration.
  */
-@Service
+@Service("trainingRegistrationService")
 public class RegistrationService {
 
     static final String ENTITY = "TRAINING_REGISTRATION";

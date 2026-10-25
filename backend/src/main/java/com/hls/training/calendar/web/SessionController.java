@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Sessions and registrations of the Training Calendar (spec 024 contracts/training-api.md). The grants are re-checked here on
  * every call; the services decide what the grants allow.
  */
-@RestController
+@RestController("trainingSessionController")
 @RequestMapping("/api/v1/training")
 public class SessionController {
 

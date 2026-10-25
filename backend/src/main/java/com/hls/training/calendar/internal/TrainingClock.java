@@ -9,7 +9,7 @@ import java.time.LocalTime;
 import org.springframework.stereotype.Component;
 
 /** Business-zone "today" and "now" for the training calendar: session dates and times are plain local values (no conversion). */
-@Component
+@Component("trainingTrainingClock")
 public class TrainingClock {
 
     private final Clock clock;

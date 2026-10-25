@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /** Who is told about a session: the people required at it and the Teachers registered for it. */
-@Component
+@Component("trainingSessionAudience")
 class SessionAudience {
 
     private final AssignmentRepository assignments;

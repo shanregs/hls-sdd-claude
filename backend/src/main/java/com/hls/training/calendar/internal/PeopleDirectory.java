@@ -14,7 +14,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /** Names, statuses and user accounts of Teachers and Managers, read in bulk through the public interfaces of their modules. */
-@Component
+@Component("trainingPeopleDirectory")
 public class PeopleDirectory {
 
     /** A person of either kind. {@code status} is the Teacher status, or ACTIVE or INACTIVE for a Manager. */

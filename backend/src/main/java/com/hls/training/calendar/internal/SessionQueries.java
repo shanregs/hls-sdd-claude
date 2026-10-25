@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Reads sessions for the calendar and the detail page (spec 024 US1): what each caller may see, the counts, the buttons
  * (a server-sent {@code actions} list), the holiday notice and the derived "attendance not recorded" flag.
  */
-@Service
+@Service("trainingSessionQueries")
 public class SessionQueries {
 
     /** Expected versus attended for one session (FR-015). {@code rate} is attended assigned people over assigned people. */

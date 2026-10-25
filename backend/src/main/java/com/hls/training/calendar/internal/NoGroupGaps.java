@@ -4,7 +4,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 /** Placeholder until the assignment service (US3) supplies the real count. */
-@Component
+@Component("trainingNoGroupGaps")
 class NoGroupGaps implements GroupGaps {
 
     @Override

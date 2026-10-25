@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * {@link ChangeRecorder}; a change to a Published session also appends to the session's own history, which keeps the
  * earlier date, time, trainer and venue visible. Callers have already checked the {@code TRAINING} grant.
  */
-@Service
+@Service("trainingSessionService")
 public class SessionService {
 
     static final String ENTITY = "TRAINING_SESSION";
