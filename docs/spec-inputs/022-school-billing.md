@@ -1,8 +1,10 @@
 # 022 School Billing and Receivables: `/speckit-specify` input
 
 2026-10-05, rewritten the same day after the Director deck (slide 12) and decisions D5 to D15 in
-`docs/spec-roadmap.md`. Depends on **012 School Contracts (MoU)** (merged in #23) and on 008 (attendance calendar),
-003 (audit), 005 (scope), 010 (notifications) and, for follow-up tasks, **025 Manager tasks**. Feeds 013b (payroll
+`docs/spec-roadmap.md`; refreshed 2026-10-26 against the merged specs 012, 025 and 027 (025 now exists, so overdue
+follow-up uses its `TaskCreation` interface, not a notification only). Depends on **012 School Contracts (MoU)**
+(merged) and on 008 (working-day calendar, for pro-rating only, not for the amount), 003 (audit), 005 (scope),
+010 (notifications) and **025 Manager tasks** (follow-up tasks). Feeds 013b (payroll
 margin inputs), 014 (reports, margin) and 028 (dashboard). The earlier combined draft is kept for reference in
 `docs/spec-inputs/022-school-billing-draft/`; the "bill by captured attendance" idea in it is **replaced** (D6).
 
@@ -69,10 +71,15 @@ Teacher's own pay and payslips (013).
   approval (that is 031).
 - The invoice is derived from the contract positions and Teacher assignments of 012 through the public
   `SchoolContracts` and `TeacherPlacementSource` interfaces; billing does not read their tables.
+- Spec 012b (fee terms) is deferred; payment due days and escalation days are settings of this spec.
 - Money is stored exactly (two decimals), shown in rupees with Indian grouping, dates DD/MM/YYYY; payments, receipts,
   credit notes and invoices are append-only, corrected by new entries.
 - After a Zone Manager change, only the current Zone Manager sees a School's billing, past months included.
-- Overdue work uses the task platform (025, contract C2); until 025 exists, only the notification is raised.
+- Overdue work uses the task platform (025, contract C2, `TaskCreation.createFollowUp`, one open task per source key;
+  `complete` and `cancel` close it when the invoice is paid or cancelled). Task holders are Zone Managers; a School
+  with no Zone Manager sends the task to no one, so the Director and Admin are notified instead.
+- Transfers and replacements (spec 027) move placements through `PlacementMoves`; billing reads the resulting
+  assignment history and never the transfer tables, so a transfer mid-month splits the billed part between Schools.
 
 ## Points for `/speckit-clarify`
 
