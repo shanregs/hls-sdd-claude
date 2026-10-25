@@ -106,13 +106,13 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ### Tests for US2 (write first)
 
-- [ ] T024 [P] [US2] Unit test `T/training/calendar/PatternRulesTest.java`: nth weekday (first to fourth, last), fixed day with month-end clamp (31st in a 30-day month, February, leap year), year boundary, preview notes
+- [X] T024 [P] [US2] Unit test `T/training/calendar/PatternRulesTest.java`: nth weekday (first to fourth, last), fixed day with month-end clamp (31st in a 30-day month, February, leap year), year boundary, preview notes
 - [ ] T025 [P] [US2] Integration test `T/training/calendar/GenerationTest.java` (SC-001): 12-month simulated run with the job executed daily and twice per day creates one session per month, none missed, none duplicated; the horizon keeps the next three months present; a start month in the past does not backfill; skipped month becomes a SKIPPED row with the reason
 - [ ] T026 [P] [US2] Integration test `T/training/calendar/PatternEditTest.java`: editing one generated session sets `hand_edited` and leaves the pattern and other months alone; editing the pattern from month M rewrites only untouched, not-held sessions of M and later and keeps their assignments and registrations; stop from month M removes untouched later sessions and keeps held and hand-edited ones; a duplicate rule and time is refused; a pattern on a holiday still creates the session and the detail carries the notice
 
 ### Implementation for US2
 
-- [ ] T027 [US2] Implement `TC/internal/PatternRules.java` (date maths and preview) and `PatternService.java` (create, preview, edit from month, skip and unskip, stop; `ChangeRecorder`). Depends on T006, T019
+- [ ] T027 [US2] Implement `TC/internal/PatternRules.java` (date maths and preview) and `PatternService.java` (create, preview, edit from month, skip and unskip, stop; `ChangeRecorder`). Depends on T006, T019 (PatternRules.java done in the T024 commit; PatternService not started)
 - [ ] T028 [US2] Implement `TC/internal/GenerationService.java` (idempotent materialisation up to the horizon from `TrainingSettings`, default group snapshot applied through `GroupResolver` from T034 once it exists, otherwise skipped) and `GenerationJob.java` (daily 03:10 in the business zone, `hls.training.generation-job.enabled` switch for tests). Depends on T027
 - [ ] T029 [US2] Implement `TC/web/PatternController.java` (patterns, preview, skips, stop). Depends on T027
 - [ ] T030 [US2] Frontend: `FE/PatternDialog.tsx` (rule picker, live preview with clamp and holiday notes, default group, from-month edit, skip and stop dialogs) and a Patterns tab on `TrainingCalendarPage`. Depends on T029
