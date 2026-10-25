@@ -90,7 +90,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 - [X] T019 [US1] Implement `TC/internal/SessionService.java` (create, edit, publish, move with history rows per changed field, cancel, delete draft; `hand_edited`; notifications through events; `ChangeRecorder` calls) and `SessionQueries.java` (list with filters, detail with counts, `actions`, holiday notice through `WorkingCalendar`, derived "attendance not recorded"). Depends on T006, T012, T013
 - [X] T020 [US1] Implement `TC/internal/RegistrationService.java` (pessimistic lock on the session row, seat check, unique row flip, Teacher ACTIVE check, start-time cut-off, Admin or Director on behalf) and the roster read. Depends on T019
-- [ ] T021 [US1] Implement `TC/web/SessionController.java` (sessions and registrations endpoints of contracts/training-api.md; `TRAINING` and `TRAINING_REGISTRATION` grants re-checked on the server). Depends on T019, T020
+- [X] T021 [US1] Implement `TC/web/SessionController.java` (sessions and registrations endpoints of contracts/training-api.md; `TRAINING` and `TRAINING_REGISTRATION` grants re-checked on the server). Depends on T019, T020
 - [ ] T022 [US1] Frontend: `FE/TrainingCalendarPage.tsx` (month grid and list, filters, holiday notice, status chips), `FE/SessionDialog.tsx`, `FE/SessionDetail.tsx` (roster, registration controls, history of earlier dates, `actions`-driven buttons), `FE/UpcomingTrainingPage.tsx` (Teacher register and cancel), routes in `frontend/src/App.tsx` guarded by `TRAINING` and `TRAINING_REGISTRATION`. Depends on T003, T021
 - [ ] T023 [P] [US1] Frontend test `FE/__tests__/SessionsAndRegistration.test.tsx`: Admin dialog validation, Teacher register and cancel, full session message, menu labels per role
 
