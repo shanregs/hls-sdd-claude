@@ -162,10 +162,13 @@ describe("Training sessions and registration (spec 024 US1)", () => {
         });
       }
       return json([
-        session({
-          my: { status: registered ? "REGISTERED" : null, open: !registered },
-          actions: registered ? ["CANCEL_REGISTRATION"] : ["REGISTER"],
-        }),
+        {
+          label: registered ? "REGISTERED" : "OPEN",
+          session: session({
+            my: { status: registered ? "REGISTERED" : null, open: !registered },
+            actions: registered ? ["CANCEL_REGISTRATION"] : ["REGISTER"],
+          }),
+        },
       ]);
     });
     renderUi(<UpcomingTrainingPage />);
@@ -181,20 +184,13 @@ describe("Training sessions and registration (spec 024 US1)", () => {
     ).toBeTruthy();
   });
 
-  it("says when a session is full", async () => {
+  it("does not offer a full session", async () => {
     access.roles = ["TEACHER"];
-    authFetch.mockResolvedValue(
-      json([
-        session({
-          seatsLeft: 0,
-          registered: 3,
-          actions: [],
-          my: { status: null, open: false },
-        }),
-      ]),
-    );
+    authFetch.mockResolvedValue(json([]));
     renderUi(<UpcomingTrainingPage />);
-    expect(await screen.findByText("No seats left.")).toBeTruthy();
+    expect(
+      await screen.findByText("No upcoming training for you right now."),
+    ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Register" })).toBeNull();
   });
 
@@ -204,13 +200,19 @@ describe("Training sessions and registration (spec 024 US1)", () => {
       if (init?.method === "POST")
         return json({ reason: "No seats left." }, 409);
       return json([
-        session({ my: { status: null, open: true }, actions: ["REGISTER"] }),
+        {
+          label: "OPEN",
+          session: session({
+            my: { status: null, open: true },
+            actions: ["REGISTER"],
+          }),
+        },
       ]);
     });
     renderUi(<UpcomingTrainingPage />);
     await userEvent.click(
       await screen.findByRole("button", { name: "Register" }),
     );
-    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(await screen.findByText("No seats left.")).toBeTruthy();
   });
 });

@@ -15,7 +15,7 @@ public class UpcomingService {
 
     private static final int MONTHS_AHEAD = 3;
 
-    /** {@code label} is REQUIRED or OPEN. */
+    /** {@code label} is REQUIRED, REGISTERED (a Teacher's own registration, so it can be cancelled) or OPEN. */
     public record Upcoming(String label, SessionView session) {}
 
     private final SessionQueries queries;
@@ -33,6 +33,9 @@ public class UpcomingService {
                 .map(s -> {
                     if (s.my() != null && "REQUIRED".equals(s.my().status())) {
                         return new Upcoming("REQUIRED", s);
+                    }
+                    if (s.my() != null && "REGISTERED".equals(s.my().status())) {
+                        return new Upcoming("REGISTERED", s);
                     }
                     if (caller.isTeacher() && s.my() != null && s.my().open() && s.my().status() == null) {
                         return new Upcoming("OPEN", s);

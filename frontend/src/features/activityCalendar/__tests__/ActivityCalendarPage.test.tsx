@@ -229,6 +229,26 @@ describe("Activity Calendar (spec 035 US1)", () => {
     );
   });
 
+  it("links a training session to the Training Calendar", async () => {
+    authFetch.mockResolvedValue(
+      json(
+        response([
+          item({
+            kind: "TRAINING",
+            subKind: "MONTHLY",
+            link: { screen: "TRAINING", path: "/operations/training" },
+          }),
+        ]),
+      ),
+    );
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Training 05\/10\/2026 Done/ }));
+    expect(await screen.findByRole("link", { name: /Open in training/ })).toHaveAttribute(
+      "href",
+      "/operations/training",
+    );
+  });
+
   it("titles the page per role: Admin and Director 'Activity Calendar', Manager 'My Activity Calendar'", async () => {
     authFetch.mockResolvedValue(json(response([])));
     grant("ADMIN", "Activity Calendar");

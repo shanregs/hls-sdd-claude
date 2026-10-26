@@ -15,26 +15,15 @@ import {
   STATUS_LABELS,
   TYPE_LABELS,
   cancelRegistration,
-  getSessions,
+  getUpcoming,
   registerForSession,
-  type SessionView,
+  type UpcomingItem,
 } from "./trainingApi";
 
 type State =
   | { kind: "loading" }
   | { kind: "error"; reason: string }
-  | { kind: "ready"; sessions: SessionView[] };
-
-function isoToday(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function isoIn(months: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+  | { kind: "ready"; items: UpcomingItem[] };
 
 /** MY ATTENDANCE -> Upcoming Training (Teacher): sessions the Teacher is Required at or can register for, with register and cancel. */
 export function UpcomingTrainingPage() {
@@ -44,21 +33,10 @@ export function UpcomingTrainingPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const result = await getSessions(authFetch, {
-      from: isoToday(),
-      to: isoIn(3),
-    });
+    const result = await getUpcoming(authFetch);
     setState(
       result.ok
-        ? {
-            kind: "ready",
-            sessions: result.data.filter(
-              (s) =>
-                s.my?.status != null ||
-                s.my?.open === true ||
-                s.seatsLeft === 0,
-            ),
-          }
+        ? { kind: "ready", items: result.data }
         : { kind: "error", reason: result.reason },
     );
   }, [authFetch]);
@@ -87,7 +65,7 @@ export function UpcomingTrainingPage() {
       )}
       {state.kind === "loading" && <CircularProgress aria-label="Loading" />}
       {state.kind === "error" && <Alert severity="error">{state.reason}</Alert>}
-      {state.kind === "ready" && state.sessions.length === 0 && (
+      {state.kind === "ready" && state.items.length === 0 && (
         <Typography>No upcoming training for you right now.</Typography>
       )}
       {state.kind === "ready" && (
@@ -96,65 +74,57 @@ export function UpcomingTrainingPage() {
           spacing={2}
           sx={{ listStyle: "none", p: 0, m: 0 }}
         >
-          {state.sessions.map((s) => {
-            const full = s.seatsLeft === 0 && s.my?.status == null;
-            return (
-              <li key={s.id}>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  useFlexGap
-                  sx={{ alignItems: "center", flexWrap: "wrap" }}
-                >
-                  <span>{formatDate(s.date)}</span>
-                  <span>{formatTime(s.startsAt)}</span>
-                  <strong>{s.topic}</strong>
-                  <span>{TYPE_LABELS[s.type]}</span>
-                  {s.my?.status === "REQUIRED" && (
-                    <Chip size="small" color="warning" label="Required" />
-                  )}
-                  {s.my?.status === "REGISTERED" && (
-                    <Chip size="small" color="success" label="Registered" />
-                  )}
-                  {s.my?.status == null && !full && (
-                    <Chip size="small" variant="outlined" label="Open" />
-                  )}
-                  {s.status !== "PUBLISHED" && (
-                    <Chip size="small" label={STATUS_LABELS[s.status]} />
-                  )}
-                  {full && (
-                    <Typography color="text.secondary">
-                      No seats left.
-                    </Typography>
-                  )}
-                  {s.actions.includes("REGISTER") && (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() =>
-                        void act(() => registerForSession(authFetch, s.id))
-                      }
-                    >
-                      Register
-                    </Button>
-                  )}
-                  {s.actions.includes("CANCEL_REGISTRATION") && (
-                    <Button
-                      size="small"
-                      onClick={() =>
-                        void act(() => cancelRegistration(authFetch, s.id))
-                      }
-                    >
-                      Cancel registration
-                    </Button>
-                  )}
-                  <Button size="small" onClick={() => setOpenId(s.id)}>
-                    Details
+          {state.items.map(({ label, session: s }) => (
+            <li key={s.id}>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{ alignItems: "center", flexWrap: "wrap" }}
+              >
+                <span>{formatDate(s.date)}</span>
+                <span>{formatTime(s.startsAt)}</span>
+                <strong>{s.topic}</strong>
+                <span>{TYPE_LABELS[s.type]}</span>
+                {label === "REQUIRED" && (
+                  <Chip size="small" color="warning" label="Required" />
+                )}
+                {label === "REGISTERED" && (
+                  <Chip size="small" color="success" label="Registered" />
+                )}
+                {label === "OPEN" && (
+                  <Chip size="small" variant="outlined" label="Open" />
+                )}
+                {s.status !== "PUBLISHED" && (
+                  <Chip size="small" label={STATUS_LABELS[s.status]} />
+                )}
+                {s.actions.includes("REGISTER") && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() =>
+                      void act(() => registerForSession(authFetch, s.id))
+                    }
+                  >
+                    Register
                   </Button>
-                </Stack>
-              </li>
-            );
-          })}
+                )}
+                {s.actions.includes("CANCEL_REGISTRATION") && (
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      void act(() => cancelRegistration(authFetch, s.id))
+                    }
+                  >
+                    Cancel registration
+                  </Button>
+                )}
+                <Button size="small" onClick={() => setOpenId(s.id)}>
+                  Details
+                </Button>
+              </Stack>
+            </li>
+          ))}
         </Stack>
       )}
       {openId && (

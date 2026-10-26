@@ -760,3 +760,20 @@ export function getHistory(
     "Could not load the training history.",
   );
 }
+
+// ------------------------------------------------------------------ upcoming (US7)
+
+export interface UpcomingItem {
+  label: "REQUIRED" | "REGISTERED" | "OPEN";
+  session: SessionView;
+}
+
+export function getUpcoming(
+  authFetch: AuthFetch,
+): Promise<ApiResult<UpcomingItem[]>> {
+  return getJson<UpcomingItem[]>(
+    authFetch,
+    `${BASE}/me/upcoming`,
+    "Could not load your upcoming training.",
+  );
+}
