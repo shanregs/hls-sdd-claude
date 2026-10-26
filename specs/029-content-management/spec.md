@@ -19,6 +19,7 @@ Answered by the owner against `clarification-questions.md` (Q1 = B, Q2 to Q5 = A
 - Q: Are the size limits and formats right? -> A: Yes: video mp4 up to 500 MB, audio mp3, m4a and wav up to 100 MB, PDF, Word (docx) and Excel (xlsx) up to 25 MB each; no legacy .doc or .xls and no mov or mkv.
 - Q: What happens when approved content gets a new version? -> A: It goes back to review; the earlier approved version stays as the last approved one.
 - Q: What can a Content Contributor see? -> A: Only content they authored or submitted, in version 1.
+- Decided: the constitution amendment is MAJOR 3.0.0. Admin is eligible for Approve but is NOT seeded with it (only the Director is); granting it is a matrix change. The 025 task interface gains a small `TaskProgress` interface so content can complete, verify and send back its linked task. The large-upload ceiling and plain downloads (no range or in-browser streaming playback) are accepted for version 1, with the deployment change recorded in `docs/aws-deployment-and-ddos-protection.md`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -188,7 +189,7 @@ Content Contributor elsewhere: no access to any other module and cannot be grant
 
 ## Assumptions
 
-- Reviewers are users holding Approve on Content: Director by default, Admin when granted.
+- Reviewers are users holding Approve on Content: Director by default; Admin only when granted in the matrix (decided, not seeded).
 - Files only, no links, in version 1. The limits in FR-005 are defaults the owner can change in one place.
 - One content piece per task, and a task only for Manager authors with a due date (spec 025 allows only active Managers as assignees; widening that is out of scope).
 - A Content Contributor has no salary, attendance, leave or expense record and is not a payroll subject.

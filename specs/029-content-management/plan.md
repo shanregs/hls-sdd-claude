@@ -34,16 +34,16 @@ types, a limit per type, streamed storage and download). Content tasks are creat
 | IX Testability | Unit, API, per-role authorization (six roles), ArchUnit, file-limit and frontend tests. |
 | X Security | Server re-checks grant and scope on every endpoint; first-byte checks per type; downloads as attachments gated by visibility; no public links. |
 
-## Constitution amendment (proposed 3.0.0)
+## Constitution amendment (3.0.0, decided)
 
-Needs the owner's sign-off before merge; the text is already edited in `.specify/memory/constitution.md` on this branch.
+Decided by the owner 2026-10-26: MAJOR 3.0.0. The text is edited in `.specify/memory/constitution.md` on this branch and lands with this spec.
 
 - Principle II: title and list become six roles; "Admin may create new roles in future" becomes "a further role is a
   constitution amendment"; new Content Contributor bullet.
 - Principle III: Content Contributor scope line. Principle IV: "All six roles", Contributor sections and dashboard.
 - Default role access matrix: a Content row and a Content Contributor column (all other rows "—").
 - Development Workflow item 2: "each of the six roles".
-- Version: MAJOR 3.0.0 under the governance rule (a principle is redefined); MINOR 2.6.0 is the alternative.
+- Version: MAJOR 3.0.0 under the governance rule (a principle is redefined).
 
 ## Impacts on other specs and code
 
@@ -58,7 +58,7 @@ Needs the owner's sign-off before merge; the text is already edited in `.specify
 | 013a / 013b | a Contributor has no salary record; payroll must not list them (verify the person lists filter by Teacher/Manager) | check only |
 | 015 expenses | `My Expenses` not granted to the Contributor | none |
 | 018 / 021 / 033 / 034 / 036 | mobile sign-in refuses the new role as for System/Admin | regression test |
-| 025 tasks | C2 unchanged (assignee must be an active Manager); `CONTENT_SUBMISSION` type reused. **Amendment**: 025 exposes no programmatic status change, so `tasks.api` gains a small `TaskProgress` interface (complete with evidence note, verify, send back, by source and source key) used by `content`; the 025 rule that the verifier is not the assignee is applied to the content reviewer, not the system | amendment |
+| 025 tasks | C2 unchanged (assignee must be an active Manager); `CONTENT_SUBMISSION` type reused. **Amendment**: 025 exposes no programmatic status change, so `tasks.api` gains a small `TaskProgress` interface (complete with evidence note, verify, send back, by source and source key) used by `content`; the 025 rule that the verifier is not the assignee is applied to the content reviewer, not the system. **Decided 2026-10-26: accepted** | amendment |
 | 028 dashboard | Content tile source (`TileSource`) and an Approvals-inbox item for submitted content | code |
 | 035 calendar | none (content is not a planned activity in v1) | none |
 | Frontend | role types, `DashboardRouter`, user dialogs and `userManagementApi`, `RolePermissionsGrid`, a11y tests, navigation tests | code |

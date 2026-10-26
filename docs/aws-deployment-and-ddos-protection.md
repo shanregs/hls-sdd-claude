@@ -295,3 +295,12 @@ Cloudflare terminates TLS and can see plaintext traffic. The app handles persona
 ## 7. When to outgrow this setup
 
 Move to a second tier (still modest) when any of these hold: sustained attacks pass Cloudflare Free, the VM sits above ~70% CPU, or downtime of a few hours is unacceptable. Typical next steps in order: Cloudflare Pro (+$20–25), RDS Postgres (+$15–20 or more) so the app VM is disposable, then an ALB with two app instances (+$18 and up for the ALB plus another VM).
+
+## 8. Large content uploads (spec 029)
+
+Content Management accepts video up to 500 MB, audio up to 100 MB and documents up to 25 MB (decided 2026-10-26; downloads are plain downloads, no range playback in v1). Today everything is sized for 12 MB bodies, so deployment needs:
+
+- **nginx**: `client_max_body_size` is 12m globally in `docker/nginx.locations.conf`; add a location for `/api/v1/content/` with `client_max_body_size 520m`, `client_body_timeout 300s`, `proxy_read_timeout 300s`, `proxy_send_timeout 300s` and `proxy_request_buffering off` so the body streams to the backend. Keep 12m for every other path.
+- **Cloudflare**: the proxied request body limit is 100 MB on Free and Pro, 200 MB on Business and 500 MB on Enterprise, so a 500 MB video cannot pass the proxy on the plans in section 2. Choices: keep the 500 MB limit in the app and upload large video from a grey-clouded (DNS-only) hostname such as `upload.<domain>` that skips Cloudflare for that path, or lower the video limit to 100 MB. This must be decided before go-live; the spec's FR-005 limits are the app's limits.
+- **Disk**: the EBS volume holding `/app/data` must be sized for video; add a CloudWatch disk alarm and include the content folder in the S3 backup (large and slow to restore).
+- **Backend**: multipart ceiling 520 MB with a disk threshold, and an early-refusal filter on every other upload path (spec 029 plan R4).

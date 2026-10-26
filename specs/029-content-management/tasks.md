@@ -5,7 +5,7 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 
 ## Phase 0: Constitution and documents
 
-- [ ] T001 Owner sign-off on constitution 3.0.0 (six roles) recorded in `.specify/memory/constitution.md` Sync Impact Report (text already drafted); decide MAJOR 3.0.0 or MINOR 2.6.0.
+- [ ] T001 Constitution 3.0.0 (MAJOR, six roles) decided by the owner 2026-10-26: remove the word PROPOSED from the Sync Impact Report and the version line in `.specify/memory/constitution.md` when this spec is implemented; bring the Default role access matrix and Principles II to IV into line (text drafted).
 - [ ] T002 [P] Doc notes: roadmap row 029 and role count in `docs/spec-roadmap.md`; "five roles" wording in specs 002 and 004 spec.md (amendment note, not a rewrite); running docs.
 
 ## Phase 1: Sixth role in identity (US5)
@@ -23,7 +23,7 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 - [ ] T010 Migration `V95__create_content.sql`: content, content_version (update trigger except removal fields), content_review, content_history (append-only trigger), code sequence, indexes.
 - [ ] T011 [P] `files.api`: `FileLimits`, streamed `store` overload, `openStream`; `FileTypePolicy`: mp4, mp3, m4a, wav with first-byte checks; per-type limit; default limits equal the present 10 MB behaviour.
 - [ ] T012 `FileStoreImpl` streaming write to disk (no whole-file array) and streamed read; error messages name the type and limit.
-- [ ] T013 Server settings: multipart max file and request 520 MB, disk threshold; early-refusal filter (over 11 MB by Content-Length) on every upload path outside `/api/v1/content/**`; deployment note for the proxy limit in `docs/aws-deployment-and-ddos-protection.md`.
+- [ ] T013 Server settings (decided: large-upload ceiling and plain downloads, no range playback, are accepted for v1): multipart max file and request 520 MB, disk threshold; early-refusal filter (over 11 MB by Content-Length) on every upload path outside `/api/v1/content/**`; `docker/nginx.locations.conf` body limit for `/api/v1/content/` only; the deployment note is already in `docs/aws-deployment-and-ddos-protection.md` section 8.
 - [ ] T014 [P] Tests: each new type accepted with correct bytes and refused with wrong bytes; limits per type (just under, just over); a 15 MB expense bill and MoU document still refused/accepted exactly as before; a 500 MB upload to a non-content endpoint refused early; legacy `byte[]` callers unchanged.
 
 ## Phase 3: Lifecycle (US1, US2, US4)

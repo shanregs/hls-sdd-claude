@@ -9,7 +9,7 @@ Context: All prior specs (001–011) and their implementation code were removed.
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
 
 Modified principles:
-- 3.0.0 (MAJOR, spec 029, PROPOSED, needs the owner's sign-off before merge): Principle II is redefined from
+- 3.0.0 (MAJOR, spec 029, decided by the owner 2026-10-26): Principle II is redefined from
   "Five Fixed Roles" to "Six Fixed Roles". The sixth role is **Content Contributor**: a self-service-style
   role for people who author content but are not Managers. It holds Dashboard (own), Content (own: View, Create,
   Edit; never Approve), Notifications (own) and Account, and nothing else; web only (no mobile sign-in).
@@ -18,7 +18,7 @@ Modified principles:
   row and a Content Contributor column; every other row is "—" for the new role) and Development Workflow item 2
   ("each of the six roles") change. Specs 001, 002, 003, 004, 010 and 018 are affected (see specs/029-content-management/plan.md).
   Version is MAJOR because the governance rule treats a redefined principle as MAJOR; 2.1.0 had only allowed
-  new roles "in future". The alternative, MINOR 2.6.0, is the owner's call.
+  new roles "in future".
 - I. Operational Truth Must Be Auditable → kept; now also covers permission-matrix changes,
   role assignments, and login history
 - II. Role-Scoped Access and Manager Ownership → split and redefined as
@@ -477,4 +477,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 3.0.0 (proposed, spec 029) | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-26
+**Version**: 3.0.0 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-26
