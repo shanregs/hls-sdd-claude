@@ -8,6 +8,18 @@
 
 **Input**: User description: "022-school-billing: An internal receivables ledger. For each School and month, record how much the School owes HLS for the Teachers placed there, derived from the active assignments (D6). Adjustments for agreed deductions, collections recorded against what is owed, ageing, follow-up tasks through spec 025, escalation to the Director, no GST (D10). Nothing is sent to the School. Full source: docs/spec-inputs/022-school-billing.md."
 
+## Clarifications
+
+### Session 2026-10-26
+
+The owner answered "defaults" to all five questions (option A each); the answers are folded into the requirements below.
+
+- Q: When is a monthly due raised? -> A: After the month starts, by one "raise all Schools" action plus a per-School action; Schools already raised are skipped.
+- Q: How is the due date set? -> A: Raised date plus 15 days; the follow-up task is created the day after the due date; escalation to the Director is 7 days after the due date (both numbers are settings).
+- Q: Who adds or reverses adjustments and cancels or replaces a wrong due? -> A: Admin and Director only; a Zone Manager can see but not change them. A wrong due is cancelled with a reason and a corrected one raised; both stay visible.
+- Q: Must a collection be allocated when recorded? -> A: Allocation is chosen when recorded and defaults to the oldest due first; any excess is kept as advance credit and can be allocated later by the same users.
+- Q: From when does ageing count, and does an overdue School block anything? -> A: Days past the due date (amounts not yet due show as "not yet due"); overdue is information only and blocks nothing.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Work Out What a School Owes for a Month (Priority: P1)

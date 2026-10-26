@@ -1,4 +1,4 @@
-# Spec 022 clarification questions (awaiting the owner)
+# Spec 022 clarification questions (ANSWERED 2026-10-26: defaults, option A for all five; recorded in spec.md)
 
 `/speckit-clarify` was run as a review only. Nothing below has been answered; the spec currently uses each recommended default. The feature is an internal receivables ledger: nothing is sent to the School. Reply with a choice per question and the answers will be folded into `spec.md` under a Clarifications section.
 
