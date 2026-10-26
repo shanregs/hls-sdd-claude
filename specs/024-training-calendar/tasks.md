@@ -193,11 +193,11 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ### Tests for US6 (write first)
 
-- [ ] T053 [P] [US6] Integration test `T/training/calendar/HistoryTest.java`: a Teacher with an induction, three monthly sessions (two attended, one absent and excused) and one weekend session shows each session once newest first, the induction entry read-only, the yearly attended versus expected figure by the rule in research.md section 10; Teacher own history hides internal remarks and exceptions but shows the certificate note; Manager reaches own Teachers and self, another Manager's Teacher gives 404; empty history returns an empty state not an error; CSV export Admin and Director only
+- [X] T053 [P] [US6] Integration test `T/training/calendar/HistoryTest.java`: a Teacher with an induction, three monthly sessions (two attended, one absent and excused) and one weekend session shows each session once newest first, the induction entry read-only, the yearly attended versus expected figure by the rule in research.md section 10; Teacher own history hides internal remarks and exceptions but shows the certificate note; Manager reaches own Teachers and self, another Manager's Teacher gives 404; empty history returns an empty state not an error; CSV export Admin and Director only
 
 ### Implementation for US6
 
-- [ ] T054 [US6] Implement `TC/internal/HistoryQueries.java` (union of entries, assignments and registrations plus the 016 induction rows, yearly figure) and `TC/web/HistoryController.java` (`/people/...`, `/me/history`, exports). Depends on T043
+- [X] T054 [US6] Implement `TC/internal/HistoryQueries.java` (union of entries, assignments and registrations plus the 016 induction rows, yearly figure) and `TC/web/HistoryController.java` (`/people/...`, `/me/history`, exports). Depends on T043
 - [ ] T055 [US6] Frontend: `FE/HistoryPage.tsx` (person history with year picker, used by Admin and Director from the calendar, by the Manager as My Training, by the Teacher as My Training History) and `FE/MyTrainingPage.tsx`. Depends on T054
 - [ ] T056 [P] [US6] Frontend test `FE/__tests__/History.test.tsx`
 
