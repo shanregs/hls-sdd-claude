@@ -163,8 +163,8 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 - [X] T043 [US4] Implement `TC/internal/AttendanceBridge.java` (pre-checks with `AttendanceReadApi`, then `TrainingAttendance`; returns SAVED, SAVED_CLASH or REFUSED with the 008 message) and `AttendanceRecordService.java` (bulk save in one transaction with per-row results, walk-ins, entry and history rows, HELD on first save, on-leave detection, sync retry, counts, `ChangeRecorder`). Depends on T006, T013, T034
 - [X] T044 [P] [US4] Add `managersOnLeaveOn(Collection<UUID> managerIds, LocalDate date)` to `B/attendance/api/ManagerAttendanceReadApi.java` with its implementation over 032's day rows in `B/attendance/manager/internal/ManagerAttendanceReadApiImpl.java` and a test `T/attendance/manager/ManagersOnLeaveOnTest.java`; the existing 032 tests pass unchanged
 - [X] T045 [US4] Implement `TC/web/AttendanceController.java` (`TRAINING_ATTENDANCE` View and Edit) with the roster, bulk save, walk-in and sync endpoints. Depends on T043
-- [ ] T046 [US4] Frontend: `FE/AttendanceGrid.tsx` (rows with outcome, whole or half day, reason, certificate note, internal remark for staff only, on-leave and clash badges, per-row result after save, walk-in dialog, the 008 lock message shown on a refused row). Depends on T045
-- [ ] T047 [P] [US4] Frontend test `FE/__tests__/AttendanceGrid.test.tsx` (Manager sees only own Teachers; results display; reason required for Absent and Excused)
+- [X] T046 [US4] Frontend: `FE/AttendanceGrid.tsx` (rows with outcome, whole or half day, reason, certificate note, internal remark for staff only, on-leave and clash badges, per-row result after save, walk-in dialog, the 008 lock message shown on a refused row). Depends on T045
+- [X] T047 [P] [US4] Frontend test `FE/__tests__/AttendanceGrid.test.tsx` (Manager sees only own Teachers; results display; reason required for Absent and Excused)
 
 **Checkpoint**: expected versus attended works end to end.
 

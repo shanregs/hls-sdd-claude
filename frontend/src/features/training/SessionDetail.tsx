@@ -17,6 +17,7 @@ import { useAuth } from "../../auth/useAuth";
 import type { ApiResult } from "../common/masterDataApi";
 import { formatDate, formatTime } from "./format";
 import { AssignDialog } from "./AssignDialog";
+import { AttendanceGrid } from "./AttendanceGrid";
 import { SessionDialog } from "./SessionDialog";
 import {
   STATUS_LABELS,
@@ -50,6 +51,7 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
   const [roster, setRoster] = useState<RegistrationRow[]>([]);
   const [assigned, setAssigned] = useState<AssignmentRow[]>([]);
   const [assigning, setAssigning] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [removing, setRemoving] = useState<AssignmentRow | null>(null);
   const [declining, setDeclining] = useState(false);
   const [text, setText] = useState("");
@@ -347,12 +349,25 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
               : "Assign people"}
           </Button>
         )}
+        {can("RECORD_ATTENDANCE") && (
+          <Button onClick={() => setRecording(true)}>Record attendance</Button>
+        )}
         {can("CANNOT_ATTEND") && (
           <Button onClick={() => setDeclining(true)}>I cannot attend</Button>
         )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
 
+      {recording && (
+        <AttendanceGrid
+          sessionId={session.id}
+          onClose={() => setRecording(false)}
+          onSaved={() => {
+            void load();
+            onChanged();
+          }}
+        />
+      )}
       {assigning && (
         <AssignDialog
           sessionId={session.id}

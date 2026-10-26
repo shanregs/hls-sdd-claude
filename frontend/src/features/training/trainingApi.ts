@@ -523,3 +523,113 @@ export function cannotAttend(authFetch: AuthFetch, id: string, note: string) {
     false,
   );
 }
+
+// ------------------------------------------------------------------ attendance (US4)
+
+export type Outcome = "PRESENT" | "ABSENT" | "EXCUSED";
+
+export interface AttendanceRow {
+  entryId: string | null;
+  personKind: "TEACHER" | "MANAGER";
+  personId: string;
+  name: string;
+  basis: string;
+  assigned: boolean;
+  registered: boolean;
+  outcome: Outcome | null;
+  dayValue: number | null;
+  reason: string | null;
+  certificateNote: string | null;
+  internalRemark: string | null;
+  onLeave: boolean;
+  syncState: string | null;
+  clashNote: string | null;
+  version: number | null;
+  history: {
+    action: string;
+    outcome: string;
+    dayValue: number | null;
+    reason: string | null;
+    changedAt: string;
+  }[];
+}
+
+export interface AttendanceInput {
+  personKind: string;
+  personId: string;
+  outcome: Outcome;
+  dayValue?: number | null;
+  reason?: string;
+  certificateNote?: string;
+  internalRemark?: string;
+  version?: number | null;
+}
+
+export interface RowResult {
+  personId: string;
+  personKind: string;
+  status: "SAVED" | "SAVED_CLASH" | "REFUSED";
+  code: string | null;
+  message: string | null;
+}
+
+export interface SaveAttendanceResult {
+  results: RowResult[];
+  counts: SessionCounts;
+}
+
+export function getAttendance(
+  authFetch: AuthFetch,
+  id: string,
+): Promise<ApiResult<AttendanceRow[]>> {
+  return getJson<AttendanceRow[]>(
+    authFetch,
+    `${BASE}/sessions/${id}/attendance`,
+    "Could not load the attendance.",
+  );
+}
+
+export function saveAttendance(
+  authFetch: AuthFetch,
+  id: string,
+  rows: AttendanceInput[],
+) {
+  return sendJson<SaveAttendanceResult>(
+    authFetch,
+    "PUT",
+    `${BASE}/sessions/${id}/attendance`,
+    { rows },
+  );
+}
+
+export function addWalkIn(
+  authFetch: AuthFetch,
+  id: string,
+  personKind: string,
+  personId: string,
+  dayValue: number,
+) {
+  return sendJson<SaveAttendanceResult>(
+    authFetch,
+    "POST",
+    `${BASE}/sessions/${id}/walk-ins`,
+    {
+      personKind,
+      personId,
+      dayValue,
+    },
+  );
+}
+
+export function syncAttendance(
+  authFetch: AuthFetch,
+  id: string,
+  entryId: string,
+) {
+  return sendJson<SaveAttendanceResult>(
+    authFetch,
+    "POST",
+    `${BASE}/sessions/${id}/attendance/${entryId}/sync`,
+    {},
+  );
+}
