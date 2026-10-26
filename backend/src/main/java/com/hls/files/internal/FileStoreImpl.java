@@ -1,12 +1,17 @@
 package com.hls.files.internal;
 
+import com.hls.files.api.FileLimits;
 import com.hls.files.api.FileStore;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
@@ -66,6 +71,115 @@ class FileStoreImpl implements FileStore {
         StoredFile saved = files.saveAndFlush(new StoredFile(
                 id, ownerType, ownerId, name, contentType, content.length, sha256(content), relative, actor, clock.instant()));
         return ref(saved);
+    }
+
+    @Override
+    @Transactional
+    public FileRef store(
+            UUID actor,
+            String ownerType,
+            UUID ownerId,
+            String originalName,
+            InputStream content,
+            long declaredSize,
+            FileLimits limits) {
+        if (content == null) {
+            throw new InvalidInputException("The file is empty.");
+        }
+        String name = cleanName(originalName);
+        String extension = FileTypePolicy.extensionOf(name);
+        long limit = limits.limitFor(extension);
+        if (limit < 0) {
+            // the type check gives the message that lists the accepted types
+            FileTypePolicy.checkHeader(name, new byte[0], 0, limits);
+        }
+        if (declaredSize > limit) {
+            throw tooLarge(extension, limit);
+        }
+        UUID id = UUID.randomUUID();
+        ZonedDateTime now = ZonedDateTime.now(clock.withZone(ZoneOffset.UTC));
+        String relative = "%04d/%02d/%s".formatted(now.getYear(), now.getMonthValue(), id);
+        Path target = root.resolve(relative).normalize();
+        if (!target.startsWith(root)) {
+            throw new InvalidInputException("The file could not be stored.");
+        }
+        Path temp = null;
+        try {
+            Files.createDirectories(target.getParent());
+            temp = Files.createTempFile(target.getParent(), "upload-", ".part");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] header = new byte[FileTypePolicy.HEADER_BYTES];
+            int headerLength = 0;
+            long total = 0;
+            String contentType = null;
+            byte[] buffer = new byte[64 * 1024];
+            try (OutputStream out = Files.newOutputStream(temp)) {
+                int read;
+                while ((read = content.read(buffer)) != -1) {
+                    if (read == 0) {
+                        continue;
+                    }
+                    total += read;
+                    if (total > limit) {
+                        throw tooLarge(extension, limit);
+                    }
+                    if (headerLength < header.length) {
+                        int take = Math.min(read, header.length - headerLength);
+                        System.arraycopy(buffer, 0, header, headerLength, take);
+                        headerLength += take;
+                    }
+                    if (contentType == null && headerLength >= Math.min(header.length, 12)) {
+                        contentType = FileTypePolicy.checkHeader(name, header, headerLength, limits);
+                    }
+                    digest.update(buffer, 0, read);
+                    out.write(buffer, 0, read);
+                }
+            }
+            if (total == 0) {
+                throw new InvalidInputException("The file is empty.");
+            }
+            if (contentType == null) {
+                contentType = FileTypePolicy.checkHeader(name, header, headerLength, limits);
+            }
+            Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE);
+            temp = null;
+            StoredFile saved = files.saveAndFlush(new StoredFile(
+                    id, ownerType, ownerId, name, contentType, total, HexFormat.of().formatHex(digest.digest()), relative, actor, clock.instant()));
+            return ref(saved);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not store the file", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        } finally {
+            if (temp != null) {
+                try {
+                    Files.deleteIfExists(temp);
+                } catch (IOException ignored) {
+                    // a leftover .part file is harmless and never served
+                }
+            }
+        }
+    }
+
+    private static InvalidInputException tooLarge(String extension, long limit) {
+        long mb = limit / (1024 * 1024);
+        return new InvalidInputException("A ." + extension + " file can be at most " + mb + " MB.");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<FileStream> openStream(UUID fileId) {
+        return files.findById(fileId).filter(f -> !f.isRemoved()).map(f -> {
+            Path path = root.resolve(f.getStoragePath()).normalize();
+            if (!path.startsWith(root)) {
+                throw new NotFoundException("File not found.");
+            }
+            try {
+                return new FileStream(ref(f), Files.newInputStream(path));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Could not read the stored file", e);
+            }
+        });
     }
 
     @Override

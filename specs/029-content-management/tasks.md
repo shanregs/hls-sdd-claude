@@ -10,21 +10,21 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 
 ## Phase 1: Sixth role in identity (US5)
 
-- [ ] T003 [US5] `Role.CONTENT_CONTRIBUTOR`; fix every exhaustive `switch (role)` (`AccessModelService.masterDataScopeFor`, `dashboardScopeFor`, scope at ~line 188) and any other compile error.
-- [ ] T004 [US5] `PermissionModule.CONTENT(VIEW, CREATE, EDIT, APPROVE)`; `PermissionEligibility`: add `CONTENT` to business modules (System none), Approve only Admin and Director, Teacher none, Contributor eligible only for CONTENT (View, Create, Edit), NOTIFICATIONS (View), dashboard and account modules; all other modules ineligible for the Contributor.
-- [ ] T005 [US5] `PermissionMatrixService` seed: CONTENT grants per data-model.md; Contributor rows for dashboard, notifications, account; verify existing seeded rows for the five roles are unchanged.
-- [ ] T006 [US5] `NavigationCatalog`: "Content" (Admin, Director) and "My Content" (Manager, Contributor) under OPERATIONS; add the Contributor to the role sets of Notifications, Profile and Logout items; Contributor dashboard entry.
-- [ ] T007 [US5] `UserAdminService`/role endpoints: accept and list the sixth role; creating a user with only this role needs no Manager/Teacher record; last-Admin rule untouched; `MobileRoleEligibility` unchanged (refuses).
-- [ ] T008 [US5] `AuditVisibility`: `CONTENT`, `CONTENT_VERSION`, `CONTENT_REVIEW` require View on `CONTENT`.
-- [ ] T009 [P] [US5] Tests: Role enum value fits 20 characters; per-role access model for all six roles; Contributor refused on a sample of endpoints of every other module (table-driven); mobile sign-in refused; union of roles (Manager + Contributor); matrix API returns six columns; existing five-role expectations unchanged.
+- [x] T003 [US5] `Role.CONTENT_CONTRIBUTOR`; fix every exhaustive `switch (role)` (`AccessModelService.masterDataScopeFor`, `dashboardScopeFor`, scope at ~line 188) and any other compile error.
+- [x] T004 [US5] `PermissionModule.CONTENT(VIEW, CREATE, EDIT, APPROVE)`; `PermissionEligibility`: add `CONTENT` to business modules (System none), Approve only Admin and Director, Teacher none, Contributor eligible only for CONTENT (View, Create, Edit), NOTIFICATIONS (View), dashboard and account modules; all other modules ineligible for the Contributor.
+- [x] T005 [US5] `PermissionMatrixService` seed: CONTENT grants per data-model.md; Contributor rows for dashboard, notifications, account; verify existing seeded rows for the five roles are unchanged.
+- [x] T006 [US5] `NavigationCatalog`: "Content" (Admin, Director) and "My Content" (Manager, Contributor) under OPERATIONS; add the Contributor to the role sets of Notifications, Profile and Logout items; Contributor dashboard entry.
+- [x] T007 [US5] `UserAdminService`/role endpoints: accept and list the sixth role; creating a user with only this role needs no Manager/Teacher record; last-Admin rule untouched; `MobileRoleEligibility` unchanged (refuses).
+- [x] T008 [US5] `AuditVisibility`: `CONTENT`, `CONTENT_VERSION`, `CONTENT_REVIEW` require View on `CONTENT`.
+- [x] T009 [P] [US5] Tests: Role enum value fits 20 characters; per-role access model for all six roles; Contributor refused on a sample of endpoints of every other module (table-driven); mobile sign-in refused; union of roles (Manager + Contributor); matrix API returns six columns; existing five-role expectations unchanged.
 
 ## Phase 2: Migration and file store (US1)
 
-- [ ] T010 Migration `V95__create_content.sql`: content, content_version (update trigger except removal fields), content_review, content_history (append-only trigger), code sequence, indexes.
-- [ ] T011 [P] `files.api`: `FileLimits`, streamed `store` overload, `openStream`; `FileTypePolicy`: mp4, mp3, m4a, wav with first-byte checks; per-type limit; default limits equal the present 10 MB behaviour.
-- [ ] T012 `FileStoreImpl` streaming write to disk (no whole-file array) and streamed read; error messages name the type and limit.
-- [ ] T013 Server settings (decided: large-upload ceiling and plain downloads, no range playback, are accepted for v1): multipart max file and request 520 MB, disk threshold; early-refusal filter (over 11 MB by Content-Length) on every upload path outside `/api/v1/content/**`; `docker/nginx.locations.conf` body limit for `/api/v1/content/` only; the deployment note is already in `docs/aws-deployment-and-ddos-protection.md` section 8.
-- [ ] T014 [P] Tests: each new type accepted with correct bytes and refused with wrong bytes; limits per type (just under, just over); a 15 MB expense bill and MoU document still refused/accepted exactly as before; a 500 MB upload to a non-content endpoint refused early; legacy `byte[]` callers unchanged.
+- [x] T010 Migration `V95__create_content.sql`: content, content_version (update trigger except removal fields), content_review, content_history (append-only trigger), code sequence, indexes.
+- [x] T011 [P] `files.api`: `FileLimits`, streamed `store` overload, `openStream`; `FileTypePolicy`: mp4, mp3, m4a, wav with first-byte checks; per-type limit; default limits equal the present 10 MB behaviour.
+- [x] T012 `FileStoreImpl` streaming write to disk (no whole-file array) and streamed read; error messages name the type and limit.
+- [x] T013 Server settings (decided: large-upload ceiling and plain downloads, no range playback, are accepted for v1): multipart max file and request 520 MB, disk threshold; early-refusal filter (over 11 MB by Content-Length) on every upload path outside `/api/v1/content/**`; `docker/nginx.locations.conf` body limit for `/api/v1/content/` only; the deployment note is already in `docs/aws-deployment-and-ddos-protection.md` section 8.
+- [x] T014 [P] Tests: each new type accepted with correct bytes and refused with wrong bytes; limits per type (just under, just over); a 15 MB expense bill and MoU document still refused/accepted exactly as before; a 500 MB upload to a non-content endpoint refused early; legacy `byte[]` callers unchanged.
 
 ## Phase 3: Lifecycle (US1, US2, US4)
 

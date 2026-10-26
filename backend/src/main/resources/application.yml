@@ -3,9 +3,12 @@ spring:
     name: hls-backend
   servlet:
     multipart:
-      # the file store allows 10 MB a file; these limits leave headroom for the form around it
-      max-file-size: 11MB
-      max-request-size: 12MB
+      # The file store allows 10 MB a file, but content uploads (spec 029) take video up to 500 MB. The ceiling is raised
+      # for everyone here and UploadSizeGuardFilter keeps the old 12 MB request limit on every path outside /api/v1/content/.
+      # Parts above the threshold are spooled to disk, never held in memory.
+      max-file-size: 520MB
+      max-request-size: 521MB
+      file-size-threshold: 2MB
   modulith:
     events:
       # Spec 018: every Android request now publishes an event for the API Access trail. Delete a
