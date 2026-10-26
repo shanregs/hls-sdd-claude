@@ -55,3 +55,7 @@ submits for them. Files open only for users who may see the content.
 ## Points for `/speckit-clarify`
 
 See specs/029-content-management/clarification-questions.md.
+
+## Owner answers (2026-10-26)
+
+Q1 = B: a new sixth role, Content Contributor (constitution amendment; see plan.md). Q2 to Q5 = A: Director holds Approve (Admin when granted; Director-authored content approved by an Admin with Approve), limits as written, a new version of approved content returns to review, a Contributor sees only content they authored or submitted. People with no login are no longer authors.

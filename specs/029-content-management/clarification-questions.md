@@ -1,6 +1,8 @@
-# Clarification questions: 029 Content Management (revised)
+# Clarification questions: 029 Content Management (ANSWERED 2026-10-26)
 
-Not answered: these need the owner. Each has a recommended default; none has been applied to spec.md beyond what the owner already said. Reply with the number and A/B/C or "recommended".
+**Status: answered by the owner.** Q1 = B (a new Content Contributor role), Q2 = A, Q3 = A, Q4 = A, Q5 = A. The answers are recorded in the Clarifications section of `spec.md` and applied to the requirements, plan and tasks. The original questions follow for the record.
+
+Original note: these needed the owner. Each had a recommended default.
 
 Settled by the owner's direction and no longer asked: content is not Manager-only, content may have no task, files are video, audio, PDF, Word and Excel with limits per type, files only (no links).
 

@@ -1,13 +1,24 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.11 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.11)
+Version change: 1.7.0 → 3.0.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.11,
+then MAJOR 3.0.0 for spec 029: a sixth fixed role)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
 
 Modified principles:
+- 3.0.0 (MAJOR, spec 029, PROPOSED, needs the owner's sign-off before merge): Principle II is redefined from
+  "Five Fixed Roles" to "Six Fixed Roles". The sixth role is **Content Contributor**: a self-service-style
+  role for people who author content but are not Managers. It holds Dashboard (own), Content (own: View, Create,
+  Edit; never Approve), Notifications (own) and Account, and nothing else; web only (no mobile sign-in).
+  Principle II (list of roles, role bullets), Principle III (data scope: own authored or submitted content),
+  Principle IV ("All six roles", Contributor dashboard and menu), the Default role access matrix (a Content
+  row and a Content Contributor column; every other row is "—" for the new role) and Development Workflow item 2
+  ("each of the six roles") change. Specs 001, 002, 003, 004, 010 and 018 are affected (see specs/029-content-management/plan.md).
+  Version is MAJOR because the governance rule treats a redefined principle as MAJOR; 2.1.0 had only allowed
+  new roles "in future". The alternative, MINOR 2.6.0, is the owner's call.
 - I. Operational Truth Must Be Auditable → kept; now also covers permission-matrix changes,
   role assignments, and login history
 - II. Role-Scoped Access and Manager Ownership → split and redefined as
@@ -173,10 +184,11 @@ changes, and security-setting changes MUST be audited, and successful and failed
 recorded as login history. Audit entries are never edited or deleted, including by Admin or System;
 corrections appear as new entries.
 
-### II. Five Fixed Roles, Configurable Permissions (RBAC)
+### II. Six Fixed Roles, Configurable Permissions (RBAC)
 
-The system has exactly five roles: **Admin, Director, Manager, Teacher, System**. Roles are fixed.
-Users cannot create, rename, or delete them. Admin may create new roles in future.
+The system has exactly six roles: **Admin, Director, Manager, Teacher, System, Content Contributor**
+(the sixth added by spec 029). Roles are fixed. Users cannot create, rename, or delete them. A further
+role is a constitution amendment.
 
 - A user MAY hold more than one role. Their effective menus, actions, and data scope are the
   **union** of their roles' grants.
@@ -200,6 +212,10 @@ Users cannot create, rename, or delete them. Admin may create new roles in futur
 - **Teacher** has a self-service scope: only their own attendance, leave, notifications, and
   profile. By default a Teacher MUST NOT reach Zone, School, or other Teachers' management; payroll
   administration; user management; system settings; or organization-wide reports.
+- **Content Contributor** authors content (spec 029) and has a self-service scope: only the content they
+  authored or submitted, their notifications, and their profile. By default a Content Contributor MUST NOT
+  reach any other module, any Zone, School, Teacher or Manager data, payroll, expenses, user
+  management, system settings or reports, and cannot be granted them. The role has no mobile sign-in.
 - **System** is separated from business operations. It covers system configuration, security
   settings, users, roles and permissions, and audit only. System MUST NOT see teacher, school,
   attendance, leave, or payroll business data.
@@ -216,6 +232,7 @@ Every business record request is filtered by data scope as well as by permission
   → the Teachers accountable to those Schools. A Manager is never organization-wide by default. They
   MUST NOT read or act on another Manager's Schools or Teachers.
 - **Teacher**: only records where they are the subject.
+- **Content Contributor**: only content they authored or submitted.
 - **System**: no business data.
 
 Zone model: each Zone has one or more Managers, with more than one when the Zone has enough
@@ -229,7 +246,7 @@ dashboards, and reports.
 
 ### IV. Role-Based Experience in One Shared Application
 
-All five roles use **one shared application framework**. The interface each user sees is derived
+All six roles use **one shared application framework**. The interface each user sees is derived
 from their roles, permissions, and scope. After login the application MUST load, in order: the
 role-based dashboard, the role-based navigation, and the role-based permissions.
 
@@ -240,7 +257,8 @@ role-based dashboard, the role-based navigation, and the role-based permissions.
   Induction, Dashboard), *MARKETING* (Prospects, Calendar, Pipeline, Dashboard, Settings), *REPORTS*, *SYSTEM*, *ACCOUNT* (Profile, Logout). The System role uses *SYSTEM DASHBOARD*,
   *SYSTEM CONFIGURATION*, *AUDIT*, *ACCOUNT*. The Teacher role uses self-service sections:
   *Dashboard*, *MY ATTENDANCE* (My Attendance, Attendance History), *LEAVE* (Apply Leave,
-  My Leave History), *NOTIFICATIONS*, *ACCOUNT* (My Profile, Logout). Sections with no authorized
+  My Leave History), *NOTIFICATIONS*, *ACCOUNT* (My Profile, Logout). The Content Contributor role uses
+  *Dashboard*, *OPERATIONS* (My Content), *NOTIFICATIONS*, *ACCOUNT*. Sections with no authorized
   item are omitted.
 - **Only authorized items are rendered.** Menu items the user may not access are hidden, not shown
   disabled. Inside a screen, actions the user may not perform (buttons, row actions, bulk actions)
@@ -251,7 +269,8 @@ role-based dashboard, the role-based navigation, and the role-based permissions.
   link to an unauthorized route shows a "not authorized" page, never the screen.
 - **Role dashboards**: Admin (complete organization management), Director (organization-wide
   overview and reports), Manager (assigned Schools and Teachers), Teacher (my attendance, my leave,
-  my notifications), System (system health, users, audit activity). A user with several roles sees
+  my notifications), System (system health, users, audit activity), Content Contributor (my content by
+  status). A user with several roles sees
   a dashboard combining their roles' widgets.
 - **Visual quality**: one design system (component library plus design tokens for color, spacing,
   and type) used consistently across every screen. Light and dark themes are supported. Every
@@ -408,12 +427,16 @@ kept intentionally lightweight for v1.
   | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
   | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
+  | Content (authored content, versions, review, approval) | View, Create, Edit (Approve can be granted) | View, Create, Edit, Approve | Own (authored or submitted; View, Create, Edit; never Approve) | — | — |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
   | User Management                 | ✓     | —        | —        | —       | ✓      |
   | Role & Permissions              | ✓     | ✓        | —        | —       | ✓      |
   | System & Security Settings      | ✓     | —        | —        | —       | ✓      |
   | Audit Logs / Activity / Logins  | ✓     | —        | —        | —       | ✓      |
+
+  **Content Contributor column** (sixth role, spec 029): every row above is — except Dashboard (Own, its
+  own dashboard), Content (Own: View, Create, Edit; never Approve), Notifications (Own) and Account (Own).
 
   Default action grants:
   - **Admin**: all actions.
@@ -427,7 +450,7 @@ kept intentionally lightweight for v1.
 
 1. Requirements and acceptance criteria are derived from the HLS operating model and remain
    traceable to real business behavior.
-2. Every spec MUST include a **Role & Permission Impact** section. For each of the five roles it
+2. Every spec MUST include a **Role & Permission Impact** section. For each of the six roles it
    states the menu items the feature adds or uses (with navigation section), the actions granted by
    default, and the data scope applied.
 3. Calculation-heavy features (payroll formulas, balance reconciliation, attendance rollups) are
@@ -454,4 +477,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.11 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24
+**Version**: 3.0.0 (proposed, spec 029) | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-26
