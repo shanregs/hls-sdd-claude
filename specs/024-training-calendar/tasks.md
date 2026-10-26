@@ -176,12 +176,12 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ### Tests for US5 (write first)
 
-- [ ] T048 [P] [US5] Unit test `T/training/calendar/RepeatRuleTest.java`: Open and Acknowledged exceptions count; Excused, Made up and Withdrawn do not; window of 6 months and threshold 2 from settings; boundary dates
-- [ ] T049 [P] [US5] Integration test `T/training/calendar/ExceptionTest.java`: Absent for an assigned person raises one Open exception; a registered no-show raises none; on-leave raises none; correcting the absence withdraws it and correcting back reopens it; close as Excused (reason), Made up (a later Present session required) and Acknowledged (note); closer and time kept; a Manager sees only own Teachers' exceptions and cannot close; a Teacher gets 403; filters by month, Zone, Manager, role and status; export for Admin and Director only; a new exception notifies Admin and Director
+- [X] T048 [P] [US5] Unit test `T/training/calendar/RepeatRuleTest.java`: Open and Acknowledged exceptions count; Excused, Made up and Withdrawn do not; window of 6 months and threshold 2 from settings; boundary dates
+- [X] T049 [P] [US5] Integration test `T/training/calendar/ExceptionTest.java`: Absent for an assigned person raises one Open exception; a registered no-show raises none; on-leave raises none; correcting the absence withdraws it and correcting back reopens it; close as Excused (reason), Made up (a later Present session required) and Acknowledged (note); closer and time kept; a Manager sees only own Teachers' exceptions and cannot close; a Teacher gets 403; filters by month, Zone, Manager, role and status; export for Admin and Director only; a new exception notifies Admin and Director
 
 ### Implementation for US5
 
-- [ ] T050 [US5] Implement `TC/internal/ExceptionService.java` (raise and withdraw from `AttendanceRecordService`, close, list with repeat marker, CSV export) and `TC/web/ExceptionController.java`. Depends on T043
+- [X] T050 [US5] Implement `TC/internal/ExceptionService.java` (raise and withdraw from `AttendanceRecordService`, close, list with repeat marker, CSV export) and `TC/web/ExceptionController.java`. Depends on T043
 - [ ] T051 [US5] Frontend: `FE/ExceptionsPage.tsx` (filters, repeat mark, close dialog) and the My Training exceptions panel for the Manager. Depends on T050
 - [ ] T052 [P] [US5] Frontend test `FE/__tests__/Exceptions.test.tsx`
 
