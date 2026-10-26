@@ -99,6 +99,9 @@ class MasterDataAccessModelTest extends IntegrationTestBase {
     @Test
     void everyoneSeesTheHolidayCalendarButOnlyAdminAndDirectorEditIt() {
         for (Role role : Role.values()) {
+            if (role == Role.CONTENT_CONTRIBUTOR) {
+                continue; // the sixth role (spec 029) holds only its own content, notifications and account
+            }
             var response = accessModelFor(role);
             boolean canEdit = role == Role.ADMIN || role == Role.DIRECTOR;
             assertThat(actionsOf(response, "Holiday Calendar"))

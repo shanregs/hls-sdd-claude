@@ -32,7 +32,14 @@ vi.mock("../../access-model/useAccessModel", () => ({
   }),
 }));
 
-const ALL_ROLES = ["SYSTEM", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER"];
+const ALL_ROLES = [
+  "SYSTEM",
+  "ADMIN",
+  "DIRECTOR",
+  "MANAGER",
+  "TEACHER",
+  "CONTENT_CONTRIBUTOR",
+];
 
 function eligible(by: Record<string, string[]>) {
   return Object.fromEntries(ALL_ROLES.map((r) => [r, by[r] ?? []]));

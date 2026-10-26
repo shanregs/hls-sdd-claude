@@ -57,7 +57,16 @@ public final class PermissionEligibility {
             PermissionModule.TEACHER_PERFORMANCE,
             PermissionModule.EXPENSES,
             PermissionModule.MY_EXPENSES,
-            PermissionModule.TEACHER_TRANSFERS);
+            PermissionModule.TEACHER_TRANSFERS,
+            PermissionModule.CONTENT);
+
+    /** What the Content Contributor may hold (spec 029): own content, own notifications, dashboard, profile and own sessions. */
+    static final Set<PermissionModule> CONTENT_CONTRIBUTOR_MODULES = EnumSet.of(
+            PermissionModule.DASHBOARD,
+            PermissionModule.ACCOUNT_PROFILE,
+            PermissionModule.MY_SESSIONS,
+            PermissionModule.NOTIFICATIONS,
+            PermissionModule.CONTENT);
 
     /**
      * Leave (spec 009): supervisors decide requests, only Teachers have requests of their own. School
@@ -132,6 +141,27 @@ public final class PermissionEligibility {
     public static Set<PermissionAction> actionsFor(Role role, PermissionModule module) {
         if (MATRIX_MANAGER_ONLY_MODULES.contains(module) && !MATRIX_MANAGER_ROLES.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        if (role == Role.CONTENT_CONTRIBUTOR) {
+            if (!CONTENT_CONTRIBUTOR_MODULES.contains(module)) {
+                return EnumSet.noneOf(PermissionAction.class);
+            }
+            if (module == PermissionModule.CONTENT) {
+                return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+            }
+            if (module == PermissionModule.NOTIFICATIONS) {
+                return EnumSet.of(PermissionAction.VIEW, PermissionAction.DELETE);
+            }
+            return module.actions();
+        }
+        if (module == PermissionModule.CONTENT) {
+            // Content (spec 029): Approve for Admin and Director only; Teacher holds nothing.
+            if (role == Role.TEACHER) {
+                return EnumSet.noneOf(PermissionAction.class);
+            }
+            if (role == Role.MANAGER) {
+                return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+            }
         }
         Set<Role> only = ROLE_RESTRICTED_MODULES.get(module);
         if (only != null && !only.contains(role)) {

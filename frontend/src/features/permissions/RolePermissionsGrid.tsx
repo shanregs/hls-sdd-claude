@@ -28,8 +28,15 @@ import type { MatrixResponse, MatrixRow } from "./types";
 
 const ROUTE = "/identity/permissions";
 
-/** The five fixed roles in column order: System first (Constitution Principle II). */
-export const ROLES = ["SYSTEM", "ADMIN", "DIRECTOR", "MANAGER", "TEACHER"];
+/** The six fixed roles in column order: System first (Constitution Principle II). */
+export const ROLES = [
+  "SYSTEM",
+  "ADMIN",
+  "DIRECTOR",
+  "MANAGER",
+  "TEACHER",
+  "CONTENT_CONTRIBUTOR",
+];
 
 /** Every action, in the order its sub-column appears under each role. */
 const ACTIONS: Record<string, { label: string; Icon: ElementType }> = {

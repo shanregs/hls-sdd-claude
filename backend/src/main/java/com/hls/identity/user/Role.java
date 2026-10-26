@@ -1,10 +1,12 @@
 package com.hls.identity.user;
 
-/** The five fixed roles (Constitution Principle II). Not creatable, renamable, or deletable. */
+/** The six fixed roles (Constitution Principle II, amended by spec 029). Not creatable, renamable, or deletable. */
 public enum Role {
     ADMIN,
     DIRECTOR,
     MANAGER,
     TEACHER,
-    SYSTEM
+    SYSTEM,
+    /** Authors content and nothing else (spec 029); web only. */
+    CONTENT_CONTRIBUTOR
 }
