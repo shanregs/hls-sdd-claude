@@ -1,7 +1,6 @@
 package com.hls.schoolbilling.internal;
 
-import com.hls.attendance.api.SchoolWorkingDays;
-import com.hls.attendance.api.WorkingCalendar;
+import com.hls.schoolbilling.api.BillingCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -55,20 +54,17 @@ public class DueCalculator {
     private final ContractAssignmentRepository assignments;
     private final ContractPositionRepository positions;
     private final ContractRepository contracts;
-    private final WorkingCalendar calendar;
-    private final SchoolWorkingDays workingDays;
+    private final BillingCalendar calendar;
 
     DueCalculator(
             ContractAssignmentRepository assignments,
             ContractPositionRepository positions,
             ContractRepository contracts,
-            WorkingCalendar calendar,
-            SchoolWorkingDays workingDays) {
+            BillingCalendar calendar) {
         this.assignments = assignments;
         this.positions = positions;
         this.contracts = contracts;
         this.calendar = calendar;
-        this.workingDays = workingDays;
     }
 
     public Result compute(UUID schoolId, YearMonth month) {
@@ -93,7 +89,7 @@ public class DueCalculator {
                 .forEach(c -> contractById.put(c.getId(), c));
         // a School whose live contracts in the month are all "MoU pending" (or that has none) is not billed at all
         boolean anyPending = contracts.liveOverlapping(List.of(schoolId), first, last).stream().anyMatch(Contract::isPending);
-        BigDecimal monthDays = workingDays.forMonth(schoolId, month).workingDays();
+        BigDecimal monthDays = calendar.monthWorkingDays(schoolId, month);
         Set<UUID> unbilledSeen = new HashSet<>();
 
         for (ContractAssignment a : here) {
@@ -125,7 +121,7 @@ public class DueCalculator {
                 worked = monthDays;
                 amount = salary;
             } else {
-                worked = BigDecimal.valueOf(calendar.workingDays(schoolId, from, to).size());
+                worked = BigDecimal.valueOf(calendar.workingDaysBetween(schoolId, from, to));
                 if (worked.compareTo(monthDays) > 0) {
                     worked = monthDays;
                 }

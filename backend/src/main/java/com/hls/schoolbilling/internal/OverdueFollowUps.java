@@ -7,10 +7,7 @@ import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.schoolbilling.api.MonthlyDueOverdue;
 import com.hls.schoolbilling.internal.ReceivablesStore.DueRecord;
-import com.hls.tasks.api.TaskCreation;
-import com.hls.tasks.api.TaskCreation.FollowUpRequest;
-import com.hls.tasks.api.TaskCreation.TaskRef;
-import com.hls.tasks.api.TaskType;
+import com.hls.schoolbilling.api.OverdueTasks;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -45,7 +42,7 @@ public class OverdueFollowUps {
 
     private final ReceivablesStore store;
     private final BillingSettings settings;
-    private final TaskCreation tasks;
+    private final OverdueTasks tasks;
     private final ManagerQueries managers;
     private final SchoolDirectory schools;
     private final BusinessDate businessDate;
@@ -56,7 +53,7 @@ public class OverdueFollowUps {
     OverdueFollowUps(
             ReceivablesStore store,
             BillingSettings settings,
-            TaskCreation tasks,
+            OverdueTasks tasks,
             ManagerQueries managers,
             SchoolDirectory schools,
             BusinessDate businessDate,
@@ -143,8 +140,7 @@ public class OverdueFollowUps {
             return false;
         }
         int escalateAfter = (int) Math.max(1, Math.min(30, settings.escalationDays() - daysOverdue));
-        TaskRef ref = tasks.createFollowUp(new FollowUpRequest(
-                TaskType.FOLLOW_UP,
+        UUID taskId = tasks.createFollowUp(new OverdueTasks.Request(
                 shorten("Collect payment: " + schoolName + " " + due.month(), 120),
                 shorten("Monthly due " + due.reference() + " (" + due.month() + ") is " + daysOverdue + " days past its due date of "
                         + due.dueOn() + ". Balance " + due.balance().toPlainString() + ".", 2000),
@@ -156,10 +152,9 @@ public class OverdueFollowUps {
                 due.reference(),
                 shorten(schoolName, 160),
                 SOURCE,
-                dueId.toString(),
-                null));
+                dueId.toString()));
         store.jdbc().update("insert into overdue_follow_up (id, due_id, task_id, created_on) values (?, ?, ?, ?)",
-                UUID.randomUUID(), dueId, ref.id(), today);
+                UUID.randomUUID(), dueId, taskId, today);
         return true;
     }
 
