@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export Person History CSV
+description: "Needs TRAINING.EXPORT."
+url: "{{baseUrl}}/api/v1/training/people/TEACHER/{{teacherId}}/history/export?year=2026"
+method: GET
+order: 33000

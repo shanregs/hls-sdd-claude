@@ -7,6 +7,7 @@ import com.hls.identity.policy.RuntimeSettings;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.settings.internal.SettingKey.Group;
+import com.hls.training.api.TrainingSettings;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
@@ -28,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the next call. Overrides are held in a {@link SnapshotCache} that a save drops in its own transaction.
  */
 @Service
-public class RuntimeSettingsService implements RuntimeSettings {
+public class RuntimeSettingsService implements RuntimeSettings, TrainingSettings {
 
     public static final String SYSTEM_ENTITY = "SYSTEM_SETTING";
     public static final String SECURITY_ENTITY = "SECURITY_SETTING";
@@ -173,6 +174,36 @@ public class RuntimeSettingsService implements RuntimeSettings {
     @Override
     public int locationReuseSeconds() {
         return number(SettingKey.MOBILE_LOCATION_REUSE_SECONDS);
+    }
+
+    @Override
+    public int repeatThreshold() {
+        return number(SettingKey.TRAINING_REPEAT_THRESHOLD);
+    }
+
+    @Override
+    public int repeatWindowMonths() {
+        return number(SettingKey.TRAINING_REPEAT_WINDOW_MONTHS);
+    }
+
+    @Override
+    public int reminderDaysFirst() {
+        return number(SettingKey.TRAINING_REMINDER_DAYS_FIRST);
+    }
+
+    @Override
+    public int reminderDaysSecond() {
+        return number(SettingKey.TRAINING_REMINDER_DAYS_SECOND);
+    }
+
+    @Override
+    public int attendanceDueDays() {
+        return number(SettingKey.TRAINING_ATTENDANCE_DUE_DAYS);
+    }
+
+    @Override
+    public int generationHorizonMonths() {
+        return number(SettingKey.TRAINING_GENERATION_HORIZON_MONTHS);
     }
 
     // ------------------------------------------------------------------ screens

@@ -1,0 +1,11 @@
+$kind: http-request
+name: Cancel Session
+description: "Registered and assigned people are told."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"reason\": \"Trainer unwell\", \"version\": 0}"
+order: 6000

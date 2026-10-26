@@ -72,7 +72,11 @@ export function BudgetVersusActualPage() {
   }, [load]);
 
   async function showDetail(area: AreaFigures) {
-    const result = await getBudgetDetail(authFetch, month, area.total ? "all" : area.zoneId);
+    const result = await getBudgetDetail(
+      authFetch,
+      month,
+      area.total ? "all" : area.zoneId,
+    );
     if (result.ok) setDetail(result.data);
     else setError(result.reason);
   }
@@ -101,12 +105,24 @@ export function BudgetVersusActualPage() {
         <TableCell component="th" scope="row">
           {a.areaName}
         </TableCell>
-        <TableCell align="right">{a.budget === null ? "No budget set" : formatRupees(Number(a.budget))}</TableCell>
+        <TableCell align="right">
+          {a.budget === null ? "No budget set" : formatRupees(Number(a.budget))}
+        </TableCell>
         <TableCell align="right">{formatRupees(Number(a.actual))}</TableCell>
         <TableCell align="right">{formatRupees(Number(a.pending))}</TableCell>
-        <TableCell align="right">{a.remaining === null ? "" : formatRupees(Number(a.remaining))}</TableCell>
-        <TableCell align="right">{a.percentUsed === null ? "" : `${a.percentUsed}%`}</TableCell>
-        <TableCell>{a.over ? <Chip size="small" color="error" label="Over budget" /> : ""}</TableCell>
+        <TableCell align="right">
+          {a.remaining === null ? "" : formatRupees(Number(a.remaining))}
+        </TableCell>
+        <TableCell align="right">
+          {a.percentUsed === null ? "" : `${a.percentUsed}%`}
+        </TableCell>
+        <TableCell>
+          {a.over ? (
+            <Chip size="small" color="error" label="Over budget" />
+          ) : (
+            ""
+          )}
+        </TableCell>
         <TableCell>
           <Stack direction="row" spacing={1}>
             <Button size="small" onClick={() => void showDetail(a)}>
@@ -180,7 +196,11 @@ export function BudgetVersusActualPage() {
       )}
 
       {detail && (
-        <Paper variant="outlined" sx={{ p: 2, mt: 3 }} aria-label="Claims behind actual">
+        <Paper
+          variant="outlined"
+          sx={{ p: 2, mt: 3 }}
+          aria-label="Claims behind actual"
+        >
           <Typography variant="h6" component="h2">
             {detail.areaName}: claims behind actual
           </Typography>
@@ -207,8 +227,16 @@ export function BudgetVersusActualPage() {
       )}
 
       {editing && (
-        <Dialog open onClose={() => setEditing(null)} aria-labelledby="budget-title" fullWidth maxWidth="xs">
-          <DialogTitle id="budget-title">Budget for {editing.areaName}</DialogTitle>
+        <Dialog
+          open
+          onClose={() => setEditing(null)}
+          aria-labelledby="budget-title"
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle id="budget-title">
+            Budget for {editing.areaName}
+          </DialogTitle>
           <DialogContent>
             {saveError && (
               <Alert severity="error" sx={{ mb: 2 }}>

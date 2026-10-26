@@ -16,7 +16,8 @@ import java.util.TreeMap;
  *
  * <p>Per working date: a check-in is a worked day (a missing check-out changes nothing); approved leave is leave, paid
  * unless it is Loss-of-Pay; half-day leave leaves the other half to be worked or, with no check-in, unpaid; a date with
- * neither a check-in nor leave is unpaid. Dates that are not over (today and later) are {@code pending}: leave on them
+ * neither a check-in nor leave is unpaid. Amended by spec 024: with no check-in, an attended training day (whole or half)
+ * counts as worked, up to the part of the day not on leave. Dates that are not over (today and later) are {@code pending}: leave on them
  * is counted as leave, but nothing on them is unpaid yet.
  */
 public final class ManagerMonthCalculator {
@@ -31,8 +32,14 @@ public final class ManagerMonthCalculator {
      * @param field the check-in was a Field day
      * @param leaveFraction 1.0 or 0.5 when approved leave covers the day, otherwise null
      * @param leaveUnpaid the leave is of the Loss-of-Pay type
+     * @param training the training day attended (1.0 or 0.5, spec 024), counted as worked only where there is no check-in
      */
-    public record DayRecord(boolean checkedIn, boolean field, BigDecimal leaveFraction, boolean leaveUnpaid) {}
+    public record DayRecord(boolean checkedIn, boolean field, BigDecimal leaveFraction, boolean leaveUnpaid, BigDecimal training) {
+
+        public DayRecord(boolean checkedIn, boolean field, BigDecimal leaveFraction, boolean leaveUnpaid) {
+            this(checkedIn, field, leaveFraction, leaveUnpaid, null);
+        }
+    }
 
     public record Figures(
             BigDecimal workingDays,
@@ -86,8 +93,13 @@ public final class ManagerMonthCalculator {
                     if (record.field()) {
                         fieldDays = fieldDays.add(rest);
                     }
-                } else if (over) {
-                    unpaidThatDay = unpaidThatDay.add(rest);
+                } else {
+                    BigDecimal training = record == null || record.training() == null ? ZERO : record.training().setScale(1);
+                    BigDecimal credited = training.min(rest);
+                    worked = worked.add(credited);
+                    if (over) {
+                        unpaidThatDay = unpaidThatDay.add(rest.subtract(credited));
+                    }
                 }
             }
             if (unpaidThatDay.signum() > 0) {

@@ -86,12 +86,7 @@ function response(items: unknown[], over: Record<string, unknown> = {}) {
       { group: "DRIVES", available: true, read: true },
       { group: "VISITS", available: true, read: true },
       { group: "TASKS", available: true, read: true },
-      {
-        group: "TRAINING",
-        available: false,
-        read: false,
-        note: "Training is not included yet",
-      },
+      { group: "TRAINING", available: true, read: true },
     ],
     summary: {
       ...COUNTS,
@@ -169,7 +164,7 @@ describe("Activity Calendar (spec 035 US1)", () => {
     expect(screen.getAllByText(/Green Valley School/).length).toBeGreaterThan(0);
     expect(screen.getByText(/first planned 14\/10\/2026/)).toBeInTheDocument();
     expect(screen.getByText(/No place recorded · No Zone/)).toBeInTheDocument();
-    expect(screen.getByText("Training is not included yet")).toBeInTheDocument();
+    expect(screen.queryByText(/not included yet/)).not.toBeInTheDocument();
     expect(authFetch).toHaveBeenCalledWith(
       expect.stringMatching(/^\/api\/v1\/activity-calendar\?month=\d{4}-\d{2}$/),
     );
@@ -231,6 +226,26 @@ describe("Activity Calendar (spec 035 US1)", () => {
     expect(await screen.findByRole("link", { name: /Open in marketing/ })).toHaveAttribute(
       "href",
       "/marketing/calendar",
+    );
+  });
+
+  it("links a training session to the Training Calendar", async () => {
+    authFetch.mockResolvedValue(
+      json(
+        response([
+          item({
+            kind: "TRAINING",
+            subKind: "MONTHLY",
+            link: { screen: "TRAINING", path: "/operations/training" },
+          }),
+        ]),
+      ),
+    );
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Training 05\/10\/2026 Done/ }));
+    expect(await screen.findByRole("link", { name: /Open in training/ })).toHaveAttribute(
+      "href",
+      "/operations/training",
     );
   });
 

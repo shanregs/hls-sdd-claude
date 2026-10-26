@@ -44,6 +44,20 @@ class InductionBatchesImpl implements InductionBatches {
         return (int) enrolments.countCompleted(batchId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<InductionRecord> recordsOf(UUID teacherId) {
+        List<InductionEnrolment> mine = enrolments.findByTeacherId(teacherId);
+        java.util.Map<UUID, InductionBatch> byId = new java.util.HashMap<>();
+        batches.findAllById(mine.stream().map(InductionEnrolment::getBatchId).toList()).forEach(b -> byId.put(b.getId(), b));
+        return mine.stream()
+                .filter(e -> byId.containsKey(e.getBatchId()))
+                .map(e -> new InductionRecord(
+                        e.getBatchId(), byId.get(e.getBatchId()).getName(), e.getStartsOn(), e.getEndsOn(), e.getResult(), e.getSignedAt()))
+                .sorted(java.util.Comparator.comparing(InductionRecord::startsOn).reversed())
+                .toList();
+    }
+
     private static InductionBatchView view(InductionBatch b) {
         return new InductionBatchView(b.getId(), b.getName(), b.getStartsOn(), b.getEndsOn());
     }

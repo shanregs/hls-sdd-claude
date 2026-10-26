@@ -77,7 +77,9 @@ export function ClaimDetailPage({ review = false }: Props) {
   const back = review ? EXPENSES_ROUTE : MY_EXPENSES_ROUTE;
 
   const load = useCallback(async () => {
-    const result = review ? await getClaim(authFetch, id) : await getMine(authFetch, id);
+    const result = review
+      ? await getClaim(authFetch, id)
+      : await getMine(authFetch, id);
     if (result.ok) {
       setClaim(result.data);
       setError(null);
@@ -114,8 +116,7 @@ export function ClaimDetailPage({ review = false }: Props) {
   async function act(run: () => Promise<{ ok: boolean }>, success: string) {
     setBusy(true);
     const result = (await run()) as
-      | { ok: true; data: ClaimDetail }
-      | { ok: false; reason: string };
+      { ok: true; data: ClaimDetail } | { ok: false; reason: string };
     setBusy(false);
     if (result.ok) {
       done(result.data, success);
@@ -125,7 +126,10 @@ export function ClaimDetailPage({ review = false }: Props) {
   }
 
   async function openBill(bill: BillView) {
-    const url = await fetchBillUrl(authFetch, billPath(review, claim!.id, bill.id));
+    const url = await fetchBillUrl(
+      authFetch,
+      billPath(review, claim!.id, bill.id),
+    );
     if (url.ok) {
       window.open(url.data, "_blank", "noopener");
     } else {
@@ -141,12 +145,19 @@ export function ClaimDetailPage({ review = false }: Props) {
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
-        sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", my: 2 }}
+        sx={{
+          alignItems: { sm: "center" },
+          justifyContent: "space-between",
+          my: 2,
+        }}
       >
         <Typography variant="h5" component="h1">
           {claim.categoryLabel}, {formatRupees(Number(claim.amount))}
         </Typography>
-        <Chip label={claim.statusLabel} color={claim.status === "REJECTED" ? "error" : "default"} />
+        <Chip
+          label={claim.statusLabel}
+          color={claim.status === "REJECTED" ? "error" : "default"}
+        />
       </Stack>
 
       {error && (
@@ -170,7 +181,10 @@ export function ClaimDetailPage({ review = false }: Props) {
           <Field term="Claimant" value={claim.claimantName} />
           <Field term="Expense date" value={formatDate(claim.expenseDate)} />
           <Field term="Area" value={claim.areaName} />
-          <Field term="Paid by" value={claim.paidBy === "COMPANY" ? "The company" : "The claimant"} />
+          <Field
+            term="Paid by"
+            value={claim.paidBy === "COMPANY" ? "The company" : "The claimant"}
+          />
           {claim.note && <Field term="Note" value={claim.note} />}
           {claim.reason && <Field term="Reason" value={claim.reason} />}
           <Field
@@ -181,10 +195,17 @@ export function ClaimDetailPage({ review = false }: Props) {
                 : "Not linked"
             }
           />
-          {claim.submittedAt && <Field term="Submitted" value={when(claim.submittedAt)} />}
-          {review && claim.ageDays !== null && <Field term="Waiting" value={`${claim.ageDays} days`} />}
+          {claim.submittedAt && (
+            <Field term="Submitted" value={when(claim.submittedAt)} />
+          )}
+          {review && claim.ageDays !== null && (
+            <Field term="Waiting" value={`${claim.ageDays} days`} />
+          )}
           {claim.decision && claim.status !== "REJECTED" && (
-            <Field term="Decided" value={`${claim.decision.byName}, ${when(claim.decision.at)}`} />
+            <Field
+              term="Decided"
+              value={`${claim.decision.byName}, ${when(claim.decision.at)}`}
+            />
           )}
         </Stack>
       </Paper>
@@ -197,22 +218,36 @@ export function ClaimDetailPage({ review = false }: Props) {
           <Stack component="dl" spacing={1} sx={{ m: 0 }}>
             <Field
               term="How"
-              value={claim.payment.how === "PAYROLL" ? "Paid with payroll" : "Paid outside payroll"}
+              value={
+                claim.payment.how === "PAYROLL"
+                  ? "Paid with payroll"
+                  : "Paid outside payroll"
+              }
             />
             {claim.payment.payrollMonth && (
-              <Field term="Pay month" value={formatDate(claim.payment.payrollMonth)} />
+              <Field
+                term="Pay month"
+                value={formatDate(claim.payment.payrollMonth)}
+              />
             )}
             {claim.payment.paidOn && claim.payment.how === "OUTSIDE" && (
               <Field term="Paid on" value={formatDate(claim.payment.paidOn)} />
             )}
-            {claim.payment.mode && <Field term="Mode" value={MODE_LABELS[claim.payment.mode]} />}
-            {claim.payment.reference && <Field term="Reference" value={claim.payment.reference} />}
+            {claim.payment.mode && (
+              <Field term="Mode" value={MODE_LABELS[claim.payment.mode]} />
+            )}
+            {claim.payment.reference && (
+              <Field term="Reference" value={claim.payment.reference} />
+            )}
           </Stack>
         ) : claim.status === "PAID_BY_COMPANY" ? (
-          <Typography>Paid by the company. Nothing is owed to the claimant.</Typography>
+          <Typography>
+            Paid by the company. Nothing is owed to the claimant.
+          </Typography>
         ) : claim.status === "APPROVED" ? (
           <Typography>
-            Owed to {claim.claimantName}. {PAYROLL_STATE_TEXT[claim.payrollState]}.
+            Owed to {claim.claimantName}.{" "}
+            {PAYROLL_STATE_TEXT[claim.payrollState]}.
             {claim.payrollState === "NONE" &&
               " This person has no pay run, so it must be recorded as paid outside payroll."}
           </Typography>
@@ -226,7 +261,9 @@ export function ClaimDetailPage({ review = false }: Props) {
       </Typography>
       {claim.bills.length === 0 ? (
         <Typography sx={{ mb: 2 }}>
-          {claim.noBillReason ? `No bill: ${claim.noBillReason}` : "No bills yet."}
+          {claim.noBillReason
+            ? `No bill: ${claim.noBillReason}`
+            : "No bills yet."}
         </Typography>
       ) : (
         <List dense sx={{ mb: 2 }}>
@@ -235,7 +272,10 @@ export function ClaimDetailPage({ review = false }: Props) {
               key={bill.id}
               secondaryAction={
                 review && can("REMOVE_BILL") && !bill.removed ? (
-                  <Button size="small" onClick={() => setDialog({ removeBill: bill })}>
+                  <Button
+                    size="small"
+                    onClick={() => setDialog({ removeBill: bill })}
+                  >
                     Remove {bill.name}
                   </Button>
                 ) : null
@@ -246,7 +286,11 @@ export function ClaimDetailPage({ review = false }: Props) {
                   bill.removed ? (
                     `${bill.name} (bill removed)`
                   ) : (
-                    <Link component="button" type="button" onClick={() => void openBill(bill)}>
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => void openBill(bill)}
+                    >
                       {bill.name}
                     </Link>
                   )
@@ -262,9 +306,18 @@ export function ClaimDetailPage({ review = false }: Props) {
         </List>
       )}
 
-      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mb: 3 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        sx={{ flexWrap: "wrap", mb: 3 }}
+      >
         {!review && can("EDIT") && (
-          <Button variant="outlined" component={RouterLink} to={`${MY_EXPENSES_ROUTE}/${claim.id}/edit`}>
+          <Button
+            variant="outlined"
+            component={RouterLink}
+            to={`${MY_EXPENSES_ROUTE}/${claim.id}/edit`}
+          >
             Edit
           </Button>
         )}
@@ -273,7 +326,10 @@ export function ClaimDetailPage({ review = false }: Props) {
             variant="contained"
             disabled={busy}
             onClick={() =>
-              void act(() => submitClaim(authFetch, claim.id, claim.version, false), "Submitted for review.")
+              void act(
+                () => submitClaim(authFetch, claim.id, claim.version, false),
+                "Submitted for review.",
+              )
             }
           >
             Submit
@@ -283,13 +339,22 @@ export function ClaimDetailPage({ review = false }: Props) {
           <Button
             variant="outlined"
             disabled={busy}
-            onClick={() => void act(() => withdrawClaim(authFetch, claim.id, claim.version), "Withdrawn to a Draft.")}
+            onClick={() =>
+              void act(
+                () => withdrawClaim(authFetch, claim.id, claim.version),
+                "Withdrawn to a Draft.",
+              )
+            }
           >
             Withdraw
           </Button>
         )}
         {!review && can("DELETE") && (
-          <Button color="error" variant="outlined" onClick={() => setDialog("delete")}>
+          <Button
+            color="error"
+            variant="outlined"
+            onClick={() => setDialog("delete")}
+          >
             Delete draft
           </Button>
         )}
@@ -299,7 +364,11 @@ export function ClaimDetailPage({ review = false }: Props) {
           </Button>
         )}
         {can("REJECT") && (
-          <Button color="error" variant="outlined" onClick={() => setDialog("reject")}>
+          <Button
+            color="error"
+            variant="outlined"
+            onClick={() => setDialog("reject")}
+          >
             Reject
           </Button>
         )}
@@ -313,11 +382,14 @@ export function ClaimDetailPage({ review = false }: Props) {
             Record as paid
           </Button>
         )}
-        {review && claim.status === "APPROVED" && claim.payrollState === "HELD_AWAITING_APPROVAL" && (
-          <Typography color="text.secondary" sx={{ alignSelf: "center" }}>
-            It is in a pay run awaiting approval, so it cannot be reversed or recorded as paid now.
-          </Typography>
-        )}
+        {review &&
+          claim.status === "APPROVED" &&
+          claim.payrollState === "HELD_AWAITING_APPROVAL" && (
+            <Typography color="text.secondary" sx={{ alignSelf: "center" }}>
+              It is in a pay run awaiting approval, so it cannot be reversed or
+              recorded as paid now.
+            </Typography>
+          )}
       </Stack>
 
       <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
@@ -340,21 +412,29 @@ export function ClaimDetailPage({ review = false }: Props) {
           mode={dialog}
           claim={claim}
           onApprove={() => approveClaim(authFetch, claim.id, claim.version)}
-          onReject={(reason) => rejectClaim(authFetch, claim.id, claim.version, reason)}
-          onDone={(c) => done(c, dialog === "approve" ? "Approved." : "Rejected.")}
+          onReject={(reason) =>
+            rejectClaim(authFetch, claim.id, claim.version, reason)
+          }
+          onDone={(c) =>
+            done(c, dialog === "approve" ? "Approved." : "Rejected.")
+          }
           onCancel={() => setDialog(null)}
         />
       )}
       {dialog === "reverse" && (
         <ReverseDialog
-          onReverse={(reason) => reverseClaim(authFetch, claim.id, claim.version, reason)}
+          onReverse={(reason) =>
+            reverseClaim(authFetch, claim.id, claim.version, reason)
+          }
           onDone={(c) => done(c, "Approval reversed.")}
           onCancel={() => setDialog(null)}
         />
       )}
       {dialog === "paid" && (
         <RecordPaidDialog
-          onRecord={(body) => recordPaid(authFetch, claim.id, { ...body, version: claim.version })}
+          onRecord={(body) =>
+            recordPaid(authFetch, claim.id, { ...body, version: claim.version })
+          }
           onDone={(c) => done(c, "Recorded as paid.")}
           onCancel={() => setDialog(null)}
         />
@@ -362,7 +442,9 @@ export function ClaimDetailPage({ review = false }: Props) {
       {typeof dialog === "object" && dialog !== null && (
         <RemoveBillDialog
           bill={dialog.removeBill}
-          onRemove={(reason) => removeBill(authFetch, claim.id, dialog.removeBill.id, reason)}
+          onRemove={(reason) =>
+            removeBill(authFetch, claim.id, dialog.removeBill.id, reason)
+          }
           onDone={(c) => done(c, "Bill removed.")}
           onCancel={() => setDialog(null)}
         />

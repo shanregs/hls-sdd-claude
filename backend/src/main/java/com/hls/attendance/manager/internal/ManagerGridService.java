@@ -118,6 +118,7 @@ public class ManagerGridService {
     private final BusinessCalendar business;
     private final AppUserRepository users;
     private final Clock clock;
+    private final com.hls.attendance.api.ManagerTrainingDays trainingDays;
 
     public ManagerGridService(
             ManagerContext context,
@@ -130,7 +131,8 @@ public class ManagerGridService {
             CalendarService calendar,
             BusinessCalendar business,
             AppUserRepository users,
-            Clock clock) {
+            Clock clock,
+            com.hls.attendance.api.ManagerTrainingDays trainingDays) {
         this.context = context;
         this.managers = managers;
         this.days = days;
@@ -142,6 +144,7 @@ public class ManagerGridService {
         this.business = business;
         this.users = users;
         this.clock = clock;
+        this.trainingDays = trainingDays;
     }
 
     /** {@code yyyy-MM}, or a 400 that says what a month looks like. */
@@ -189,6 +192,9 @@ public class ManagerGridService {
                 .map(s -> s.getId().getManagerId())
                 .collect(Collectors.toSet());
 
+        Map<UUID, Map<LocalDate, java.math.BigDecimal>> training =
+                trainingDays.attendedDaysOf(ids, month.atDay(1), month.atEndOfMonth());
+
         List<GridRow> out = new ArrayList<>();
         for (ManagerRef ref : all) {
             if (inZone != null && !inZone.contains(ref.id())) {
@@ -211,7 +217,7 @@ public class ManagerGridService {
                 LocalDate date = month.atDay(day);
                 statuses.add(status(byDate.get(date), date, emp, facts));
             }
-            FiguresResult figures = figures(emp, byDate, facts);
+            FiguresResult figures = figures(emp, byDate, facts, training.getOrDefault(ref.id(), Map.of()));
             out.add(new GridRow(
                     ref.id(),
                     ref.displayName(),
@@ -264,7 +270,8 @@ public class ManagerGridService {
                     place(row.getCheckOutLat(), row.getCheckOutLng(), row.getCheckOutAccuracyM()),
                     detail ? histories.getOrDefault(row.getId(), List.of()) : null));
         }
-        FiguresResult figures = figures(emp, byDate, facts);
+        FiguresResult figures = figures(
+                emp, byDate, facts, trainingDays.attendedDays(manager.managerId(), month.atDay(1), month.atEndOfMonth()));
         return new MonthView(
                 month.toString(), manager.managerId(), manager.name(), locked, figures.figures(), figures.unavailable(), entries);
     }
@@ -302,7 +309,8 @@ public class ManagerGridService {
 
     private record FiguresResult(MonthFigures figures, String unavailable) {}
 
-    private FiguresResult figures(ManagerEmployment emp, Map<LocalDate, ManagerDay> byDate, Facts facts) {
+    private FiguresResult figures(
+            ManagerEmployment emp, Map<LocalDate, ManagerDay> byDate, Facts facts, Map<LocalDate, java.math.BigDecimal> training) {
         if (emp == null || emp.joiningDate() == null) {
             return new FiguresResult(null, UNAVAILABLE_NO_JOINING);
         }
@@ -316,6 +324,14 @@ public class ManagerGridService {
             records.put(
                     e.getKey(),
                     new DayRecord(d.hasCheckIn(), d.getDayType() == DayType.FIELD, d.getLeaveFraction(), d.isLeaveUnpaid()));
+        }
+        for (Map.Entry<LocalDate, java.math.BigDecimal> t : training.entrySet()) {
+            DayRecord base = records.get(t.getKey());
+            records.put(
+                    t.getKey(),
+                    base == null
+                            ? new DayRecord(false, false, null, false, t.getValue())
+                            : new DayRecord(base.checkedIn(), base.field(), base.leaveFraction(), base.leaveUnpaid(), t.getValue()));
         }
         Figures f = ManagerMonthCalculator.compute(workingDates, records, facts.today());
         return new FiguresResult(

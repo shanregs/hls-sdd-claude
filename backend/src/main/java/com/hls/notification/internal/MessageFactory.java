@@ -108,6 +108,22 @@ public final class MessageFactory {
         return "REPLACEMENT".equals(kind) ? "replacement" : "transfer";
     }
 
+    public static Text mouSubmitted(String school, boolean resubmitted) {
+        return new Text(
+                shorten("MoU for approval: " + school, MAX_TITLE),
+                shorten("The MoU of " + school + (resubmitted ? " was sent for approval again." : " was sent for approval."), MAX_MESSAGE),
+                "/operations/school-contracts/schools/");
+    }
+
+    public static Text mouDecided(String school, String outcome, String reason, boolean termsAmended) {
+        String verb = outcome.toLowerCase(Locale.ROOT);
+        String amended = termsAmended ? " The approver corrected some terms." : "";
+        return new Text(
+                shorten("MoU " + verb + ": " + school, MAX_TITLE),
+                shorten("The MoU of " + school + " was " + verb + because(reason) + "." + amended, MAX_MESSAGE),
+                "/operations/school-contracts/schools/");
+    }
+
     public static Text transferRequested(String kind, String teacherName, String fromSchool, LocalDate on) {
         return new Text(
                 shorten("New " + movement(kind) + " request: " + teacherName, MAX_TITLE),
@@ -135,6 +151,66 @@ public final class MessageFactory {
                 shorten("Teacher referred: " + teacherName, MAX_TITLE),
                 shorten(teacherName + " was referred for " + ("TRANSFER".equals(recommendation) ? "transfer" : "replacement") + ". Please review.", MAX_MESSAGE),
                 "/operations/teacher-performance/issues/" + issueId);
+    }
+
+    /** Where a Teacher or Manager reaches their own training; the screen sends each role to its own page (spec 024). */
+    static final String MY_TRAINING_LINK = "/training/mine";
+
+    public static Text trainingAssigned(String topic, LocalDate on) {
+        return new Text(
+                "You are required at a training session",
+                shorten("You are required at the training \"" + topic + "\" on " + date(on) + ".", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingAssignmentRemoved(String topic, LocalDate on) {
+        return new Text(
+                "You no longer need to attend a training",
+                shorten("You no longer need to attend the training \"" + topic + "\" on " + date(on) + ".", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingMoved(String topic, LocalDate oldDate, LocalDate newDate) {
+        return new Text(
+                "A training session was moved",
+                shorten("The training \"" + topic + "\" moved from " + date(oldDate) + " to " + date(newDate) + ".", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingCancelled(String topic, LocalDate on) {
+        return new Text(
+                "A training session was cancelled",
+                shorten("The training \"" + topic + "\" on " + date(on) + " was cancelled.", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingReminder(String topic, LocalDate on, int daysBefore) {
+        String when = daysBefore <= 0 ? "today" : daysBefore == 1 ? "tomorrow" : "in " + daysBefore + " days (" + date(on) + ")";
+        return new Text(
+                "Training reminder",
+                shorten("The training \"" + topic + "\" is " + when + ".", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingRegistered(String topic, LocalDate on) {
+        return new Text(
+                "Your training registration is confirmed",
+                shorten("You are registered for the training \"" + topic + "\" on " + date(on) + ".", MAX_MESSAGE),
+                MY_TRAINING_LINK);
+    }
+
+    public static Text trainingException(String personName, LocalDate on, UUID sessionId) {
+        return new Text(
+                shorten("Training absence: " + personName, MAX_TITLE),
+                shorten(personName + " was absent from the training on " + date(on) + ".", MAX_MESSAGE),
+                "/operations/training/exceptions?session=" + sessionId);
+    }
+
+    public static Text trainingCannotAttend(String personName, String note, UUID sessionId) {
+        return new Text(
+                shorten(personName + " cannot attend a training", MAX_TITLE),
+                shorten(personName + " says they cannot attend" + because(note) + ".", MAX_MESSAGE),
+                "/operations/training/sessions/" + sessionId);
     }
 
     public static Text substituteNeeded(String teacherName, String schoolName, LocalDate day, UUID requirementId) {

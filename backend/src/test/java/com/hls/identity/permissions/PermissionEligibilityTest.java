@@ -95,9 +95,12 @@ class PermissionEligibilityTest extends IntegrationTestBase {
             boolean staff = role == Role.ADMIN || role == Role.DIRECTOR || role == Role.MANAGER;
             assertThat(PermissionEligibility.actionsFor(role, PermissionModule.SCHOOL_CONTRACTS))
                     .as("SCHOOL_CONTRACTS " + role)
-                    .isEqualTo(staff
-                            ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
-                            : java.util.EnumSet.noneOf(PermissionAction.class));
+                    .isEqualTo(!staff
+                            ? java.util.EnumSet.noneOf(PermissionAction.class)
+                            : role == Role.ADMIN
+                                    ? java.util.EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)
+                                    : java.util.EnumSet.of(
+                                            PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT, PermissionAction.APPROVE));
         }
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
             for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
@@ -387,5 +390,18 @@ class PermissionEligibilityTest extends IntegrationTestBase {
         assertThat(matrix.isGranted(Role.TEACHER, PermissionModule.IDENTITY_PERMISSIONS, PermissionAction.VIEW))
                 .isFalse();
         assertThat(matrix.isGranted(Role.SYSTEM, PermissionModule.ZONES, PermissionAction.VIEW)).isFalse();
+    }
+
+    @Test
+    void trainingModulesAreForTheirRolesOnly() {
+        for (PermissionModule module : List.of(PermissionModule.TRAINING, PermissionModule.TRAINING_ATTENDANCE, PermissionModule.TRAINING_REGISTRATION)) {
+            assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, module)).as("SYSTEM " + module).isEmpty();
+        }
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, PermissionModule.TRAINING)).containsExactly(PermissionAction.VIEW);
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.TRAINING)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.TRAINING_ATTENDANCE)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.TRAINING_REGISTRATION))
+                .isEqualTo(PermissionModule.TRAINING_REGISTRATION.actions());
+        assertThat(PermissionEligibility.actionsFor(Role.ADMIN, PermissionModule.TRAINING_REGISTRATION)).isEmpty();
     }
 }

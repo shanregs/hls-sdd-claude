@@ -41,6 +41,7 @@ public class ContractListService {
     private final ScopeQueries scopeQueries;
     private final ContractService contractService;
     private final Clock clock;
+    private final MouApprovalQueries approvalQueries;
 
     public ContractListService(
             ContractRepository contracts,
@@ -50,7 +51,8 @@ public class ContractListService {
             ManagerQueries managers,
             ScopeQueries scopeQueries,
             ContractService contractService,
-            Clock clock) {
+            Clock clock,
+            MouApprovalQueries approvalQueries) {
         this.contracts = contracts;
         this.positions = positions;
         this.assignments = assignments;
@@ -59,11 +61,19 @@ public class ContractListService {
         this.scopeQueries = scopeQueries;
         this.contractService = contractService;
         this.clock = clock;
+        this.approvalQueries = approvalQueries;
     }
 
     @Transactional(readOnly = true)
     public PageResponse<ContractListRow> list(
-            UUID userId, Set<Role> roles, ContractStatus status, UUID managerId, int page, int size) {
+            UUID userId,
+            Set<Role> roles,
+            ContractStatus status,
+            UUID managerId,
+            String approval,
+            String document,
+            int page,
+            int size) {
         LocalDate today = LocalDate.now(clock);
         List<SchoolInfo> inScope = schools.allSchools();
         if (!CallerContext.isOrgWide(roles)) {
@@ -90,6 +100,10 @@ public class ContractListService {
                 .collect(Collectors.groupingBy(ContractPosition::getContractId));
         Map<UUID, List<ContractAssignment>> hereToday = assignments.atSchoolsOn(schoolIds, today).stream()
                 .collect(Collectors.groupingBy(ContractAssignment::getSchoolId));
+
+        Map<UUID, ContractState> stateOf = new HashMap<>();
+        shown.values().forEach(c -> stateOf.put(c.getId(), c.getState()));
+        Map<UUID, MouApprovalQueries.ListInfo> approvalOf = approvalQueries.listInfo(stateOf.keySet(), stateOf);
 
         List<ContractListRow> rows = new java.util.ArrayList<>();
         for (SchoolInfo school : inScope) {
@@ -120,6 +134,7 @@ public class ContractListService {
             // a School with Teachers but no MoU recorded yet is listed as pending, even before a contract row exists
             Integer count = c == null || c.isPending() ? null : c.getTeacherCount();
             int vacant = count == null ? 0 : Math.max(0, count - filled);
+            MouApprovalQueries.ListInfo info = c == null ? null : approvalOf.get(c.getId());
             rows.add(new ContractListRow(
                     school.id(),
                     school.name(),
@@ -133,10 +148,15 @@ public class ContractListService {
                     vacant,
                     unmapped,
                     c == null || c.getSalaryMode() == null ? null : c.getSalaryMode().name(),
-                    c == null ? null : c.getSignedOn()));
+                    c == null ? null : c.getSignedOn(),
+                    info == null ? null : info.state().name(),
+                    info == null ? null : info.documentState(),
+                    info == null ? null : info.pendingSince()));
         }
         List<ContractListRow> filtered = rows.stream()
                 .filter(r -> status == null || r.status() == status)
+                .filter(r -> approval == null || approval.isBlank() || approval.equals(r.approvalState()))
+                .filter(r -> document == null || document.isBlank() || document.equals(r.documentState()))
                 .sorted(Comparator.comparing(ContractListRow::schoolName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
         int from = Math.min(filtered.size(), Math.max(0, page) * Math.max(1, size));

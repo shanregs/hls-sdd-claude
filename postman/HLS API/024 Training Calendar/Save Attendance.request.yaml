@@ -1,0 +1,11 @@
+$kind: http-request
+name: Save Attendance
+description: "Bulk save with a result per row. Session date must be today or past. Needs TRAINING_ATTENDANCE.EDIT."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/attendance"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"rows\": [{\"personKind\": \"TEACHER\", \"personId\": \"{{teacherId}}\", \"outcome\": \"PRESENT\", \"dayValue\": 1.0}]}"
+order: 26000

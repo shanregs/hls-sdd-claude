@@ -1,0 +1,3 @@
+$kind: collection
+description: "MoU signed documents and approval (spec 031). Admin and Director upload, replace, remove and submit; the Director and the Zone Manager of the School approve, reject and correct terms while pending; Admin never approves. Teacher and System get 403; a School outside a Zone Manager's scope is a 404. Collection variables: contractId (spec 012 folder), documentId, approvalVersion (read from Approval), the Director or Zone Manager login for the decision requests."
+order: 31000

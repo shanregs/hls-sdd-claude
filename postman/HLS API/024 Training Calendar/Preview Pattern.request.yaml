@@ -1,0 +1,11 @@
+$kind: http-request
+name: Preview Pattern
+description: "Next months with month-end clamp and holiday notes; writes nothing."
+url: "{{baseUrl}}/api/v1/training/patterns/preview"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"ruleKind\": \"NTH_WEEKDAY\", \"nth\": 2, \"weekday\": 6, \"startsAt\": \"10:00\", \"endsAt\": \"13:00\", \"topic\": \"Monthly review\", \"trainerName\": \"Trainer Tina\", \"venueKind\": \"PHYSICAL\", \"venue\": \"Head office\", \"startMonth\": \"{{date}}\"}"
+order: 13000

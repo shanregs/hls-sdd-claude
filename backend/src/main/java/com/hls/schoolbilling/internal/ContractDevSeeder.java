@@ -30,7 +30,8 @@ import org.springframework.stereotype.Component;
  * Dev-only demo data (inert unless {@code hls.seed.demo-data=true}, idempotent): the MoU of the first demo
  * School (4 Teachers at one salary, signed by its Zone Manager and a Director) recorded on the "MoU pending"
  * contract the placements created, with the Teachers already placed there mapped to its first positions.
- * The second demo School has no Zone Manager, so it stays "MoU pending" to show that state.
+ * The second demo School has no Zone Manager, so it stays "MoU pending" to show that state. The first MoU is
+ * sent for approval (spec 031) so a pending approval shows for the Director and the Zone Manager.
  */
 @Component
 @Order(45)
@@ -46,6 +47,8 @@ public class ContractDevSeeder implements ApplicationRunner {
     private final ContractPositionRepository positions;
     private final ContractService contractService;
     private final RemapService remapService;
+    private final MouApprovalService approvalService;
+    private final MouApprovalRepository approvals;
     private final Clock clock;
 
     public ContractDevSeeder(
@@ -56,6 +59,8 @@ public class ContractDevSeeder implements ApplicationRunner {
             ContractPositionRepository positions,
             ContractService contractService,
             RemapService remapService,
+            MouApprovalService approvalService,
+            MouApprovalRepository approvals,
             Clock clock) {
         this.users = users;
         this.schools = schools;
@@ -64,6 +69,8 @@ public class ContractDevSeeder implements ApplicationRunner {
         this.positions = positions;
         this.contractService = contractService;
         this.remapService = remapService;
+        this.approvalService = approvalService;
+        this.approvals = approvals;
         this.clock = clock;
     }
 
@@ -117,6 +124,10 @@ public class ContractDevSeeder implements ApplicationRunner {
         if (!entries.isEmpty()) {
             remapService.remap(admin.getId(), Set.of(Role.ADMIN), pending.get().getId(), entries);
         }
+        // spec 031: the demo MoU is sent for approval so the Director and the Zone Manager have one to decide
+        approvals.findByContractId(pending.get().getId())
+                .ifPresent(a -> approvalService.submit(
+                        admin.getId(), Set.of(Role.ADMIN), pending.get().getId(), a.getVersion()));
         log.info(
                 "[DEV SEED] School contract demo data ready: {} has a 4-Teacher MoU with {} Teachers mapped.",
                 first.name(),

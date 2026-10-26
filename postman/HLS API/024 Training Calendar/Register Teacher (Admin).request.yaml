@@ -1,0 +1,11 @@
+$kind: http-request
+name: Register Teacher (Admin)
+description: "On behalf of a Teacher. Needs TRAINING.CREATE."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/registrations"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"teacherId\": \"{{teacherId}}\"}"
+order: 9000

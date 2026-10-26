@@ -86,7 +86,7 @@ class CalendarFilterTest extends ActivityCalendarTestBase {
         assertThat(list(director, "zones").stream().map(z -> z.get("id"))).contains(zone.toString());
         assertThat(list(director, "kinds")).hasSize(6);
         assertThat(list(director, "kinds").stream().filter(k -> "TRAINING".equals(k.get("kind"))).findFirst().orElseThrow())
-                .containsEntry("available", false);
+                .containsEntry("available", true);
         assertThat(list(director, "kinds").stream().filter(k -> "TASK".equals(k.get("kind"))).findFirst().orElseThrow())
                 .containsEntry("available", true);
 

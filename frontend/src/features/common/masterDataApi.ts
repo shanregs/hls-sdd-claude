@@ -58,7 +58,7 @@ export async function getJson<T>(
 
 export async function sendJson<T = void>(
   authFetch: AuthFetch,
-  method: "POST" | "PUT" | "DELETE",
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
   url: string,
   body?: unknown,
   expectBody = true,

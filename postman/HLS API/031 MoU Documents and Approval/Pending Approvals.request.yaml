@@ -1,0 +1,6 @@
+$kind: http-request
+name: Pending Approvals
+description: "MoUs waiting for a decision in the caller scope, oldest first. Needs SCHOOL_CONTRACTS.APPROVE."
+url: "{{baseUrl}}/api/v1/school-contracts/approvals/pending?page=0&size=25"
+method: GET
+order: 9000

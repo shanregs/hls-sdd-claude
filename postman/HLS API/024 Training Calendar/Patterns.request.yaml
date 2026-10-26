@@ -1,0 +1,6 @@
+$kind: http-request
+name: Patterns
+description: "Active and stopped patterns."
+url: "{{baseUrl}}/api/v1/training/patterns"
+method: GET
+order: 12000
