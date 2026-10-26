@@ -31,6 +31,14 @@ public abstract class ReceivablesTestBase extends SchoolContractsTestBase {
         return f;
     }
 
+    /** A School whose different-salary contract started {@code daysAgo} days ago (to bill earlier months too). */
+    protected Fixture billedSchoolSince(String admin, int daysAgo, String... salaries) {
+        Fixture f = fixture(admin);
+        UUID dir = director().userId();
+        contractId(createContract(admin, f.schoolId(), startedDaysAgo(perTeacherBody(f, dir, salaries), daysAgo)));
+        return f;
+    }
+
     protected UUID positionId(String admin, UUID schoolId, int index) {
         return UUID.fromString((String) positionsOf(contractsOf(admin, schoolId).get(0)).get(index).get("id"));
     }
