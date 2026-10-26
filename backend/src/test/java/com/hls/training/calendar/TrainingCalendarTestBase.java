@@ -151,4 +151,61 @@ public abstract class TrainingCalendarTestBase extends AttendanceTestBase {
                 .findFirst()
                 .orElseThrow();
     }
+
+    /** An ACTIVE Teacher (no login) placed at the School since a month ago. */
+    protected UUID placedTeacher(String admin, UUID school) {
+        UUID teacher = teacher(admin);
+        assertThat(placeTeacherRaw(admin, teacher, school, today().minusDays(30)).status()).isEqualTo(200);
+        return teacher;
+    }
+
+    /** Registers a Teacher directly in the database (the registration API is tested on its own). */
+    protected void registerRow(UUID session, UUID teacher) {
+        jdbc.update(
+                "insert into training_registration (id, session_id, teacher_id, status, registered_by, registered_at, version)"
+                        + " values (?, ?, ?, 'REGISTERED', ?, now(), 0)",
+                UUID.randomUUID(), session, teacher, UUID.randomUUID());
+    }
+
+    protected Map<String, Object> row(String kind, UUID person, String outcome, Double dayValue, String reason) {
+        Map<String, Object> row = new HashMap<>();
+        row.put("personKind", kind);
+        row.put("personId", person);
+        row.put("outcome", outcome);
+        row.put("dayValue", dayValue);
+        row.put("reason", reason);
+        return row;
+    }
+
+    protected Resp saveAttendance(String token, UUID session, Map<String, Object>... rows) {
+        return put(API + "/sessions/" + session + "/attendance", token, Map.of("rows", List.of(rows)));
+    }
+
+    /** The status of one person's row in a save response. */
+    @SuppressWarnings("unchecked")
+    protected static String resultOf(Resp resp, UUID person) {
+        return ((List<Map<String, Object>>) resp.map().get("results")).stream()
+                .filter(r -> person.toString().equals(r.get("personId")))
+                .map(r -> (String) r.get("status") + (r.get("code") == null ? "" : ":" + r.get("code")))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    /** The 008 training-day value for a Teacher on a date, or null when the day has no training mark. */
+    protected java.math.BigDecimal trainingDay(UUID teacher, LocalDate date) {
+        List<java.math.BigDecimal> found = jdbc.queryForList(
+                "select m.day_value from attendance_mark m join attendance_status_code c on c.id = m.status_code_id"
+                        + " where m.teacher_id = ? and m.mark_date = ? and c.short_code = 'T'",
+                java.math.BigDecimal.class, teacher, date);
+        return found.isEmpty() ? null : found.get(0);
+    }
+
+    protected void lockMonth(UUID teacher, LocalDate date) {
+        jdbc.update(
+                "insert into attendance_teacher_month (id, teacher_id, year_month, state, working_days, days_worked, days_leave,"
+                        + " training_available, training_attended, unmarked, weighted_total, changed_at, version)"
+                        + " values (?, ?, ?, 'LOCKED', 0, 0, 0, 0, 0, 0, 0, now(), 0)"
+                        + " on conflict (teacher_id, year_month) do update set state = 'LOCKED'",
+                UUID.randomUUID(), teacher, java.time.YearMonth.from(date).toString());
+    }
 }

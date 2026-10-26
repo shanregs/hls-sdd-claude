@@ -60,6 +60,17 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
     }
 
     @Override
+    public Set<UUID> managersOnLeaveOn(Collection<UUID> managerIds, LocalDate date) {
+        if (managerIds.isEmpty() || date == null) {
+            return Set.of();
+        }
+        return days.findByManagerIdInAndDayDateBetween(new LinkedHashSet<>(managerIds), date, date).stream()
+                .filter(ManagerDay::hasFullLeave)
+                .map(ManagerDay::getManagerId)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     public Map<UUID, ManagerMonth> months(Collection<UUID> managerIds, YearMonth month) {
         Set<UUID> ids = new LinkedHashSet<>(managerIds);
         Map<UUID, ManagerMonth> result = new LinkedHashMap<>();
