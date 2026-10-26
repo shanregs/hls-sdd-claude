@@ -130,16 +130,16 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ### Tests for US3 (write first)
 
-- [ ] T032 [P] [US3] Unit test `T/training/calendar/GroupResolverTest.java`: individual, School, Manager, Zone, all Teachers, all Managers, all; IN_TRAINING and EXITED refused with reasons; ON_LEAVE only by individual pick; group is a snapshot (later moves do not change it)
-- [ ] T033 [P] [US3] Integration test `T/training/calendar/AssignmentTest.java` (SC-002): 100 people assigned in under a minute with one obligation and one notification each; assigning twice (individually and through a group) keeps one row; removal before HELD notifies and flips the row; removal after HELD refused; assignment to a weekend session makes only those people Required; a "cannot attend" note notifies Admin and Director and changes nothing; the exit clean-up removes the obligation of an exited Teacher on a not-held session (T038)
+- [X] T032 [P] [US3] Unit test `T/training/calendar/GroupResolverTest.java`: individual, School, Manager, Zone, all Teachers, all Managers, all; IN_TRAINING and EXITED refused with reasons; ON_LEAVE only by individual pick; group is a snapshot (later moves do not change it)
+- [X] T033 [P] [US3] Integration test `T/training/calendar/AssignmentTest.java` (SC-002): 100 people assigned in under a minute with one obligation and one notification each; assigning twice (individually and through a group) keeps one row; removal before HELD notifies and flips the row; removal after HELD refused; assignment to a weekend session makes only those people Required; a "cannot attend" note notifies Admin and Director and changes nothing; the exit clean-up removes the obligation of an exited Teacher on a not-held session (T038)
 
 ### Implementation for US3
 
-- [ ] T034 [US3] Implement `TC/internal/GroupResolver.java` (through `TeacherPlacementSource`, `SchoolDirectory`, `ManagerQueries`, `TeacherDirectory`) and `AssignmentService.java` (preview, assign, remove, cannot-attend, "group not fully assigned" count, events). Depends on T006, T012
-- [ ] T035 [US3] Extend `SessionController` with the assignment endpoints and connect `GenerationService` to `GroupResolver`. Depends on T034
+- [X] T034 [US3] Implement `TC/internal/GroupResolver.java` (through `TeacherPlacementSource`, `SchoolDirectory`, `ManagerQueries`, `TeacherDirectory`) and `AssignmentService.java` (preview, assign, remove, cannot-attend, "group not fully assigned" count, events). Depends on T006, T012
+- [X] T035 [US3] Extend `SessionController` with the assignment endpoints and connect `GenerationService` to `GroupResolver`. Depends on T034
 - [ ] T036 [US3] Frontend: `FE/AssignDialog.tsx` (pick people or group, preview counts and refusals, confirm), assignments list on `SessionDetail` with remove, "N people in the group are not assigned" with "Add the group again", and the "I cannot attend" action on the person's own list. Depends on T035
 - [ ] T037 [P] [US3] Frontend test `FE/__tests__/Assignment.test.tsx`
-- [ ] T038 [US3] Implement `TC/internal/ReconcileJob.java` (daily 03:30: remove obligations and registrations of EXITED Teachers and inactive Managers on not-held sessions with a note and an Admin and Director notice; retry `CLASH` syncs up to 31 days old once US4 exists; switch for tests) and its test `T/training/calendar/ReconcileJobTest.java`. Depends on T034
+- [X] T038 [US3] Implement `TC/internal/ReconcileJob.java` (daily 03:30: remove obligations and registrations of EXITED Teachers and inactive Managers on not-held sessions with a note and an Admin and Director notice; retry `CLASH` syncs up to 31 days old once US4 exists; switch for tests) and its test `T/training/calendar/ReconcileJobTest.java`. Depends on T034
 
 **Checkpoint**: sessions have obligations.
 

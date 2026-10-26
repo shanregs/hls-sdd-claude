@@ -6,6 +6,13 @@ import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.school.api.CallerContext;
 import com.hls.school.api.InvalidInputException;
+import com.hls.training.calendar.internal.AssignmentService;
+import com.hls.training.calendar.internal.AssignmentService.AssignBody;
+import com.hls.training.calendar.internal.AssignmentService.AssignResult;
+import com.hls.training.calendar.internal.AssignmentService.AssignmentRow;
+import com.hls.training.calendar.internal.AssignmentService.NoteBody;
+import com.hls.training.calendar.internal.AssignmentService.Preview;
+import com.hls.training.calendar.internal.AssignmentService.RemoveBody;
 import com.hls.training.calendar.internal.Caller;
 import com.hls.training.calendar.internal.RegistrationService;
 import com.hls.training.calendar.internal.RegistrationService.Result;
@@ -47,9 +54,16 @@ public class SessionController {
     private final SessionService service;
     private final SessionQueries queries;
     private final RegistrationService registrations;
+    private final AssignmentService assignmentService;
     private final PermissionGuard guard;
 
-    public SessionController(SessionService service, SessionQueries queries, RegistrationService registrations, PermissionGuard guard) {
+    public SessionController(
+            SessionService service,
+            SessionQueries queries,
+            RegistrationService registrations,
+            AssignmentService assignmentService,
+            PermissionGuard guard) {
+        this.assignmentService = assignmentService;
         this.service = service;
         this.queries = queries;
         this.registrations = registrations;
@@ -146,6 +160,52 @@ public class SessionController {
     public List<RosterRow> roster(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         requireTraining(jwt, PermissionAction.VIEW);
         return registrations.roster(caller(jwt), id);
+    }
+
+    // ------------------------------------------------------------------ assignments
+
+    @PostMapping("/sessions/{id}/assignments/preview")
+    public Preview previewAssignment(@PathVariable UUID id, @RequestBody AssignBody body, @AuthenticationPrincipal Jwt jwt) {
+        requireTraining(jwt, PermissionAction.EDIT);
+        queries.requireVisible(caller(jwt), id);
+        return assignmentService.preview(id, body);
+    }
+
+    @PostMapping("/sessions/{id}/assignments")
+    public ResponseEntity<AssignResult> assign(@PathVariable UUID id, @RequestBody AssignBody body, @AuthenticationPrincipal Jwt jwt) {
+        requireTraining(jwt, PermissionAction.EDIT);
+        queries.requireVisible(caller(jwt), id);
+        return ResponseEntity.status(201).body(assignmentService.assign(caller(jwt), id, body));
+    }
+
+    @DeleteMapping("/sessions/{id}/assignments/{assignmentId}")
+    public ResponseEntity<Void> removeAssignment(
+            @PathVariable UUID id,
+            @PathVariable UUID assignmentId,
+            @RequestBody(required = false) RemoveBody body,
+            @AuthenticationPrincipal Jwt jwt) {
+        requireTraining(jwt, PermissionAction.EDIT);
+        assignmentService.remove(caller(jwt), id, assignmentId, body);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/sessions/{id}/assignments")
+    public List<AssignmentRow> assignmentRoster(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        requireTraining(jwt, PermissionAction.VIEW);
+        return assignmentService.roster(caller(jwt), id);
+    }
+
+    /** A Teacher with TRAINING_REGISTRATION Create, or a Manager with TRAINING View, says they cannot attend. */
+    @PostMapping("/sessions/{id}/assignments/me/cannot-attend")
+    public ResponseEntity<Void> cannotAttend(@PathVariable UUID id, @RequestBody NoteBody body, @AuthenticationPrincipal Jwt jwt) {
+        Set<Role> roles = CallerContext.roles(jwt);
+        boolean allowed = can(roles, PermissionModule.TRAINING_REGISTRATION, PermissionAction.CREATE)
+                || (roles.contains(Role.MANAGER) && can(roles, PermissionModule.TRAINING, PermissionAction.VIEW));
+        if (!allowed) {
+            throw new AccessDeniedException("Not authorized for training");
+        }
+        assignmentService.cannotAttend(caller(jwt), id, body);
+        return ResponseEntity.noContent().build();
     }
 
     // ------------------------------------------------------------------ helpers

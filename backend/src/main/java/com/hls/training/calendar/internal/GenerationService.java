@@ -22,18 +22,21 @@ public class GenerationService {
     private final TrainingSessionRepository sessions;
     private final TrainingSettings settings;
     private final TrainingClock clock;
+    private final AssignmentService assignmentService;
 
     GenerationService(
             PatternRepository patterns,
             PatternSkipRepository skips,
             TrainingSessionRepository sessions,
             TrainingSettings settings,
-            TrainingClock clock) {
+            TrainingClock clock,
+            AssignmentService assignmentService) {
         this.patterns = patterns;
         this.skips = skips;
         this.sessions = sessions;
         this.settings = settings;
         this.clock = clock;
+        this.assignmentService = assignmentService;
     }
 
     /** Fills every open-ended and still-running pattern as of {@code today}; returns the number of sessions created. */
@@ -82,7 +85,14 @@ public class GenerationService {
             }
             sessions.saveAndFlush(session);
             created++;
-            // The default group snapshot is applied here once the assignment service exists (spec 024 T035).
+            if (pattern.defaultGroupKind != null && !TrainingSession.SKIPPED.equals(session.status)) {
+                try {
+                    assignmentService.assignGroupAtGeneration(session, pattern.createdBy, pattern.defaultGroupKind, pattern.defaultGroupRef);
+                } catch (RuntimeException e) {
+                    org.slf4j.LoggerFactory.getLogger(GenerationService.class)
+                            .warn("Could not apply the default group to session {}: {}", session.id, e.getMessage());
+                }
+            }
         }
         return created;
     }
