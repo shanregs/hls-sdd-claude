@@ -74,3 +74,11 @@ interfaces: [contracts/module-interfaces.md](contracts/module-interfaces.md); ta
   `LeaveAuditTest.everyTransitionIsRecordedWithItsReasonForAdmin` ("None of these dates is a working day for you."), a leave-module
   test this feature does not touch; not yet confirmed against main.
 - Manual walkthrough (T056) not done: needs a person on the running app.
+
+### Update after merging origin/main (2026-10-26)
+
+- The InboxPanel lint error is gone with the merge. Constitution note renumbered to 2.5.12 (spec 028 took 2.5.11).
+- Backend after the merge: ApplicationModulesTest (Modulith), all `*AccessModelTest` and `*ModuleRulesTest` pass (128 tests).
+  Run alone: `LeaveAuditTest` passes (3), and DevSeedTest, LeaveDecisionTest, DashboardEndpointsTest, InboxServiceTest,
+  TileExtensibilityTest, ZonePeriodFilterTest, MouListApiTest, MouRegressionTest and TeacherFirstAssignedTest pass (48). The
+  earlier failures were load timeouts on a busy machine, and the LeaveAuditTest one did not reproduce.

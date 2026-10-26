@@ -172,7 +172,7 @@ MoU. No user story can start before these.
 - [X] T051 [P] Update docs: `docs/spec-roadmap.md` row 031; constitution (PATCH bump to the next patch after the highest merged, the School Contracts row of the default access matrix gains Approve for Director and Manager (own Schools), the OPERATIONS item "MoU Approvals"); a note in spec 012's contract docs that terms can be edited by the approver only through this path
 - [X] T052 [P] Accessibility pass on the new screens (WCAG 2.2 AA: labels, status not by colour alone, focus order, dialog focus trap, 44 px targets at phone width) and loading, empty and error states (FR-019)
 - [X] T053 **Re-check the migration number**: list `backend/src/main/resources/db/migration` on the latest `origin/main` and on every open implementation branch; if V100 is taken, rename `V100__create_mou_approval.sql` and update plan.md, data-model.md, research.md and this file before merging. Do this again immediately before the PR is marked ready
-- [ ] T054 Full backend run (`mvn -o test`, Docker running) including `ModulithVerificationTest`; record the results in plan.md or quickstart.md; fix regressions in specs 012, 023, 027 and the permission tests
+- [X] T054 Full backend run (`mvn -o test`, Docker running) including `ModulithVerificationTest`; record the results in plan.md or quickstart.md; fix regressions in specs 012, 023, 027 and the permission tests
 - [X] T055 Full frontend run (`npm test`, `npm run build`, lint) and record the result
 - [ ] T056 Manual walkthrough of quickstart.md sections 1 to 5 on the running app with each role (Admin, Director, Manager A, Manager B), at desktop and phone width; record the result; this is the last task before the PR
 
