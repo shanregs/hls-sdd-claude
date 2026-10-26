@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../../auth/useAuth";
 import type { ApiResult } from "../common/masterDataApi";
 import { formatDate, formatTime } from "./format";
+import { AssignDialog } from "./AssignDialog";
 import { SessionDialog } from "./SessionDialog";
 import {
   STATUS_LABELS,
@@ -23,10 +24,14 @@ import {
   cancelRegistration,
   cancelSession,
   deleteSession,
+  cannotAttend,
+  getAssignments,
   getRoster,
+  removeAssignment,
   getSession,
   publishSession,
   registerForSession,
+  type AssignmentRow,
   type RegistrationRow,
   type SessionView,
 } from "./trainingApi";
@@ -43,6 +48,12 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
   const { authFetch } = useAuth();
   const [session, setSession] = useState<SessionView | null>(null);
   const [roster, setRoster] = useState<RegistrationRow[]>([]);
+  const [assigned, setAssigned] = useState<AssignmentRow[]>([]);
+  const [assigning, setAssigning] = useState(false);
+  const [removing, setRemoving] = useState<AssignmentRow | null>(null);
+  const [declining, setDeclining] = useState(false);
+  const [text, setText] = useState("");
+  const [textError, setTextError] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [mode, setMode] = useState<"edit" | "move" | "cancel" | null>(null);
   const [reason, setReason] = useState("");
@@ -61,6 +72,10 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
     ) {
       const rows = await getRoster(authFetch, sessionId);
       setRoster(rows.ok ? rows.data : []);
+    }
+    if (result.data.counts) {
+      const people = await getAssignments(authFetch, sessionId);
+      setAssigned(people.ok ? people.data : []);
     }
   }, [authFetch, sessionId]);
 
@@ -209,6 +224,32 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
               {session.counts.excused}, walk-ins {session.counts.walkIns}.
             </Typography>
           )}
+          {assigned.length > 0 && (
+            <Box>
+              <Divider sx={{ mb: 1 }} />
+              <Typography variant="subtitle2" component="h3">
+                Assigned (
+                {assigned.filter((a) => a.status === "REQUIRED").length})
+              </Typography>
+              <ul>
+                {assigned
+                  .filter((a) => a.status === "REQUIRED")
+                  .map((a) => (
+                    <li key={a.id}>
+                      {a.name}
+                      {a.cannotAttendNote
+                        ? ` (cannot attend: ${a.cannotAttendNote})`
+                        : ""}
+                      {can("ASSIGN") && (
+                        <Button size="small" onClick={() => setRemoving(a)}>
+                          Remove {a.name}
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+              </ul>
+            </Box>
+          )}
           {session.type === "WEEKEND" && roster.length > 0 && (
             <Box>
               <Divider sx={{ mb: 1 }} />
@@ -299,8 +340,99 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
             Delete draft
           </Button>
         )}
+        {can("ASSIGN") && (
+          <Button onClick={() => setAssigning(true)}>
+            {session.groupNotFullyAssigned
+              ? "Add the group again"
+              : "Assign people"}
+          </Button>
+        )}
+        {can("CANNOT_ATTEND") && (
+          <Button onClick={() => setDeclining(true)}>I cannot attend</Button>
+        )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+
+      {assigning && (
+        <AssignDialog
+          sessionId={session.id}
+          onCancel={() => setAssigning(false)}
+          onAssigned={() => {
+            setAssigning(false);
+            void load();
+            onChanged();
+          }}
+        />
+      )}
+      {(removing || declining) && (
+        <Dialog
+          open
+          onClose={() => {
+            setRemoving(null);
+            setDeclining(false);
+          }}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            {removing ? `Remove ${removing.name}` : "I cannot attend"}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              fullWidth
+              margin="dense"
+              label={removing ? "Reason for removing" : "Note for the office"}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              error={Boolean(textError)}
+              helperText={textError}
+              slotProps={{ htmlInput: { maxLength: 300 } }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setRemoving(null);
+                setDeclining(false);
+                setText("");
+                setTextError(null);
+              }}
+            >
+              Back
+            </Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                if (!text.trim()) {
+                  setTextError(
+                    removing ? "Enter the reason." : "Enter a note.",
+                  );
+                  return;
+                }
+                setTextError(null);
+                const ok = await run(() =>
+                  removing
+                    ? removeAssignment(
+                        authFetch,
+                        session.id,
+                        removing.id,
+                        text.trim(),
+                      )
+                    : cannotAttend(authFetch, session.id, text.trim()),
+                );
+                if (ok) {
+                  setRemoving(null);
+                  setDeclining(false);
+                  setText("");
+                }
+              }}
+            >
+              {removing ? "Remove" : "Send"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       {(mode === "edit" || mode === "move") && (
         <SessionDialog

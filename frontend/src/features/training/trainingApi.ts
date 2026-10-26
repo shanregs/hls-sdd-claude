@@ -405,3 +405,121 @@ export function stopPattern(
     { fromMonth, version },
   );
 }
+
+// ------------------------------------------------------------------ assignments (US3)
+
+export interface AssignBody {
+  personKind?: "TEACHER" | "MANAGER";
+  ids?: string[];
+  groupKind?: string;
+  groupRef?: string | null;
+  confirm?: boolean;
+}
+
+export interface PreviewPerson {
+  kind: string;
+  id: string;
+  name: string;
+  state: "NEW" | "ALREADY" | "REFUSED";
+  reason: string | null;
+}
+
+export interface AssignPreview {
+  newCount: number;
+  alreadyCount: number;
+  refusedCount: number;
+  people: PreviewPerson[];
+}
+
+export interface AssignResult {
+  assigned: number;
+  alreadyAssigned: number;
+  refused: number;
+  refusedPeople: PreviewPerson[];
+}
+
+export interface AssignmentRow {
+  id: string;
+  personKind: "TEACHER" | "MANAGER";
+  personId: string;
+  name: string;
+  source: string;
+  groupKind: string | null;
+  status: "REQUIRED" | "REMOVED";
+  assignedAt: string;
+  cannotAttendNote: string | null;
+}
+
+export const GROUP_LABELS: Record<string, string> = {
+  SCHOOL: "A School",
+  MANAGER: "A Manager's Teachers",
+  ZONE: "A Zone",
+  ALL_TEACHERS: "All Teachers",
+  ALL_MANAGERS: "All Managers",
+  ALL: "Everyone",
+};
+
+export function previewAssignment(
+  authFetch: AuthFetch,
+  id: string,
+  body: AssignBody,
+) {
+  return sendJson<AssignPreview>(
+    authFetch,
+    "POST",
+    `${BASE}/sessions/${id}/assignments/preview`,
+    body,
+  );
+}
+
+export function assignPeople(
+  authFetch: AuthFetch,
+  id: string,
+  body: AssignBody,
+) {
+  return sendJson<AssignResult>(
+    authFetch,
+    "POST",
+    `${BASE}/sessions/${id}/assignments`,
+    {
+      ...body,
+      confirm: true,
+    },
+  );
+}
+
+export function getAssignments(
+  authFetch: AuthFetch,
+  id: string,
+): Promise<ApiResult<AssignmentRow[]>> {
+  return getJson<AssignmentRow[]>(
+    authFetch,
+    `${BASE}/sessions/${id}/assignments`,
+    "Could not load the assigned people.",
+  );
+}
+
+export function removeAssignment(
+  authFetch: AuthFetch,
+  id: string,
+  assignmentId: string,
+  reason: string,
+) {
+  return sendJson(
+    authFetch,
+    "DELETE",
+    `${BASE}/sessions/${id}/assignments/${assignmentId}`,
+    { reason },
+    false,
+  );
+}
+
+export function cannotAttend(authFetch: AuthFetch, id: string, note: string) {
+  return sendJson(
+    authFetch,
+    "POST",
+    `${BASE}/sessions/${id}/assignments/me/cannot-attend`,
+    { note },
+    false,
+  );
+}
