@@ -147,7 +147,7 @@ class CalendarMonthIntegrationTest extends ActivityCalendarTestBase {
 
         // every source was read
         assertThat(resp.map().get("partial")).isEqualTo(false);
-        assertThat(resp.body()).contains("\"group\":\"TRAINING\"").contains("Training is not included yet");
+        assertThat(resp.body()).contains("\"group\":\"TRAINING\"").doesNotContain("not included yet");
     }
 
     @Test
