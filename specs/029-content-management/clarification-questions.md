@@ -1,68 +1,69 @@
-# Clarification questions: 029 Content Management
+# Clarification questions: 029 Content Management (revised)
 
-Not answered: these need the owner. Each has a recommended default; none has been applied to spec.md. Reply with the question number and A/B/C or "recommended".
+Not answered: these need the owner. Each has a recommended default; none has been applied to spec.md beyond what the owner already said. Reply with the number and A/B/C or "recommended".
 
-## Q1. Who may review (approve or return) content?
+Settled by the owner's direction and no longer asked: content is not Manager-only, content may have no task, files are video, audio, PDF, Word and Excel with limits per type, files only (no links).
 
-**Question:** Which roles hold the Approve action on Content by default?
-Why it matters: it sets the permission seed, the notification recipients and the self-review rule.
+## Q1. Who is the "third person"?
 
-**Recommended:** Option A - mirrors 025 (verifier needs Approve, never the assignee) and keeps Managers from approving peers.
+**Question:** Is the contributor who is not a Manager an existing user (Admin, Director or Manager), a new Content Contributor role, or an outside person with no login?
+Why it matters: the constitution fixes five roles, so a new role is a constitution change; an outside person needs no account but cannot sign in to submit or see anything.
 
-| Option | Description |
-| --- | --- |
-| A | Director only (Admin can be granted, Manager not eligible) |
-| B | Admin and Director, as in 025 |
-| C | Director, plus the Zone Manager of the content owner's area |
-
-## Q2. File types and size
-
-**Question:** Should content files follow the shared file store's present type and size policy (10 MB, photo, PDF, document), or a wider one for content such as video or slide decks?
-Why it matters: a stricter or wider limit changes storage cost and the upload screen.
-
-**Recommended:** Option A - reuse the store as is; raise the limit later in one place.
+**Recommended:** Option A - an existing active user with Create on Content; a person with no login is covered by someone else submitting for them with the author's name recorded.
 
 | Option | Description |
 | --- | --- |
-| A | Reuse the store's policy unchanged |
-| B | Reuse it but add presentation formats (pptx) |
-| C | Larger limit (for example 50 MB) and video for content only |
+| A | Existing users only (Admin, Director, Manager), submit for others, name an outside author as text |
+| B | A new Content Contributor role (needs a constitution amendment, role and menu work) |
+| C | Outside people with no login, recorded by name only, always submitted by an internal user |
 
-## Q3. Files only, or links too?
+## Q2. Who reviews and approves, and what if the Director is the author?
 
-**Question:** May a Manager submit a link (for example a shared drive URL) instead of uploading a file?
-Why it matters: the deck requires the actual output to be captured, and a link can change or lose access after approval.
+**Question:** Who holds Approve on Content by default, and who approves content the Director wrote?
+Why it matters: the author and submitter can never approve their own version, so the Director's own content needs a different approver or it can never be approved.
 
-**Recommended:** Option A - file only in version 1.
+**Recommended:** Option A - the Director approves everyone else; Director-authored content is approved by an Admin granted Approve; otherwise it waits and management is told.
 
 | Option | Description |
 | --- | --- |
-| A | File only |
-| B | File or link, link kept as text |
-| C | Link allowed only alongside a file |
+| A | Director holds Approve; Admin can be granted it; Director's own content goes to an Admin with Approve |
+| B | Admin and Director both hold Approve by default |
+| C | Director only; Director's own content needs no review |
+
+## Q3. Are the size limits right, and which formats count?
+
+**Question:** Are these limits and formats acceptable: video mp4 up to 500 MB, audio mp3/m4a/wav up to 100 MB, PDF, Word (docx) and Excel (xlsx) up to 25 MB each, with no old .doc or .xls and no mov/mkv?
+Why it matters: the shared file store today allows 10 MB for everything and no video or audio, so the limits decide the storage, upload time and how the store is changed.
+
+**Recommended:** Option A.
+
+| Option | Description |
+| --- | --- |
+| A | As written above |
+| B | Smaller: video 200 MB, audio 50 MB, documents 15 MB |
+| C | As A, plus legacy .doc/.xls and mov |
 
 ## Q4. Approved content that is revised
 
-**Question:** When a Manager submits a new version of already approved content, should it go back to review?
-Why it matters: it decides whether "Approved" ever means a version that nobody has checked.
+**Question:** When a new version of already approved content is submitted, should it go back to review?
+Why it matters: it decides whether "Approved" can ever refer to a file nobody checked.
 
-**Recommended:** Option A - new version returns to Submitted and needs approval; the earlier approval stays in history and the earlier version stays the last approved one.
+**Recommended:** Option A - back to review; the earlier approved version stays as the last approved one.
 
 | Option | Description |
 | --- | --- |
 | A | Back to review; earlier approved version remains the last approved |
 | B | Not allowed; approved content is locked |
-| C | Stays approved, new version is just added |
+| C | Stays approved, new version just added |
 
-## Q5. Tasks and content pieces
+## Q5. What can a non-Manager contributor see?
 
-**Question:** Is a content task always one content piece, and may a Manager create content with no assigned task?
-Why it matters: it decides whether the task link is mandatory, and how the dashboard and overdue counts are computed.
+**Question:** Should a contributor see only content they wrote or submitted, or all approved content?
+Why it matters: it sets the data scope and whether approved content becomes a shared library.
 
-**Recommended:** Option A - one task per assigned piece; self-started content has no task and is not counted as overdue.
+**Recommended:** Option A - own content only, in version 1.
 
 | Option | Description |
 | --- | --- |
-| A | One task per assigned piece; self-started content has no task |
-| B | One task may cover several pieces |
-| C | Every content piece must have a task, self-started ones get a task for themselves |
+| A | Only content they authored or submitted |
+| B | Own content plus all approved content (read only) |
