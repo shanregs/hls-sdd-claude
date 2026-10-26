@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("trainingSessionService")
 public class SessionService {
 
-    static final String ENTITY = "TRAINING_SESSION";
+    public static final String ENTITY = "TRAINING_SESSION";
 
     /** The body of a create or edit. {@code publish} is read on create only; {@code reason} is needed to move a session. */
     public record SessionBody(

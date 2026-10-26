@@ -106,7 +106,7 @@ describe("Training sessions and registration (spec 024 US1)", () => {
     authFetch.mockResolvedValue(json([]));
     renderUi(<TrainingCalendarPage />);
     await userEvent.click(await screen.findByRole("button", { name: "New session" }));
-    await userEvent.selectOptions(screen.getByLabelText("Venue kind"), "ONLINE");
+    await userEvent.selectOptions(screen.getByLabelText("Venue kind"), "VIRTUAL");
     await userEvent.type(screen.getByLabelText(/Meeting link/), "http://example.org/x");
     await userEvent.click(screen.getByRole("button", { name: "Save as draft" }));
     expect(await screen.findByText("The meeting link must start with https://")).toBeTruthy();

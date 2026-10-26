@@ -112,4 +112,43 @@ public abstract class TrainingCalendarTestBase extends AttendanceTestBase {
     protected static boolean hasId(List<Map<String, Object>> sessions, UUID id) {
         return sessions.stream().anyMatch(s -> id.toString().equals(s.get("id")));
     }
+
+    private static final java.util.concurrent.atomic.AtomicInteger MINUTES = new java.util.concurrent.atomic.AtomicInteger(1);
+
+    /** A second Saturday pattern at a start time no other test uses (the same rule and time is refused as a duplicate). */
+    protected Map<String, Object> patternBody(LocalDate startMonth) {
+        int n = MINUTES.getAndIncrement() + (int) (System.nanoTime() % 600);
+        java.time.LocalTime start = java.time.LocalTime.of(6 + (n / 60) % 12, n % 60);
+        Map<String, Object> body = new HashMap<>();
+        body.put("ruleKind", "NTH_WEEKDAY");
+        body.put("nth", 2);
+        body.put("weekday", 6);
+        body.put("startsAt", start.toString());
+        body.put("endsAt", start.plusMinutes(90).toString());
+        body.put("topic", uniqueName("Monthly"));
+        body.put("venueKind", "PHYSICAL");
+        body.put("venue", "Head office");
+        body.put("startMonth", startMonth.withDayOfMonth(1).toString());
+        return body;
+    }
+
+    protected UUID createPattern(String token, Map<String, Object> body) {
+        Resp resp = post(API + "/patterns", token, body);
+        assertThat(resp.status()).as(resp.body()).isEqualTo(201);
+        return resp.id();
+    }
+
+    /** The session ids of a pattern, oldest month first. */
+    protected List<UUID> patternSessions(UUID pattern) {
+        return jdbc.queryForList(
+                "select id from training_session where pattern_id = ? order by pattern_month", UUID.class, pattern);
+    }
+
+    protected long patternVersion(String token, UUID pattern) {
+        return list(get(API + "/patterns", token)).stream()
+                .filter(p -> pattern.toString().equals(p.get("id")))
+                .map(p -> ((Number) p.get("version")).longValue())
+                .findFirst()
+                .orElseThrow();
+    }
 }

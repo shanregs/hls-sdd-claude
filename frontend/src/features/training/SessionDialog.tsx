@@ -69,7 +69,7 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
     if (seatLimit && (!/^\d+$/.test(seatLimit) || Number(seatLimit) < 1)) {
       found.seatLimit = "Enter a whole number of seats, or leave it empty.";
     }
-    if (venueKind === "ONLINE" && venue && !HTTPS.test(venue)) {
+    if (venueKind === "VIRTUAL" && venue && !HTTPS.test(venue)) {
       found.venue = "The meeting link must start with https://";
     }
     if (session && moved && !reason.trim()) {
@@ -212,10 +212,10 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
               slotProps={{ select: { native: true } }}
             >
               <option value="PHYSICAL">In person</option>
-              <option value="ONLINE">Online</option>
+              <option value="VIRTUAL">Online</option>
             </TextField>
             <TextField
-              label={venueKind === "ONLINE" ? "Meeting link" : "Venue"}
+              label={venueKind === "VIRTUAL" ? "Meeting link" : "Venue"}
               value={venue}
               onChange={(e) => setVenue(e.target.value)}
               error={Boolean(errors.venue)}

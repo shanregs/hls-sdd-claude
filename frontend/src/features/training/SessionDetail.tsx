@@ -133,7 +133,7 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
             )}
             {session.venue && (
               <>
-                <dt>{session.venueKind === "ONLINE" ? "Meeting link" : "Venue"}</dt>
+                <dt>{session.venueKind === "VIRTUAL" ? "Meeting link" : "Venue"}</dt>
                 <dd>{session.venue}</dd>
               </>
             )}
