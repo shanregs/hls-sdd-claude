@@ -1,0 +1,6 @@
+$kind: http-request
+name: Cancel My Registration
+description: "Before the session starts."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/registrations/me"
+method: DELETE
+order: 10000

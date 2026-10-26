@@ -1,0 +1,6 @@
+$kind: http-request
+name: Sessions in a Month
+description: "Calendar list. Manager: sessions that include them or their Teachers; Teacher: open and own. Needs TRAINING.VIEW or TRAINING_REGISTRATION.VIEW."
+url: "{{baseUrl}}/api/v1/training/sessions?from={{date}}&to={{date}}&type=&status="
+method: GET
+order: 1000

@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.7.0 → 2.5.11 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.11)
+Version change: 1.7.0 → 2.5.12 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.12)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
 restarts at 001. The new spec sequence is tracked in docs/spec-roadmap.md.
@@ -32,6 +32,18 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.12 (PATCH, spec 024): the Default role access matrix gains three rows. Training (the calendar, sessions, patterns,
+    assignments, exceptions, history, CSV export): Admin and Director hold View, Create, Edit, Delete and Export; a Manager
+    holds View (sessions that include them or their Teachers, their Teachers' exceptions, never the ability to close one);
+    Teacher and System have none. Training Attendance (record who attended): Admin and Director View and Edit for anyone; a
+    Manager View and Edit for the Teachers placed under them only. Training Registration (an open weekend session): a Teacher
+    holds View, Create and Edit for their own registration only. The navigation model gains the OPERATIONS items Training
+    Calendar and Training Exceptions (Admin, Director) and My Training (Manager), and the MY ATTENDANCE items Upcoming
+    Training and My Training History (Teacher). Principle VII holds: the feature is the `training.calendar` package of the
+    `training` module; Teacher attendance is written only through `attendance.api.TrainingAttendance` after a read through
+    `AttendanceReadApi`, Manager attendance and the 035 calendar read training only through `attendance.api.ManagerTrainingDays`
+    and `training.api.TrainingActivities`, and `attendance` does not depend on `training`. Number 2.5.12 follows 2.5.11 of
+    spec 028; renumber to whichever patch is next when this merges.
   - 2.5.8 (PATCH, spec 027): the Default role access matrix gains a Transfers and Replacements row. Admin holds View, Create and
     Edit (never Approve); Director and Manager hold View, Create, Edit and Approve; nobody decides a request they raised. A Manager
     reads requests where the leaving or receiving School is theirs and acts only for the leaving School; Teacher and System have no
@@ -405,6 +417,9 @@ kept intentionally lightweight for v1.
   | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Activity Calendar (read-only planned vs done) | View | View | Own activities (View) | — | — |
+  | Training (calendar, sessions, patterns, assignments, exceptions, history, CSV export) | View, Create, Edit, Delete, Export | View, Create, Edit, Delete, Export | Assigned (View; sessions that include them or their Teachers; never closes an exception) | — | — |
+  | Training Attendance (record who attended a session) | View, Edit | View, Edit | Assigned (View, Edit; only the Teachers placed under them) | — | — |
+  | Training Registration (register for an open weekend session) | — | — | — | Own (View, Create, Edit) | — |
   | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
   | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
@@ -454,4 +469,4 @@ expanded guidance, PATCH for clarifications. Every plan's Constitution Check and
 `/speckit-analyze` run verifies compliance with Principles I–XI. The system prioritizes operational
 trust over convenience, especially in payment, payroll, attendance, and access control.
 
-**Version**: 2.5.11 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-24
+**Version**: 2.5.12 | **Ratified**: 2026-09-18 | **Last Amended**: 2026-10-26

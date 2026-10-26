@@ -1,0 +1,11 @@
+$kind: http-request
+name: Edit or Move Session
+description: "A date or time change is a move and needs a reason; version required (409 when stale)."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"type\": \"WEEKEND\", \"topic\": \"Phonics refresher\", \"date\": \"{{date}}\", \"startsAt\": \"10:00\", \"endsAt\": \"13:00\", \"trainerName\": \"Trainer Tina\", \"venueKind\": \"PHYSICAL\", \"venue\": \"Head office\", \"seatLimit\": 3, \"publish\": true, \"reason\": \"Venue changed\", \"version\": 0}"
+order: 4000

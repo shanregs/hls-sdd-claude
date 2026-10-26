@@ -16,4 +16,10 @@ public interface ManagerAttendanceReadApi {
 
     /** Bulk form; every asked Manager is in the map. A fixed number of queries however many are asked. */
     Map<UUID, ManagerMonth> months(Collection<UUID> managerIds, YearMonth month);
+
+    /**
+     * The given Managers who have approved leave for the whole day on the date (spec 024 "on leave" suggestion). A half day
+     * of leave does not count. One query however many are asked; unknown Managers are simply absent.
+     */
+    java.util.Set<UUID> managersOnLeaveOn(Collection<UUID> managerIds, java.time.LocalDate date);
 }

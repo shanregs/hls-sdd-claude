@@ -20,6 +20,7 @@ import com.hls.identity.permissions.PermissionGuard;
 import com.hls.identity.user.Role;
 import com.hls.organization.api.ManagerQueries;
 import com.hls.school.api.SchoolDirectory;
+import com.hls.training.api.TrainingActivities;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashMap;
@@ -70,6 +71,18 @@ class SourceResilienceTest {
                 mock(PlatformTransactionManager.class));
     }
 
+    private static TrainingSource emptyTraining() {
+        TrainingActivities training = mock(TrainingActivities.class);
+        when(training.activitiesBetween(any(), any(), any())).thenReturn(List.of());
+        return new TrainingSource(training);
+    }
+
+    private static TrainingSource failingTraining() {
+        TrainingActivities training = mock(TrainingActivities.class);
+        when(training.activitiesBetween(any(), any(), any())).thenThrow(new IllegalStateException("down"));
+        return new TrainingSource(training);
+    }
+
     private static final Caller DIRECTOR = new Caller(UUID.randomUUID(), Set.of(Role.DIRECTOR));
 
     private static SourceReport report(CalendarResponse r, String group) {
@@ -77,17 +90,17 @@ class SourceResilienceTest {
     }
 
     @Test
-    void noTrainingBeanGivesAnUnavailableNoteAndStaysComplete() {
+    void aTrainingSourceWithNoSessionsIsReadAndStaysComplete() {
         CalendarResponse r = service(
                         new Stub("DRIVES", true, List.of(entry("CAMPUS_DRIVE")), false),
                         new Stub("VISITS", true, List.of(entry("SCHOOL_VISIT")), false),
                         new Stub("TASKS", true, List.of(entry("TASK")), false),
-                        new TrainingSource())
+                        emptyTraining())
                 .month(DIRECTOR, YearMonth.from(TODAY));
         SourceReport training = report(r, "TRAINING");
-        assertThat(training.available()).isFalse();
-        assertThat(training.read()).isFalse();
-        assertThat(training.note()).isEqualTo("Training is not included yet");
+        assertThat(training.available()).isTrue();
+        assertThat(training.read()).isTrue();
+        assertThat(training.note()).isNull();
         assertThat(r.partial()).isFalse();
         assertThat(r.items()).hasSize(3);
     }
@@ -112,7 +125,7 @@ class SourceResilienceTest {
                         new Stub("DRIVES", true, List.of(entry("CAMPUS_DRIVE")), false),
                         new Stub("VISITS", true, List.of(entry("SCHOOL_VISIT")), false),
                         new Stub("TASKS", true, List.of(), true),
-                        new TrainingSource())
+                        emptyTraining())
                 .month(DIRECTOR, YearMonth.from(TODAY));
         SourceReport tasks = report(r, "TASKS");
         assertThat(tasks.read()).isFalse();
@@ -129,7 +142,7 @@ class SourceResilienceTest {
                         new Stub("DRIVES", true, List.of(), true),
                         new Stub("VISITS", true, List.of(), true),
                         new Stub("TASKS", true, List.of(), true),
-                        new TrainingSource())
+                        failingTraining())
                 .month(DIRECTOR, YearMonth.from(TODAY));
         assertThat(r.items()).isEmpty();
         assertThat(r.partial()).isTrue();

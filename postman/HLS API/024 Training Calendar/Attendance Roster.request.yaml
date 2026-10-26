@@ -1,0 +1,6 @@
+$kind: http-request
+name: Attendance Roster
+description: "Needs TRAINING_ATTENDANCE.VIEW."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/attendance"
+method: GET
+order: 25000

@@ -161,4 +161,15 @@ class DevSeedTest extends IntegrationTestBase {
             }
         }
     }
+
+    @Test
+    void trainingCalendarDemoDataHasAPatternAWeekendSessionAndAHeldSessionWithOneException() {
+        Signed director = signIn(null, "9800000002", "Password123!");
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        String sessions = get("/api/v1/training/sessions?from=" + today.minusMonths(1) + "&to=" + today.plusMonths(4), director.token()).body();
+        assertThat(sessions).contains("Demo Weekend Refresher", "Demo Held Session", "Demo Monthly Training");
+        assertThat(get("/api/v1/training/patterns", director.token()).body()).contains("Demo Monthly Training");
+        assertThat(get("/api/v1/training/exceptions?size=200", director.token()).body()).contains("Demo Held Session");
+    }
 }

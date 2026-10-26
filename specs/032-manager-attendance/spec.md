@@ -401,3 +401,15 @@ when this spec merges.
   records the audit.
 - Out of scope: the Android screens (spec 033), geofencing and distance checks, shifts and overtime, the salary itself
   and the payroll run (013b), travel claims (015), and Teacher attendance (spec 008).
+
+## Amended by 024
+
+Three additions. (1) `ManagerAttendanceReadApi.managersOnLeaveOn(managerIds, date)` returns the Managers with a whole day of
+approved leave on a date (a half day does not count); one query. (2) `attendance.api.ManagerTrainingDays` (owned here,
+implemented by training): `assignedSessionsOn` adds the Manager's assigned training sessions as a choice on the Field day
+link (kind TRAINING, through `PlannedActivities.forDay`), and `attendedDays` / `attendedDaysOf` give the days a Manager was
+recorded Present (1.0 or 0.5). (3) Decided by the user on 2026-10-24: an attended training day counts as worked in
+`ManagerMonth` and so in Manager payroll, but only where there is no check-in that day (whole 1.0, half 0.5, up to the part of
+the day not on leave); the calculator, the Manager grid and the month lock all use the same figures. Tests:
+`ManagersOnLeaveOnTest`, `ManagerMonthCalculatorTest` (training cases), `TrainingFieldDayLinkTest`, and the payroll figure in
+`PayRunTrainingDayTest`. The existing 032 tests pass unchanged.

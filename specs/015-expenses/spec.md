@@ -450,3 +450,12 @@ Items marked "to confirm in /speckit-clarify" are defaults chosen because no one
   A claim dated in a closed month is still accepted within the 60-day window.
 - **Dashboard and reports**: spec 028 (approvals inbox, spend versus budget) and spec 014 (Expenses report) read the
   exposed figures of FR-026 and add no rules of their own.
+
+## Amended by 024
+
+A Training Stay claim may now link to a training session as well as an induction batch (spec 024 task T-015, done at the
+user's request). `training.api.TrainingSessions` (`between`, `session`: Published and Held sessions only) is read by
+`LinkResolver`; the new link kind is `TRAINING_SESSION`, offered with the batches in the Training Stay options and refused for
+every other category. The link is stored as kind, id, date and label like the others, so it survives a cancelled session.
+Travel and Fuel links, batch links and the cost-per-School measure are unchanged. Tests: `ClaimTrainingSessionLinkTest`, a
+Training Stay case in the My Expenses frontend tests; `ClaimLinkTest` and `CostMeasureTest` pass unchanged.

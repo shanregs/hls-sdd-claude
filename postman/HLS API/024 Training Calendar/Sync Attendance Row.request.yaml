@@ -1,0 +1,11 @@
+$kind: http-request
+name: Sync Attendance Row
+description: "Retry the 008 write after a clash."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/attendance/{{entryId}}/sync"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{}"
+order: 28000

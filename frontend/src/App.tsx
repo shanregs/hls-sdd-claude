@@ -43,6 +43,11 @@ import { MyExpensesPage } from "./features/expenses/MyExpensesPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
+import { ExceptionsPage } from "./features/training/ExceptionsPage";
+import { HistoryPage } from "./features/training/HistoryPage";
+import { MyTrainingPage } from "./features/training/MyTrainingPage";
+import { TrainingCalendarPage } from "./features/training/TrainingCalendarPage";
+import { UpcomingTrainingPage } from "./features/training/UpcomingTrainingPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
 import { TeachersPage } from "./features/teachers/TeachersPage";
@@ -447,6 +452,54 @@ export function App() {
           element={
             <RouteGuard>
               <ActivityCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/training"
+          element={
+            <RouteGuard>
+              <TrainingCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/training/exceptions"
+          element={
+            <RouteGuard>
+              <ExceptionsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/training/history/:kind/:id"
+          element={
+            <RouteGuard>
+              <HistoryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/training/history"
+          element={
+            <RouteGuard>
+              <HistoryPage mine />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/my-training"
+          element={
+            <RouteGuard>
+              <MyTrainingPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/training"
+          element={
+            <RouteGuard>
+              <UpcomingTrainingPage />
             </RouteGuard>
           }
         />

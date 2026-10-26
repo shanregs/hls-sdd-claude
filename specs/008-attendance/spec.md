@@ -573,3 +573,10 @@ Admin, Director and System may edit the role→permission matrix; this spec does
   payroll spec.
 - Specs 002 (access model), 003 (audit), 004 (users) and 005 (master data) are implemented and
   reused as-is. Dates are shown as DD/MM/YYYY.
+
+## Amended by 024
+
+Training days from spec 024 are written through `TrainingAttendance` only after `AttendanceReadApi` shows the month is open
+and the day holds no other kind of mark; a clash is reported to the Admin and 008 is left unchanged. A training mark on a
+non-working day counts in working days (see research G6 of spec 024). "Training days available" can now use the expected
+days of spec 024 where a person is assigned; until then available equals attended, as before.
