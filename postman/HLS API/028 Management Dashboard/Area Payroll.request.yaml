@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Payroll
+description: "Pay run state, paid and owed, attendance locks. Needs Payroll View: 404 for a Manager."
+url: "{{baseUrl}}/api/v1/dashboard/areas/PAYROLL"
+method: GET
+order: 7000

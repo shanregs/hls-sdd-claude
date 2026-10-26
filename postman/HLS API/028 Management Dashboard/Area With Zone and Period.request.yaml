@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area With Zone and Period
+description: "One area narrowed to a Zone and a month. A Zone the caller may not pick is 404; a period that is not YYYY-MM is 400. Tiles that cannot be split by Zone say Organization-wide."
+url: "{{baseUrl}}/api/v1/dashboard/areas/MANAGERS?zoneId={{zoneId}}&period=2026-10"
+method: GET
+order: 8000

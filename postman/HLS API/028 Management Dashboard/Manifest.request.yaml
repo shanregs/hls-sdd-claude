@@ -1,0 +1,6 @@
+$kind: http-request
+name: Manifest
+description: "The caller's areas and tiles in order, the Zone choices, the default period and whether the inbox is shown. Admin and Director see every area; a Manager only the areas with a tile they may see; Teacher and System get an empty list."
+url: "{{baseUrl}}/api/v1/dashboard"
+method: GET
+order: 1000

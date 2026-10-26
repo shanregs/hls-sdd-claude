@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Alert, Button, Stack } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { AttendanceGridScreen } from "./AttendanceGridScreen";
@@ -11,9 +12,19 @@ import { useGrantedActions } from "../common/useGrantedActions";
 
 const ROUTE = "/operations/attendance";
 
+function localIsoDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${date}`;
+}
+
 /** Attendance (spec 008 US4): the organization-wide month grid for Admin and Director. */
 export function AttendanceGridPage() {
   const actions = useGrantedActions(ROUTE);
+  // The dashboard opens this grid with ?filter=away to show the Teachers away today (spec 028).
+  const [params, setParams] = useSearchParams();
+  const awayToday = params.get("filter") === "away";
   const [filters, setFilters] = useState<GridFilterValues>(NO_FILTERS);
   const [locking, setLocking] = useState(false);
   const canProcess = actions.has("PROCESS");
@@ -53,8 +64,25 @@ export function AttendanceGridPage() {
         schoolId: filters.schoolId || undefined,
         managerId: filters.managerId || undefined,
         status: filters.status || undefined,
+        awayOn: awayToday ? localIsoDate() : undefined,
       }}
-      filters={<GridFilters value={filters} onChange={setFilters} />}
+      filters={
+        <>
+          <GridFilters value={filters} onChange={setFilters} />
+          {awayToday && (
+            <Alert
+              severity="info"
+              action={
+                <Button color="inherit" size="small" onClick={() => setParams({})}>
+                  Show all
+                </Button>
+              }
+            >
+              Showing the Teachers away today.
+            </Alert>
+          )}
+        </>
+      }
       actions={({ month, query, reload, openTeacher }) =>
         (canProcess || canExport) && (
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>

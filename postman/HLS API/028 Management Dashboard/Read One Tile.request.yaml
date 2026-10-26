@@ -1,0 +1,6 @@
+$kind: http-request
+name: Read One Tile
+description: "One tile on its own (the retry after an ERROR). The figure equals the same tile read through its area."
+url: "{{baseUrl}}/api/v1/dashboard/areas/MANAGERS/tiles/managers.tasks.overdue"
+method: GET
+order: 9000

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -246,6 +246,9 @@ export function PayrollRunPage() {
   const canApprove = actions.has("APPROVE");
   const canExport = actions.has("EXPORT");
 
+  // The dashboard opens a run with ?tab=owed to land on the people still owed (spec 028).
+  const [urlParams] = useSearchParams();
+  const wantsOwed = urlParams.get("tab") === "owed";
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -288,6 +291,12 @@ export function PayrollRunPage() {
   }, [loadRun]);
 
   const run = state.kind === "ready" ? state.run : null;
+  const runApproved = run?.status === "APPROVED";
+  useEffect(() => {
+    if (wantsOwed && runApproved) {
+      document.getElementById("owed-heading")?.scrollIntoView?.({ block: "start" });
+    }
+  }, [wantsOwed, runApproved, state.kind]);
   const computing = run ? isComputing(run) : false;
 
   // progress: ask again every two seconds while the batch runs, and stop when it is done or failed

@@ -153,6 +153,8 @@ public class ManagerLeaveService {
         if (lastHalf && !working.contains(last)) {
             throw new InvalidInputException("A half day must fall on a working day, and the last date is not one.");
         }
+        // One submission at a time per Manager, so the overlap check below cannot be passed by two requests at once.
+        requests.lockForSubmission("manager_leave:" + who.managerId());
         List<ManagerLeaveRequest> overlapping =
                 requests.findByManagerIdAndStatusInAndFirstDateLessThanEqualAndLastDateGreaterThanEqual(
                         who.managerId(), EnumSet.of(Status.PENDING, Status.APPROVED), last, first);

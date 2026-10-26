@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LeaveManagementPage } from "./LeaveManagementPage";
 
@@ -69,7 +70,11 @@ describe("LeaveManagementPage", () => {
 
   it("lists pending requests first with the pending count", async () => {
     authFetch.mockResolvedValue(list([PENDING], 3));
-    render(<LeaveManagementPage />);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
 
     const table = await screen.findByRole("table", { name: "Leave requests" });
     expect(within(table).getByText("Tara Teacher")).toBeInTheDocument();
@@ -87,7 +92,11 @@ describe("LeaveManagementPage", () => {
       }
       return approved ? list([], 0) : list([PENDING]);
     });
-    render(<LeaveManagementPage />);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
     const user = userEvent.setup();
 
     await user.click(
@@ -114,7 +123,11 @@ describe("LeaveManagementPage", () => {
         ? json({ reason: "This request was cancelled by the Teacher." }, 409)
         : list([PENDING]),
     );
-    render(<LeaveManagementPage />);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
     const user = userEvent.setup();
 
     await user.click(
@@ -139,7 +152,11 @@ describe("LeaveManagementPage", () => {
 
   it("offers revoke for an approved request", async () => {
     authFetch.mockResolvedValue(list([APPROVED], 0));
-    render(<LeaveManagementPage />);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
 
     expect(
       await screen.findByRole("button", {
@@ -152,7 +169,11 @@ describe("LeaveManagementPage", () => {
   it("hides the decision icons without the Approve permission", async () => {
     granted = new Set(["VIEW"]);
     authFetch.mockResolvedValue(list([PENDING]));
-    render(<LeaveManagementPage />);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
 
     await screen.findByRole("table", { name: "Leave requests" });
     expect(screen.queryByRole("button", { name: /leave of/ })).toBeNull();

@@ -41,10 +41,14 @@ public class AttendanceGridService {
     public static final int MAX_PAGE_SIZE = 100;
 
     /** Optional filters; all combine with AND. */
-    public record Filter(String query, UUID zoneId, UUID schoolId, UUID managerId, String status) {
+    public record Filter(String query, UUID zoneId, UUID schoolId, UUID managerId, String status, LocalDate awayOn) {
+
+        public Filter(String query, UUID zoneId, UUID schoolId, UUID managerId, String status) {
+            this(query, zoneId, schoolId, managerId, status, null);
+        }
 
         public static Filter none() {
-            return new Filter(null, null, null, null, null);
+            return new Filter(null, null, null, null, null, null);
         }
     }
 
@@ -114,6 +118,19 @@ public class AttendanceGridService {
     /** Every Teacher of the filtered grid, in name order; used by the CSV export too. */
     @Transactional(readOnly = true)
     public List<UUID> filteredTeacherIds(UUID userId, Set<Role> roles, YearMonth month, Filter filter) {
+        List<UUID> ids = placementFiltered(userId, roles, month, filter);
+        if (filter.awayOn() == null || ids.isEmpty()) {
+            return ids;
+        }
+        // Teachers with a leave-category mark on the date, the same rule the dashboard tile counts (spec 028).
+        Set<UUID> away = marks.findByTeacherIdInAndMarkDateBetween(ids, filter.awayOn(), filter.awayOn()).stream()
+                .filter(m -> codes.find(m.getStatusCodeId()).map(c -> c.getCategory() == StatusCategory.LEAVE).orElse(false))
+                .map(AttendanceMark::getTeacherId)
+                .collect(java.util.stream.Collectors.toSet());
+        return ids.stream().filter(away::contains).toList();
+    }
+
+    private List<UUID> placementFiltered(UUID userId, Set<Role> roles, YearMonth month, Filter filter) {
         Set<UUID> allowed = scope.allowedDuring(userId, roles, month);
         if (allowed.isEmpty()) {
             return List.of();

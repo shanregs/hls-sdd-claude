@@ -72,6 +72,19 @@ class AttendanceGridControllerTest extends AttendanceTestBase {
     }
 
     @Test
+    void awayOnListsTheTeachersWithALeaveMarkOnThatDate() {
+        World w = newWorld();
+        LocalDate date = today().minusDays(2);
+        assertThat(put("/api/v1/attendance/teachers/" + w.teacherA().teacherId() + "/marks/" + date,
+                w.admin(), Map.of("statusCode", "A", "dayValue", 1)).status()).isEqualTo(200);
+
+        String url = GRID + "?month=" + YearMonth.from(date) + "&schoolId=" + w.schoolA();
+
+        assertThat(teacherIds(w.admin(), url + "&awayOn=" + date)).containsExactly(w.teacherA().teacherId().toString());
+        assertThat(teacherIds(w.admin(), url + "&awayOn=" + date.minusDays(1))).isEmpty();
+    }
+
+    @Test
     void anAdminCorrectionIsAttributedToTheAdminAndVisibleToTheTeacher() {
         World w = newWorld();
         LocalDate date = today().minusDays(9);

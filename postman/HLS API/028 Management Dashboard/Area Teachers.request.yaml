@@ -1,0 +1,6 @@
+$kind: http-request
+name: Area Teachers
+description: "Teachers by status and the substitution tile."
+url: "{{baseUrl}}/api/v1/dashboard/areas/TEACHERS"
+method: GET
+order: 5000

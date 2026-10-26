@@ -89,6 +89,7 @@ jest.mock("react-native-safe-area-context", () =>
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { resetLocationGate } from "./src/location/LocationGate";
+import { resetCipherKey } from "./src/outbox/cipher";
 import { setAccessToken } from "./src/security/memoryToken";
 
 // Controllable fake of expo-image-picker (spec 033): tests set what the camera and the gallery return, and whether the
@@ -105,8 +106,14 @@ jest.mock("expo-image-picker", () => {
       assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
     } as { canceled: boolean; assets?: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number | null }[] },
   };
+  // Assets a phone can produce besides jpg and png (spec 036): HEIC from the camera app, WebP from the gallery.
+  const assets = {
+    heic: { uri: "file:///cache/IMG_0001.heic", fileName: "IMG_0001.heic", mimeType: "image/heic", fileSize: 2_411_724, width: 4032, height: 3024 },
+    webp: { uri: "file:///cache/picture.webp", fileName: "picture.webp", mimeType: "image/webp", fileSize: 512_000, width: 1600, height: 1200 },
+  };
   return {
     __state: state,
+    __assets: assets,
     requestCameraPermissionsAsync: jest.fn(async () => ({
       status: state.cameraPermission,
       granted: state.cameraPermission === "granted",
@@ -114,6 +121,170 @@ jest.mock("expo-image-picker", () => {
     })),
     launchCameraAsync: jest.fn(async () => state.camera),
     launchImageLibraryAsync: jest.fn(async () => state.library),
+  };
+});
+
+// In-memory fakes of the native modules spec 036 uses (offline capture and bill photos). Tests reach their state through
+// `jest.requireMock(name).__state`; every test starts with the defaults (see the beforeEach at the end).
+
+// expo-file-system (the legacy string API): a map of file uri to base64 content. `full` makes every write fail (a full
+// phone); `sizes` lets a test declare the size a file reports without holding that many bytes.
+jest.mock("expo-file-system/legacy", () => {
+  const state = {
+    files: new Map<string, string>(),
+    dirs: new Set<string>(),
+    sizes: new Map<string, number>(),
+    full: false,
+  };
+  const sizeOf = (uri: string): number => {
+    const override = state.sizes.get(uri);
+    if (override !== undefined) return override;
+    const content = state.files.get(uri) ?? "";
+    return Math.floor((content.replace(/=+$/, "").length * 3) / 4);
+  };
+  const trim = (uri: string) => uri.replace(/\/$/, "");
+  const children = (dir: string): string[] => {
+    const prefix = `${trim(dir)}/`;
+    const names = new Set<string>();
+    for (const key of [...state.files.keys(), ...state.dirs]) {
+      if (key.startsWith(prefix) && key.length > prefix.length) names.add(key.slice(prefix.length).split("/")[0]);
+    }
+    return [...names];
+  };
+  return {
+    __state: state,
+    documentDirectory: "file:///doc/",
+    cacheDirectory: "file:///cache/",
+    EncodingType: { UTF8: "utf8", Base64: "base64" },
+    getInfoAsync: jest.fn(async (uri: string) => {
+      if (state.files.has(uri) || state.sizes.has(uri)) return { exists: true, isDirectory: false, uri, size: sizeOf(uri) };
+      if (state.dirs.has(trim(uri)) || children(uri).length > 0) return { exists: true, isDirectory: true, uri };
+      return { exists: false, isDirectory: false, uri };
+    }),
+    readAsStringAsync: jest.fn(async (uri: string) => {
+      const content = state.files.get(uri);
+      if (content === undefined) {
+        // A picked file nobody seeded: a few stand-in bytes.
+        if (uri.startsWith("file:///cache/")) return "/9j/4AAQSkZJRg==";
+        throw new Error(`No such file: ${uri}`);
+      }
+      return content;
+    }),
+    writeAsStringAsync: jest.fn(async (uri: string, contents: string) => {
+      if (state.full) throw new Error("No space left on device");
+      state.files.set(uri, contents);
+    }),
+    deleteAsync: jest.fn(async (uri: string) => {
+      const base = trim(uri);
+      for (const key of [...state.files.keys()]) {
+        if (key === uri || key.startsWith(`${base}/`)) {
+          state.files.delete(key);
+          state.sizes.delete(key);
+        }
+      }
+      for (const dir of [...state.dirs]) if (dir === base || dir.startsWith(`${base}/`)) state.dirs.delete(dir);
+    }),
+    makeDirectoryAsync: jest.fn(async (uri: string) => {
+      if (state.full) throw new Error("No space left on device");
+      state.dirs.add(trim(uri));
+    }),
+    readDirectoryAsync: jest.fn(async (uri: string) => children(uri)),
+    copyAsync: jest.fn(async ({ from, to }: { from: string; to: string }) => {
+      if (state.full) throw new Error("No space left on device");
+      state.files.set(to, state.files.get(from) ?? "/9j/4AAQSkZJRg==");
+    }),
+  };
+});
+
+// expo-crypto: predictable ids, and bytes that differ from call to call.
+jest.mock("expo-crypto", () => {
+  const state = { uuid: 0, bytes: 0 };
+  return {
+    __state: state,
+    randomUUID: jest.fn(() => {
+      state.uuid += 1;
+      return `00000000-0000-4000-8000-${String(state.uuid).padStart(12, "0")}`;
+    }),
+    getRandomBytes: jest.fn((count: number) => {
+      const out = new Uint8Array(count);
+      for (let i = 0; i < count; i += 1) {
+        state.bytes += 1;
+        out[i] = (state.bytes * 73 + i * 31 + 7) % 256;
+      }
+      return out;
+    }),
+  };
+});
+
+// expo-image-manipulator: records what was asked and returns a small jpg. The source size of a picked uri is in
+// `sources` (default 4000 x 3000); the size the result reports is the next of `outputBytes` (default 700 000).
+jest.mock("expo-image-manipulator", () => {
+  const state = {
+    calls: [] as { uri: string; actions: { resize?: { width?: number; height?: number } }[]; options: { compress?: number; format?: string } }[],
+    sources: new Map<string, { width: number; height: number }>(),
+    outputBytes: [] as number[],
+    fail: false,
+    counter: 0,
+  };
+  return {
+    __state: state,
+    SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
+    manipulateAsync: jest.fn(async (uri: string, actions: { resize?: { width?: number; height?: number } }[], options: { compress?: number; format?: string }) => {
+      state.calls.push({ uri, actions, options });
+      if (state.fail) throw new Error("Cannot decode image");
+      const source = state.sources.get(uri) ?? { width: 4000, height: 3000 };
+      let { width, height } = source;
+      const resize = actions.find((a) => a.resize)?.resize;
+      if (resize?.width) {
+        height = Math.round((height * resize.width) / width);
+        width = resize.width;
+      } else if (resize?.height) {
+        width = Math.round((width * resize.height) / height);
+        height = resize.height;
+      }
+      state.counter += 1;
+      const out = `file:///cache/manipulated-${state.counter}.jpg`;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require("expo-file-system/legacy");
+      fs.__state.files.set(out, "/9j/4AAQSkZJRg==");
+      fs.__state.sizes.set(out, state.outputBytes.length > 0 ? (state.outputBytes.shift() as number) : 700_000);
+      return { uri: out, width, height };
+    }),
+  };
+});
+
+jest.mock("expo-document-picker", () => {
+  const state = {
+    result: {
+      canceled: false,
+      assets: [{ uri: "file:///cache/bill.pdf", name: "bill.pdf", mimeType: "application/pdf", size: 120_000 }],
+    } as { canceled: boolean; assets?: { uri: string; name: string; mimeType?: string; size?: number }[] },
+  };
+  return { __state: state, getDocumentAsync: jest.fn(async () => state.result) };
+});
+
+// @react-native-community/netinfo: `__emit` fires a connectivity change to every listener.
+jest.mock("@react-native-community/netinfo", () => {
+  const listeners = new Set<unknown>();
+  const state = { isConnected: true as boolean | null, isInternetReachable: true as boolean | null };
+  const addEventListener = jest.fn((listener: unknown) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  });
+  const fetch = jest.fn(async () => ({ ...state }));
+  return {
+    __esModule: true,
+    default: { addEventListener, fetch },
+    addEventListener,
+    fetch,
+    __state: state,
+    __emit: (next: Partial<typeof state>) => {
+      Object.assign(state, next);
+      listeners.forEach((listener) => Reflect.apply(listener as object as () => void, undefined, [{ ...state }]));
+    },
+    __listenerCount: () => listeners.size,
   };
 });
 
@@ -153,7 +324,24 @@ beforeEach(async () => {
       assets: [{ uri: "file:///cache/gallery.png", fileName: "gallery.png", mimeType: "image/png", fileSize: 1_258_291 }],
     },
   });
+  const fileSystem = jest.requireMock("expo-file-system/legacy").__state;
+  fileSystem.files.clear();
+  fileSystem.dirs.clear();
+  fileSystem.sizes.clear();
+  fileSystem.full = false;
+  Object.assign(jest.requireMock("expo-crypto").__state, { uuid: 0, bytes: 0 });
+  const manipulator = jest.requireMock("expo-image-manipulator").__state;
+  manipulator.calls.length = 0;
+  manipulator.sources.clear();
+  manipulator.outputBytes.length = 0;
+  manipulator.fail = false;
+  jest.requireMock("expo-document-picker").__state.result = {
+    canceled: false,
+    assets: [{ uri: "file:///cache/bill.pdf", name: "bill.pdf", mimeType: "application/pdf", size: 120_000 }],
+  };
+  Object.assign(jest.requireMock("@react-native-community/netinfo").__state, { isConnected: true, isInternetReachable: true });
   resetLocationGate();
+  resetCipherKey();
   (SecureStore as unknown as { __reset: () => void }).__reset();
   setAccessToken(null);
 });

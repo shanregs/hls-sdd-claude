@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AttendanceGridPage } from "./AttendanceGridPage";
 import { currentMonth, dateKey, daysInMonth, todayKey } from "./monthUtils";
@@ -108,7 +109,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
 
   it("loads the organization grid", async () => {
     mockApi();
-    render(<AttendanceGridPage />);
+    render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByText("Tara Teacher")).toBeInTheDocument();
     expect(screen.getByText(/Demo School One/)).toBeInTheDocument();
@@ -116,7 +121,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
 
   it("sends the chosen School filter with the request", async () => {
     mockApi();
-    render(<AttendanceGridPage />);
+    render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
     const user = userEvent.setup();
 
     await screen.findByText("Tara Teacher");
@@ -172,7 +181,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
         status: 200,
         blob: async () => new Blob(["Teacher"]),
       } as unknown as Response);
-      render(<AttendanceGridPage />);
+      render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
       const user = userEvent.setup();
 
       await screen.findByText("Tara Teacher");
@@ -194,7 +207,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
 
     it("shows the refusal when the export fails", async () => {
       mockApiWithExport(json({ reason: "Not authorized" }, 403));
-      render(<AttendanceGridPage />);
+      render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
 
       await screen.findByText("Tara Teacher");
       await userEvent
@@ -210,7 +227,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
     it("hides the button without the EXPORT grant", async () => {
       grantedActions = ["VIEW", "EDIT"];
       mockApi();
-      render(<AttendanceGridPage />);
+      render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
 
       await screen.findByText("Tara Teacher");
       expect(screen.queryByRole("button", { name: "Export CSV" })).toBeNull();
@@ -221,7 +242,11 @@ describe("AttendanceGridPage (User Story 4)", () => {
     authFetch.mockImplementation(async () =>
       json({ reason: "Not authorized" }, 403),
     );
-    render(<AttendanceGridPage />);
+    render(
+      <MemoryRouter>
+        <AttendanceGridPage />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Not authorized",

@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, HelperText, SegmentedButtons, Text, TextInput } from "react-native-paper";
 import { getProfile, updateProfile, type AccountProfile } from "../api/profileApi";
 import { ApiError, NoConnectionError } from "../api/errors";
-import { useAuth } from "../auth/AuthProvider";
+import { useSignOutGuard } from "../auth/useSignOutGuard";
 import { useThemePreference, type ThemePreference } from "../theme/ThemeProvider";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { Screen } from "./Screen";
@@ -19,7 +19,7 @@ export function ProfileScreen({
   onOpenDevices: () => void;
   onOpenPrivacy: () => void;
 }) {
-  const { logout } = useAuth();
+  const { requestLogout, dialog } = useSignOutGuard();
   const { preference, setPreference } = useThemePreference();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -158,9 +158,10 @@ export function ProfileScreen({
       <Button mode="outlined" onPress={onOpenPrivacy} contentStyle={styles.buttonContent} accessibilityLabel="Location and privacy">
         Location and privacy
       </Button>
-      <Button mode="outlined" onPress={() => void logout()} contentStyle={styles.buttonContent} accessibilityLabel="Log out">
+      <Button mode="outlined" onPress={requestLogout} contentStyle={styles.buttonContent} accessibilityLabel="Log out">
         Log out
       </Button>
+      {dialog}
     </Screen>
   );
 }

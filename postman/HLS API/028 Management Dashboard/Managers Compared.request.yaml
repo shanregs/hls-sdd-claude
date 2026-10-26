@@ -1,0 +1,6 @@
+$kind: http-request
+name: Managers Compared
+description: "The Manager-by-Manager table, sortable: sort is name or a column key (tasks.overdue, tasks.awaiting, tasks.escalated, marketing.visitsMissed, marketing.won, attendance.noCheckInDays), dir is asc or desc. Admin and Director only: 404 for a Manager."
+url: "{{baseUrl}}/api/v1/dashboard/managers?period=2026-10&sort=tasks.overdue&dir=desc"
+method: GET
+order: 11000
