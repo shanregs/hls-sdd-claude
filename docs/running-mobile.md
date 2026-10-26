@@ -4,7 +4,7 @@ How to run the HLS Android app (`mobile/`) on a Windows 11 PC with the Android e
 test it. For the backend and web app see [running-locally.md](running-locally.md). The app is
 specified in `specs/018-android-app-foundation/`.
 
-The app uses native modules (secure storage, location, a rooted-device check), so **Expo Go does not
+The app uses native modules (secure storage, location, camera and gallery, a rooted-device check), so **Expo Go does not
 work**. You need a development build (`npx expo run:android`) on an emulator or a phone.
 
 ## 1. One-time setup
@@ -47,12 +47,19 @@ on private networks. Keep it running while you use the app. Start the web app to
 
 **Order matters: emulator online first, then the build.**
 
+**Shortcut:** `.\scripts\run-mobile.ps1` does the steps below for you. It starts the emulator (the first
+one it finds, or `-Avd <name>`), waits until it has booted, sets `JAVA_HOME` to JDK 17 (override with
+`HLS_JDK17`), creates `mobile\.env` and runs `npm install` if needed, then starts Metro and opens the
+app. Add `-Build` for the first run or after native changes (it runs `npx expo run:android`), and
+`-Wipe` to wipe the emulator data. Start the database and backend first (section 2). The steps below
+are the same thing done by hand.
+
 1. **Start the emulator and wait until it is online.** Use Device Manager's play button, or from a
    terminal (software graphics, no GPU use):
    ```powershell
    $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
    $env:Path = "$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:Path"
-   emulator -avd Pixel_7 -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -memory 3072 -cores 4
+   emulator -avd <your_avd_name> -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -memory 3072 -cores 4
    ```
    (Add `-wipe-data` only the first time, or when the phone is stuck.) In a second window run
    `adb devices` until it shows `emulator-5554   device`. `offline` means it is still booting; the
@@ -64,7 +71,7 @@ on private networks. Keep it running while you use the app. Start the web app to
    $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
    $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
    java -version          # must say 17.0.x
-   cd D:\me\work\HiCitizen\HLS-App\hls-018-android\mobile
+   cd mobile          # from the repository root
    copy .env.example .env
    npm install
    npx expo run:android
@@ -79,13 +86,13 @@ on private networks. Keep it running while you use the app. Start the web app to
 3. `.env` already has `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8080`. **`10.0.2.2` is how the
    emulator reaches `localhost` on your PC.** Do not use `localhost` inside the emulator.
 
-**Next days (the app is already installed):** start the emulator, the database and backend, then run
-`npx expo start` in `mobile` and press `a` to open the app on the emulator. You only need
+**Next days (the app is already installed):** start the database and backend, then run
+`.\scripts\run-mobile.ps1`, or by hand start the emulator and run `npx expo start` in `mobile` and press `a`. You only need
 `npx expo run:android` again after changing native packages or `app.config.ts`.
 
-If the app shows "No connection" over plain `http://`, allow cleartext traffic for the dev build by
-adding `usesCleartextTraffic: true` to the `expo-build-properties` android settings in
-`mobile/app.config.ts`, then rebuild.
+Debug builds already allow plain `http://` (`mobile/android/app/src/debug/AndroidManifest.xml` sets
+`usesCleartextTraffic`), so no extra setting is needed. If the app still shows "No connection", see
+the troubleshooting table.
 
 ## 4. Test accounts
 
@@ -129,7 +136,8 @@ Details and expected results are in `specs/018-android-app-foundation/quickstart
 10. **Accessibility**: turn on TalkBack (Settings → Accessibility). Every control on Sign In, Home,
     Profile and Signed-in devices should be announced with a name; touch targets are at least 48 dp.
 11. **Version gate**: set `HLS_MOBILE_MIN_APP_VERSION=9.0.0` in the backend's environment and restart
-    it: the app shows "Please update the HLS app". Unset it afterwards.
+    it (or set "Minimum Android app version" to `9.0.0` in the web System Settings, which takes
+    effect without a restart): the app shows "Please update the HLS app". Unset it afterwards.
 12. **Attendance** (spec 019, steps in `specs/019-mobile-attendance/quickstart.md`):
     - Tara (Teacher): My Attendance opens on the current month with the week starting on Sunday. Mark
       today Present, then change it to a half day; the cell and totals update. Try a day older than 3
@@ -197,7 +205,7 @@ No device needed:
 
 ```powershell
 cd mobile
-npm test              # Jest + React Native Testing Library (about 200 tests)
+npm test              # Jest + React Native Testing Library (about 1,400 tests in 116 suites; takes 2 to 3 minutes)
 npm run lint
 npm run typecheck
 npm run check:manifest   # no background location, backups off, minSdk 29
@@ -257,7 +265,7 @@ the camera permission is the same one used for check-in photos, and the gallery 
 | `ConfigError: ... package.json does not exist` | You ran the command inside `mobile\android`. Run `npx expo run:android` from the `mobile` folder. |
 | `app:checkDebugAarMetadata` fails: "requires ... compile against version 35 or later" | `compileSdkVersion`, `targetSdkVersion` or `buildToolsVersion` is pinned to 34 in `app.config.ts` or `mobile\android\gradle.properties`. Remove the pin (keep only `minSdkVersion: 29`) and rebuild. If `android\gradle.properties` still has the old values, delete those lines or run `npx expo prebuild --platform android --clean` (this regenerates `android`, so re-apply any timeout edit). |
 | Build needs a missing Android platform, NDK or CMake | Gradle downloads them automatically on the first build (licences are accepted in `Sdk\licenses`). It needs the internet. If it fails, run the build again, or install them from Android Studio → SDK Manager. |
-| App cannot reach the backend | Backend running? `.env` uses `10.0.2.2`, not `localhost`? Rebuild after changing `.env`. See the cleartext note in step 3. |
+| App cannot reach the backend | Backend running? `.env` uses `10.0.2.2`, not `localhost`? Rebuild after changing `.env`. Debug builds allow `http://`, so also check that the backend is on port 8080 and the firewall allows Java. |
 | Code login shows nothing | Read the code from the backend console (the dev SMS stub). Codes expire; there is a 30 second resend wait. |
 | Location is always "unavailable" | Emulator: send a location from `...` → Location. Check the app's permission under Settings → Apps → HLS → Permissions. |
 | Metro port 8081 busy | Close the other Metro window, or `npx expo start --port 8082`. |

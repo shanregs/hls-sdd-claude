@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
 import { getCalendar, type AttendanceCalendar } from "../api/attendanceApi";
 import { NoConnectionError } from "../api/errors";
 import { DayLegend } from "../attendance/DayLegend";
@@ -10,7 +10,7 @@ import { MonthPicker } from "../attendance/MonthPicker";
 import { calendarDays, holidaysOfMonth, holidaysOfYear } from "../attendance/holidayModel";
 import { currentMonth } from "../attendance/monthRange";
 import { serverNow } from "../attendance/serverClock";
-import { formatLongDate } from "../formats/dates";
+import { formatIsoDate, formatLongDate } from "../formats/dates";
 import { useInnerBack } from "../navigation/InnerBack";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { Screen } from "./Screen";
@@ -97,9 +97,7 @@ export function HolidayCalendarScreen({ schoolId }: { schoolId?: string | null }
           All holidays in {year}
         </Text>
         {all.length === 0 ? <Text variant="bodyLarge">No holidays this year.</Text> : null}
-        {all.map((holiday) => (
-          <HolidayLine key={holiday.date} date={holiday.date} description={holiday.description} />
-        ))}
+        {all.length > 0 ? <HolidayTable holidays={all} /> : null}
       </Screen>
     );
   }
@@ -137,7 +135,53 @@ function HolidayLine({ date, description }: { date: string; description: string 
   );
 }
 
+/** The year's holidays as a table: Sl No, Date (DD/MM/YYYY) and Holiday. */
+function HolidayTable({ holidays }: { holidays: { date: string; description: string }[] }) {
+  const theme = useTheme();
+  const border = { borderColor: theme.colors.outlineVariant };
+  return (
+    <View style={[styles.table, border]} accessibilityRole="list">
+      <View style={[styles.row, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <Text variant="labelLarge" style={[styles.cell, styles.slNo]}>
+          Sl No
+        </Text>
+        <Text variant="labelLarge" style={[styles.cell, styles.date]}>
+          Date
+        </Text>
+        <Text variant="labelLarge" style={[styles.cell, styles.holiday]}>
+          Holiday
+        </Text>
+      </View>
+      {holidays.map((holiday, index) => (
+        <View
+          key={holiday.date}
+          style={[styles.row, styles.bodyRow, border]}
+          accessible
+          accessibilityLabel={`${formatLongDate(holiday.date)}, ${holiday.description}`}
+        >
+          <Text variant="bodyMedium" style={[styles.cell, styles.slNo]}>
+            {index + 1}
+          </Text>
+          <Text variant="bodyMedium" style={[styles.cell, styles.date]}>
+            {formatIsoDate(holiday.date)}
+          </Text>
+          <Text variant="bodyMedium" style={[styles.cell, styles.holiday]}>
+            {holiday.description}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   button: { minHeight: minTouchTarget },
   line: { gap: 2, paddingVertical: spacingUnit / 2 },
+  table: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 4, overflow: "hidden" },
+  row: { flexDirection: "row", alignItems: "center", minHeight: minTouchTarget },
+  bodyRow: { borderTopWidth: StyleSheet.hairlineWidth },
+  cell: { paddingHorizontal: spacingUnit, paddingVertical: spacingUnit / 2 },
+  slNo: { width: 56 },
+  date: { width: 110 },
+  holiday: { flex: 1 },
 });
