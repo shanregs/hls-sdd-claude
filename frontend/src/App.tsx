@@ -28,6 +28,8 @@ import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistor
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
 import { TransfersPage } from "./features/transfers/TransfersPage";
+import { BillingOverviewPage } from "./features/schoolbilling/receivables/BillingOverviewPage";
+import { SchoolLedgerPage } from "./features/schoolbilling/receivables/SchoolLedgerPage";
 import { FeedbackPage } from "./features/performance/FeedbackPage";
 import { IssuePage, IssuesPage } from "./features/performance/IssuePage";
 import { ObservationForm } from "./features/performance/ObservationForm";
@@ -381,6 +383,22 @@ export function App() {
           element={
             <RouteGuard>
               <SecuritySettingsPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/school-billing"
+          element={
+            <RouteGuard>
+              <BillingOverviewPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/school-billing/:schoolId"
+          element={
+            <RouteGuard>
+              <SchoolLedgerPage />
             </RouteGuard>
           }
         />

@@ -106,6 +106,7 @@ public class PermissionMatrixService {
         seedTeacherPerformance();
         seedExpenses();
         seedTeacherTransfers();
+        seedSchoolBilling();
         seedTraining();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
@@ -301,6 +302,18 @@ public class PermissionMatrixService {
                 }
                 seed(role, PermissionModule.TEACHER_TRANSFERS, action, true);
             }
+        }
+        grants.invalidateAround();
+    }
+
+    /** School billing defaults (spec 022): Admin and Director hold everything; a Zone Manager views, exports and records collections. */
+    private void seedSchoolBilling() {
+        for (PermissionAction action : PermissionModule.SCHOOL_BILLING.actions()) {
+            seed(Role.ADMIN, PermissionModule.SCHOOL_BILLING, action, true);
+            seed(Role.DIRECTOR, PermissionModule.SCHOOL_BILLING, action, true);
+        }
+        for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EXPORT)) {
+            seed(Role.MANAGER, PermissionModule.SCHOOL_BILLING, action, true);
         }
         grants.invalidateAround();
     }
