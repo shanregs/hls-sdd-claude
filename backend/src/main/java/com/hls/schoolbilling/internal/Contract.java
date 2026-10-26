@@ -17,7 +17,8 @@ import java.util.UUID;
 /**
  * The MoU between HLS and one School for a period (spec 012). Terms are never edited: a change is a new
  * contract that ends this one. Only the end date, the cancellation and the one-time recording of the MoU on
- * a pending contract change a row. The responsible Manager is not stored; it is the School's Zone Manager.
+ * a pending contract change a row. The one exception is spec 031 FR-012: while its approval is PENDING, the
+ * approver may correct the rate, the position salaries and the dates through {@code MouTermsService}. The responsible Manager is not stored; it is the School's Zone Manager.
  */
 @Entity
 @Table(name = "contract")
@@ -164,6 +165,13 @@ public class Contract {
     }
 
     public void setEndsOn(LocalDate endsOn) {
+        this.endsOn = endsOn;
+    }
+
+    void amendTerms(BigDecimal rate, LocalDate signedOn, LocalDate startsOn, LocalDate endsOn) {
+        this.rate = rate;
+        this.signedOn = signedOn;
+        this.startsOn = startsOn;
         this.endsOn = endsOn;
     }
 

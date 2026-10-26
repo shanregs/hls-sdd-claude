@@ -179,6 +179,10 @@ public final class PermissionEligibility {
         if (role == Role.ADMIN && module == PermissionModule.TEACHER_TRANSFERS) {
             return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
         }
+        // MoU approval (spec 031): Admin keeps the MoU but never approves it.
+        if (role == Role.ADMIN && module == PermissionModule.SCHOOL_CONTRACTS) {
+            return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+        }
         Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
         if (payrollOnly != null && !payrollOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);

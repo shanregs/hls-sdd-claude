@@ -73,6 +73,8 @@ public class ContractService {
     private final AppUserRepository users;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final MouApprovalRepository approvals;
+    private final MouApprovalQueries approvalQueries;
 
     public ContractService(
             ContractRepository contracts,
@@ -86,7 +88,9 @@ public class ContractService {
             RoleAssignmentRepository roles,
             AppUserRepository users,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            MouApprovalRepository approvals,
+            MouApprovalQueries approvalQueries) {
         this.contracts = contracts;
         this.positions = positions;
         this.signatories = signatories;
@@ -99,6 +103,8 @@ public class ContractService {
         this.users = users;
         this.changes = changes;
         this.clock = clock;
+        this.approvals = approvals;
+        this.approvalQueries = approvalQueries;
     }
 
     // ------------------------------------------------------------------ reads
@@ -108,7 +114,7 @@ public class ContractService {
     public SchoolContractsDto schoolContracts(UUID userId, Set<Role> roles, UUID schoolId) {
         SchoolInfo school = requireSchoolInScope(userId, roles, schoolId);
         List<Contract> all = contracts.findBySchoolIdOrderByStartsOnDesc(schoolId);
-        List<ContractDto> views = viewsOf(all);
+        List<ContractDto> views = viewsOf(all, roles);
         Optional<ManagerRef> manager = managers.managerOfSchool(schoolId);
         return new SchoolContractsDto(
                 schoolId,
@@ -176,8 +182,9 @@ public class ContractService {
             throw new ConflictException("These dates overlap another contract of this School.");
         }
         insertDetails(contract, mou);
+        approvals.saveAndFlush(MouApproval.draft(contract.getId(), clock.instant()));
         auditCreated(actor, contract, mou);
-        return viewsOf(List.of(contract)).get(0);
+        return viewsOf(List.of(contract), roles).get(0);
     }
 
     /** Records the MoU on a "MoU pending" contract, once. */
@@ -192,8 +199,9 @@ public class ContractService {
         contract.recordMou(mou.mode(), mou.count(), mou.rate(), mou.signedOn());
         contracts.saveAndFlush(contract);
         insertDetails(contract, mou);
+        approvals.saveAndFlush(MouApproval.draft(contract.getId(), clock.instant()));
         auditCreated(actor, contract, mou);
-        return viewsOf(List.of(contract)).get(0);
+        return viewsOf(List.of(contract), roles).get(0);
     }
 
     /** Sets the end date of a live contract. Teachers' own assignments are not shortened by it. */
@@ -217,7 +225,7 @@ public class ContractService {
             throw new ConflictException("That end date overlaps the School's next contract.");
         }
         changes.record(actor, "CONTRACT", contract.getId(), "endsOn", before, endsOn);
-        return viewsOf(List.of(contract)).get(0);
+        return viewsOf(List.of(contract), roles).get(0);
     }
 
     /** Cancels a contract that no Teacher is mapped to. */
@@ -249,7 +257,7 @@ public class ContractService {
         contract.setState(ContractState.CANCELLED);
         contracts.saveAndFlush(contract);
         changes.record(actor, "CONTRACT", contract.getId(), "state", before.name(), ContractState.CANCELLED.name());
-        return viewsOf(List.of(contract)).get(0);
+        return viewsOf(List.of(contract), roles).get(0);
     }
 
     // ------------------------------------------------------------- validation
@@ -351,7 +359,7 @@ public class ContractService {
         return new Validated(r.salaryMode(), count, rate, r.signedOn(), rows, schoolSigners, hlsSigners);
     }
 
-    private static BigDecimal money(BigDecimal value, String what) {
+    static BigDecimal money(BigDecimal value, String what) {
         if (value == null || value.signum() <= 0) {
             throw new InvalidInputException(what + " must be an amount above zero.");
         }
@@ -480,10 +488,11 @@ public class ContractService {
     }
 
     /** Contract views with positions (and who fills each today) and signatories. */
-    List<ContractDto> viewsOf(List<Contract> list) {
+    List<ContractDto> viewsOf(List<Contract> list, Set<Role> roles) {
         if (list.isEmpty()) {
             return List.of();
         }
+        Map<UUID, MouDtos.ApprovalSummaryDto> approvalOf = approvalQueries.summaries(list, roles);
         LocalDate today = LocalDate.now(clock);
         List<UUID> ids = list.stream().map(Contract::getId).toList();
         Map<UUID, List<ContractPosition>> positionsByContract = positions
@@ -530,7 +539,8 @@ public class ContractService {
                     c.getEndsOn(),
                     c.getVersion(),
                     pos,
-                    sig));
+                    sig,
+                    approvalOf.get(c.getId())));
         }
         return result;
     }

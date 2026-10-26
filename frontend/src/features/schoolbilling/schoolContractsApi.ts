@@ -7,6 +7,12 @@ import {
   type PageOf,
 } from "../common/masterDataApi";
 
+import type {
+  ApprovalState,
+  ApprovalSummary,
+  DocumentState,
+} from "./mouApprovalApi";
+
 /** Spec 012 contracts/school-contracts-api.md. Amounts are strings with two decimals; dates are ISO. */
 
 export type ContractStatus =
@@ -29,6 +35,10 @@ export interface ContractListRow {
   unmapped: number;
   salaryMode: SalaryMode | null;
   signedOn: string | null;
+  /** Spec 031: absent when the School has no contract. */
+  approvalState?: ApprovalState | null;
+  documentState?: DocumentState | null;
+  pendingSince?: string | null;
 }
 
 export interface PositionRow {
@@ -63,6 +73,8 @@ export interface ContractRow {
   version: number;
   positions: PositionRow[];
   signatories: SignatoryRow[];
+  /** Spec 031 approval summary with the actions the caller may take. */
+  approval?: ApprovalSummary;
 }
 
 export interface UnmappedTeacher {
@@ -123,6 +135,8 @@ export function listContracts(
   params: {
     status?: ContractStatus;
     managerId?: string;
+    approval?: ApprovalState;
+    document?: DocumentState;
     page: number;
     size: number;
   },
@@ -130,6 +144,8 @@ export function listContracts(
   const query = queryString({
     status: params.status,
     managerId: params.managerId,
+    approval: params.approval,
+    document: params.document,
     page: params.page,
     size: params.size,
   });

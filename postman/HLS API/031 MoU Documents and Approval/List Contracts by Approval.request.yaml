@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Contracts by Approval
+description: "The School Contracts list filtered by approval state and document state. Needs SCHOOL_CONTRACTS.VIEW."
+url: "{{baseUrl}}/api/v1/school-contracts?approval=PENDING&document=NONE&page=0&size=25"
+method: GET
+order: 10000

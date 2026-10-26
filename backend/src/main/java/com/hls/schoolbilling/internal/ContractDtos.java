@@ -75,7 +75,8 @@ public final class ContractDtos {
             LocalDate endsOn,
             long version,
             List<PositionDto> positions,
-            List<SignatoryDto> signatories) {}
+            List<SignatoryDto> signatories,
+            MouDtos.ApprovalSummaryDto approval) {}
 
     /** A Teacher who is at the School but not mapped to a position of the contract in effect. */
     public record UnmappedTeacherDto(UUID teacherId, String teacherName) {}
@@ -104,5 +105,8 @@ public final class ContractDtos {
             int vacant,
             int unmapped,
             String salaryMode,
-            LocalDate signedOn) {}
+            LocalDate signedOn,
+            String approvalState,
+            String documentState,
+            java.time.Instant pendingSince) {}
 }

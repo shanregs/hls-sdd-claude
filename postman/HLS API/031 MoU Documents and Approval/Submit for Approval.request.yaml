@@ -1,0 +1,12 @@
+$kind: http-request
+name: Submit for Approval
+description: "Draft or rejected to pending; no document needed. Admin and Director with SCHOOL_CONTRACTS.EDIT. Body version is the approval version."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/submit"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{approvalVersion}} }
+order: 5000

@@ -27,7 +27,7 @@ public class ContractPosition {
     @Column(name = "title", updatable = false)
     private String title;
 
-    @Column(name = "salary", nullable = false, updatable = false)
+    @Column(name = "salary", nullable = false)
     private BigDecimal salary;
 
     protected ContractPosition() {
@@ -59,5 +59,10 @@ public class ContractPosition {
 
     public BigDecimal getSalary() {
         return salary;
+    }
+
+    /** Only the pending-approval correction of spec 031 FR-012 changes a salary; the database allows it for no other case. */
+    void correctSalary(BigDecimal salary) {
+        this.salary = salary;
     }
 }
