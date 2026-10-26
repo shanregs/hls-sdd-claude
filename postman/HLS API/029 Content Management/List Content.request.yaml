@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Content
+description: "Admin and Director see all content; everyone else only what they authored, created or submitted. Optional status (DRAFT, ASSIGNED, SUBMITTED, APPROVED, RETURNED), authorUserId, category, subject, from, to, page, size. Needs CONTENT.VIEW."
+url: "{{baseUrl}}/api/v1/content?status=SUBMITTED"
+method: GET
+order: 1000

@@ -1,5 +1,11 @@
 /** `authFetch`-based client for contracts/user-management-api.md (mirrors features/permissions). */
-export type Role = "ADMIN" | "DIRECTOR" | "MANAGER" | "TEACHER" | "SYSTEM";
+export type Role =
+  | "ADMIN"
+  | "DIRECTOR"
+  | "MANAGER"
+  | "TEACHER"
+  | "SYSTEM"
+  | "CONTENT_CONTRIBUTOR";
 
 export const ALL_ROLES: Role[] = [
   "ADMIN",
@@ -7,6 +13,7 @@ export const ALL_ROLES: Role[] = [
   "MANAGER",
   "TEACHER",
   "SYSTEM",
+  "CONTENT_CONTRIBUTOR",
 ];
 
 export interface UserSummary {

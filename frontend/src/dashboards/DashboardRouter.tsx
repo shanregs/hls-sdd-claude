@@ -5,6 +5,7 @@ import { DirectorDashboard } from "./DirectorDashboard";
 import { ManagerDashboard } from "./ManagerDashboard";
 import { TeacherDashboard } from "./TeacherDashboard";
 import { SystemDashboard } from "./SystemDashboard";
+import { ContributorDashboard } from "./ContributorDashboard";
 
 /** Composes the union of the signed-in user's role dashboards (FR-011/FR-012, Acceptance
  * Scenario 2) — never a role-selection step. */
@@ -19,6 +20,7 @@ export function DashboardRouter() {
       {roles.includes("MANAGER") && <ManagerDashboard />}
       {roles.includes("TEACHER") && <TeacherDashboard />}
       {roles.includes("SYSTEM") && <SystemDashboard />}
+      {roles.includes("CONTENT_CONTRIBUTOR") && <ContributorDashboard />}
     </Stack>
   );
 }

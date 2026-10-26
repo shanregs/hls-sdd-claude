@@ -31,6 +31,10 @@ and the parity test (SC-003) proves it.
 | Payroll | payroll.run | state of this month's run and its total (or "no run yet") | month | Payroll | no | the run, or Payroll runs | payroll.run |
 | Payroll | payroll.paidOwed | paid so far, still owed | month | Payroll | no | the run, owed tab | payroll.run |
 | Payroll | payroll.locks | attendance locked for Teachers, for Managers | month | Payroll | no | Payroll run, month lock | payroll.run |
+| Content | content.submitted | content submitted (every version out for review, approved or returned) | today | Content | no | Content, all (amended by spec 029) | content |
+| Content | content.awaiting | content waiting for review | today | Content | no | Content, status Submitted | content |
+| Content | content.approved | content approved | today | Content | no | Content, status Approved | content |
+| Content | content.overdue | content past its due date with nothing submitted | today | Content | no | Content, all | content |
 
 Payroll tiles are organization-wide and carry an amount; they are absent for a caller without Payroll View.
 
@@ -41,10 +45,11 @@ Payroll tiles are organization-wide and carry an amount; they are absent for a c
 | MANAGER_LEAVE | Manager Leave, Approve | the leave decision screen | leave.manager |
 | FORGOTTEN_CHECK_IN | Manager Leave, Approve | the request on the decision screen | attendance.manager |
 | FINAL_STAGE_PROSPECT | Marketing, Approve | the prospect | marketing |
+| CONTENT_REVIEW | Content, Approve (not content the caller wrote or submitted) | the content (spec 029) | content |
 | PAYROLL_RUN | Payroll, Approve (not a run the caller submitted) | the run | payroll.run |
 | TASK_VERIFICATION | Manager Tasks, Approve | the task | tasks |
 
 ## Not registered now (arrive with their specs)
 
 Expenses (015), receivables (022), training (024), observations and performance (026), transfers and replacements (027),
-content (029), incentives (030), and the inbox kinds for expenses, incentives, transfers and MoU documents. Absent, never zero.
+incentives (030), and the inbox kinds for expenses, incentives, transfers and MoU documents. Absent, never zero.

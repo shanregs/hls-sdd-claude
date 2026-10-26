@@ -1,0 +1,14 @@
+$kind: http-request
+name: Submit Version
+description: "Sends the actual content file as the next version (multipart field file, optional note). Accepted: mp4 up to 500 MB; mp3, m4a, wav up to 100 MB; pdf, docx, xlsx up to 25 MB. 400 for a missing file, a wrong type or content that does not match its type, or a file over the limit for its type. 409 while the content already waits for review. Needs CONTENT.EDIT."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}/versions"
+method: POST
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+    - key: note
+      value: First cut
+      type: text
+order: 4000

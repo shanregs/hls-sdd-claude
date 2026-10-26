@@ -1,0 +1,6 @@
+$kind: http-request
+name: Download Version
+description: "Streams one version file as an attachment. 404 when the file was removed or the content is outside the caller scope. Needs CONTENT.VIEW."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}/versions/1/file"
+method: GET
+order: 5000

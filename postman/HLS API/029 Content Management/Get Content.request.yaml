@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Content
+description: "The record, every version with its file details, the reviews with comments, the history and the actions the caller may take. 404 for content outside the caller scope. Needs CONTENT.VIEW."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}"
+method: GET
+order: 3000

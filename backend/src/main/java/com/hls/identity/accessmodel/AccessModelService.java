@@ -118,6 +118,8 @@ public class AccessModelService {
                 dataScope, callerRoles, PermissionModule.MY_EXPENSES, DataScope.OWN, Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TEACHER_TRANSFERS, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TEACHER_TRANSFERS, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.CONTENT, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.CONTENT, DataScope.OWN, Role.MANAGER, Role.CONTENT_CONTRIBUTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_BILLING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_BILLING, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
@@ -144,7 +146,8 @@ public class AccessModelService {
                 Role.ADMIN,
                 Role.DIRECTOR,
                 Role.MANAGER,
-                Role.TEACHER);
+                Role.TEACHER,
+                Role.CONTENT_CONTRIBUTOR);
 
         List<String> roleNames = callerRoles.stream().map(Enum::name).sorted().toList();
         return new AccessModelResponse(roleNames, navigation, dataScope);
@@ -182,7 +185,7 @@ public class AccessModelService {
         return switch (role) {
             case ADMIN, DIRECTOR -> DataScope.ORG_WIDE;
             case MANAGER -> DataScope.ASSIGNED;
-            case TEACHER, SYSTEM -> DataScope.NONE;
+            case TEACHER, SYSTEM, CONTENT_CONTRIBUTOR -> DataScope.NONE;
         };
     }
 
@@ -191,7 +194,7 @@ public class AccessModelService {
         return switch (role) {
             case ADMIN, DIRECTOR -> DataScope.ORG_WIDE;
             case MANAGER -> DataScope.ASSIGNED;
-            case TEACHER -> DataScope.OWN;
+            case TEACHER, CONTENT_CONTRIBUTOR -> DataScope.OWN;
             case SYSTEM -> DataScope.NONE;
         };
     }

@@ -46,7 +46,7 @@ class TasksModuleRulesTest {
         // performance (spec 026) creates and completes Observation tasks through TaskCreation (contract C2).
         noClasses()
                 .that()
-                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..", "com.hls.activitycalendar..", "com.hls.performance..", "com.hls.expenses..")
+                .resideOutsideOfPackages("com.hls.tasks..", "com.hls.notification..", "com.hls.attendance.manager..", "com.hls.activitycalendar..", "com.hls.performance..", "com.hls.expenses..", "com.hls.content..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAPackage("com.hls.tasks..")

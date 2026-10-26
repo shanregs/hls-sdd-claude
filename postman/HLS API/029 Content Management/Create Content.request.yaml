@@ -1,0 +1,19 @@
+$kind: http-request
+name: Create Content
+description: "Creates a content piece for yourself, or for another author (Admin and Director only; the author must be an active user who can create content). A Manager author with a due date also gets a Manager task; every other content has none. Answers 201 with the detail. Needs CONTENT.CREATE."
+url: "{{baseUrl}}/api/v1/content"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Phonics Week 1",
+      "category": "Lesson",
+      "subject": "English",
+      "description": "Week one worksheets and a short video",
+      "authorUserId": "{{authorUserId}}",
+      "dueOn": "2026-11-05"
+    }
+order: 2000

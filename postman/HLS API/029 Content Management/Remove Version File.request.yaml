@@ -1,0 +1,14 @@
+$kind: http-request
+name: Remove Version File
+description: "Admin and Director only: hides the file of a version with a reason; the version row and its history stay. Needs CONTENT.EDIT."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}/versions/1/file"
+method: DELETE
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Wrong recording uploaded"
+    }
+order: 8000

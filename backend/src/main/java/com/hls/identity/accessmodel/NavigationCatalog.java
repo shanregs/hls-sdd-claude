@@ -28,7 +28,7 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "Dashboard",
                     10,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)),
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.CONTENT_CONTRIBUTOR)),
             new NavItem(
                     "Dashboard",
                     "/dashboard",
@@ -350,6 +350,22 @@ public final class NavigationCatalog {
                     37,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
+                    "Content",
+                    "/operations/content",
+                    PermissionModule.CONTENT,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    38,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
+            new NavItem(
+                    "My Content",
+                    "/operations/content",
+                    PermissionModule.CONTENT,
+                    PermissionAction.VIEW,
+                    "OPERATIONS",
+                    38,
+                    EnumSet.of(Role.MANAGER, Role.CONTENT_CONTRIBUTOR)),
+            new NavItem(
                     "My Tasks",
                     "/operations/tasks",
                     PermissionModule.TASKS,
@@ -564,7 +580,7 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     90,
-                    EnumSet.of(Role.TEACHER)),
+                    EnumSet.of(Role.TEACHER, Role.CONTENT_CONTRIBUTOR)),
             new NavItem(
                     "Settings",
                     "/account/settings",
@@ -572,7 +588,7 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     91,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM)),
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM, Role.CONTENT_CONTRIBUTOR)),
             new NavItem(
                     "Sessions",
                     "/account/sessions",
@@ -580,7 +596,7 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     92,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM)),
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.SYSTEM, Role.CONTENT_CONTRIBUTOR)),
             new NavItem(
                     "Notifications",
                     "/account/notifications",
@@ -588,7 +604,7 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "ACCOUNT",
                     93,
-                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)));
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.CONTENT_CONTRIBUTOR)));
 
     private NavigationCatalog() {}
 

@@ -79,6 +79,18 @@ public class RecipientResolver {
         return ids;
     }
 
+    /** Every active user whose role holds Content Approve (spec 029): who hears of content submitted for review. */
+    public Set<UUID> contentReviewers() {
+        Set<UUID> ids = new LinkedHashSet<>();
+        for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
+            if (matrix.isGranted(role, PermissionModule.CONTENT, PermissionAction.APPROVE)) {
+                ids.addAll(roles.userIdsWithRole(role));
+            }
+        }
+        ids.removeIf(id -> !users.findById(id).filter(AppUser::isActive).isPresent());
+        return ids;
+    }
+
     /** Every active Director: who an escalated task goes to (spec 025). */
     public Set<UUID> activeDirectors() {
         Set<UUID> ids = new LinkedHashSet<>(roles.userIdsWithRole(Role.DIRECTOR));

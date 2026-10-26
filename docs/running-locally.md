@@ -49,6 +49,7 @@ Opens http://localhost:5173 (it proxies `/api` to the backend on 8080).
 | Manoj Manager | `manoj.manager` or `9800000003` / `Password123!` | Manager |
 | Tara Teacher | `9800000004` / `Password123!` (or a one-time code) | Teacher |
 | Sunil System | `sunil.system` or `9800000005` / `Password123!` | System |
+| Cora Contributor | `cora.contributor` or `9800000006` / `Password123!` | Content Contributor |
 
 Every user can sign in with a password or, as the other option (for example after forgetting the
 password), with a one-time code: choose the One-time code tab, or the link under the password form.

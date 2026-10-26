@@ -53,7 +53,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
         for (Role role : new Role[] {Role.ADMIN, Role.DIRECTOR}) {
             var response = accessModelFor(role);
             // "MoU Approvals" needs Approve on School Contracts: the Director has it, Admin never does (spec 031)
-            List<String> expectedOperations = new java.util.ArrayList<>(List.of("Attendance", "Leave Management", "School Contracts", "Substitutions", "Expenses", "My Expenses", "Transfers & Replacements", "Salary Structures", "Teacher Performance", "School Billing", "Manager Tasks", "Manager Attendance", "Manager Leave", "Payroll", "Activity Calendar", "Training Calendar", "Training Exceptions"));
+            List<String> expectedOperations = new java.util.ArrayList<>(List.of("Attendance", "Leave Management", "School Contracts", "Substitutions", "Expenses", "My Expenses", "Transfers & Replacements", "Salary Structures", "Teacher Performance", "School Billing", "Manager Tasks", "Manager Attendance", "Content", "Manager Leave", "Payroll", "Activity Calendar", "Training Calendar", "Training Exceptions"));
             if (role == Role.DIRECTOR) {
                 expectedOperations.add(3, "MoU Approvals");
             }
@@ -75,7 +75,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
     void managerSeesTeacherAttendanceWithAssignedScopeOnly() {
         var response = accessModelFor(Role.MANAGER);
 
-        assertThat(labels(response, "OPERATIONS")).containsExactly("Teacher Attendance", "Leave Management", "School Contracts", "MoU Approvals", "Substitutions", "My Expenses", "Transfers & Replacements", "Teacher Performance", "School Billing", "My Tasks", "My Activity Calendar", "My Training");
+        assertThat(labels(response, "OPERATIONS")).containsExactly("Teacher Attendance", "Leave Management", "School Contracts", "MoU Approvals", "Substitutions", "My Expenses", "Transfers & Replacements", "Teacher Performance", "School Billing", "My Tasks", "My Content", "My Activity Calendar", "My Training");
         assertThat(actionsOf(response, "Teacher Attendance")).containsExactly("VIEW", "CREATE", "EDIT");
         assertThat(response.dataScope())
                 .containsEntry("TEACHER_ATTENDANCE", "ASSIGNED")

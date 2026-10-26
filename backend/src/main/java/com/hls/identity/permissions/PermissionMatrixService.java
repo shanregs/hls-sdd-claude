@@ -106,6 +106,7 @@ public class PermissionMatrixService {
         seedTeacherPerformance();
         seedExpenses();
         seedTeacherTransfers();
+        seedContent();
         seedSchoolBilling();
         seedTraining();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
@@ -213,7 +214,7 @@ public class PermissionMatrixService {
 
     /** Notification defaults (spec 010): every business role reads and deletes its own; never System. */
     private void seedNotifications() {
-        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER)) {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.TEACHER, Role.CONTENT_CONTRIBUTOR)) {
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.VIEW, true);
             seed(role, PermissionModule.NOTIFICATIONS, PermissionAction.DELETE, true);
         }
@@ -315,6 +316,21 @@ public class PermissionMatrixService {
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EXPORT)) {
             seed(Role.MANAGER, PermissionModule.SCHOOL_BILLING, action, true);
         }
+        grants.invalidateAround();
+    }
+
+    /**
+     * Content defaults (spec 029): Admin, Manager and Content Contributor view, create and edit; only the Director
+     * approves by default (Admin may be granted Approve in the matrix; it is not seeded).
+     */
+    private void seedContent() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER, Role.CONTENT_CONTRIBUTOR)) {
+            for (PermissionAction action :
+                    List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT)) {
+                seed(role, PermissionModule.CONTENT, action, true);
+            }
+        }
+        seed(Role.DIRECTOR, PermissionModule.CONTENT, PermissionAction.APPROVE, true);
         grants.invalidateAround();
     }
 
@@ -435,6 +451,10 @@ public class PermissionMatrixService {
     }
 
     private void seed(Role role, PermissionModule module, PermissionAction action, boolean granted) {
+        // The Content Contributor can never hold anything outside its eligible set (spec 029), so nothing else is seeded.
+        if (role == Role.CONTENT_CONTRIBUTOR && !PermissionEligibility.isEligible(role, module, action)) {
+            return;
+        }
         if (repository.findByRoleAndModuleAndAction(role, module, action).isEmpty()) {
             repository.save(new PermissionMatrixEntry(role, module, action, granted, clock.instant()));
         }

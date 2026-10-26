@@ -7,7 +7,8 @@ public enum Area {
     RECRUITMENT("Recruitment"),
     TEACHERS("Teachers"),
     ATTENDANCE_LEAVE("Attendance and leave"),
-    PAYROLL("Payroll");
+    PAYROLL("Payroll"),
+    CONTENT("Content");
 
     private final String title;
 
