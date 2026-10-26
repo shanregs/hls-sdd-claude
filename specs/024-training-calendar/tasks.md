@@ -233,7 +233,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ## Phase 11: Polish & Cross-Cutting Concerns
 
-- [ ] T081 [P] ArchUnit and Modulith verification: run `ApplicationModulesTest`, the new training rules and `ActivityCalendarModuleRulesTest` (nothing reads `training.calendar.internal`; `attendance` still does not depend on `training`)
+- [X] T081 [P] ArchUnit and Modulith verification: run `ApplicationModulesTest`, the new training rules and `ActivityCalendarModuleRulesTest` (nothing reads `training.calendar.internal`; `attendance` still does not depend on `training`)
 - [X] T082 [P] Security and privacy sweep test `T/training/calendar/TrainingPrivacyTest.java`: no response to a Teacher contains internal remarks, exceptions or other people's rows; no response anywhere has a pay, stipend or payroll field (FR-030); text is escaped; a non-https venue is refused
 - [X] T083 [P] Demo data `TC/internal/TrainingCalendarDevSeeder.java` (inert unless `hls.seed.demo-data=true`, idempotent): one pattern with three months, a weekend session with registrations, a held session with outcomes and one exception, matching quickstart.md users
 - [X] T084 [P] Postman: add the training requests to the collection under `postman/` and run the folder against local
