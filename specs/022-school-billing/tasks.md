@@ -80,7 +80,7 @@ Independent test: interface figures equal the screens; cancelled due contributes
 ## Phase 11: Polish and wrap-up
 
 - [x] T032 Dev demo data `internal/BillingDevSeeder.java` (a contract School with a mid-month Teacher, an overdue due, a collection), Postman folder, `quickstart-results.md`.
-- [ ] T033 Roadmap row 022 and constitution PATCH row for School Billing in the Default role access matrix (next free patch number at merge), spec 028 receivable tile note; full backend and frontend test run (JDK 25).
+- [x] T033 Roadmap row 022 and constitution PATCH row for School Billing in the Default role access matrix (next free patch number at merge), spec 028 receivable tile note; full backend and frontend test run (JDK 25).
 
 ## Dependencies
 
