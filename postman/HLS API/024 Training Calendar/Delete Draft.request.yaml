@@ -1,0 +1,6 @@
+$kind: http-request
+name: Delete Draft
+description: "Draft only. Needs TRAINING.DELETE."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}"
+method: DELETE
+order: 7000

@@ -62,12 +62,7 @@ export const SOURCES_OK = [
   { group: "DRIVES", available: true, read: true },
   { group: "VISITS", available: true, read: true },
   { group: "TASKS", available: true, read: true },
-  {
-    group: "TRAINING",
-    available: false,
-    read: false,
-    note: "Training is not included yet",
-  },
+  { group: "TRAINING", available: true, read: true },
 ];
 
 export function response(items: unknown[], over: Record<string, unknown> = {}) {
@@ -97,7 +92,7 @@ export const FILTER_CHOICES = {
     { kind: "CALL", available: true },
     { kind: "MEETING", available: true },
     { kind: "TASK", available: true },
-    { kind: "TRAINING", available: false },
+    { kind: "TRAINING", available: true },
   ],
   statuses: ["PLANNED", "DONE", "MISSED", "CANCELLED"],
 };

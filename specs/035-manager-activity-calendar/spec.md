@@ -215,3 +215,13 @@ These defaults were chosen without asking the user; each point marked is **to co
 - **Not included**: travel claims (015), field-day linking (032, already built) and the Director dashboard (028) read the same contract but are separate specs; export to file, reminders and any editing are not part of this spec.
 - **Time**: one organization time zone; dates only. The week starts on Monday.
 - **Volume**: tens of Managers and some hundreds of activities a month, so no paging is needed within a month.
+
+## Amended by 024
+
+Training source is real. The placeholder `TrainingSource` (available false, no entries) is replaced by a source over
+`training.api.TrainingActivities.activitiesBetween`: one entry per Published, Held or Cancelled session, kind TRAINING with
+sub-kind WEEKEND or MONTHLY, the creating Admin or Director as owner and the assigned Managers as attendees (Teachers never
+appear). A session has no Zone, so it is shown under "No Zone". `ActivityCalendarService.linkFor` gains a TRAINING case
+(module TRAINING, route `/operations/training`). The note "Training is not included yet" now appears only when the source
+reports itself unavailable. Tests updated: `SourceResilienceTest`, `CalendarFilterTest`, `CalendarMonthIntegrationTest` and the
+frontend Sources and page tests; new `TrainingSourceTest`.

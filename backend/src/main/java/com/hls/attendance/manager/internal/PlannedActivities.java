@@ -1,5 +1,7 @@
 package com.hls.attendance.manager.internal;
 
+import com.hls.attendance.api.ManagerTrainingDays;
+import com.hls.attendance.api.ManagerTrainingDays.TrainingSessionRef;
 import com.hls.recruitment.api.DriveActivities;
 import com.hls.recruitment.api.MarketingActivities;
 import com.hls.recruitment.api.PlannedActivity;
@@ -12,7 +14,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
- * The planned activities (contract C1) a Manager can link to a Field day: drives, marketing visits and tasks of that
+ * The planned activities (contract C1) a Manager can link to a Field day: drives, marketing visits, tasks and assigned training sessions of that
  * user on that date, read through the owning modules' api packages only.
  */
 @Component
@@ -24,11 +26,13 @@ public class PlannedActivities {
     private final DriveActivities drives;
     private final MarketingActivities marketing;
     private final TaskActivities tasks;
+    private final ManagerTrainingDays training;
 
-    public PlannedActivities(DriveActivities drives, MarketingActivities marketing, TaskActivities tasks) {
+    public PlannedActivities(DriveActivities drives, MarketingActivities marketing, TaskActivities tasks, ManagerTrainingDays training) {
         this.drives = drives;
         this.marketing = marketing;
         this.tasks = tasks;
+        this.training = training;
     }
 
     /** The user's activities dated exactly {@code date}. */
@@ -42,6 +46,9 @@ public class PlannedActivities {
         }
         for (TaskActivities.PlannedActivity a : tasks.plannedBetween(date, date, userId)) {
             add(out, a.kind(), a.id(), a.date(), a.place(), a.status(), date);
+        }
+        for (TrainingSessionRef t : training.assignedSessionsOn(userId, date)) {
+            add(out, "TRAINING", t.sessionId(), t.date(), t.place(), t.status(), date);
         }
         out.sort(Comparator.comparing(Planned::kind).thenComparing(Planned::id));
         return out;

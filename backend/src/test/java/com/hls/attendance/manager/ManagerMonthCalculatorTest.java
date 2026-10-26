@@ -219,4 +219,42 @@ class ManagerMonthCalculatorTest {
         // worked 15 + 0.5; leave paid 2 + 0.5; leave unpaid 1 + 0.5; unpaid = 1 + 1 + 5 = 7
         assertFigures(f, "25", "15.5", "2.5", "1.5", "7", "3");
     }
+
+    // ------------------------------------------------------------------ amended by spec 024: attended training days
+
+    private static DayRecord training(String value) {
+        return new DayRecord(false, false, null, false, new BigDecimal(value));
+    }
+
+    @Test
+    void aWholeTrainingDayWithNoCheckInCountsAsWorked() {
+        Figures f = compute(List.of(nov(3)), Map.of(nov(3), training("1.00")), AFTER);
+        assertFigures(f, "1", "1", "0", "0", "0", "0");
+    }
+
+    @Test
+    void aHalfTrainingDayCountsHalfAndTheRestIsUnpaid() {
+        Figures f = compute(List.of(nov(3)), Map.of(nov(3), training("0.50")), AFTER);
+        assertFigures(f, "1", "0.5", "0", "0", "0.5", "0");
+    }
+
+    @Test
+    void aCheckInAndATrainingDayAreNotCountedTwice() {
+        Figures f = compute(List.of(nov(3)), Map.of(nov(3), new DayRecord(true, false, null, false, new BigDecimal("1.00"))), AFTER);
+        assertFigures(f, "1", "1", "0", "0", "0", "0");
+    }
+
+    @Test
+    void trainingOnlyFillsTheHalfNotOnLeave() {
+        Figures f = compute(List.of(nov(3)), Map.of(nov(3), new DayRecord(false, false, new BigDecimal("0.5"), false, new BigDecimal("1.00"))), AFTER);
+        assertFigures(f, "1", "0.5", "0.5", "0", "0", "0");
+    }
+
+    @Test
+    void trainingOnADayThatIsNotOverYetIsNeverUnpaid() {
+        LocalDate today = nov(3);
+        Figures f = compute(List.of(today), Map.of(today, training("0.50")), today);
+        assertThat(f.unpaid()).isEqualByComparingTo("0");
+        assertThat(f.daysWorked()).isEqualByComparingTo("0.5");
+    }
 }

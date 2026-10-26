@@ -49,8 +49,8 @@ class SettingKeyTest {
     }
 
     @Test
-    void groupsSplitTheElevenSettingsAndKeysAreUnique() {
-        assertThat(SettingKey.of(Group.SYSTEM)).hasSize(3);
+    void groupsSplitTheSeventeenSettingsAndKeysAreUnique() {
+        assertThat(SettingKey.of(Group.SYSTEM)).hasSize(9);
         assertThat(SettingKey.of(Group.SECURITY)).hasSize(8);
         assertThat(SettingKey.values()).extracting(SettingKey::key).doesNotHaveDuplicates();
         assertThat(SettingKey.byKey("lockout.duration-minutes")).contains(SettingKey.LOCKOUT_DURATION_MINUTES);

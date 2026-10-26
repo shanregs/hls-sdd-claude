@@ -42,7 +42,7 @@ export interface CalendarPerson {
 }
 
 export interface CalendarLink {
-  screen: "MARKETING" | "RECRUITMENT" | "TASKS";
+  screen: "MARKETING" | "RECRUITMENT" | "TASKS" | "TRAINING";
   path: string;
 }
 

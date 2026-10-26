@@ -7,6 +7,7 @@ import com.hls.school.api.InvalidInputException;
 import com.hls.tasks.api.TaskActivities;
 import com.hls.training.api.InductionBatchView;
 import com.hls.training.api.InductionBatches;
+import com.hls.training.api.TrainingSessions;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,12 +35,19 @@ class LinkResolver {
     private final MarketingActivities marketing;
     private final TaskActivities tasks;
     private final InductionBatches batches;
+    private final TrainingSessions trainingSessions;
 
-    LinkResolver(DriveActivities drives, MarketingActivities marketing, TaskActivities tasks, InductionBatches batches) {
+    LinkResolver(
+            DriveActivities drives,
+            MarketingActivities marketing,
+            TaskActivities tasks,
+            InductionBatches batches,
+            TrainingSessions trainingSessions) {
         this.drives = drives;
         this.marketing = marketing;
         this.tasks = tasks;
         this.batches = batches;
+        this.trainingSessions = trainingSessions;
     }
 
     /** The links the claimant may choose for the category and date; empty for a category that takes none. */
@@ -62,6 +70,9 @@ class LinkResolver {
             for (InductionBatchView b : batches.endingBetween(date.minusDays(120), date.plusDays(365))) {
                 options.add(batchOption(b));
             }
+            for (TrainingSessions.SessionView t : trainingSessions.between(date.minusDays(120), date.plusDays(365))) {
+                options.add(sessionOption(t));
+            }
         }
         return options;
     }
@@ -83,15 +94,20 @@ class LinkResolver {
         }
         String wanted = kind.trim();
         if (category == ExpenseCategory.TRAINING_STAY) {
+            if (LinkKinds.TRAINING_SESSION.equals(wanted)) {
+                return Optional.of(trainingSessions.session(ref)
+                        .map(LinkResolver::sessionOption)
+                        .orElseThrow(() -> new InvalidInputException("That training session does not exist.")));
+            }
             if (!LinkKinds.INDUCTION_BATCH.equals(wanted)) {
-                throw new InvalidInputException("A Training Stay claim links to an induction batch.");
+                throw new InvalidInputException("A Training Stay claim links to an induction batch or a training session.");
             }
             return Optional.of(batches.batch(ref)
                     .map(LinkResolver::batchOption)
                     .orElseThrow(() -> new InvalidInputException("That induction batch does not exist.")));
         }
-        if (LinkKinds.INDUCTION_BATCH.equals(wanted)) {
-            throw new InvalidInputException("Travel and Fuel links to a visit, meeting, drive or task, not a batch.");
+        if (LinkKinds.INDUCTION_BATCH.equals(wanted) || LinkKinds.TRAINING_SESSION.equals(wanted)) {
+            throw new InvalidInputException("Travel and Fuel links to a visit, meeting, drive or task, not a batch or a training session.");
         }
         return options(claimantId, category, date).stream()
                 .filter(o -> o.kind().equals(wanted) && o.ref().equals(ref))
@@ -109,6 +125,10 @@ class LinkResolver {
     private static Option batchOption(InductionBatchView b) {
         return new Option(
                 LinkKinds.INDUCTION_BATCH, b.id(), b.startsOn(), shorten(b.name() + " (" + b.startsOn() + " to " + b.endsOn() + ")"));
+    }
+
+    private static Option sessionOption(TrainingSessions.SessionView t) {
+        return new Option(LinkKinds.TRAINING_SESSION, t.id(), t.date(), shorten("Training session - " + t.topic() + " (" + t.date() + ")"));
     }
 
     private static String shorten(String label) {

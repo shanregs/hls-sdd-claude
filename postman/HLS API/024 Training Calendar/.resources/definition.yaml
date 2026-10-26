@@ -1,0 +1,3 @@
+$kind: collection
+description: "Training Calendar (spec 024): sessions and registration, standing monthly patterns, assignment by group, attendance (written to the 008 training day), non-compliance exceptions, completion history and the own upcoming list. Needs TRAINING (Admin and Director full; Manager View), TRAINING_ATTENDANCE (Admin, Director, Manager for own Teachers) and TRAINING_REGISTRATION (Teacher). Collection variables: sessionId, patternId, assignmentId, exceptionId, teacherId, managerId, entryId, month (yyyy-MM), date (yyyy-MM-dd)."
+order: 24000

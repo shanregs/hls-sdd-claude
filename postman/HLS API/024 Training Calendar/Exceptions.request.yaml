@@ -1,0 +1,6 @@
+$kind: http-request
+name: Exceptions
+description: "With the repeat marker; Manager sees own Teachers."
+url: "{{baseUrl}}/api/v1/training/exceptions?month={{month}}&status=&role=&page=0&size=50"
+method: GET
+order: 29000

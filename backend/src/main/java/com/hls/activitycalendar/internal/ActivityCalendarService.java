@@ -353,6 +353,10 @@ public class ActivityCalendarService {
                 module = PermissionModule.MARKETING;
                 link = new Link("MARKETING", "/marketing/calendar");
             }
+            case ActivitySource.TRAINING -> {
+                module = PermissionModule.TRAINING;
+                link = new Link("TRAINING", "/operations/training");
+            }
             case ActivitySource.TASKS -> {
                 module = PermissionModule.TASKS;
                 link = new Link("TASKS", "/operations/tasks");
