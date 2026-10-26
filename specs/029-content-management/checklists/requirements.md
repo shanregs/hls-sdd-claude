@@ -26,4 +26,4 @@
 - [x] No implementation details leak into specification
 
 ## Notes
-- Open decisions are held as defaults in Assumptions and listed in clarification-questions.md.
+- Open decisions are held as defaults in Assumptions and listed in clarification-questions.md (revised after owner direction on contributors and file types).
