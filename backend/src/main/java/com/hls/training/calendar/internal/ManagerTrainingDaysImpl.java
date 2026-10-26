@@ -53,6 +53,29 @@ public class ManagerTrainingDaysImpl implements ManagerTrainingDays {
     }
 
     @Override
+    public Map<UUID, Map<LocalDate, BigDecimal>> attendedDaysOf(java.util.Collection<UUID> managerIds, LocalDate from, LocalDate to) {
+        if (managerIds.isEmpty()) {
+            return Map.of();
+        }
+        List<AttendanceEntry> present =
+                entries.findByPersonKindAndPersonIdInAndOutcome(Assignment.MANAGER, managerIds, AttendanceEntry.PRESENT);
+        if (present.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, TrainingSession> byId = sessions.findByIdIn(present.stream().map(e -> e.sessionId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(s -> s.id, s -> s));
+        Map<UUID, Map<LocalDate, BigDecimal>> out = new HashMap<>();
+        for (AttendanceEntry e : present) {
+            TrainingSession s = byId.get(e.sessionId);
+            if (s == null || e.dayValue == null || s.sessionDate.isBefore(from) || s.sessionDate.isAfter(to)) {
+                continue;
+            }
+            out.computeIfAbsent(e.personId, k -> new HashMap<>()).merge(s.sessionDate, e.dayValue, BigDecimal::max);
+        }
+        return out;
+    }
+
+    @Override
     public Map<LocalDate, BigDecimal> attendedDays(UUID managerId, LocalDate from, LocalDate to) {
         List<AttendanceEntry> present = entries.findByPersonKindAndPersonIdAndOutcome(Assignment.MANAGER, managerId, AttendanceEntry.PRESENT);
         if (present.isEmpty()) {

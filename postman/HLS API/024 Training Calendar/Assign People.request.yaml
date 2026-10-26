@@ -1,0 +1,11 @@
+$kind: http-request
+name: Assign People
+description: "Picked people."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/assignments"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"personKind\": \"TEACHER\", \"ids\": [\"{{teacherId}}\"], \"confirm\": true}"
+order: 21000

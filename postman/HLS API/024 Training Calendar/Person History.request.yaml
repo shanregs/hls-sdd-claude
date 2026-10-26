@@ -1,0 +1,6 @@
+$kind: http-request
+name: Person History
+description: "Sessions newest first, induction, yearly attended versus expected."
+url: "{{baseUrl}}/api/v1/training/people/TEACHER/{{teacherId}}/history?year=2026"
+method: GET
+order: 32000

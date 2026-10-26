@@ -1,0 +1,6 @@
+$kind: http-request
+name: Assignments
+description: "Obligations of the session; a Manager sees own Teachers."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/assignments"
+method: GET
+order: 22000

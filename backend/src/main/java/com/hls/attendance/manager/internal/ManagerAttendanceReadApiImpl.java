@@ -2,6 +2,7 @@ package com.hls.attendance.manager.internal;
 
 import com.hls.attendance.api.ManagerAttendanceReadApi;
 import com.hls.attendance.api.ManagerMonth;
+import com.hls.attendance.api.ManagerTrainingDays;
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.attendance.internal.BusinessCalendar;
 import com.hls.attendance.manager.internal.ManagerMonthCalculator.DayRecord;
@@ -40,18 +41,21 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
     private final ManagerMonthStateRepository monthStates;
     private final WorkingCalendar workingCalendar;
     private final BusinessCalendar business;
+    private final ManagerTrainingDays trainingDays;
 
     public ManagerAttendanceReadApiImpl(
             ManagerQueries managers,
             ManagerDayRepository days,
             ManagerMonthStateRepository monthStates,
             WorkingCalendar workingCalendar,
-            BusinessCalendar business) {
+            BusinessCalendar business,
+            ManagerTrainingDays trainingDays) {
         this.managers = managers;
         this.days = days;
         this.monthStates = monthStates;
         this.workingCalendar = workingCalendar;
         this.business = business;
+        this.trainingDays = trainingDays;
     }
 
     @Override
@@ -88,6 +92,7 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
         Map<UUID, ManagerMonthState> states = monthStates.findForMonth(ids, month.toString()).stream()
                 .collect(Collectors.toMap(s -> s.getId().getManagerId(), s -> s, (a, b) -> a));
         LocalDate today = business.today();
+        Map<UUID, Map<LocalDate, java.math.BigDecimal>> training = trainingDays.attendedDaysOf(ids, from, to);
 
         for (UUID id : ids) {
             ManagerEmployment emp = employment.get(id);
@@ -96,7 +101,9 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
             } else if (emp.joiningDate() == null) {
                 result.put(id, new ManagerMonth.NoJoiningDate());
             } else {
-                result.put(id, found(month, emp, working, records.getOrDefault(id, List.of()), states.get(id), today));
+                result.put(
+                        id,
+                        found(month, emp, working, records.getOrDefault(id, List.of()), states.get(id), today, training.getOrDefault(id, Map.of())));
             }
         }
         return result;
@@ -108,7 +115,8 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
             List<LocalDate> working,
             List<ManagerDay> rows,
             ManagerMonthState state,
-            LocalDate today) {
+            LocalDate today,
+            Map<LocalDate, java.math.BigDecimal> training) {
         boolean locked = state != null && state.isLocked();
         if (locked && state.frozen().workingDays() != null) {
             Frozen f = state.frozen();
@@ -134,6 +142,14 @@ public class ManagerAttendanceReadApiImpl implements ManagerAttendanceReadApi {
             records.put(
                     d.getDayDate(),
                     new DayRecord(d.hasCheckIn(), d.getDayType() == ManagerDay.DayType.FIELD, d.getLeaveFraction(), d.isLeaveUnpaid()));
+        }
+        for (Map.Entry<LocalDate, java.math.BigDecimal> t : training.entrySet()) {
+            DayRecord base = records.get(t.getKey());
+            records.put(
+                    t.getKey(),
+                    base == null
+                            ? new DayRecord(false, false, null, false, t.getValue())
+                            : new DayRecord(base.checkedIn(), base.field(), base.leaveFraction(), base.leaveUnpaid(), t.getValue()));
         }
         Figures f = ManagerMonthCalculator.compute(employed, records, today);
         return new ManagerMonth.Found(

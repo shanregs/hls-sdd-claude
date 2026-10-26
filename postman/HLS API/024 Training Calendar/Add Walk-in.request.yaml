@@ -1,0 +1,11 @@
+$kind: http-request
+name: Add Walk-in
+description: "Recorded Present, not expected."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/walk-ins"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"personKind\": \"TEACHER\", \"personId\": \"{{teacherId}}\", \"dayValue\": 1.0}"
+order: 27000

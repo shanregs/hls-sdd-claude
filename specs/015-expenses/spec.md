@@ -450,3 +450,8 @@ Items marked "to confirm in /speckit-clarify" are defaults chosen because no one
   A claim dated in a closed month is still accepted within the 60-day window.
 - **Dashboard and reports**: spec 028 (approvals inbox, spend versus budget) and spec 014 (Expenses report) read the
   exposed figures of FR-026 and add no rules of their own.
+
+## Amended by 024
+
+Optional (spec 024 task T-015, not built): a Training Stay claim could link to a training session through a small
+`training.api.TrainingSessions` read in `LinkResolver`. Left undone on purpose; it is offered only if the user asks.

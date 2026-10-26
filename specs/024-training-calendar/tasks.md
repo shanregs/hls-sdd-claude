@@ -227,18 +227,18 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 
 ## Phase 10: Spec 032 amendment (decided: attended training day counts as worked)
 
-- [ ] T080 **Decided (user, 2026-10-24): yes, it counts as worked.** Spec 032 amendment: a Manager's attended training day (`ManagerTrainingDays.attendedDays`, whole 1.0, half 0.5, only when there is no check-in) counts as worked in `ManagerMonth` and therefore in Manager payroll. Write the 032 change, its tests (including a payroll figure for a Manager with a training day and no check-in) and the "Amended by 024" note
+- [X] T080 **Decided (user, 2026-10-24): yes, it counts as worked.** Spec 032 amendment: a Manager's attended training day (`ManagerTrainingDays.attendedDays`, whole 1.0, half 0.5, only when there is no check-in) counts as worked in `ManagerMonth` and therefore in Manager payroll. Write the 032 change, its tests (including a payroll figure for a Manager with a training day and no check-in) and the "Amended by 024" note
 
 ---
 
 ## Phase 11: Polish & Cross-Cutting Concerns
 
 - [ ] T081 [P] ArchUnit and Modulith verification: run `ApplicationModulesTest`, the new training rules and `ActivityCalendarModuleRulesTest` (nothing reads `training.calendar.internal`; `attendance` still does not depend on `training`)
-- [ ] T082 [P] Security and privacy sweep test `T/training/calendar/TrainingPrivacyTest.java`: no response to a Teacher contains internal remarks, exceptions or other people's rows; no response anywhere has a pay, stipend or payroll field (FR-030); text is escaped; a non-https venue is refused
-- [ ] T083 [P] Demo data `TC/internal/TrainingCalendarDevSeeder.java` (inert unless `hls.seed.demo-data=true`, idempotent): one pattern with three months, a weekend session with registrations, a held session with outcomes and one exception, matching quickstart.md users
-- [ ] T084 [P] Postman: add the training requests to the collection under `postman/` and run the folder against local
-- [ ] T085 [P] Documentation: roadmap row 024 and the C1 entry in `docs/spec-roadmap.md`; constitution 2.5.11 PATCH with the Training row in the Default role access matrix and the navigation items in `.specify/memory/constitution.md`
-- [ ] T086 [P] "Amended by 024" notes in the specs of 035 (TrainingSource real, Training under "No Zone"), 032 (`managersOnLeaveOn`, `ManagerTrainingDays`, Field day link), 008 (training day on a non-working day counts in working days; "training days available" can now use expected days) and 015 (optional T-015)
+- [X] T082 [P] Security and privacy sweep test `T/training/calendar/TrainingPrivacyTest.java`: no response to a Teacher contains internal remarks, exceptions or other people's rows; no response anywhere has a pay, stipend or payroll field (FR-030); text is escaped; a non-https venue is refused
+- [X] T083 [P] Demo data `TC/internal/TrainingCalendarDevSeeder.java` (inert unless `hls.seed.demo-data=true`, idempotent): one pattern with three months, a weekend session with registrations, a held session with outcomes and one exception, matching quickstart.md users
+- [X] T084 [P] Postman: add the training requests to the collection under `postman/` and run the folder against local
+- [X] T085 [P] Documentation: roadmap row 024 and the C1 entry in `docs/spec-roadmap.md`; constitution 2.5.11 PATCH with the Training row in the Default role access matrix and the navigation items in `.specify/memory/constitution.md`
+- [X] T086 [P] "Amended by 024" notes in the specs of 035 (TrainingSource real, Training under "No Zone"), 032 (`managersOnLeaveOn`, `ManagerTrainingDays`, Field day link), 008 (training day on a non-working day counts in working days; "training days available" can now use expected days) and 015 (optional T-015)
 - [ ] T087 Run the full backend and frontend test suites once (all green; record any failure not caused by this work) and the quickstart timing checks for SC-002 and SC-008
 - [ ] T088 Manual walkthrough LAST: follow quickstart.md sections 1 to 6 in the browser as Admin, Director, Manager A, Manager B and Teachers; confirm the screen-reader and keyboard use of the attendance grid; record results in this file. T080 (the 032 Manager-pay amendment) is built and checked separately
 

@@ -18,6 +18,9 @@ interface AttendanceEntryRepository extends JpaRepository<AttendanceEntry, UUID>
 
     List<AttendanceEntry> findByPersonKindAndPersonIdAndOutcome(String personKind, UUID personId, String outcome);
 
+    List<AttendanceEntry> findByPersonKindAndPersonIdInAndOutcome(
+            String personKind, java.util.Collection<UUID> personIds, String outcome);
+
     List<AttendanceEntry> findBySyncState(String syncState);
 
     boolean existsBySessionId(UUID sessionId);

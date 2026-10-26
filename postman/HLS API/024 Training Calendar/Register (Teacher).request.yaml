@@ -1,0 +1,11 @@
+$kind: http-request
+name: Register (Teacher)
+description: "A Teacher registers themselves; 409 when full or started."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/registrations"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{}"
+order: 8000

@@ -1,0 +1,11 @@
+$kind: http-request
+name: Stop Pattern
+description: "Untouched later sessions are removed."
+url: "{{baseUrl}}/api/v1/training/patterns/{{patternId}}/stop"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"fromMonth\": \"{{date}}\", \"version\": 0}"
+order: 18000

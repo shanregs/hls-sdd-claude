@@ -1,0 +1,11 @@
+$kind: http-request
+name: I Cannot Attend
+description: "Tells the Admin and Director; changes nothing."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/assignments/me/cannot-attend"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"note\": \"Family function\"}"
+order: 24000

@@ -21,4 +21,7 @@ public interface ManagerTrainingDays {
 
     /** The Manager's attended training days in the range: 1.00 or 0.50 for each day recorded Present. */
     Map<LocalDate, BigDecimal> attendedDays(UUID managerId, LocalDate from, LocalDate to);
+
+    /** Bulk form of attendedDays: a fixed number of queries however many Managers are asked; Managers with none are absent. */
+    Map<UUID, Map<LocalDate, BigDecimal>> attendedDaysOf(java.util.Collection<UUID> managerIds, LocalDate from, LocalDate to);
 }
