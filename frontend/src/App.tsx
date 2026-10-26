@@ -44,6 +44,8 @@ import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ExceptionsPage } from "./features/training/ExceptionsPage";
+import { HistoryPage } from "./features/training/HistoryPage";
+import { MyTrainingPage } from "./features/training/MyTrainingPage";
 import { TrainingCalendarPage } from "./features/training/TrainingCalendarPage";
 import { UpcomingTrainingPage } from "./features/training/UpcomingTrainingPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
@@ -470,10 +472,26 @@ export function App() {
           }
         />
         <Route
+          path="/operations/training/history/:kind/:id"
+          element={
+            <RouteGuard>
+              <HistoryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/my-attendance/training/history"
+          element={
+            <RouteGuard>
+              <HistoryPage mine />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/operations/my-training"
           element={
             <RouteGuard>
-              <TrainingCalendarPage />
+              <MyTrainingPage />
             </RouteGuard>
           }
         />

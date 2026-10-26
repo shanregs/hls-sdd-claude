@@ -703,3 +703,60 @@ export function closeException(
 export function exceptionsExportUrl(query: ExceptionQuery): string {
   return `${BASE}/exceptions/export?${queryString({ ...query })}`;
 }
+
+// ------------------------------------------------------------------ history (US6)
+
+export interface HistoryEntry {
+  type: "SESSION";
+  sessionId: string;
+  sessionType: SessionType;
+  topic: string;
+  date: string;
+  sessionStatus: SessionStatus;
+  role: string;
+  outcome: Outcome | null;
+  dayValue: number | null;
+  reason: string | null;
+  certificateNote: string | null;
+  internalRemark: string | null;
+  exceptionStatus: string | null;
+  onLeave: boolean;
+}
+
+export interface InductionEntry {
+  type: "INDUCTION";
+  batchId: string;
+  batchName: string;
+  startsOn: string;
+  endsOn: string;
+  result: string | null;
+  signedAt: string | null;
+}
+
+export interface TrainingHistory {
+  person: { kind: string; id: string; name: string };
+  year: number;
+  entries: HistoryEntry[];
+  induction: InductionEntry[];
+  yearly: {
+    expected: number;
+    attended: number;
+    expectedSessions: number;
+    attendedSessions: number;
+  };
+}
+
+export function getHistory(
+  authFetch: AuthFetch,
+  year: number,
+  person?: { kind: string; id: string },
+): Promise<ApiResult<TrainingHistory>> {
+  const path = person
+    ? `${BASE}/people/${person.kind}/${person.id}/history`
+    : `${BASE}/me/history`;
+  return getJson<TrainingHistory>(
+    authFetch,
+    `${path}?${queryString({ year })}`,
+    "Could not load the training history.",
+  );
+}

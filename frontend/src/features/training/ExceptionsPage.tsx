@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { useAccessModel } from "../../access-model/useAccessModel";
+import { Link as RouterLink } from "react-router-dom";
 import { formatDate } from "./format";
 import {
   closeException,
@@ -220,6 +221,15 @@ export function ExceptionsPage({ embedded = false }: { embedded?: boolean }) {
               )}
               {r.managerName && <span>Manager: {r.managerName}</span>}
               {r.zoneName && <span>Zone: {r.zoneName}</span>}
+              {management && (
+                <Button
+                  size="small"
+                  component={RouterLink}
+                  to={`/operations/training/history/${r.personKind.toLowerCase()}/${r.personId}`}
+                >
+                  History of {r.name}
+                </Button>
+              )}
               {management && r.status === "OPEN" && (
                 <Button size="small" onClick={() => setClosing(r)}>
                   Close exception for {r.name}

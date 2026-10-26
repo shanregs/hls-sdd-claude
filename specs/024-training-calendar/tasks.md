@@ -198,8 +198,8 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 ### Implementation for US6
 
 - [X] T054 [US6] Implement `TC/internal/HistoryQueries.java` (union of entries, assignments and registrations plus the 016 induction rows, yearly figure) and `TC/web/HistoryController.java` (`/people/...`, `/me/history`, exports). Depends on T043
-- [ ] T055 [US6] Frontend: `FE/HistoryPage.tsx` (person history with year picker, used by Admin and Director from the calendar, by the Manager as My Training, by the Teacher as My Training History) and `FE/MyTrainingPage.tsx`. Depends on T054
-- [ ] T056 [P] [US6] Frontend test `FE/__tests__/History.test.tsx`
+- [X] T055 [US6] Frontend: `FE/HistoryPage.tsx` (person history with year picker, used by Admin and Director from the calendar, by the Manager as My Training, by the Teacher as My Training History) and `FE/MyTrainingPage.tsx`. Depends on T054
+- [X] T056 [P] [US6] Frontend test `FE/__tests__/History.test.tsx`
 
 ---
 
