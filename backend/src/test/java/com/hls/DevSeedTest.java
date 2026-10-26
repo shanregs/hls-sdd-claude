@@ -161,4 +161,14 @@ class DevSeedTest extends IntegrationTestBase {
             }
         }
     }
+
+    @Test
+    void schoolBillingDemoDataHasThisMonthsDueAndAPartCollection() {
+        Signed admin = signIn(null, "9800000001", "Password123!");
+        String month = java.time.YearMonth.now(java.time.ZoneId.of("Asia/Kolkata")).toString();
+
+        String overview = get("/api/v1/school-billing/overview?month=" + month, admin.token()).body();
+
+        assertThat(overview).contains("Demo School One").contains("\"collected\":20000");
+    }
 }

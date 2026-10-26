@@ -37,4 +37,4 @@ A month with no non-cancelled due yields no entry (not zero). A cancelled due co
 
 ## Interfaces used (existing)
 
-`TeacherPlacementSource.spansOverlapping`, `SchoolContracts.contractsOverlapping` / `positionOf`, `WorkingCalendar.workingDays`, `SchoolWorkingDays.forMonth`, `ManagerQueries.managerOfSchool`, `ScopeQueries.scopeOf`, `TaskCreation.createFollowUp` / `complete` / `cancel` / `reassign`.
+Billing reads its own contract and assignment tables (same module), `ManagerQueries.managerOfSchool`, `ScopeQueries.scopeOf`, and two ports it owns: `BillingCalendar` (implemented in `attendance` over `WorkingCalendar` and `SchoolWorkingDays`) and `OverdueTasks` (implemented in `tasks` over `TaskCreation`). Billing therefore depends on neither `attendance` nor `tasks`, which keeps the module graph acyclic.

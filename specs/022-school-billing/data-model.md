@@ -90,13 +90,17 @@ Derived: due balance = total - active adjustments - sum(allocation amounts); adv
 
 This is the only mutable ledger-side row (closed_on written once).
 
-## Settings (system settings, spec 011)
+## billing_setting
 
-`billing.payment_due_days` (default 15), `billing.escalation_days` (default 7).
+`key` (pk), `value` int, `updated_by`, `updated_at`. Keys `billing.payment_due_days` (default 15, 1 to 120) and `billing.escalation_days` (default 7, 2 to 120); a missing row means the default. Every change goes to Change History.
+
+## due_balance (view)
+
+Per due: total, active adjustments, net allocations and balance, so every screen and the public interface read the same figures.
 
 ## Permission and navigation
 
-Module `SCHOOL_BILLING`: View, Create, Edit, Approve, Export. Mapping: View = see ledger; Create = record collections (Zone Manager own Schools) and raise dues; Edit = adjustments, reversals, allocation; Approve = cancel a due. Raise, adjust, cancel are additionally limited to Admin and Director by eligibility rules. Menu: OPERATIONS → School Billing.
+Module `SCHOOL_BILLING`: View, Create, Edit, Approve, Export. Mapping as built: View = see the ledger; Create = record and allocate collections (Zone Manager own Schools); Edit = raise dues, adjustments, reversals, settings; Approve = cancel a due; Export = CSV. Raise, adjust, cancel are additionally limited to Admin and Director by eligibility rules. Menu: OPERATIONS → School Billing.
 
 ## State (derived)
 

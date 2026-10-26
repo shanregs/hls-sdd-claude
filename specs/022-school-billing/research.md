@@ -75,3 +75,10 @@ Decision: add `SCHOOL_DUE_UNASSIGNED` (no Zone Manager, to Director and Admin). 
 ## R16. Decisions confirmed by the owner (2026-10-26)
 
 Escalation days count from the due date; a Zone Manager without a user account means no task and a notification to the Director and Admin; the partial-month denominator is the stored 037 figure (else calendar-derived); the reference is `MD-YYYYMM-<seq>`; any month that has started may be raised, including past months. No open decisions remain.
+
+## R17. Implementation notes (2026-10-26)
+
+- The two ports `BillingCalendar` (implemented in `attendance`) and `OverdueTasks` (implemented in `tasks`) replace the direct reads of `WorkingCalendar`, `SchoolWorkingDays` and `TaskCreation` named in R1 and R8: billing depending on them closed module cycles (attendance, recruitment and tasks all reach `schoolbilling`), which the Modulith verification refuses. The behaviour is unchanged.
+- Billing reads its own assignment, position and contract tables for the calculation (same module) instead of the `TeacherPlacementSource` and `SchoolContracts` interfaces named in R1 and R2: those take Teacher ids, and the calculation needs every assignment at one School.
+- The settings live in a small `billing_setting` table rather than the spec 011 settings catalog (R10), which has no group for module settings; changes are audited through Change History.
+- Raising dues needs Edit (not Create) and allocating an advance needs Create, so a Zone Manager (View, Create, Export only) can record and allocate collections but not raise, adjust, reverse or cancel.
