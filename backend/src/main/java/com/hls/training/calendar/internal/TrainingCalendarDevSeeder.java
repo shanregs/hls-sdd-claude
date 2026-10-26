@@ -84,7 +84,11 @@ public class TrainingCalendarDevSeeder implements ApplicationRunner {
 
     private void seed() {
         AppUser director = users.findByPhone("9800000002").orElse(null);
-        List<TeacherInfo> active = teachers.activeTeachers();
+        // Tara Teacher (9800000004) is the demo user whose bell the seeders keep quiet, so she is not used here.
+        UUID taraUserId = users.findByPhone("9800000004").map(AppUser::getId).orElse(null);
+        List<TeacherInfo> active = teachers.activeTeachers().stream()
+                .filter(t -> taraUserId == null || !taraUserId.equals(t.userId()))
+                .toList();
         if (director == null || active.size() < 2) {
             return;
         }
