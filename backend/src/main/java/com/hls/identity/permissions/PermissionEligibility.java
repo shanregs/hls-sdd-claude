@@ -58,6 +58,7 @@ public final class PermissionEligibility {
             PermissionModule.EXPENSES,
             PermissionModule.MY_EXPENSES,
             PermissionModule.TEACHER_TRANSFERS,
+            PermissionModule.SCHOOL_BILLING,
             PermissionModule.TRAINING,
             PermissionModule.TRAINING_ATTENDANCE,
             PermissionModule.TRAINING_REGISTRATION,
@@ -233,6 +234,16 @@ public final class PermissionEligibility {
         if (module == PermissionModule.TASKS) {
             if (role == Role.MANAGER) {
                 return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+            }
+            if (role != Role.ADMIN && role != Role.DIRECTOR) {
+                return EnumSet.noneOf(PermissionAction.class);
+            }
+        }
+        // School billing (spec 022): staff roles only. A Zone Manager reads, exports and records collections for their own
+        // Schools; raising dues, adjustments and cancelling stay with Admin and Director.
+        if (module == PermissionModule.SCHOOL_BILLING) {
+            if (role == Role.MANAGER) {
+                return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EXPORT);
             }
             if (role != Role.ADMIN && role != Role.DIRECTOR) {
                 return EnumSet.noneOf(PermissionAction.class);

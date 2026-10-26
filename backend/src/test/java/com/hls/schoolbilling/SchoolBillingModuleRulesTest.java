@@ -43,7 +43,7 @@ class SchoolBillingModuleRulesTest {
 
     @Test
     void schoolBillingReadsOtherModulesOnlyThroughTheirApiPackages() {
-        for (String module : new String[] {"teacher", "organization", "school", "attendance", "leave"}) {
+        for (String module : new String[] {"teacher", "organization", "school", "attendance", "leave", "designation"}) {
             noClasses()
                     .that()
                     .resideInAPackage("com.hls.schoolbilling..")
@@ -53,5 +53,18 @@ class SchoolBillingModuleRulesTest {
                     .allowEmptyShould(true)
                     .check(MAIN);
         }
+    }
+
+    /** Billing owns the calendar and task ports; attendance and tasks implement them, so the module graph stays acyclic. */
+    @Test
+    void schoolBillingDoesNotDependOnAttendanceOrTasks() {
+        noClasses()
+                .that()
+                .resideInAPackage("com.hls.schoolbilling..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("com.hls.attendance..", "com.hls.tasks..")
+                .allowEmptyShould(true)
+                .check(MAIN);
     }
 }

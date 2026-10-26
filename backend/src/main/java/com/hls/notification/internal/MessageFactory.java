@@ -111,6 +111,14 @@ public final class MessageFactory {
                 "/operations/tasks/" + taskId);
     }
 
+    public static Text schoolDueUnassigned(String school, String month, java.math.BigDecimal balance, long daysOverdue, java.util.UUID schoolId) {
+        return new Text(
+                shorten("Overdue payment: " + school, MAX_TITLE),
+                shorten(school + " owes " + balance.toPlainString() + " for " + month + " and is " + daysOverdue
+                        + " days past the due date. The School has no Zone Manager to follow up.", MAX_MESSAGE),
+                "/operations/school-billing?schoolId=" + schoolId);
+    }
+
     public static Text taskOverdue(String title, LocalDate dueOn, UUID taskId) {
         return new Text(
                 shorten("Task overdue: " + title, MAX_TITLE),

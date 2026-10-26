@@ -2,7 +2,7 @@
 Sync Impact Report
 ==================
 Version change: 1.7.0 → 3.0.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.13,
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.14,
 then MAJOR 3.0.0 for spec 029: a sixth fixed role)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
@@ -62,6 +62,14 @@ Modified principles:
     `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
     their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
     parallel specs merges first.
+  - 2.5.14 (PATCH, spec 022): the Default role access matrix gains a School Billing row (the internal receivables ledger:
+    monthly dues derived from active assignments, adjustments, collections, ageing). Admin and Director hold View, Create, Edit,
+    Approve and Export org-wide; a Zone Manager holds View, Create (record collections) and Export for their own Schools only and
+    never Edit or Approve; Teacher and System hold nothing. The navigation model gains the OPERATIONS item School Billing. Principle
+    VII holds: `schoolbilling` owns two ports in its api package, `BillingCalendar` (implemented by `attendance`) and
+    `OverdueTasks` (implemented by `tasks`), so it depends on neither and the module graph stays acyclic; `notification` reads
+    `schoolbilling.api` events. Number kept after 2.5.13; the next patch after whichever of the parallel specs merges first. No
+    principle changes.
   - 2.5.13 (PATCH, spec 031): the Default role access matrix School Contracts row gains Approve: the Director holds it
     for every School and the Manager for their own Schools; Admin never holds it (Admin uploads, replaces, removes and
     submits the signed MoU document, which needs Edit). Teacher and System have no access. The navigation model gains the
@@ -440,6 +448,7 @@ kept intentionally lightweight for v1.
   | My Manager Attendance (own check-in, month, forgotten check-ins, leave) | — | — | Own (View, Create, Delete) | — | — |
   | Payroll (the monthly pay run, payslips, payment records, CSV export) | View, Process, Export | View, Approve, Export (never Process) | — | — | — |
   | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
+  | School Billing (monthly dues, adjustments, collections, ageing, CSV export) | View, Create, Edit, Approve, Export | View, Create, Edit, Approve, Export | Assigned (View, Export; Create records collections for own Schools; never Edit or Approve) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Activity Calendar (read-only planned vs done) | View | View | Own activities (View) | — | — |
   | Training (calendar, sessions, patterns, assignments, exceptions, history, CSV export) | View, Create, Edit, Delete, Export | View, Create, Edit, Delete, Export | Assigned (View; sessions that include them or their Teachers; never closes an exception) | — | — |
