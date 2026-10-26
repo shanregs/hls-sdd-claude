@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reject
+description: "Pending to rejected with a required reason (up to 500 characters). Needs SCHOOL_CONTRACTS.APPROVE."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/reject"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{approvalVersion}}, "reason": "Rate does not match the signed copy" }
+order: 7000

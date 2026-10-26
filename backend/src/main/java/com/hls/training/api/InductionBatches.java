@@ -17,4 +17,10 @@ public interface InductionBatches {
 
     /** How many Teachers of the batch were signed off as having completed it. */
     int completedTeachers(UUID batchId);
+
+    /** One Teacher's induction record as shown in their training history (spec 024): read only. */
+    record InductionRecord(UUID batchId, String batchName, LocalDate startsOn, LocalDate endsOn, String result, java.time.Instant signedAt) {}
+
+    /** The Teacher's induction enrolments, newest first. */
+    List<InductionRecord> recordsOf(UUID teacherId);
 }

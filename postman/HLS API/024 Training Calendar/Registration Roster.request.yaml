@@ -1,0 +1,6 @@
+$kind: http-request
+name: Registration Roster
+description: "Needs TRAINING.VIEW."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/registrations"
+method: GET
+order: 11000

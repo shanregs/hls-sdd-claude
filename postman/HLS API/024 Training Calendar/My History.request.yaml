@@ -1,0 +1,6 @@
+$kind: http-request
+name: My History
+description: "The caller's own history without internal remarks."
+url: "{{baseUrl}}/api/v1/training/me/history?year=2026"
+method: GET
+order: 34000

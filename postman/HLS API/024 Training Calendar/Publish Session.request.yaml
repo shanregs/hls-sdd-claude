@@ -1,0 +1,11 @@
+$kind: http-request
+name: Publish Session
+description: "Draft to Published."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/publish"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"version\": 0}"
+order: 5000

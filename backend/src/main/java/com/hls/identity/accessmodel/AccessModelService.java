@@ -120,6 +120,11 @@ public class AccessModelService {
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TEACHER_TRANSFERS, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.CONTENT, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.CONTENT, DataScope.OWN, Role.MANAGER, Role.CONTENT_CONTRIBUTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING_ATTENDANCE, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING_ATTENDANCE, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING_REGISTRATION, DataScope.OWN, Role.TEACHER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TASKS, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TASKS, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_CONTRACTS, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Upload Document
+description: "Multipart field file (pdf, jpg, jpeg or png, up to 10 MB). Adds the next version; on an approved MoU it resets it to pending. Admin and Director with SCHOOL_CONTRACTS.EDIT."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/documents"
+method: POST
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+      value: ""
+order: 2000

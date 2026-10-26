@@ -1,0 +1,12 @@
+$kind: http-request
+name: Approve
+description: "Pending to approved. Director, or the Zone Manager of the School (SCHOOL_CONTRACTS.APPROVE); never Admin. A second decision gets 409 naming who decided."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{approvalVersion}} }
+order: 6000

@@ -107,6 +107,7 @@ public class PermissionMatrixService {
         seedExpenses();
         seedTeacherTransfers();
         seedContent();
+        seedTraining();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -320,6 +321,28 @@ public class PermissionMatrixService {
         grants.invalidateAround();
     }
 
+    /**
+     * Training calendar defaults (spec 024): Admin and Director run the calendar and record attendance; a Manager sees the
+     * calendar and records attendance for their own Teachers; a Teacher registers for open sessions.
+     */
+    private void seedTraining() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action : PermissionModule.TRAINING.actions()) {
+                seed(role, PermissionModule.TRAINING, action, true);
+            }
+        }
+        for (PermissionAction action : PermissionModule.TRAINING_ATTENDANCE.actions()) {
+            for (Role role : List.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)) {
+                seed(role, PermissionModule.TRAINING_ATTENDANCE, action, true);
+            }
+        }
+        seed(Role.MANAGER, PermissionModule.TRAINING, PermissionAction.VIEW, true);
+        for (PermissionAction action : PermissionModule.TRAINING_REGISTRATION.actions()) {
+            seed(Role.TEACHER, PermissionModule.TRAINING_REGISTRATION, action, true);
+        }
+        grants.invalidateAround();
+    }
+
     private void seedTasks() {
         for (PermissionAction action : PermissionModule.TASKS.actions()) {
             seed(Role.ADMIN, PermissionModule.TASKS, action, true);
@@ -368,6 +391,9 @@ public class PermissionMatrixService {
             }
         }
         seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.VIEW, true);
+        // MoU approval (spec 031): the Director and the Zone Manager (own Schools) decide; never Admin
+        seed(Role.DIRECTOR, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.APPROVE, true);
+        seed(Role.MANAGER, PermissionModule.SCHOOL_CONTRACTS, PermissionAction.APPROVE, true);
         grants.invalidateAround();
     }
 

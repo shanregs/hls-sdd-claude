@@ -82,7 +82,7 @@ class SettingsApiTest extends IntegrationTestBase {
         assertThat((List<?>) security.map().get("settings")).hasSize(8);
         Map<String, Object> lockout = setting(security, "lockout.max-failed-attempts");
         assertThat(lockout).containsEntry("default", "5").containsEntry("min", 3).containsEntry("max", 20);
-        assertThat((List<?>) get(SYSTEM, token).map().get("settings")).hasSize(3);
+        assertThat((List<?>) get(SYSTEM, token).map().get("settings")).hasSize(9);
     }
 
     // ------------------------------------------------------------------ validation

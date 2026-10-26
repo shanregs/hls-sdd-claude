@@ -2,7 +2,7 @@
 Sync Impact Report
 ==================
 Version change: 1.7.0 → 3.0.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.11,
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.13,
 then MAJOR 3.0.0 for spec 029: a sixth fixed role)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
@@ -43,6 +43,18 @@ Modified principles:
 - VII. Reliability/Testability → renumbered to IX; adds per-role authorization and menu tests
 - VIII. Security/Identity/Observability → renumbered to X; backend is the security control,
   never the hidden menu
+  - 2.5.12 (PATCH, spec 024): the Default role access matrix gains three rows. Training (the calendar, sessions, patterns,
+    assignments, exceptions, history, CSV export): Admin and Director hold View, Create, Edit, Delete and Export; a Manager
+    holds View (sessions that include them or their Teachers, their Teachers' exceptions, never the ability to close one);
+    Teacher and System have none. Training Attendance (record who attended): Admin and Director View and Edit for anyone; a
+    Manager View and Edit for the Teachers placed under them only. Training Registration (an open weekend session): a Teacher
+    holds View, Create and Edit for their own registration only. The navigation model gains the OPERATIONS items Training
+    Calendar and Training Exceptions (Admin, Director) and My Training (Manager), and the MY ATTENDANCE items Upcoming
+    Training and My Training History (Teacher). Principle VII holds: the feature is the `training.calendar` package of the
+    `training` module; Teacher attendance is written only through `attendance.api.TrainingAttendance` after a read through
+    `AttendanceReadApi`, Manager attendance and the 035 calendar read training only through `attendance.api.ManagerTrainingDays`
+    and `training.api.TrainingActivities`, and `attendance` does not depend on `training`. Number 2.5.12 follows 2.5.11 of
+    spec 028; renumber to whichever patch is next when this merges.
   - 2.5.8 (PATCH, spec 027): the Default role access matrix gains a Transfers and Replacements row. Admin holds View, Create and
     Edit (never Approve); Director and Manager hold View, Create, Edit and Approve; nobody decides a request they raised. A Manager
     reads requests where the leaving or receiving School is theirs and acts only for the leaving School; Teacher and System have no
@@ -50,6 +62,12 @@ Modified principles:
     `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
     their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
     parallel specs merges first.
+  - 2.5.13 (PATCH, spec 031): the Default role access matrix School Contracts row gains Approve: the Director holds it
+    for every School and the Manager for their own Schools; Admin never holds it (Admin uploads, replaces, removes and
+    submits the signed MoU document, which needs Edit). Teacher and System have no access. The navigation model gains the
+    OPERATIONS item MoU Approvals (Director, Manager). Principle VII holds: the feature stays in the `schoolbilling`
+    module, which reaches `files` only through `files.api`; other modules read the approval state through
+    `schoolbilling.api.MouApprovals`; only `notification` listens to its events. No principle changes.
   - 2.5.11 (PATCH, spec 028): the Default role access matrix is unchanged; the dashboard grants each tile
     through the View grant of the module that owns its figure (a Manager's own-row tiles through the My Manager Attendance View
     grant), so no module is added to the matrix. Principle VII holds: the feature is the `reporting` module. It owns no
@@ -410,7 +428,7 @@ kept intentionally lightweight for v1.
   | Salary Structures (each person's salary, designation defaults, pay policy) | View, Create | View, Create | — | — | — |
   | Substitutions (requirements, assign, cover, School informed) | View, Edit | View, Edit | View, Edit (their Schools) | My Substitutions: View (own) | — |
   | Manager Tasks                   | View, Create, Edit, Approve | View, Create, Edit, Approve | Own tasks (View, Create for self, Edit to act on them; never Approve) | — | — |
-  | School Contracts (MoU)          | ✓     | ✓        | Assigned (view; maps Teachers) | — | — |
+  | School Contracts (MoU)          | ✓ (no Approve) | ✓ (incl. Approve) | Assigned (view; maps Teachers; Approve for own Schools) | — | — |
   | Recruitment (drives, candidates) | ✓    | ✓        | Assigned (reads all; writes own drives) | — | — |
   | Marketing (prospects, visits)   | ✓     | ✓        | Assigned (own Zones; also reviews Final Stage) | — | — |
   | Offers                          | View  | ✓        | View     | —       | —      |
@@ -424,6 +442,9 @@ kept intentionally lightweight for v1.
   | Transfers and Replacements (requests, approval, movement history) | View, Create, Edit (never Approve) | View, Create, Edit, Approve | Assigned (View, Create, Edit, Approve; read where the leaving or receiving School is theirs, act for the leaving School) | — | — |
   | Teacher Performance (observations, Principal feedback, issues, referrals) | View, Create, Edit | View, Create, Edit | Assigned (View, Create, Edit; the Teachers placed at their Schools and the records they wrote) | — (never sees their own) | — |
   | Activity Calendar (read-only planned vs done) | View | View | Own activities (View) | — | — |
+  | Training (calendar, sessions, patterns, assignments, exceptions, history, CSV export) | View, Create, Edit, Delete, Export | View, Create, Edit, Delete, Export | Assigned (View; sessions that include them or their Teachers; never closes an exception) | — | — |
+  | Training Attendance (record who attended a session) | View, Edit | View, Edit | Assigned (View, Edit; only the Teachers placed under them) | — | — |
+  | Training Registration (register for an open weekend session) | — | — | — | Own (View, Create, Edit) | — |
   | Expenses (review, approve, pay, budgets, cost measures, CSV export) | View, Create, Edit, Approve, Process, Export | View, Create, Edit, Approve, Export (never Process) | — | — | — |
   | My Expenses (own claims, bills, links, what is owed) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | Own (View, Create, Edit, Delete) | — |
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |

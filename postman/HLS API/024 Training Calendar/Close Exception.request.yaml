@@ -1,0 +1,11 @@
+$kind: http-request
+name: Close Exception
+description: "EXCUSED, MADE_UP (with makeupSessionId) or ACKNOWLEDGED. Needs TRAINING.EDIT."
+url: "{{baseUrl}}/api/v1/training/exceptions/{{exceptionId}}/close"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"kind\": \"EXCUSED\", \"note\": \"Medical\", \"version\": 0}"
+order: 30000

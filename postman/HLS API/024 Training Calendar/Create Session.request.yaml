@@ -1,0 +1,11 @@
+$kind: http-request
+name: Create Session
+description: "Admin or Director. publish false makes a Draft. Needs TRAINING.CREATE."
+url: "{{baseUrl}}/api/v1/training/sessions"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"type\": \"WEEKEND\", \"topic\": \"Phonics refresher\", \"date\": \"{{date}}\", \"startsAt\": \"10:00\", \"endsAt\": \"13:00\", \"trainerName\": \"Trainer Tina\", \"venueKind\": \"PHYSICAL\", \"venue\": \"Head office\", \"seatLimit\": 3, \"publish\": true}"
+order: 2000

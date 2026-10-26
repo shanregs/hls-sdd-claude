@@ -1,0 +1,11 @@
+$kind: http-request
+name: Remove Assignment
+description: "Before the session is held."
+url: "{{baseUrl}}/api/v1/training/sessions/{{sessionId}}/assignments/{{assignmentId}}"
+method: DELETE
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"reason\": \"Clash with exams\"}"
+order: 23000

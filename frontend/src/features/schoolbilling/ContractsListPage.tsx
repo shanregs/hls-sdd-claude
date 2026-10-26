@@ -20,6 +20,9 @@ import { useAuth } from "../../auth/useAuth";
 import { formatDate } from "../teachers/formatters";
 import { ContractStatusChip } from "./ContractStatusChip";
 import { statusLabel } from "./contractStatus";
+import { ApprovalStatusChip } from "./ApprovalStatusChip";
+import { approvalLabel, documentLabel, formatInstant } from "./mouFormat";
+import type { ApprovalState, DocumentState } from "./mouApprovalApi";
 import {
   listContracts,
   type ContractListRow,
@@ -27,6 +30,14 @@ import {
 } from "./schoolContractsApi";
 
 const PAGE_SIZE = 25;
+const APPROVALS: ApprovalState[] = [
+  "DRAFT",
+  "PENDING",
+  "REJECTED",
+  "APPROVED",
+  "APPROVED_WITHOUT_DOCUMENT",
+  "APPROVED_BEFORE_APPROVAL_STEP",
+];
 const STATUSES: ContractStatus[] = [
   "ACTIVE",
   "ENDS_SOON",
@@ -49,12 +60,16 @@ export function ContractsListPage() {
   const navigate = useNavigate();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [status, setStatus] = useState<ContractStatus | "">("");
+  const [approval, setApproval] = useState<ApprovalState | "">("");
+  const [documentFilter, setDocumentFilter] = useState<DocumentState | "">("");
   const [page, setPage] = useState(0);
 
   const load = useCallback(async () => {
     setState({ kind: "loading" });
     const result = await listContracts(authFetch, {
       status: status || undefined,
+      approval: approval || undefined,
+      document: documentFilter || undefined,
       page,
       size: PAGE_SIZE,
     });
@@ -67,7 +82,7 @@ export function ContractsListPage() {
           }
         : { kind: "error", reason: result.reason },
     );
-  }, [authFetch, status, page]);
+  }, [authFetch, status, approval, documentFilter, page]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial and filter-driven fetch
@@ -102,6 +117,41 @@ export function ContractsListPage() {
             </MenuItem>
           ))}
         </TextField>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            select
+            size="small"
+            label="Approval"
+            value={approval}
+            onChange={(e) => {
+              setApproval(e.target.value as ApprovalState | "");
+              setPage(0);
+            }}
+            sx={{ minWidth: 240 }}
+          >
+            <MenuItem value="">All</MenuItem>
+            {APPROVALS.map((a) => (
+              <MenuItem key={a} value={a}>
+                {approvalLabel(a)}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Signed document"
+            value={documentFilter}
+            onChange={(e) => {
+              setDocumentFilter(e.target.value as DocumentState | "");
+              setPage(0);
+            }}
+            sx={{ minWidth: 200 }}
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="ATTACHED">{documentLabel("ATTACHED")}</MenuItem>
+            <MenuItem value="NONE">{documentLabel("NONE")}</MenuItem>
+          </TextField>
+        </Stack>
 
         {state.kind === "loading" && (
           <Typography role="status">Loading contracts...</Typography>
@@ -127,6 +177,8 @@ export function ContractsListPage() {
                     <TableCell>Status</TableCell>
                     <TableCell>Teachers</TableCell>
                     <TableCell>Dates</TableCell>
+                    <TableCell>Approval</TableCell>
+                    <TableCell>Document</TableCell>
                     <TableCell>
                       <span style={{ position: "absolute", left: -9999 }}>
                         Actions
@@ -160,6 +212,25 @@ export function ContractsListPage() {
                                 ? ` to ${formatDate(row.endsOn)}`
                                 : " onwards"
                             }`
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        {row.approvalState ? (
+                          <>
+                            <ApprovalStatusChip state={row.approvalState} />
+                            {row.pendingSince && (
+                              <Typography variant="caption" sx={{ display: "block" }}>
+                                since {formatInstant(row.pendingSince)}
+                              </Typography>
+                            )}
+                          </>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.documentState
+                          ? documentLabel(row.documentState)
                           : "-"}
                       </TableCell>
                       <TableCell align="right">

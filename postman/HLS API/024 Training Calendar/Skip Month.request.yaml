@@ -1,0 +1,11 @@
+$kind: http-request
+name: Skip Month
+description: "A reason is required."
+url: "{{baseUrl}}/api/v1/training/patterns/{{patternId}}/skips"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\"month\": \"{{date}}\", \"reason\": \"Festival week\"}"
+order: 16000

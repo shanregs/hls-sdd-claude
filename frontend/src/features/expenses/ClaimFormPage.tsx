@@ -151,9 +151,13 @@ export function ClaimFormPage() {
     const found: Record<string, string> = {};
     const today = todayIso();
     if (date > today) found.date = "The expense date cannot be in the future.";
-    else if (date < shift(today, -60)) found.date = "The expense date is older than 60 days.";
-    if (category === "OTHER" && reason.trim() === "") found.reason = "A reason is required for the category Other.";
-    if (category === "TRAINING_STAY" && link === "") found.link = "Choose the induction batch for a Training Stay claim.";
+    else if (date < shift(today, -60))
+      found.date = "The expense date is older than 60 days.";
+    if (category === "OTHER" && reason.trim() === "")
+      found.reason = "A reason is required for the category Other.";
+    if (category === "TRAINING_STAY" && link === "")
+      found.link =
+        "Choose the induction batch or training session for a Training Stay claim.";
     if (liveBills + files.length === 0 && noBill.trim() === "") {
       found.bills = "Attach a bill, or give the reason there is no bill.";
     }
@@ -164,8 +168,10 @@ export function ClaimFormPage() {
     const found: Record<string, string> = {};
     if (date === "") found.date = "The expense date is required.";
     const n = Number(amount);
-    if (amount.trim() === "" || Number.isNaN(n) || n <= 0) found.amount = "The amount must be more than zero.";
-    else if (!/^\d+(\.\d{1,2})?$/.test(amount.trim())) found.amount = "The amount can have at most two decimal places.";
+    if (amount.trim() === "" || Number.isNaN(n) || n <= 0)
+      found.amount = "The amount must be more than zero.";
+    else if (!/^\d+(\.\d{1,2})?$/.test(amount.trim()))
+      found.amount = "The amount can have at most two decimal places.";
     return found;
   }
 
@@ -187,14 +193,21 @@ export function ClaimFormPage() {
   }
 
   async function save(submit: boolean, confirmDuplicate = false) {
-    const found = { ...draftProblems(), ...(submit ? submissionProblems() : {}) };
+    const found = {
+      ...draftProblems(),
+      ...(submit ? submissionProblems() : {}),
+    };
     setErrors(found);
     setFormError(null);
     if (Object.keys(found).length > 0) return;
     setBusy(true);
     let claim: ClaimDetail;
     const saved = existing
-      ? await updateClaim(authFetch, existing.id, body({ version: existing.version }))
+      ? await updateClaim(
+          authFetch,
+          existing.id,
+          body({ version: existing.version }),
+        )
       : await createClaim(authFetch, body({}));
     if (!saved.ok) {
       setBusy(false);
@@ -220,18 +233,29 @@ export function ClaimFormPage() {
       navigate(`${MY_EXPENSES_ROUTE}/${claim.id}`);
       return;
     }
-    const sent = await submitClaim(authFetch, claim.id, claim.version, confirmDuplicate);
+    const sent = await submitClaim(
+      authFetch,
+      claim.id,
+      claim.version,
+      confirmDuplicate,
+    );
     setBusy(false);
     if (sent.ok) {
       navigate(`${MY_EXPENSES_ROUTE}/${claim.id}`);
-    } else if (sent.status === 409 && /same date, amount and category/.test(sent.reason)) {
+    } else if (
+      sent.status === 409 &&
+      /same date, amount and category/.test(sent.reason)
+    ) {
       setDuplicate(true);
     } else {
       setFormError(sent.reason);
     }
   }
 
-  const linkLabel = category === "TRAINING_STAY" ? "Induction batch" : "Linked work (optional)";
+  const linkLabel =
+    category === "TRAINING_STAY"
+      ? "Induction batch or training session"
+      : "Linked work (optional)";
 
   return (
     <Box component="form" noValidate onSubmit={(e) => e.preventDefault()}>
@@ -281,7 +305,12 @@ export function ClaimFormPage() {
             </MenuItem>
           ))}
         </TextField>
-        <TextField select label="Area" value={area} onChange={(e) => setArea(e.target.value)}>
+        <TextField
+          select
+          label="Area"
+          value={area}
+          onChange={(e) => setArea(e.target.value)}
+        >
           <MenuItem value={HEAD_OFFICE}>Head office</MenuItem>
           {areas
             .filter((a) => a.id !== null)
@@ -329,17 +358,20 @@ export function ClaimFormPage() {
             error={Boolean(errors.link)}
             helperText={errors.link}
           >
-            {category === "TRAVEL_FUEL" && <MenuItem value="">Not linked</MenuItem>}
+            {category === "TRAVEL_FUEL" && (
+              <MenuItem value="">Not linked</MenuItem>
+            )}
             {options.map((o) => (
               <MenuItem key={`${o.kind}|${o.ref}`} value={`${o.kind}|${o.ref}`}>
                 {o.label} ({formatDate(o.date)})
               </MenuItem>
             ))}
-            {existing?.link && !options.some((o) => o.ref === existing.link!.ref) && (
-              <MenuItem value={`${existing.link.kind}|${existing.link.ref}`}>
-                {existing.link.label} (kept as submitted)
-              </MenuItem>
-            )}
+            {existing?.link &&
+              !options.some((o) => o.ref === existing.link!.ref) && (
+                <MenuItem value={`${existing.link.kind}|${existing.link.ref}`}>
+                  {existing.link.label} (kept as submitted)
+                </MenuItem>
+              )}
           </TextField>
         )}
 
@@ -356,7 +388,10 @@ export function ClaimFormPage() {
                 .filter((b) => !b.removed)
                 .map((b) => (
                   <ListItem key={b.id}>
-                    <ListItemText primary={b.name} secondary={`Added by ${b.addedByName}`} />
+                    <ListItemText
+                      primary={b.name}
+                      secondary={`Added by ${b.addedByName}`}
+                    />
                   </ListItem>
                 ))}
             </List>
@@ -367,7 +402,12 @@ export function ClaimFormPage() {
                 <ListItem
                   key={f.name + f.size}
                   secondaryAction={
-                    <Button size="small" onClick={() => setFiles((prev) => prev.filter((x) => x !== f))}>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        setFiles((prev) => prev.filter((x) => x !== f))
+                      }
+                    >
                       Remove {f.name}
                     </Button>
                   }
@@ -392,7 +432,12 @@ export function ClaimFormPage() {
             />
           </Button>
           {errors.bills && (
-            <Typography role="alert" color="error" variant="body2" sx={{ mt: 1 }}>
+            <Typography
+              role="alert"
+              color="error"
+              variant="body2"
+              sx={{ mt: 1 }}
+            >
               {errors.bills}
             </Typography>
           )}
@@ -406,21 +451,36 @@ export function ClaimFormPage() {
         />
 
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" disabled={busy} onClick={() => void save(false)}>
+          <Button
+            variant="outlined"
+            disabled={busy}
+            onClick={() => void save(false)}
+          >
             Save draft
           </Button>
-          <Button variant="contained" disabled={busy} onClick={() => void save(true)}>
+          <Button
+            variant="contained"
+            disabled={busy}
+            onClick={() => void save(true)}
+          >
             Submit
           </Button>
         </Stack>
       </Stack>
 
       {duplicate && (
-        <Dialog open onClose={() => setDuplicate(false)} aria-labelledby="duplicate-title">
-          <DialogTitle id="duplicate-title">This looks like a claim you already made</DialogTitle>
+        <Dialog
+          open
+          onClose={() => setDuplicate(false)}
+          aria-labelledby="duplicate-title"
+        >
+          <DialogTitle id="duplicate-title">
+            This looks like a claim you already made
+          </DialogTitle>
           <DialogContent>
             <DialogContentText>
-              You already have a claim with the same date, amount and category. Submit this one as well?
+              You already have a claim with the same date, amount and category.
+              Submit this one as well?
             </DialogContentText>
           </DialogContent>
           <DialogActions>

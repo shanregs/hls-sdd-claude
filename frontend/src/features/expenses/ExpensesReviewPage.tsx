@@ -61,7 +61,10 @@ export function ExpensesReviewPage() {
 
   const load = useCallback(async () => {
     setState({ kind: "loading" });
-    const result = await listClaims(authFetch, { status, category: category || undefined });
+    const result = await listClaims(authFetch, {
+      status,
+      category: category || undefined,
+    });
     setState(
       result.ok
         ? { kind: "ready", rows: result.data.content }
@@ -94,25 +97,42 @@ export function ExpensesReviewPage() {
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
-        sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mb: 2 }}
+        sx={{
+          alignItems: { sm: "center" },
+          justifyContent: "space-between",
+          mb: 2,
+        }}
       >
         <Typography variant="h5" component="h1">
           Expenses
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Button component={RouterLink} to={`${EXPENSES_ROUTE}/budgets`} variant="outlined">
+          <Button
+            component={RouterLink}
+            to={`${EXPENSES_ROUTE}/budgets`}
+            variant="outlined"
+          >
             Budgets
           </Button>
-          <Button component={RouterLink} to={`${EXPENSES_ROUTE}/costs`} variant="outlined">
+          <Button
+            component={RouterLink}
+            to={`${EXPENSES_ROUTE}/costs`}
+            variant="outlined"
+          >
             Cost measures
           </Button>
         </Stack>
       </Stack>
 
       {pending && (
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }} aria-label="Pending approvals">
+        <Paper
+          variant="outlined"
+          sx={{ p: 2, mb: 2 }}
+          aria-label="Pending approvals"
+        >
           <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-            Waiting for a decision: {pending.count} ({formatRupees(Number(pending.total))})
+            Waiting for a decision: {pending.count} (
+            {formatRupees(Number(pending.total))})
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             {pending.buckets.map((b) => (
@@ -121,7 +141,8 @@ export function ExpensesReviewPage() {
                   {b.label}
                 </Typography>
                 <Typography>
-                  {b.count} {b.count === 1 ? "claim" : "claims"}, {formatRupees(Number(b.total))}
+                  {b.count} {b.count === 1 ? "claim" : "claims"},{" "}
+                  {formatRupees(Number(b.total))}
                 </Typography>
               </Box>
             ))}
@@ -187,7 +208,9 @@ export function ExpensesReviewPage() {
         </Box>
       )}
       {state.kind === "error" && <Alert severity="error">{state.reason}</Alert>}
-      {state.kind === "ready" && state.rows.length === 0 && <Typography>No claims are waiting.</Typography>}
+      {state.kind === "ready" && state.rows.length === 0 && (
+        <Typography>No claims are waiting.</Typography>
+      )}
       {state.kind === "ready" && state.rows.length > 0 && (
         <TableContainer>
           <Table size="small" aria-label="Claims">
@@ -209,19 +232,30 @@ export function ExpensesReviewPage() {
               {state.rows.map((row) => (
                 <TableRow key={row.id} hover>
                   <TableCell>
-                    <Link component={RouterLink} to={`${EXPENSES_ROUTE}/${row.id}`}>
+                    <Link
+                      component={RouterLink}
+                      to={`${EXPENSES_ROUTE}/${row.id}`}
+                    >
                       {row.claimantName}
                     </Link>
                   </TableCell>
                   <TableCell>{formatDate(row.expenseDate)}</TableCell>
                   <TableCell>{row.categoryLabel}</TableCell>
                   <TableCell>{row.areaName}</TableCell>
-                  <TableCell align="right">{formatRupees(Number(row.amount))}</TableCell>
-                  <TableCell>{row.billCount > 0 ? row.billCount : "No bill"}</TableCell>
-                  <TableCell>{row.linkLabel ?? "Not linked"}</TableCell>
-                  <TableCell>{row.ageDays === null ? "" : `${row.ageDays} days`}</TableCell>
                   <TableCell align="right">
-                    {row.remainingBudget === null ? "No budget set" : formatRupees(Number(row.remainingBudget))}
+                    {formatRupees(Number(row.amount))}
+                  </TableCell>
+                  <TableCell>
+                    {row.billCount > 0 ? row.billCount : "No bill"}
+                  </TableCell>
+                  <TableCell>{row.linkLabel ?? "Not linked"}</TableCell>
+                  <TableCell>
+                    {row.ageDays === null ? "" : `${row.ageDays} days`}
+                  </TableCell>
+                  <TableCell align="right">
+                    {row.remainingBudget === null
+                      ? "No budget set"
+                      : formatRupees(Number(row.remainingBudget))}
                   </TableCell>
                   <TableCell>
                     <Chip size="small" label={row.statusLabel} />

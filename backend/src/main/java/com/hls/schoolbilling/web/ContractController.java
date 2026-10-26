@@ -32,7 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The School contracts (MoU) of spec 012. Every route is guarded by {@code SCHOOL_CONTRACTS}; a Zone Manager
- * only reads (and only their own Schools: another School is answered as not found).
+ * reads (and only their own Schools: another School is answered as not found) and, holding {@code APPROVE}
+ * since spec 031, decides the MoUs of their Schools through {@link MouApprovalController}. The terms of a
+ * contract are never edited here; only the approver's correction while pending (spec 031 FR-012) changes them.
  */
 @RestController
 @RequestMapping("/api/v1/school-contracts")
@@ -52,6 +54,8 @@ public class ContractController {
     public PageResponse<ContractListRow> list(
             @RequestParam(required = false) ContractStatus status,
             @RequestParam(required = false) UUID managerId,
+            @RequestParam(required = false) String approval,
+            @RequestParam(required = false) String document,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
@@ -61,6 +65,8 @@ public class ContractController {
                 CallerContext.roles(jwt),
                 status,
                 managerId,
+                approval,
+                document,
                 Math.max(0, page),
                 Math.min(100, Math.max(1, size)));
     }

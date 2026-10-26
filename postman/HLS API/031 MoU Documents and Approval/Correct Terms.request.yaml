@@ -1,0 +1,12 @@
+$kind: http-request
+name: Correct Terms
+description: "While pending only: rate (same salary for all) or positions (different salaries), signedOn, startsOn, endsOn. Only the fields sent change. Needs SCHOOL_CONTRACTS.APPROVE."
+url: "{{baseUrl}}/api/v1/school-contracts/contracts/{{contractId}}/terms"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{approvalVersion}}, "rate": "16000.00" }
+order: 8000

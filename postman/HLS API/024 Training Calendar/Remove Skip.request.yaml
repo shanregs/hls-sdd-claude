@@ -1,0 +1,6 @@
+$kind: http-request
+name: Remove Skip
+description: "Restores the month."
+url: "{{baseUrl}}/api/v1/training/patterns/{{patternId}}/skips/{{date}}"
+method: DELETE
+order: 17000

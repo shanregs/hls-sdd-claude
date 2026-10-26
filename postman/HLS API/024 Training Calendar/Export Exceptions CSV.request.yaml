@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export Exceptions CSV
+description: "Admin and Director. Needs TRAINING.EXPORT."
+url: "{{baseUrl}}/api/v1/training/exceptions/export?month={{month}}"
+method: GET
+order: 31000

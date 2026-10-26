@@ -20,6 +20,24 @@ public enum SettingKey {
     MOBILE_LOCATION_REUSE_SECONDS(
             "mobile.location-reuse-seconds", Group.SYSTEM, "Reuse a recent location fix for", "seconds", Type.INTEGER,
             0, 300, "10", "hls.mobile.location-reuse-seconds"),
+    TRAINING_REPEAT_THRESHOLD(
+            "training.repeat-threshold", Group.SYSTEM, "Training absences that mark a repeat", "absences", Type.INTEGER, 1,
+            10, "2", null),
+    TRAINING_REPEAT_WINDOW_MONTHS(
+            "training.repeat-window-months", Group.SYSTEM, "Months counted for repeat training absences", "months",
+            Type.INTEGER, 1, 24, "6", null),
+    TRAINING_REMINDER_DAYS_FIRST(
+            "training.reminder-days-first", Group.SYSTEM, "First training reminder", "days before", Type.INTEGER, 0, 30,
+            "2", null),
+    TRAINING_REMINDER_DAYS_SECOND(
+            "training.reminder-days-second", Group.SYSTEM, "Second training reminder (0 turns it off)", "days before",
+            Type.INTEGER, 0, 30, "1", null),
+    TRAINING_ATTENDANCE_DUE_DAYS(
+            "training.attendance-due-days", Group.SYSTEM, "Days after a session to record attendance", "days",
+            Type.INTEGER, 1, 60, "7", null),
+    TRAINING_GENERATION_HORIZON_MONTHS(
+            "training.generation-horizon-months", Group.SYSTEM, "Months of monthly sessions kept ahead", "months",
+            Type.INTEGER, 1, 12, "3", null),
 
     PASSWORD_MIN_LENGTH(
             "password.min-length", Group.SECURITY, "Minimum password length", "characters", Type.INTEGER, 8, 64,
