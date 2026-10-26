@@ -20,6 +20,14 @@ The owner answered "defaults" to all five questions (option A each); the answers
 - Q: Must a collection be allocated when recorded? -> A: Allocation is chosen when recorded and defaults to the oldest due first; any excess is kept as advance credit and can be allocated later by the same users.
 - Q: From when does ageing count, and does an overdue School block anything? -> A: Days past the due date (amounts not yet due show as "not yet due"); overdue is information only and blocks nothing.
 
+### Session 2026-10-26 (planning decisions, confirmed by the owner)
+
+- Q: Escalation days count from when? -> A: From the due date (not from task creation); a late job run still escalates no earlier than the next day.
+- Q: A School's Zone Manager has no user account? -> A: No task is created; the Director and Admin are notified instead.
+- Q: Partial-month denominator? -> A: The School's stored month working days (spec 037) when entered, else the calendar-derived count.
+- Q: Reference format? -> A: `MD-YYYYMM-<seq>`.
+- Q: Which months can be raised? -> A: Any month that has started; backdating is allowed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Work Out What a School Owes for a Month (Priority: P1)

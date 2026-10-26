@@ -71,3 +71,7 @@ Decision: add `SCHOOL_DUE_UNASSIGNED` (no Zone Manager, to Director and Admin). 
 - 013b / 014 / 028: consume `SchoolReceivables`; no change to them now. The roadmap row for 022 is updated.
 - 025: no code change. Uses `createFollowUp`, `complete`, `cancel`, `reassign` as they exist. If the Zone Manager has no user account the call refuses and the job falls back to the R8 no-manager path.
 - 012: none. 027: none (read through `TeacherPlacementSource`).
+
+## R16. Decisions confirmed by the owner (2026-10-26)
+
+Escalation days count from the due date; a Zone Manager without a user account means no task and a notification to the Director and Admin; the partial-month denominator is the stored 037 figure (else calendar-derived); the reference is `MD-YYYYMM-<seq>`; any month that has started may be raised, including past months. No open decisions remain.
