@@ -43,6 +43,7 @@ import { MyExpensesPage } from "./features/expenses/MyExpensesPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
+import { ExceptionsPage } from "./features/training/ExceptionsPage";
 import { TrainingCalendarPage } from "./features/training/TrainingCalendarPage";
 import { UpcomingTrainingPage } from "./features/training/UpcomingTrainingPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
@@ -457,6 +458,14 @@ export function App() {
           element={
             <RouteGuard>
               <TrainingCalendarPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/training/exceptions"
+          element={
+            <RouteGuard>
+              <ExceptionsPage />
             </RouteGuard>
           }
         />

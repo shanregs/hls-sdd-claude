@@ -21,6 +21,7 @@ import {
   monthTitle,
   shiftMonth,
 } from "./format";
+import { ExceptionsPage } from "./ExceptionsPage";
 import { PatternsPanel } from "./PatternsPanel";
 import { SessionDetail } from "./SessionDetail";
 import { SessionDialog } from "./SessionDialog";
@@ -238,6 +239,8 @@ export function TrainingCalendarPage() {
             ))}
         </>
       )}
+
+      {!management && <ExceptionsPage embedded />}
 
       {openId && (
         <SessionDetail

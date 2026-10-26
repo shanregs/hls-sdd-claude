@@ -3,6 +3,7 @@ import {
   queryString,
   sendJson,
   type ApiResult,
+  type PageOf,
   type AuthFetch,
 } from "../common/masterDataApi";
 
@@ -632,4 +633,73 @@ export function syncAttendance(
     `${BASE}/sessions/${id}/attendance/${entryId}/sync`,
     {},
   );
+}
+
+// ------------------------------------------------------------------ exceptions (US5)
+
+export interface ExceptionRow {
+  id: string;
+  personKind: "TEACHER" | "MANAGER";
+  personId: string;
+  name: string;
+  sessionId: string;
+  topic: string;
+  date: string;
+  status: "OPEN" | "CLOSED" | "WITHDRAWN";
+  closureKind: "EXCUSED" | "MADE_UP" | "ACKNOWLEDGED" | null;
+  closureNote: string | null;
+  makeupSessionId: string | null;
+  closedBy: string | null;
+  closedAt: string | null;
+  raisedAt: string;
+  version: number;
+  repeat: boolean;
+  countInWindow: number;
+  managerId: string | null;
+  managerName: string | null;
+  zoneId: string | null;
+  zoneName: string | null;
+}
+
+export interface ExceptionQuery {
+  month?: string;
+  zoneId?: string;
+  managerId?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}
+
+export function getExceptions(
+  authFetch: AuthFetch,
+  query: ExceptionQuery,
+): Promise<ApiResult<PageOf<ExceptionRow>>> {
+  return getJson<PageOf<ExceptionRow>>(
+    authFetch,
+    `${BASE}/exceptions?${queryString({ ...query })}`,
+    "Could not load the exceptions.",
+  );
+}
+
+export function closeException(
+  authFetch: AuthFetch,
+  id: string,
+  body: {
+    kind: string;
+    note?: string;
+    makeupSessionId?: string;
+    version: number;
+  },
+) {
+  return sendJson<ExceptionRow>(
+    authFetch,
+    "POST",
+    `${BASE}/exceptions/${id}/close`,
+    body,
+  );
+}
+
+export function exceptionsExportUrl(query: ExceptionQuery): string {
+  return `${BASE}/exceptions/export?${queryString({ ...query })}`;
 }

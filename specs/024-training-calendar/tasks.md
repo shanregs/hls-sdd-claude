@@ -182,8 +182,8 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 ### Implementation for US5
 
 - [X] T050 [US5] Implement `TC/internal/ExceptionService.java` (raise and withdraw from `AttendanceRecordService`, close, list with repeat marker, CSV export) and `TC/web/ExceptionController.java`. Depends on T043
-- [ ] T051 [US5] Frontend: `FE/ExceptionsPage.tsx` (filters, repeat mark, close dialog) and the My Training exceptions panel for the Manager. Depends on T050
-- [ ] T052 [P] [US5] Frontend test `FE/__tests__/Exceptions.test.tsx`
+- [X] T051 [US5] Frontend: `FE/ExceptionsPage.tsx` (filters, repeat mark, close dialog) and the My Training exceptions panel for the Manager. Depends on T050
+- [X] T052 [P] [US5] Frontend test `FE/__tests__/Exceptions.test.tsx`
 
 ---
 
