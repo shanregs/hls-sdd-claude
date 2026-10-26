@@ -55,7 +55,10 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
       return;
     }
     setSession(result.data);
-    if (result.data.actions.includes("REGISTER_TEACHER") || result.data.counts) {
+    if (
+      result.data.actions.includes("REGISTER_TEACHER") ||
+      result.data.counts
+    ) {
       const rows = await getRoster(authFetch, sessionId);
       setRoster(rows.ok ? rows.data : []);
     }
@@ -95,27 +98,55 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
   const registered = roster.filter((r) => r.status === "REGISTERED");
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="session-detail-title">
+    <Dialog
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby="session-detail-title"
+    >
       <DialogTitle id="session-detail-title">{session.topic}</DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
           {failure && <Alert severity="error">{failure}</Alert>}
           {session.holidayNotice && (
-            <Alert severity="info">This date is a holiday or non-working day.</Alert>
+            <Alert severity="info">
+              This date is a holiday or non-working day.
+            </Alert>
           )}
           {session.attendanceNotRecorded && (
-            <Alert severity="warning">Attendance has not been recorded for this session.</Alert>
+            <Alert severity="warning">
+              Attendance has not been recorded for this session.
+            </Alert>
           )}
           {session.status === "CANCELLED" && session.cancelReason && (
             <Alert severity="warning">Cancelled: {session.cancelReason}</Alert>
           )}
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: "wrap" }}
+          >
             <Chip label={STATUS_LABELS[session.status]} />
             <Chip label={TYPE_LABELS[session.type]} variant="outlined" />
-            {session.my?.status === "REQUIRED" && <Chip label="Required" color="warning" />}
-            {session.my?.status === "REGISTERED" && <Chip label="Registered" color="success" />}
+            {session.my?.status === "REQUIRED" && (
+              <Chip label="Required" color="warning" />
+            )}
+            {session.my?.status === "REGISTERED" && (
+              <Chip label="Registered" color="success" />
+            )}
           </Stack>
-          <Box component="dl" sx={{ m: 0, display: "grid", gridTemplateColumns: "max-content 1fr", gap: 0.5, columnGap: 2 }}>
+          <Box
+            component="dl"
+            sx={{
+              m: 0,
+              display: "grid",
+              gridTemplateColumns: "max-content 1fr",
+              gap: 0.5,
+              columnGap: 2,
+            }}
+          >
             <dt>Date</dt>
             <dd>{formatDate(session.date)}</dd>
             <dt>Time</dt>
@@ -133,7 +164,9 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
             )}
             {session.venue && (
               <>
-                <dt>{session.venueKind === "VIRTUAL" ? "Meeting link" : "Venue"}</dt>
+                <dt>
+                  {session.venueKind === "VIRTUAL" ? "Meeting link" : "Venue"}
+                </dt>
                 <dd>{session.venue}</dd>
               </>
             )}
@@ -144,12 +177,16 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
                 : `${session.registered} of ${session.seatLimit} taken`}
             </dd>
           </Box>
-          {session.description && <Typography>{session.description}</Typography>}
-          {session.groupNotFullyAssigned != null && session.groupNotFullyAssigned > 0 && (
-            <Alert severity="info">
-              {session.groupNotFullyAssigned} people in the group are not assigned.
-            </Alert>
+          {session.description && (
+            <Typography>{session.description}</Typography>
           )}
+          {session.groupNotFullyAssigned != null &&
+            session.groupNotFullyAssigned > 0 && (
+              <Alert severity="info">
+                {session.groupNotFullyAssigned} people in the group are not
+                assigned.
+              </Alert>
+            )}
           {session.earlierDates.length > 0 && (
             <Box>
               <Typography variant="subtitle2" component="h3">
@@ -167,9 +204,9 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
           )}
           {session.counts && (
             <Typography variant="body2">
-              Expected {session.counts.expected}, attended {session.counts.attended}, absent{" "}
-              {session.counts.absent}, excused {session.counts.excused}, walk-ins{" "}
-              {session.counts.walkIns}.
+              Expected {session.counts.expected}, attended{" "}
+              {session.counts.attended}, absent {session.counts.absent}, excused{" "}
+              {session.counts.excused}, walk-ins {session.counts.walkIns}.
             </Typography>
           )}
           {session.type === "WEEKEND" && roster.length > 0 && (
@@ -186,7 +223,13 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
                       <Button
                         size="small"
                         onClick={() =>
-                          void run(() => cancelRegistration(authFetch, session.id, r.teacherId))
+                          void run(() =>
+                            cancelRegistration(
+                              authFetch,
+                              session.id,
+                              r.teacherId,
+                            ),
+                          )
                         }
                       >
                         Cancel registration for {r.name}
@@ -201,22 +244,40 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
       </DialogContent>
       <DialogActions sx={{ flexWrap: "wrap" }}>
         {can("REGISTER") && (
-          <Button variant="contained" onClick={() => void run(() => registerForSession(authFetch, session.id))}>
+          <Button
+            variant="contained"
+            onClick={() =>
+              void run(() => registerForSession(authFetch, session.id))
+            }
+          >
             Register
           </Button>
         )}
         {can("CANCEL_REGISTRATION") && (
-          <Button onClick={() => void run(() => cancelRegistration(authFetch, session.id))}>
+          <Button
+            onClick={() =>
+              void run(() => cancelRegistration(authFetch, session.id))
+            }
+          >
             Cancel my registration
           </Button>
         )}
-        {session.my?.open === false && session.seatsLeft === 0 && session.my?.status == null && (
-          <Typography color="text.secondary" sx={{ mr: 1 }}>
-            No seats left.
-          </Typography>
-        )}
+        {session.my?.open === false &&
+          session.seatsLeft === 0 &&
+          session.my?.status == null && (
+            <Typography color="text.secondary" sx={{ mr: 1 }}>
+              No seats left.
+            </Typography>
+          )}
         {can("PUBLISH") && (
-          <Button variant="contained" onClick={() => void run(() => publishSession(authFetch, session.id, session.version))}>
+          <Button
+            variant="contained"
+            onClick={() =>
+              void run(() =>
+                publishSession(authFetch, session.id, session.version),
+              )
+            }
+          >
             Publish
           </Button>
         )}
@@ -231,7 +292,8 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
           <Button
             color="error"
             onClick={async () => {
-              if (await run(() => deleteSession(authFetch, session.id))) onClose();
+              if (await run(() => deleteSession(authFetch, session.id)))
+                onClose();
             }}
           >
             Delete draft
@@ -264,7 +326,9 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               error={Boolean(reasonError)}
-              helperText={reasonError ?? "Registered and assigned people are told."}
+              helperText={
+                reasonError ?? "Registered and assigned people are told."
+              }
               slotProps={{ htmlInput: { maxLength: 300 } }}
             />
           </DialogContent>
@@ -279,7 +343,16 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
                   return;
                 }
                 setReasonError(null);
-                if (await run(() => cancelSession(authFetch, session.id, reason.trim(), session.version))) {
+                if (
+                  await run(() =>
+                    cancelSession(
+                      authFetch,
+                      session.id,
+                      reason.trim(),
+                      session.version,
+                    ),
+                  )
+                ) {
                   setMode(null);
                   setReason("");
                 }

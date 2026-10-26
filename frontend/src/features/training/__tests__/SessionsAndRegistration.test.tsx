@@ -80,36 +80,58 @@ describe("Training sessions and registration (spec 024 US1)", () => {
   it("shows the page title by role", async () => {
     authFetch.mockResolvedValue(json([]));
     renderUi(<TrainingCalendarPage />);
-    expect(await screen.findByRole("heading", { name: "Training Calendar" })).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: "Training Calendar" }),
+    ).toBeTruthy();
   });
 
   it("titles the Manager screen My Training and offers no New session button", async () => {
     access.roles = ["MANAGER"];
     authFetch.mockResolvedValue(json([]));
     renderUi(<TrainingCalendarPage />);
-    expect(await screen.findByRole("heading", { name: "My Training" })).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: "My Training" }),
+    ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "New session" })).toBeNull();
   });
 
   it("validates the dialog before anything is sent", async () => {
     authFetch.mockResolvedValue(json([]));
     renderUi(<TrainingCalendarPage />);
-    await userEvent.click(await screen.findByRole("button", { name: "New session" }));
-    await userEvent.click(screen.getByRole("button", { name: "Save as draft" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "New session" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save as draft" }),
+    );
     expect(await screen.findByText("Enter the topic.")).toBeTruthy();
     expect(screen.getByText("Choose the date.")).toBeTruthy();
-    const posts = authFetch.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "POST");
+    const posts = authFetch.mock.calls.filter(
+      (c) => (c[1] as RequestInit | undefined)?.method === "POST",
+    );
     expect(posts).toHaveLength(0);
   });
 
   it("refuses an online session whose link is not https", async () => {
     authFetch.mockResolvedValue(json([]));
     renderUi(<TrainingCalendarPage />);
-    await userEvent.click(await screen.findByRole("button", { name: "New session" }));
-    await userEvent.selectOptions(screen.getByLabelText("Venue kind"), "VIRTUAL");
-    await userEvent.type(screen.getByLabelText(/Meeting link/), "http://example.org/x");
-    await userEvent.click(screen.getByRole("button", { name: "Save as draft" }));
-    expect(await screen.findByText("The meeting link must start with https://")).toBeTruthy();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "New session" }),
+    );
+    await userEvent.selectOptions(
+      screen.getByLabelText("Venue kind"),
+      "VIRTUAL",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/Meeting link/),
+      "http://example.org/x",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save as draft" }),
+    );
+    expect(
+      await screen.findByText("The meeting link must start with https://"),
+    ).toBeTruthy();
   });
 
   it("lets a Teacher register and then cancel", async () => {
@@ -118,11 +140,26 @@ describe("Training sessions and registration (spec 024 US1)", () => {
     authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
       if (init?.method === "POST") {
         registered = true;
-        return json({ sessionId: "s1", teacherId: "t1", status: "REGISTERED", created: true, seatsLeft: 2 }, 201);
+        return json(
+          {
+            sessionId: "s1",
+            teacherId: "t1",
+            status: "REGISTERED",
+            created: true,
+            seatsLeft: 2,
+          },
+          201,
+        );
       }
       if (init?.method === "DELETE") {
         registered = false;
-        return json({ sessionId: "s1", teacherId: "t1", status: "CANCELLED", created: false, seatsLeft: 3 });
+        return json({
+          sessionId: "s1",
+          teacherId: "t1",
+          status: "CANCELLED",
+          created: false,
+          seatsLeft: 3,
+        });
       }
       return json([
         session({
@@ -132,16 +169,29 @@ describe("Training sessions and registration (spec 024 US1)", () => {
       ]);
     });
     renderUi(<UpcomingTrainingPage />);
-    await userEvent.click(await screen.findByRole("button", { name: "Register" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Register" }),
+    );
     expect(await screen.findByText("Registered")).toBeTruthy();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel registration" }));
-    expect(await screen.findByRole("button", { name: "Register" })).toBeTruthy();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Cancel registration" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Register" }),
+    ).toBeTruthy();
   });
 
   it("says when a session is full", async () => {
     access.roles = ["TEACHER"];
     authFetch.mockResolvedValue(
-      json([session({ seatsLeft: 0, registered: 3, actions: [], my: { status: null, open: false } })]),
+      json([
+        session({
+          seatsLeft: 0,
+          registered: 3,
+          actions: [],
+          my: { status: null, open: false },
+        }),
+      ]),
     );
     renderUi(<UpcomingTrainingPage />);
     expect(await screen.findByText("No seats left.")).toBeTruthy();
@@ -151,11 +201,16 @@ describe("Training sessions and registration (spec 024 US1)", () => {
   it("shows the server's refusal when registering fails", async () => {
     access.roles = ["TEACHER"];
     authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (init?.method === "POST") return json({ reason: "No seats left." }, 409);
-      return json([session({ my: { status: null, open: true }, actions: ["REGISTER"] })]);
+      if (init?.method === "POST")
+        return json({ reason: "No seats left." }, 409);
+      return json([
+        session({ my: { status: null, open: true }, actions: ["REGISTER"] }),
+      ]);
     });
     renderUi(<UpcomingTrainingPage />);
-    await userEvent.click(await screen.findByRole("button", { name: "Register" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Register" }),
+    );
     expect(await screen.findByRole("alert")).toBeTruthy();
   });
 });

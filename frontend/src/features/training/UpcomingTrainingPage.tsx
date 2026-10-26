@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { formatDate, formatTime } from "./format";
 import { SessionDetail } from "./SessionDetail";
@@ -36,13 +44,19 @@ export function UpcomingTrainingPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const result = await getSessions(authFetch, { from: isoToday(), to: isoIn(3) });
+    const result = await getSessions(authFetch, {
+      from: isoToday(),
+      to: isoIn(3),
+    });
     setState(
       result.ok
         ? {
             kind: "ready",
             sessions: result.data.filter(
-              (s) => s.my?.status != null || s.my?.open === true || s.seatsLeft === 0,
+              (s) =>
+                s.my?.status != null ||
+                s.my?.open === true ||
+                s.seatsLeft === 0,
             ),
           }
         : { kind: "error", reason: result.reason },
@@ -77,28 +91,60 @@ export function UpcomingTrainingPage() {
         <Typography>No upcoming training for you right now.</Typography>
       )}
       {state.kind === "ready" && (
-        <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
+        <Stack
+          component="ul"
+          spacing={2}
+          sx={{ listStyle: "none", p: 0, m: 0 }}
+        >
           {state.sessions.map((s) => {
             const full = s.seatsLeft === 0 && s.my?.status == null;
             return (
               <li key={s.id}>
-                <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{ alignItems: "center", flexWrap: "wrap" }}
+                >
                   <span>{formatDate(s.date)}</span>
                   <span>{formatTime(s.startsAt)}</span>
                   <strong>{s.topic}</strong>
                   <span>{TYPE_LABELS[s.type]}</span>
-                  {s.my?.status === "REQUIRED" && <Chip size="small" color="warning" label="Required" />}
-                  {s.my?.status === "REGISTERED" && <Chip size="small" color="success" label="Registered" />}
-                  {s.my?.status == null && !full && <Chip size="small" variant="outlined" label="Open" />}
-                  {s.status !== "PUBLISHED" && <Chip size="small" label={STATUS_LABELS[s.status]} />}
-                  {full && <Typography color="text.secondary">No seats left.</Typography>}
+                  {s.my?.status === "REQUIRED" && (
+                    <Chip size="small" color="warning" label="Required" />
+                  )}
+                  {s.my?.status === "REGISTERED" && (
+                    <Chip size="small" color="success" label="Registered" />
+                  )}
+                  {s.my?.status == null && !full && (
+                    <Chip size="small" variant="outlined" label="Open" />
+                  )}
+                  {s.status !== "PUBLISHED" && (
+                    <Chip size="small" label={STATUS_LABELS[s.status]} />
+                  )}
+                  {full && (
+                    <Typography color="text.secondary">
+                      No seats left.
+                    </Typography>
+                  )}
                   {s.actions.includes("REGISTER") && (
-                    <Button size="small" variant="contained" onClick={() => void act(() => registerForSession(authFetch, s.id))}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() =>
+                        void act(() => registerForSession(authFetch, s.id))
+                      }
+                    >
                       Register
                     </Button>
                   )}
                   {s.actions.includes("CANCEL_REGISTRATION") && (
-                    <Button size="small" onClick={() => void act(() => cancelRegistration(authFetch, s.id))}>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        void act(() => cancelRegistration(authFetch, s.id))
+                      }
+                    >
                       Cancel registration
                     </Button>
                   )}
@@ -112,7 +158,11 @@ export function UpcomingTrainingPage() {
         </Stack>
       )}
       {openId && (
-        <SessionDetail sessionId={openId} onChanged={() => void load()} onClose={() => setOpenId(null)} />
+        <SessionDetail
+          sessionId={openId}
+          onChanged={() => void load()}
+          onClose={() => setOpenId(null)}
+        />
       )}
     </Box>
   );

@@ -115,8 +115,8 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 - [X] T027 [US2] Implement `TC/internal/PatternRules.java` (date maths and preview) and `PatternService.java` (create, preview, edit from month, skip and unskip, stop; `ChangeRecorder`). Depends on T006, T019
 - [X] T028 [US2] Implement `TC/internal/GenerationService.java` (idempotent materialisation up to the horizon from `TrainingSettings`, default group snapshot applied through `GroupResolver` from T034 once it exists, otherwise skipped) and `GenerationJob.java` (daily 03:10 in the business zone, `hls.training.generation-job.enabled` switch for tests). Depends on T027
 - [X] T029 [US2] Implement `TC/web/PatternController.java` (patterns, preview, skips, stop). Depends on T027
-- [ ] T030 [US2] Frontend: `FE/PatternDialog.tsx` (rule picker, live preview with clamp and holiday notes, default group, from-month edit, skip and stop dialogs) and a Patterns tab on `TrainingCalendarPage`. Depends on T029
-- [ ] T031 [P] [US2] Frontend test `FE/__tests__/Patterns.test.tsx`: preview rendered, edit-from-month confirmation, skip with reason required
+- [X] T030 [US2] Frontend: `FE/PatternDialog.tsx` (rule picker, live preview with clamp and holiday notes, default group, from-month edit, skip and stop dialogs) and a Patterns tab on `TrainingCalendarPage`. Depends on T029
+- [X] T031 [P] [US2] Frontend test `FE/__tests__/Patterns.test.tsx`: preview rendered, edit-from-month confirmation, skip with reason required
 
 **Checkpoint**: US1 and US2 give the full calendar.
 

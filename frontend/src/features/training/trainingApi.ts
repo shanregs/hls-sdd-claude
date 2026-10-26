@@ -14,11 +14,7 @@ export const UPCOMING_TRAINING_ROUTE = "/my-attendance/training";
 
 export type SessionType = "WEEKEND" | "MONTHLY";
 export type SessionStatus =
-  | "DRAFT"
-  | "PUBLISHED"
-  | "HELD"
-  | "CANCELLED"
-  | "SKIPPED";
+  "DRAFT" | "PUBLISHED" | "HELD" | "CANCELLED" | "SKIPPED";
 
 export const TYPE_LABELS: Record<SessionType, string> = {
   WEEKEND: "Weekend refresher",
@@ -180,7 +176,12 @@ export function updateSession(
   id: string,
   body: SessionBody,
 ) {
-  return sendJson<SessionView>(authFetch, "PUT", `${BASE}/sessions/${id}`, body);
+  return sendJson<SessionView>(
+    authFetch,
+    "PUT",
+    `${BASE}/sessions/${id}`,
+    body,
+  );
 }
 
 export function publishSession(
@@ -211,7 +212,13 @@ export function cancelSession(
 }
 
 export function deleteSession(authFetch: AuthFetch, id: string) {
-  return sendJson(authFetch, "DELETE", `${BASE}/sessions/${id}`, undefined, false);
+  return sendJson(
+    authFetch,
+    "DELETE",
+    `${BASE}/sessions/${id}`,
+    undefined,
+    false,
+  );
 }
 
 export function registerForSession(
@@ -247,5 +254,154 @@ export function getRoster(
     authFetch,
     `${BASE}/sessions/${id}/registrations`,
     "Could not load the registrations.",
+  );
+}
+
+// ------------------------------------------------------------------ patterns (US2)
+
+export type RuleKind = "NTH_WEEKDAY" | "DAY_OF_MONTH";
+
+export interface PatternBody {
+  ruleKind: RuleKind;
+  nth?: number | null;
+  weekday?: number | null;
+  dayOfMonth?: number | null;
+  startsAt: string;
+  endsAt: string;
+  topic: string;
+  trainerName?: string;
+  trainerContact?: string;
+  venueKind: string;
+  venue?: string;
+  description?: string;
+  defaultGroup?: { kind: string; ref?: string | null } | null;
+  startMonth?: string;
+  fromMonth?: string;
+  version?: number;
+}
+
+export interface PatternView {
+  id: string;
+  ruleKind: RuleKind;
+  nth: number | null;
+  weekday: number | null;
+  dayOfMonth: number | null;
+  startsAt: string;
+  endsAt: string;
+  topic: string;
+  trainerName: string | null;
+  trainerContact: string | null;
+  venueKind: string;
+  venue: string | null;
+  description: string | null;
+  defaultGroup: { kind: string; ref: string | null } | null;
+  startMonth: string;
+  endMonth: string | null;
+  active: boolean;
+  version: number;
+  skips: { month: string; reason: string }[];
+}
+
+export interface PreviewRow {
+  month: string;
+  date: string;
+  note: string | null;
+  holidayNotice: boolean;
+}
+
+export function describeRule(p: {
+  ruleKind: RuleKind;
+  nth: number | null;
+  weekday: number | null;
+  dayOfMonth: number | null;
+}): string {
+  if (p.ruleKind === "DAY_OF_MONTH") return `Day ${p.dayOfMonth} of the month`;
+  const nth =
+    p.nth === 5
+      ? "Last"
+      : ["", "First", "Second", "Third", "Fourth"][p.nth ?? 0];
+  const day = WEEKDAYS[(p.weekday ?? 1) - 1];
+  return `${nth} ${day} of the month`;
+}
+
+export const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+export function getPatterns(
+  authFetch: AuthFetch,
+): Promise<ApiResult<PatternView[]>> {
+  return getJson<PatternView[]>(
+    authFetch,
+    `${BASE}/patterns`,
+    "Could not load the patterns.",
+  );
+}
+
+export function previewPattern(authFetch: AuthFetch, body: PatternBody) {
+  return sendJson<PreviewRow[]>(
+    authFetch,
+    "POST",
+    `${BASE}/patterns/preview`,
+    body,
+  );
+}
+
+export function createPattern(authFetch: AuthFetch, body: PatternBody) {
+  return sendJson<PatternView>(authFetch, "POST", `${BASE}/patterns`, body);
+}
+
+export function updatePattern(
+  authFetch: AuthFetch,
+  id: string,
+  body: PatternBody,
+) {
+  return sendJson<PatternView>(
+    authFetch,
+    "PUT",
+    `${BASE}/patterns/${id}`,
+    body,
+  );
+}
+
+export function skipMonth(
+  authFetch: AuthFetch,
+  id: string,
+  month: string,
+  reason: string,
+) {
+  return sendJson<PatternView>(
+    authFetch,
+    "POST",
+    `${BASE}/patterns/${id}/skips`,
+    { month, reason },
+  );
+}
+
+export function unskipMonth(authFetch: AuthFetch, id: string, month: string) {
+  return sendJson<PatternView>(
+    authFetch,
+    "DELETE",
+    `${BASE}/patterns/${id}/skips/${month}`,
+  );
+}
+
+export function stopPattern(
+  authFetch: AuthFetch,
+  id: string,
+  fromMonth: string,
+  version: number,
+) {
+  return sendJson<PatternView>(
+    authFetch,
+    "POST",
+    `${BASE}/patterns/${id}/stop`,
+    { fromMonth, version },
   );
 }

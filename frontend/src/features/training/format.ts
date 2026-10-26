@@ -31,5 +31,8 @@ export function monthTitle(month: string): string {
 export function monthBounds(month: string): { from: string; to: string } {
   const [year, mon] = month.split("-").map(Number);
   const last = new Date(year, mon, 0).getDate();
-  return { from: `${month}-01`, to: `${month}-${String(last).padStart(2, "0")}` };
+  return {
+    from: `${month}-01`,
+    to: `${month}-${String(last).padStart(2, "0")}`,
+  };
 }

@@ -30,15 +30,24 @@ interface Props {
 const HTTPS = /^https:\/\/\S+$/i;
 
 /** Create, edit or move a training session (Admin, Director). Validation mirrors the server so the message appears before saving. */
-export function SessionDialog({ session, move = false, onSaved, onCancel }: Props) {
+export function SessionDialog({
+  session,
+  move = false,
+  onSaved,
+  onCancel,
+}: Props) {
   const { authFetch } = useAuth();
   const [type, setType] = useState<SessionType>(session?.type ?? "WEEKEND");
   const [topic, setTopic] = useState(session?.topic ?? "");
   const [date, setDate] = useState(session?.date ?? "");
-  const [startsAt, setStartsAt] = useState(session?.startsAt?.slice(0, 5) ?? "10:00");
+  const [startsAt, setStartsAt] = useState(
+    session?.startsAt?.slice(0, 5) ?? "10:00",
+  );
   const [endsAt, setEndsAt] = useState(session?.endsAt?.slice(0, 5) ?? "13:00");
   const [trainerName, setTrainerName] = useState(session?.trainerName ?? "");
-  const [trainerContact, setTrainerContact] = useState(session?.trainerContact ?? "");
+  const [trainerContact, setTrainerContact] = useState(
+    session?.trainerContact ?? "",
+  );
   const [venueKind, setVenueKind] = useState(session?.venueKind ?? "PHYSICAL");
   const [venue, setVenue] = useState(session?.venue ?? "");
   const [seatLimit, setSeatLimit] = useState(
@@ -118,7 +127,13 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
       : "Edit this session";
 
   return (
-    <Dialog open onClose={onCancel} fullWidth maxWidth="sm" aria-labelledby="session-dialog-title">
+    <Dialog
+      open
+      onClose={onCancel}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="session-dialog-title"
+    >
       <DialogTitle id="session-dialog-title">{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -182,7 +197,10 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               error={Boolean(errors.reason)}
-              helperText={errors.reason ?? "People registered keep their place and are told."}
+              helperText={
+                errors.reason ??
+                "People registered keep their place and are told."
+              }
               slotProps={{ htmlInput: { maxLength: 300 } }}
               required
             />
@@ -247,7 +265,11 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
           Cancel
         </Button>
         {session ? (
-          <Button variant="contained" onClick={() => void save(false)} disabled={busy}>
+          <Button
+            variant="contained"
+            onClick={() => void save(false)}
+            disabled={busy}
+          >
             Save
           </Button>
         ) : (
@@ -255,7 +277,11 @@ export function SessionDialog({ session, move = false, onSaved, onCancel }: Prop
             <Button onClick={() => void save(false)} disabled={busy}>
               Save as draft
             </Button>
-            <Button variant="contained" onClick={() => void save(true)} disabled={busy}>
+            <Button
+              variant="contained"
+              onClick={() => void save(true)}
+              disabled={busy}
+            >
               Save and publish
             </Button>
           </>
