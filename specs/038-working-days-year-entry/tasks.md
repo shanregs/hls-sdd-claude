@@ -168,3 +168,6 @@ Desktop must be running for the Testcontainers tests (`docker info` first).
 - **Next**: US3 (the per-role matrix and the phone layout checks), then US4 (helpers), then US5 (links and unsaved changes). Each adds value without breaking the earlier ones.
 - US3's server rules are built in Foundation; its phase proves them with the full role matrix, so do not ship the MVP to users without US3's tests passing.
 - Consumer modules (payroll, Manager attendance, rollups) are not touched; they read these figures through the 037 interface.
+
+> Test note (2026-10-26): `YearEntryApiTest` concurrency test re-run alone 4 times, 4 of 4 green; the earlier single failure in a
+> full run did not reproduce. See specs/026-teacher-observation-performance/quickstart-results.md.

@@ -47,3 +47,17 @@ The full run did not finish, so there is no all-green full-suite result.
   test failed). A re-run of that file with a 300 s timeout was started; its result is not recorded here.
 - Quickstart sections 1 to 7 in the running app.
 - Spec 038 `YearEntryApiTest` concurrency failure from the earlier run: not re-checked.
+
+## Follow-up re-runs (branch fix/026-loose-ends, 2026-10-26)
+
+- `LeaveAuditTest` (all 3 tests, including `everyTransitionIsRecordedWithItsReasonForAdmin`) run alone: passes. The earlier 409
+  "not a working day" came from seeded holidays leaking into the shared test database during the full run. `LeaveTestBase.monday()`
+  already skips weeks that contain a holiday, so no test change was needed.
+- Spec 038 `YearEntryApiTest` (22 tests, including the concurrency test) run alone 4 times: 4 of 4 green. The earlier failure did not
+  reproduce; treated as load-related, not a code defect.
+- `src/a11y/a11y.test.tsx` run alone with `--pool=forks`: the per-test timeout is hard-coded to 30 s inside the file, so the
+  `--testTimeout=300000` flag had no effect. First run: 175 of 178 passed (DesignationsPage and HistoryDialog dark mode timed out,
+  SchoolWorkingDaysPage failed with "Axe is already running" as a knock-on of the timeout). The in-file timeout was raised to 120 s;
+  second run: 176 of 178 passed, 2 still timed out (AddCandidateDialog light, AppShell dark) at 120 s. No axe violation was reported in
+  either run. Other worktrees were building at the same time and the run durations were erratic, so the timeouts look
+  environmental. A run on an idle machine is still needed to close this out.
