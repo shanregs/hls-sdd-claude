@@ -42,6 +42,8 @@ import { ExpensesReviewPage } from "./features/expenses/ExpensesReviewPage";
 import { MyExpensesPage } from "./features/expenses/MyExpensesPage";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
+import { ContentDetailPage } from "./features/content/ContentDetailPage";
+import { ContentPage } from "./features/content/ContentPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ManagersPage } from "./features/managers/ManagersPage";
 import { SchoolsPage } from "./features/schools/SchoolsPage";
@@ -511,6 +513,22 @@ export function App() {
           element={
             <RouteGuard>
               <ClaimDetailPage review />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/content"
+          element={
+            <RouteGuard>
+              <ContentPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/content/:id"
+          element={
+            <RouteGuard>
+              <ContentDetailPage />
             </RouteGuard>
           }
         />

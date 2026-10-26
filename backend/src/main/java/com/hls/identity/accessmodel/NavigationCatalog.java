@@ -343,7 +343,7 @@ public final class NavigationCatalog {
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR)),
             new NavItem(
                     "My Content",
-                    "/operations/content/mine",
+                    "/operations/content",
                     PermissionModule.CONTENT,
                     PermissionAction.VIEW,
                     "OPERATIONS",

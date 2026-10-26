@@ -49,7 +49,7 @@
 
 ## R7. Contributor dashboard and menu
 
-- Navigation catalog: OPERATIONS → "My Content" (`/operations/content/mine`) for Manager and Contributor; "Content" (`/operations/content`) for Admin and Director;
+- Navigation catalog: OPERATIONS → "My Content" (`/operations/content`, the same route as "Content" so detail pages share the menu grant) for Manager and Contributor; "Content" (`/operations/content`) for Admin and Director;
   both require View on `CONTENT`. Contributor dashboard: `DashboardRouter` shows `ContributorDashboard` (own content counts by status) from a `/api/v1/content/summary`.
 - Profile, Notifications, Account items: existing items gain the Contributor role in their role sets.
 

@@ -15,6 +15,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.school.api.StaleVersion;
 import com.hls.tasks.api.TaskAssigned;
 import com.hls.tasks.api.TaskCreation;
+import com.hls.tasks.api.TaskProgress;
 import com.hls.tasks.api.TaskType;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -31,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  * change writes the task history and Change History; the server alone decides who may do what.
  */
 @Service
-public class TaskService implements TaskCreation {
+public class TaskService implements TaskCreation, TaskProgress {
 
     public static final int DEFAULT_ESCALATE_DAYS = 3;
     public static final int MAX_EVIDENCE = 5;
@@ -197,6 +198,38 @@ public class TaskService implements TaskCreation {
         task.complete(text, clock.instant());
         recorder.change(task, "COMPLETED", completedByUserId, "status", before, task.getStatus(), text);
         return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean verify(String source, String sourceKey, UUID verifiedByUserId) {
+        Task task = completedBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        task.verify(verifiedByUserId, clock.instant());
+        recorder.change(task, "VERIFIED", verifiedByUserId, "status", TaskStatus.COMPLETED, TaskStatus.VERIFIED, source);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean sendBack(String source, String sourceKey, String reason, UUID sentBackByUserId) {
+        Task task = completedBySource(source, sourceKey);
+        if (task == null) {
+            return false;
+        }
+        String text = required(reason, 3, 500, "The reason");
+        task.sendBack(clock.instant());
+        recorder.change(task, "SENT_BACK", sentBackByUserId, "status", TaskStatus.COMPLETED, TaskStatus.IN_PROGRESS, text);
+        return true;
+    }
+
+    private Task completedBySource(String source, String sourceKey) {
+        if (source == null || source.isBlank() || sourceKey == null || sourceKey.isBlank()) {
+            return null;
+        }
+        return tasks.findFirstBySourceAndSourceKeyAndStatusIn(source.trim(), sourceKey.trim(), java.util.List.of(TaskStatus.COMPLETED)).orElse(null);
     }
 
     @Override

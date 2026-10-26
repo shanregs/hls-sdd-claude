@@ -143,6 +143,7 @@ describe("RolePermissionsGrid (User Story 3, FR-002/FR-004a)", () => {
       "DIRECTOR",
       "MANAGER",
       "TEACHER",
+      "CONTENT_CONTRIBUTOR",
     ]);
     expect(ALL_ROLES).toEqual(groups);
   });

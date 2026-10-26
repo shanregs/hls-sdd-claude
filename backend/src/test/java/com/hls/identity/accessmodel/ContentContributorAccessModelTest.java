@@ -87,7 +87,7 @@ class ContentContributorAccessModelTest extends IntegrationTestBase {
     @Test
     void contributorMenuHasOnlyItsItems() {
         String body = accessModel(signInAs(Role.CONTENT_CONTRIBUTOR));
-        assertThat(body).contains("CONTENT_CONTRIBUTOR").contains("My Content").contains("/operations/content/mine");
+        assertThat(body).contains("CONTENT_CONTRIBUTOR").contains("My Content").contains("/operations/content");
         assertThat(body).contains("\"CONTENT\":\"OWN\"");
         assertThat(body)
                 .doesNotContain("My Tasks")

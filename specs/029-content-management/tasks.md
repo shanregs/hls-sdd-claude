@@ -28,28 +28,28 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 
 ## Phase 3: Lifecycle (US1, US2, US4)
 
-- [ ] T015 [US1] Entities and repositories: Content, ContentVersion, ContentReview, ContentHistory, status enum.
-- [ ] T016 [US1] `ContentService`: create (self or for another author; author must hold Create), edit, submit version (file required, numbered, status), history and Change History on every step.
-- [ ] T017 [US2] `ContentService`: approve and return (Approve; not author or submitter; comment required for return); resubmission after Approved keeps `last_approved_version`.
-- [ ] T018 [US2] `ReviewerResolver` and `ContentNoReviewer` event, once per version.
-- [ ] T019 [US1] File removal by Admin or Director with reason; downloads streamed as attachments gated by visibility.
+- [x] T015 [US1] Entities and repositories: Content, ContentVersion, ContentReview, ContentHistory, status enum.
+- [x] T016 [US1] `ContentService`: create (self or for another author; author must hold Create), edit, submit version (file required, numbered, status), history and Change History on every step.
+- [x] T017 [US2] `ContentService`: approve and return (Approve; not author or submitter; comment required for return); resubmission after Approved keeps `last_approved_version`.
+- [x] T018 [US2] `ReviewerResolver` and `ContentNoReviewer` event, once per version.
+- [x] T019 [US1] File removal by Admin or Director with reason; downloads streamed as attachments gated by visibility.
 - [ ] T020 [US1] 025 amendment: `tasks.api.TaskProgress` (complete with note, verify, send back by source and source key); `ContentTaskBridge` creates the task only for active Manager authors with a due date and drives its status; regression tests in `tasks` for the new interface.
-- [ ] T021 `ContentController` per contracts/content-api.md with a grant check on every endpoint.
-- [ ] T022 [P] Tests: lifecycle API; no file refused; version immutability; self-review refused for author and for submitter; Director-authored content not approvable by the Director; no-reviewer notice once; task created/not created cases; stale-version 409; per-role authorization for every endpoint across six roles; visibility (other users get 404).
+- [x] T021 `ContentController` per contracts/content-api.md with a grant check on every endpoint.
+- [x] T022 [P] Tests: lifecycle API; no file refused; version immutability; self-review refused for author and for submitter; Director-authored content not approvable by the Director; no-reviewer notice once; task created/not created cases; stale-version 409; per-role authorization for every endpoint across six roles; visibility (other users get 404).
 
 ## Phase 4: Lists, dashboard, notifications (US3)
 
-- [ ] T023 [US3] `ContentQueryService`: list filters, summary, scope predicate (authored or submitted), overdue only where a due date exists.
+- [x] T023 [US3] `ContentQueryService`: list filters, summary, scope predicate (authored or submitted), overdue only where a due date exists.
 - [ ] T024 [US3] `ContentTiles` (TileSource) and approvals-inbox source for submitted content; permission-gated like the other tiles.
-- [ ] T025 `ContentEventListener` and `MessageFactory` texts for the five notification types; recipients per contracts/module-interfaces.md.
+- [x] T025 `ContentEventListener` and `MessageFactory` texts for the five notification types; recipients per contracts/module-interfaces.md.
 - [ ] T026 [P] Tests: filters, scope, tile counts, inbox item, notification recipients and content.
-- [ ] T027 ArchUnit: only `notification` and `reporting` read `content.api`; `content` depends on `files.api`, `tasks.api`, `organization.api` only through published APIs.
+- [x] T027 ArchUnit: only `notification` and `reporting` read `content.api`; `content` depends on `files.api`, `tasks.api`, `organization.api` only through published APIs.
 
 ## Phase 5: Frontend (US1 to US5)
 
-- [ ] T028 `frontend/src/features/content`: `contentApi`, My Content / Content list with filters, detail page (versions, reviews, history, comments), create dialog, submit-version dialog with type/limit hints and progress for large files, review actions, file removal.
+- [x] T028 `frontend/src/features/content`: `contentApi`, My Content / Content list with filters, detail page (versions, reviews, history, comments), create dialog, submit-version dialog with type/limit hints and progress for large files, review actions, file removal.
 - [ ] T029 [US5] `DashboardRouter` + `ContributorDashboard` (own content counts); role types; user dialogs and `userManagementApi` list the sixth role; `RolePermissionsGrid` shows six columns; a11y tests include the Contributor.
-- [ ] T030 [P] Frontend tests: menu per role (hidden, not disabled), Contributor sees only its items, refused type/size messages, review buttons hidden for author, five-role snapshots unchanged.
+- [x] T030 [P] Frontend tests: menu per role (hidden, not disabled), Contributor sees only its items, refused type/size messages, review buttons hidden for author, five-role snapshots unchanged.
 
 ## Phase 6: Demo data, docs, walkthrough
 

@@ -68,6 +68,42 @@ public final class MessageFactory {
                 "/marketing/prospects/" + prospectId);
     }
 
+    public static Text contentAssigned(String title, LocalDate dueOn, UUID contentId) {
+        String due = dueOn == null ? "" : ", due " + date(dueOn);
+        return new Text(
+                shorten("New content: " + title, MAX_TITLE),
+                shorten("You were asked to prepare the content \"" + title + "\"" + due + ".", MAX_MESSAGE),
+                "/operations/content/" + contentId);
+    }
+
+    public static Text contentSubmitted(String title, int version, String author, UUID contentId) {
+        return new Text(
+                shorten("Content to review: " + title, MAX_TITLE),
+                shorten(author + " submitted version " + version + " of \"" + title + "\" for review.", MAX_MESSAGE),
+                "/operations/content/" + contentId);
+    }
+
+    public static Text contentApproved(String title, int version, UUID contentId) {
+        return new Text(
+                shorten("Content approved: " + title, MAX_TITLE),
+                shorten("Version " + version + " of \"" + title + "\" was approved.", MAX_MESSAGE),
+                "/operations/content/" + contentId);
+    }
+
+    public static Text contentReturned(String title, int version, String comment, UUID contentId) {
+        return new Text(
+                shorten("Content returned: " + title, MAX_TITLE),
+                shorten("Version " + version + " of \"" + title + "\" needs changes: " + comment, MAX_MESSAGE),
+                "/operations/content/" + contentId);
+    }
+
+    public static Text contentNoReviewer(String title, int version, UUID contentId) {
+        return new Text(
+                shorten("No reviewer for: " + title, MAX_TITLE),
+                shorten("Version " + version + " of \"" + title + "\" is waiting, but nobody else can approve it. Grant Approve on Content to a reviewer.", MAX_MESSAGE),
+                "/operations/content/" + contentId);
+    }
+
     public static Text taskAssigned(String title, LocalDate dueOn, UUID taskId) {
         return new Text(
                 shorten("New task: " + title, MAX_TITLE),
