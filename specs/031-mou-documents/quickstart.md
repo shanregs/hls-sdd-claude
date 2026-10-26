@@ -62,3 +62,15 @@ interfaces: [contracts/module-interfaces.md](contracts/module-interfaces.md); ta
   plus `ModulithVerificationTest`, the permission eligibility and seed tests, `AuditVisibility` tests, and the V100 migration
   test (backfill, trigger).
 - Frontend: `npm test -- schoolbilling` in `frontend/`.
+
+## Test results (2026-10-26)
+
+- Frontend: `tsc -b` clean; `vite build` passes; `vitest run` 107 of 107 files pass. `npm run lint`: 1 error, in
+  `features/dashboard/InboxPanel.tsx` (set-state-in-effect, from spec 028, not this feature) and 6 warnings, none in 031 files.
+  The "shows a loading message first" test in `MouApprovalsPage.test.tsx` used a never-settling promise; it now settles it.
+- Backend (`mvn -o test`, Docker up): 2038 tests. The first full run, on a machine heavily loaded by other worktrees, had 5
+  failures and 24 errors (context-load and timeout failures). Rerun alone, DevSeedTest, LeaveDecisionTest, DashboardEndpointsTest,
+  InboxServiceTest, MouListApiTest, MouRegressionTest and TeacherFirstAssignedTest all pass. Still failing alone:
+  `LeaveAuditTest.everyTransitionIsRecordedWithItsReasonForAdmin` ("None of these dates is a working day for you."), a leave-module
+  test this feature does not touch; not yet confirmed against main.
+- Manual walkthrough (T056) not done: needs a person on the running app.

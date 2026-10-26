@@ -106,10 +106,13 @@ describe("MouApprovalsPage (spec 031 US3)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Boom");
   });
 
-  it("shows a loading message first", () => {
-    authFetch.mockReturnValue(new Promise(() => undefined));
+  it("shows a loading message first", async () => {
+    let release: (value: unknown) => void = () => undefined;
+    authFetch.mockReturnValue(new Promise((resolve) => (release = resolve)));
     renderPage();
 
     expect(screen.getByRole("status")).toHaveTextContent("Loading approvals...");
+    release(page([]));
+    expect(await screen.findByText("No MoU is waiting for approval.")).toBeInTheDocument();
   });
 });
