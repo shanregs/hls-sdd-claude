@@ -55,7 +55,13 @@ export function ReasonDialog({
   }
 
   return (
-    <Dialog open onClose={onCancel} aria-labelledby="reason-title" fullWidth maxWidth="sm">
+    <Dialog
+      open
+      onClose={onCancel}
+      aria-labelledby="reason-title"
+      fullWidth
+      maxWidth="sm"
+    >
       <DialogTitle id="reason-title">{title}</DialogTitle>
       <DialogContent>
         {intro && <DialogContentText sx={{ mb: 2 }}>{intro}</DialogContentText>}
@@ -147,13 +153,17 @@ export function DecisionDialog({
           </Alert>
         )}
         <DialogContentText>
-          Approve the claim of {claim.claimantName} for the amount shown. A claim the claimant paid is then offered to their
-          next pay run.
+          Approve the claim of {claim.claimantName} for the amount shown. A
+          claim the claimant paid is then offered to their next pay run.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button variant="contained" onClick={() => void approve()} disabled={busy}>
+        <Button
+          variant="contained"
+          onClick={() => void approve()}
+          disabled={busy}
+        >
           Approve
         </Button>
       </DialogActions>

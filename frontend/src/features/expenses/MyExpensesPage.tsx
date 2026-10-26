@@ -63,18 +63,29 @@ export function MyExpensesPage() {
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
-        sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mb: 2 }}
+        sx={{
+          alignItems: { sm: "center" },
+          justifyContent: "space-between",
+          mb: 2,
+        }}
       >
         <Typography variant="h5" component="h1">
           My Expenses
         </Typography>
-        <Button variant="contained" component={RouterLink} to={`${MY_EXPENSES_ROUTE}/new`}>
+        <Button
+          variant="contained"
+          component={RouterLink}
+          to={`${MY_EXPENSES_ROUTE}/new`}
+        >
           New claim
         </Button>
       </Stack>
 
       {state.kind === "ready" && (
-        <Alert severity={Number(state.owed) > 0 ? "info" : "success"} sx={{ mb: 2 }}>
+        <Alert
+          severity={Number(state.owed) > 0 ? "info" : "success"}
+          sx={{ mb: 2 }}
+        >
           {Number(state.owed) > 0
             ? `You are still owed ${formatRupees(Number(state.owed))} for approved claims.`
             : "Nothing is owed to you right now."}
@@ -112,7 +123,9 @@ export function MyExpensesPage() {
       )}
       {state.kind === "error" && <Alert severity="error">{state.reason}</Alert>}
       {state.kind === "ready" && state.rows.length === 0 && (
-        <Typography>You have no claims{status || month ? " for these filters" : " yet"}.</Typography>
+        <Typography>
+          You have no claims{status || month ? " for these filters" : " yet"}.
+        </Typography>
       )}
       {state.kind === "ready" && state.rows.length > 0 && (
         <TableContainer>
@@ -131,17 +144,28 @@ export function MyExpensesPage() {
               {state.rows.map((row) => (
                 <TableRow key={row.id} hover>
                   <TableCell>
-                    <Link component={RouterLink} to={`${MY_EXPENSES_ROUTE}/${row.id}`}>
+                    <Link
+                      component={RouterLink}
+                      to={`${MY_EXPENSES_ROUTE}/${row.id}`}
+                    >
                       {formatDate(row.expenseDate)}
                     </Link>
                   </TableCell>
                   <TableCell>{row.categoryLabel}</TableCell>
                   <TableCell>{row.areaName}</TableCell>
-                  <TableCell align="right">{formatRupees(Number(row.amount))}</TableCell>
+                  <TableCell align="right">
+                    {formatRupees(Number(row.amount))}
+                  </TableCell>
                   <TableCell>
                     <Chip size="small" label={row.statusLabel} />
                   </TableCell>
-                  <TableCell>{row.billCount > 0 ? row.billCount : row.noBillReason ? "No bill" : "None"}</TableCell>
+                  <TableCell>
+                    {row.billCount > 0
+                      ? row.billCount
+                      : row.noBillReason
+                        ? "No bill"
+                        : "None"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

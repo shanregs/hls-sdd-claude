@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { Alert, Box, CircularProgress, Link, Paper, Stack, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Link,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import { formatDate, formatRupees, todayIso } from "../teachers/formatters";
 import {
@@ -127,16 +136,20 @@ function Measure({
         {title}
       </Typography>
       <Typography variant="h4" component="p" sx={{ my: 1 }}>
-        {measure.state === emptyState || measure.perUnit === null ? emptyText : formatRupees(Number(measure.perUnit))}
+        {measure.state === emptyState || measure.perUnit === null
+          ? emptyText
+          : formatRupees(Number(measure.perUnit))}
       </Typography>
       <Typography>
-        Underlying cost {formatRupees(Number(measure.cost))}; {unit}: {measure.divisor}.
+        Underlying cost {formatRupees(Number(measure.cost))}; {unit}:{" "}
+        {measure.divisor}.
       </Typography>
       {measure.claims.length > 0 && (
         <ul aria-label={`Claims behind ${title}`}>
           {measure.claims.map((c) => (
             <li key={c.id}>
-              {c.claimantName}, {c.categoryLabel}, {formatDate(c.expenseDate)}: {formatRupees(Number(c.amount))}
+              {c.claimantName}, {c.categoryLabel}, {formatDate(c.expenseDate)}:{" "}
+              {formatRupees(Number(c.amount))}
             </li>
           ))}
         </ul>

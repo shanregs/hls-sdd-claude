@@ -58,7 +58,13 @@ export function RecordPaidDialog({ onRecord, onDone, onCancel }: Props) {
   }
 
   return (
-    <Dialog open onClose={onCancel} aria-labelledby="paid-title" fullWidth maxWidth="sm">
+    <Dialog
+      open
+      onClose={onCancel}
+      aria-labelledby="paid-title"
+      fullWidth
+      maxWidth="sm"
+    >
       <DialogTitle id="paid-title">Record as paid outside payroll</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
@@ -76,7 +82,10 @@ export function RecordPaidDialog({ onRecord, onDone, onCancel }: Props) {
             value={paidOn}
             onChange={(e) => setPaidOn(e.target.value)}
             required
-            slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: todayIso() } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { max: todayIso() },
+            }}
           />
           <TextField
             select

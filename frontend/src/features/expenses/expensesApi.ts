@@ -30,12 +30,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 };
 
 export type ClaimStatus =
-  | "DRAFT"
-  | "SUBMITTED"
-  | "APPROVED"
-  | "REJECTED"
-  | "PAID"
-  | "PAID_BY_COMPANY";
+  "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "PAID" | "PAID_BY_COMPANY";
 
 export const STATUS_LABELS: Record<ClaimStatus, string> = {
   DRAFT: "Draft",
@@ -59,11 +54,7 @@ export type AllowedAction =
   | "REMOVE_BILL";
 
 export type PayrollState =
-  | "NONE"
-  | "WAITING"
-  | "HELD_BY_DRAFT"
-  | "HELD_AWAITING_APPROVAL"
-  | "APPLIED";
+  "NONE" | "WAITING" | "HELD_BY_DRAFT" | "HELD_AWAITING_APPROVAL" | "APPLIED";
 
 export const PAYROLL_STATE_TEXT: Record<PayrollState, string> = {
   NONE: "Not with payroll",
@@ -226,7 +217,10 @@ export const MAX_BILL_BYTES = 10 * 1024 * 1024;
 export const BILL_EXTENSIONS = ["jpg", "jpeg", "png", "pdf"];
 
 /** The reason a bill is refused before it is sent, or null when it looks fine. */
-export function billProblem(file: { name: string; size: number }): string | null {
+export function billProblem(file: {
+  name: string;
+  size: number;
+}): string | null {
   const dot = file.name.lastIndexOf(".");
   const extension = dot < 0 ? "" : file.name.slice(dot + 1).toLowerCase();
   if (!BILL_EXTENSIONS.includes(extension)) {

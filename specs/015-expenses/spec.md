@@ -453,5 +453,9 @@ Items marked "to confirm in /speckit-clarify" are defaults chosen because no one
 
 ## Amended by 024
 
-Optional (spec 024 task T-015, not built): a Training Stay claim could link to a training session through a small
-`training.api.TrainingSessions` read in `LinkResolver`. Left undone on purpose; it is offered only if the user asks.
+A Training Stay claim may now link to a training session as well as an induction batch (spec 024 task T-015, done at the
+user's request). `training.api.TrainingSessions` (`between`, `session`: Published and Held sessions only) is read by
+`LinkResolver`; the new link kind is `TRAINING_SESSION`, offered with the batches in the Training Stay options and refused for
+every other category. The link is stored as kind, id, date and label like the others, so it survives a cancelled session.
+Travel and Fuel links, batch links and the cost-per-School measure are unchanged. Tests: `ClaimTrainingSessionLinkTest`, a
+Training Stay case in the My Expenses frontend tests; `ClaimLinkTest` and `CostMeasureTest` pass unchanged.

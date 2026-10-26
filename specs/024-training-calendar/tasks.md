@@ -221,7 +221,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 - [X] T063 [US7] Create `B/attendance/api/ManagerTrainingDays.java` (contract section 3), its implementation `TC/internal/ManagerTrainingDaysImpl.java`, and add training sessions to `B/attendance/manager/internal/PlannedActivities.java` `forDay` through the port (kind `TRAINING`); extend the 032 Field day link tests so a Manager sees an assigned session as a choice and every existing link test passes unchanged. Reading `attendedDays` into Manager pay is NOT part of this task (T080). Depends on T061
 - [X] T064 [US7] Implement `TC/internal/ReminderJob.java` (daily 07:30 in the business zone, `training_reminder_sent` keys, settings offsets, events) and `TC/web/MyTrainingController.java` (`/me/upcoming`). Depends on T034, T012
 - [X] T065 [US7] Frontend: Required and Open labels, reminders-free list in `UpcomingTrainingPage` and the Manager "My Training" upcoming list; extend the 035 calendar link test for Training. Depends on T064
-- [ ] T066 [P] [US7] Optional separate task **T-015** (do only if the user asks): offer training sessions as a link for a Training Stay claim in `B/expenses/internal/LinkResolver.java` and `LinkKinds` through a small `training.api.TrainingSessions` read; otherwise leave undone and say so in the walkthrough
+- [X] T066 [P] [US7] Optional separate task **T-015** (do only if the user asks): offer training sessions as a link for a Training Stay claim in `B/expenses/internal/LinkResolver.java` and `LinkKinds` through a small `training.api.TrainingSessions` read; otherwise leave undone and say so in the walkthrough **Done at the user's request.**
 
 ---
 
