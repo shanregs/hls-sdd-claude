@@ -1,7 +1,7 @@
 # Clarification Questions: Manager Incentives (030)
 
-Written 2026-10-27 for the user. These were not answered by anyone; the spec uses the recommended default for each
-(see Assumptions in `spec.md`). Reply with e.g. "Q1: A, Q2: B" and the spec will be updated.
+**ANSWERED 2026-10-27: the user chose "defaults", that is option A for Q1 to Q5.** The answers are recorded in the
+Clarifications section of `spec.md`. The questions are kept below for history.
 
 ## Q1. Who earns the incentive when the prospect's owner is not a Manager?
 

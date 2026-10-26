@@ -8,6 +8,18 @@
 
 **Input**: User description: "030-manager-incentives: A Manager earns Rs 5,000 for each School they closed. The incentive is created when the School's signed MoU is recorded and approved (decision D9, spec 031), goes to the owner of the prospect that became the School (spec 023), is approved by the Director or the School's Zone Manager (decision D5; a Manager may approve an incentive they earned, and the audit trail records who approved), and is paid by being added to that month's Manager payroll (spec 013b). Full input: docs/spec-inputs/030-manager-incentives.md."
 
+## Clarifications
+
+### Session 2026-10-27
+
+The user answered "defaults" for all five questions in `clarification-questions.md`, so each recommended option (A) is decided.
+
+- Q: Who earns when the prospect's owner is not a Manager? -> A: Only an owner who is a payroll Manager earns. Otherwise no incentive is made and the School is listed as "no earner" with the reason.
+- Q: Which payroll month pays it? -> A: The next run that includes the Manager after the incentive is approved (usually the month of approval), the rule 013b already uses for waiting adjustments.
+- Q: Is the amount always Rs 5,000? -> A: One amount for every School, kept as a setting (default Rs 5,000) and frozen on each incentive. No per-incentive change, no thresholds.
+- Q: What if the MoU is rejected or sent back to pending after the incentive is approved? -> A: Hold the incentive (no run takes it) until the MoU is approved again. After payment it is never taken back automatically; the Admin uses a Correction adjustment in payroll.
+- Q: Do MoUs approved before go-live earn? -> A: No. Only MoUs approved after go-live earn. A MoU shown as "approved (before approval step)" has no approval date and is listed as "excluded, approved before the approval step"; it never earns.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Incentive is earned when the MoU is approved (Priority: P1)
@@ -174,7 +186,7 @@ If the MoU stops counting as approved (rejected, or sent back to pending by a do
 
 ## Assumptions
 
-Defaults used where the sources are silent. Each open choice is listed with options in `clarification-questions.md`; these defaults stand until the user answers.
+Decided on 2026-10-27 (see Clarifications): the user chose the recommended default for each of the five questions in `clarification-questions.md`. The points below that are not in Clarifications are planning defaults.
 
 - Specs 012, 023, 031 and 013b are merged. 030 reads MoU approval through the `MouApprovals` interface and the `MouDecided` event (031), the owner through `ProspectOwners` (023), and pays through payroll's adjustment mechanism with the kind Incentive that 013b reserved. Opening that kind to this spec needs a small additive amendment to 013b (an intake like the one spec 015 added for reimbursements); no existing pay behaviour changes.
 - Closure date means the date the MoU was approved. The incentive is earned once per School, ever.
