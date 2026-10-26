@@ -1,0 +1,14 @@
+$kind: http-request
+name: Return Content
+description: "Returns the current version to the author for revision; a comment is required. Needs CONTENT.APPROVE."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}/return"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "comment": "The audio is too quiet in the second half"
+    }
+order: 7000

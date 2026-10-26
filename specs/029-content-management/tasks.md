@@ -6,7 +6,7 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 ## Phase 0: Constitution and documents
 
 - [ ] T001 Constitution 3.0.0 (MAJOR, six roles) decided by the owner 2026-10-26: remove the word PROPOSED from the Sync Impact Report and the version line in `.specify/memory/constitution.md` when this spec is implemented; bring the Default role access matrix and Principles II to IV into line (text drafted).
-- [ ] T002 [P] Doc notes: roadmap row 029 and role count in `docs/spec-roadmap.md`; "five roles" wording in specs 002 and 004 spec.md (amendment note, not a rewrite); running docs.
+- [x] T002 [P] Doc notes: roadmap row 029 and role count in `docs/spec-roadmap.md`; "five roles" wording in specs 002 and 004 spec.md (amendment note, not a rewrite); running docs.
 
 ## Phase 1: Sixth role in identity (US5)
 
@@ -33,28 +33,28 @@ US5 Content Contributor role. [P] = can run in parallel (different files).
 - [x] T017 [US2] `ContentService`: approve and return (Approve; not author or submitter; comment required for return); resubmission after Approved keeps `last_approved_version`.
 - [x] T018 [US2] `ReviewerResolver` and `ContentNoReviewer` event, once per version.
 - [x] T019 [US1] File removal by Admin or Director with reason; downloads streamed as attachments gated by visibility.
-- [ ] T020 [US1] 025 amendment: `tasks.api.TaskProgress` (complete with note, verify, send back by source and source key); `ContentTaskBridge` creates the task only for active Manager authors with a due date and drives its status; regression tests in `tasks` for the new interface.
+- [x] T020 [US1] 025 amendment: `tasks.api.TaskProgress` (complete with note, verify, send back by source and source key); `ContentTaskBridge` creates the task only for active Manager authors with a due date and drives its status; regression tests in `tasks` for the new interface.
 - [x] T021 `ContentController` per contracts/content-api.md with a grant check on every endpoint.
 - [x] T022 [P] Tests: lifecycle API; no file refused; version immutability; self-review refused for author and for submitter; Director-authored content not approvable by the Director; no-reviewer notice once; task created/not created cases; stale-version 409; per-role authorization for every endpoint across six roles; visibility (other users get 404).
 
 ## Phase 4: Lists, dashboard, notifications (US3)
 
 - [x] T023 [US3] `ContentQueryService`: list filters, summary, scope predicate (authored or submitted), overdue only where a due date exists.
-- [ ] T024 [US3] `ContentTiles` (TileSource) and approvals-inbox source for submitted content; permission-gated like the other tiles.
+- [x] T024 [US3] `ContentTiles` (TileSource) and approvals-inbox source for submitted content; permission-gated like the other tiles.
 - [x] T025 `ContentEventListener` and `MessageFactory` texts for the five notification types; recipients per contracts/module-interfaces.md.
-- [ ] T026 [P] Tests: filters, scope, tile counts, inbox item, notification recipients and content.
+- [x] T026 [P] Tests: filters, scope, tile counts, inbox item, notification recipients and content.
 - [x] T027 ArchUnit: only `notification` and `reporting` read `content.api`; `content` depends on `files.api`, `tasks.api`, `organization.api` only through published APIs.
 
 ## Phase 5: Frontend (US1 to US5)
 
 - [x] T028 `frontend/src/features/content`: `contentApi`, My Content / Content list with filters, detail page (versions, reviews, history, comments), create dialog, submit-version dialog with type/limit hints and progress for large files, review actions, file removal.
-- [ ] T029 [US5] `DashboardRouter` + `ContributorDashboard` (own content counts); role types; user dialogs and `userManagementApi` list the sixth role; `RolePermissionsGrid` shows six columns; a11y tests include the Contributor.
+- [x] T029 [US5] `DashboardRouter` + `ContributorDashboard` (own content counts); role types; user dialogs and `userManagementApi` list the sixth role; `RolePermissionsGrid` shows six columns; a11y tests include the Contributor.
 - [x] T030 [P] Frontend tests: menu per role (hidden, not disabled), Contributor sees only its items, refused type/size messages, review buttons hidden for author, five-role snapshots unchanged.
 
 ## Phase 6: Demo data, docs, walkthrough
 
-- [ ] T031 `ContentDevSeeder`: a Contributor user, content in every status, sample small files; `DevDataSeeder` adds the Contributor.
-- [ ] T032 [P] Postman requests for the content API; update `docs/spec-roadmap.md` row 029 status and the constitution default matrix (already drafted).
+- [x] T031 `ContentDevSeeder`: a Contributor user, content in every status, sample small files; `DevDataSeeder` adds the Contributor.
+- [x] T032 [P] Postman requests for the content API; update `docs/spec-roadmap.md` row 029 status and the constitution default matrix (already drafted).
 - [ ] T033 Run backend and frontend suites; walk through `quickstart.md`; record results in `quickstart-results.md`.
 
 ## Dependencies

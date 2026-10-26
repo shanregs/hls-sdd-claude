@@ -1,0 +1,3 @@
+$kind: collection
+description: "Content management (spec 029): create content for an author, submit numbered versions with a file (mp4, mp3, m4a, wav up to their limits; pdf, docx, xlsx up to 25 MB), review (approve or return with a comment), remove a file. Needs the CONTENT module: Admin, Manager and Content Contributor View, Create, Edit; the Director also Approve (Admin can be granted it). Teacher and System get 403 on every endpoint. A Manager or Content Contributor sees only content they authored or submitted (others get 404). Collection variables: contentId, authorUserId."
+order: 29000

@@ -45,13 +45,14 @@ public class DevDataSeeder implements ApplicationRunner {
                 "manoj.manager@example.com");
         seed("Tara Teacher", "9800000004", Set.of(Role.TEACHER), "Password123!", null, null);
         seed("Sunil System", "9800000005", Set.of(Role.SYSTEM), "Password123!", "sunil.system", null);
+        seed("Cora Contributor", "9800000006", Set.of(Role.CONTENT_CONTRIBUTOR), "Password123!", "cora.contributor", null);
 
         log.info(
                 "[DEV SEED] Demo users ready. Try: 9800000001/Password123! (Admin, phone+password), "
                         + "asha.admin/Password123! (Admin, username+password, has email for reset-by-email), "
                         + "9800000002/Password123! (Director), 9800000003 or manoj.manager/Password123! (Manager, "
                         + "has email), 9800000004/Password123! (Teacher; a one-time code also works for every user), 9800000005 or "
-                        + "sunil.system/Password123! (System).");
+                        + "sunil.system/Password123! (System), 9800000006 or cora.contributor/Password123! (Content Contributor).");
     }
 
     private void seed(String name, String phone, Set<Role> roles, String password, String username, String email) {

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Accepted File Types
+description: "The accepted file types and the largest size of each, in bytes. Needs CONTENT.VIEW."
+url: "{{baseUrl}}/api/v1/content/limits"
+method: GET
+order: 9000

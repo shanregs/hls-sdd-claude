@@ -299,3 +299,7 @@ Constitution's default role access matrix row for User Management.
   every request checks that the token's session (`sid`) is still active and the user is active.
 - An admin-set password does not force the user to change it at next sign-in in this spec; revisit
   if policy requires it.
+
+## Amended by 029
+
+Spec 029 (Content Management) adds a sixth fixed role, **Content Contributor** (Constitution 3.0.0). Wherever this spec says "the five fixed roles", read six: the role picker and the access model list the new role, its menu is Dashboard, My Content, Notifications and Account, and it has no mobile sign-in. No other behaviour of this spec changes.

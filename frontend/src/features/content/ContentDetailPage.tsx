@@ -69,6 +69,7 @@ export function ContentDetailPage() {
   }, [authFetch, id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial and filter-driven fetch
     void load();
   }, [load]);
 

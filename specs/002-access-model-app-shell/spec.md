@@ -353,3 +353,7 @@ phone width, with no horizontal page scroll at any width.
 - Dependencies: depends on 001-identity-access for the signed-in identity and roles. Specs 003
   (audit trail for matrix changes), 004 (screens for user and role management), and 005 onward
   (business menus, actions, and dashboard widgets) depend on this spec.
+
+## Amended by 029
+
+Spec 029 (Content Management) adds a sixth fixed role, **Content Contributor** (Constitution 3.0.0). Wherever this spec says "the five fixed roles", read six: the role picker and the access model list the new role, its menu is Dashboard, My Content, Notifications and Account, and it has no mobile sign-in. No other behaviour of this spec changes.

@@ -1,0 +1,11 @@
+$kind: http-request
+name: Approve Content
+description: "Approves the current version (Submitted to Approved). The author and the submitter of that version can never approve it, even with Approve. Needs CONTENT.APPROVE (Director by default)."
+url: "{{baseUrl}}/api/v1/content/{{contentId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{}"
+order: 6000
