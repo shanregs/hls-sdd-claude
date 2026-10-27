@@ -50,6 +50,9 @@ class ManagerComparisonTest extends TaskTestBase {
         assertThat(cell(rows.get(0), overdue)).isEqualTo(2);
         assertThat(cell(rows.get(1), overdue)).isEqualTo(0);
         assertThat(resp.body()).contains("Visits missed", "Schools won", "Days with no check-in", "Awaiting verification", "Escalated");
+        // spec 014c T015: the columns added by A6, A7 and A8 appear; the values above did not change
+        assertThat(resp.body()).contains("Tasks assigned", "Tasks completed", "Activities planned", "Activities done", "Activities missed",
+                "Activities rescheduled", "Visits done", "Schools won in month");
         assertThat(resp.body()).contains("assigneeUserId").contains(one.signed().userId().toString());
 
         Resp asc = get(URL + "?zoneId=" + zone + "&sort=tasks.overdue&dir=asc", admin);

@@ -33,7 +33,7 @@
 - [X] T013a Test A7: planned, done, missed, rescheduled equal `CalendarSummary.byManager` for the month
 - [X] T014 [P] A8 (023) `marketing.visitsDone`, `marketing.wonInMonth` on `MarketingManagerColumns`
 - [X] T014a Test A8: counts for a seeded month; `marketing.visitsMissed` and `marketing.won` unchanged
-- [ ] T015 Dashboard comparison regression: the new columns appear and existing column values are unchanged (028 tests)
+- [X] T015 Dashboard comparison regression: the new columns appear and existing column values are unchanged (028 tests)
 
 ## Phase 3: US1 Manager productivity (P1) MVP
 
