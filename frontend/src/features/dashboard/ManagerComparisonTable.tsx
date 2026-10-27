@@ -49,8 +49,21 @@ export function ManagerComparisonTable({ table }: { table: TileTable }) {
   }
 
   return (
-    <TableContainer sx={{ overflowX: "auto", maxWidth: "100%" }}>
-      <Table size="small" aria-label="Managers compared">
+    <TableContainer sx={{ overflowX: "auto", maxWidth: "100%", mt: 1 }}>
+      <Table
+        size="small"
+        aria-label="Managers compared"
+        sx={{
+          "& th, & td": { whiteSpace: "nowrap" },
+          // Keep the Manager's name in view while the figures scroll.
+          "& th:first-of-type, & td:first-of-type": {
+            position: "sticky",
+            left: 0,
+            zIndex: 1,
+            bgcolor: "background.paper",
+          },
+        }}
+      >
         <TableHead>
           <TableRow>
             {table.columns.map((label, index) => (
