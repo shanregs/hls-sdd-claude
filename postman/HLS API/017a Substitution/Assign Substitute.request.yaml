@@ -1,0 +1,20 @@
+$kind: http-request
+name: Assign Substitute
+description: "Needs Edit. Assign or reassign. 409 for a stale version or an unavailable Teacher."
+url: "{{baseUrl}}/api/v1/substitutions/{{substitutionId}}/assign"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "substituteTeacherId": "{{substituteTeacherId}}",
+      "note": "Covering the day",
+      "version": {{substitutionVersion}}
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('substitutionId', j.id); pm.collectionVariables.set('substitutionVersion', j.version); }"
+    language: text/javascript
+order: 4000

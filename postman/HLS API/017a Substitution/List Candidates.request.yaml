@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Candidates
+description: "Every active Teacher but the absent one, with available and reason."
+url: "{{baseUrl}}/api/v1/substitutions/{{substitutionId}}/candidates"
+method: GET
+order: 3000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Clear Principal Confirmation
+description: "Clears the Principal confirmation on the mark."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/marks/{{date}}/principal-confirmation"
+method: DELETE
+order: 10000

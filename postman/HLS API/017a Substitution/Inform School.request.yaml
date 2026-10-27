@@ -1,0 +1,21 @@
+$kind: http-request
+name: Inform School
+description: "Needs Edit. Records that the School was informed."
+url: "{{baseUrl}}/api/v1/substitutions/{{substitutionId}}/inform"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "contact": "Principal",
+      "method": "PHONE",
+      "note": "Informed by phone",
+      "version": {{substitutionVersion}}
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('substitutionId', j.id); pm.collectionVariables.set('substitutionVersion', j.version); }"
+    language: text/javascript
+order: 7000
