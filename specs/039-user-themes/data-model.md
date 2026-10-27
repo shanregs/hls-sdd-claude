@@ -7,7 +7,7 @@
 | user_id | uuid PK, FK to users | one row per user; no row means defaults |
 | theme_preset | varchar(30) not null default 'classic' | catalogue id; unknown id falls back to classic on read |
 | theme_mode | varchar(10) not null default 'device' | check in ('light','dark','device') |
-| custom_accent | char(7) null | `#RRGGBB`, validated against the contrast rule |
+| custom_accent | varchar(7) null | `#RRGGBB`, validated against the contrast rule |
 | sidebar_dark | boolean not null default false | web only |
 | changed_at | timestamptz not null | client change time, used for last-write-wins; capped at server now + 5 minutes |
 | updated_at | timestamptz not null default now() | server write time |
