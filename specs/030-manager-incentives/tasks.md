@@ -21,29 +21,29 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 ## Phase 3: User Story 1 - Earn on MoU approval (P1)
 
-- [ ] T011 [P] [US1] Entities and repositories: `Incentive`, `NoEarnerRecord`, `IncentiveEvent`, `IncentiveProgram` (`incentive/internal/`)
-- [ ] T012 [US1] `EarningService`: given a School, read `MouApprovals.stateOn`, require `countsAsApproved`; if `approvedOn` is null record no-earner `APPROVED_BEFORE_APPROVAL_STEP` and stop; if `approvedOn` before `starts_at` record `BEFORE_GO_LIVE`; resolve owner via `ProspectOwners`, require an active payroll Manager (`ManagerQueries.managerByUserId`) else record `NO_PROSPECT`, `NO_OWNER` or `OWNER_NOT_MANAGER`; otherwise insert one incentive (amount from setting, closure date = business date of `approvedOn`, Zone) handling the unique-key conflict as "already earned"; resolve an earlier no-earner row; write event and Change History
-- [ ] T013 [US1] Listener for `MouDecided` APPROVED (application-module listener, after commit) calling `EarningService`; publish `IncentiveEarned`
-- [ ] T014 [US1] `ReconcileJob` (daily, virtual-thread friendly): re-run `EarningService` for Schools whose MoU counts as approved with non-null `approvedOn` after go-live and no incentive or no-earner row; idempotent
-- [ ] T015 [P] [US1] Tests: earn once; duplicate event; re-approval after document change; later MoU; no prospect; no owner; owner is Director; owner left; legacy `APPROVED_BEFORE_APPROVAL_STEP` has no incentive and shows excluded; approval before go-live; amount change affects only new rows; reconcile creates a missed one and creates no duplicate; MoU approval still succeeds when 030 fails
+- [x] T011 [P] [US1] Entities and repositories: `Incentive`, `NoEarnerRecord`, `IncentiveEvent`, `IncentiveProgram` (`incentive/internal/`)
+- [x] T012 [US1] `EarningService`: given a School, read `MouApprovals.stateOn`, require `countsAsApproved`; if `approvedOn` is null record no-earner `APPROVED_BEFORE_APPROVAL_STEP` and stop; if `approvedOn` before `starts_at` record `BEFORE_GO_LIVE`; resolve owner via `ProspectOwners`, require an active payroll Manager (`ManagerQueries.managerByUserId`) else record `NO_PROSPECT`, `NO_OWNER` or `OWNER_NOT_MANAGER`; otherwise insert one incentive (amount from setting, closure date = business date of `approvedOn`, Zone) handling the unique-key conflict as "already earned"; resolve an earlier no-earner row; write event and Change History
+- [x] T013 [US1] Listener for `MouDecided` APPROVED (application-module listener, after commit) calling `EarningService`; publish `IncentiveEarned`
+- [x] T014 [US1] `ReconcileJob` (daily, virtual-thread friendly): re-run `EarningService` for Schools whose MoU counts as approved with non-null `approvedOn` after go-live and no incentive or no-earner row; idempotent
+- [x] T015 [P] [US1] Tests: earn once; duplicate event; re-approval after document change; later MoU; no prospect; no owner; owner is Director; owner left; legacy `APPROVED_BEFORE_APPROVAL_STEP` has no incentive and shows excluded; approval before go-live; amount change affects only new rows; reconcile creates a missed one and creates no duplicate; MoU approval still succeeds when 030 fails
 
 ## Phase 4: User Story 2 - Approval (P1)
 
-- [ ] T016 [US2] `DecisionService`: approve and reject (row lock plus version, 409 naming the first decider), Director or Zone Manager of the School's Zone (`ManagerQueries.managerOfSchool`), self-approval allowed and flagged `approved_by_earner`, reject reason required (at most 500), Admin/Teacher/System refused, no Zone Manager means Director only; events and Change History naming earner and approver; publish `IncentiveDecided`
-- [ ] T017 [US2] `IncentiveController` endpoints approve, reject per [contracts/incentive-api.md](contracts/incentive-api.md), with scope checks and 404 outside scope
-- [ ] T018 [P] [US2] Tests per role and scope (SC-002, SC-004): Director, Zone Manager in and out of Zone, earner-as-Zone-Manager approves own (flag and audit), Admin refused, concurrent decisions record one, missing reason refused, Zone Manager changed while pending
+- [x] T016 [US2] `DecisionService`: approve and reject (row lock plus version, 409 naming the first decider), Director or Zone Manager of the School's Zone (`ManagerQueries.managerOfSchool`), self-approval allowed and flagged `approved_by_earner`, reject reason required (at most 500), Admin/Teacher/System refused, no Zone Manager means Director only; events and Change History naming earner and approver; publish `IncentiveDecided`
+- [x] T017 [US2] `IncentiveController` endpoints approve, reject per [contracts/incentive-api.md](contracts/incentive-api.md), with scope checks and 404 outside scope
+- [x] T018 [P] [US2] Tests per role and scope (SC-002, SC-004): Director, Zone Manager in and out of Zone, earner-as-Zone-Manager approves own (flag and audit), Admin refused, concurrent decisions record one, missing reason refused, Zone Manager changed while pending
 
 ## Phase 5: User Story 3 - Payment through payroll (P1)
 
-- [ ] T019 [US3] `PayrollLink`: on approve call `IncentiveIntake.offer` (`sourceRef = INCENTIVE:<id>`, amount, reason "Manager incentive: closed School <name>") in the same transaction as the decision; a refusal keeps status APPROVED with a visible payroll status text and is retried by the reconcile job
-- [ ] T020 [US3] Listener for `PayrollAdjustmentApplied` kind INCENTIVE: set `PAID_IN_RUN` with `run_id` and `run_month`, write event; idempotent
-- [ ] T021 [US3] Show payroll status (`IncentiveIntake.status`) on detail and list
+- [x] T019 [US3] `PayrollLink`: on approve call `IncentiveIntake.offer` (`sourceRef = INCENTIVE:<id>`, amount, reason "Manager incentive: closed School <name>") in the same transaction as the decision; a refusal keeps status APPROVED with a visible payroll status text and is retried by the reconcile job
+- [x] T020 [US3] Listener for `PayrollAdjustmentApplied` kind INCENTIVE: set `PAID_IN_RUN` with `run_id` and `run_month`, write event; idempotent
+- [x] T021 [US3] Show payroll status (`IncentiveIntake.status`) on detail and list
 - [ ] T022 [P] [US3] Integration tests (SC-003, SC-007): approved incentive appears once in the next run with the Manager, counts in net pay once, applied at run approval; return and recompute keep one line; Manager who cannot be paid leaves it waiting and a later run takes it; run approved before the feature unchanged; Teachers' and other Managers' pay identical
 
 ## Phase 6: User Story 4 - Lists, notifications, dashboard (P2)
 
-- [ ] T023 [P] [US4] `IncentiveQueries`: list with filters (status, Manager, Zone, month, q), sort, batch name lookups, scope (Admin and Director all; Zone Manager own Zone; Manager own), `actions` per row, `mine`, `summary` with totals per Manager and month
-- [ ] T024 [P] [US4] `GET /no-earner` (Admin, Director) and `GET /export.csv` (EXPORT, formula-safe cells)
+- [x] T023 [P] [US4] `IncentiveQueries`: list with filters (status, Manager, Zone, month, q), sort, batch name lookups, scope (Admin and Director all; Zone Manager own Zone; Manager own), `actions` per row, `mine`, `summary` with totals per Manager and month
+- [x] T024 [P] [US4] `GET /no-earner` (Admin, Director) and `GET /export.csv` (EXPORT, formula-safe cells)
 - [ ] T025 [P] [US4] Notification types `INCENTIVE_PENDING`, `INCENTIVE_DECIDED` and `IncentiveEventListener` in `notification` (recipients per [contracts/module-interfaces.md](contracts/module-interfaces.md)); tests
 - [ ] T026 [P] [US4] `incentive.api.IncentiveSummary` implementation and the 028 tile plus Director approvals-inbox entry via the `reporting` SPI; tests
 - [ ] T027 [US4] Frontend `features/incentives`: list with filters and totals, detail drawer with history and payroll status, approve and reject dialogs (reason), My Incentives, No-earner tab, CSV export, route and menu entry; loading, empty and error states; DD/MM/YYYY and Rupee format
