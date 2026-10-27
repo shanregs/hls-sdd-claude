@@ -29,7 +29,7 @@
 - [x] T014 [US1] Manager rows from `ManagerAttendanceReadApi.months`: working days, checked-in days, leave, missed check-ins, Manager attendance %
 - [x] T015 [US1] Month state: OPEN when not all people in scope are locked (`lockedTeachers`, manager lock); label in page and export
 - [x] T016 [US1] Tests: figures equal the attendance grid and the 028 attendance tiles for a seeded month; a Zone Manager cannot read another Zone; hand-count of 20 of 25 days is 80%
-- [ ] T017 [P] [US1] Frontend: `frontend/src/features/reports/` report list, generic report page (month, Zone, School, Teacher, Manager filters, table, totals, state banner), Attendance columns; component tests
+- [x] T017 [P] [US1] Frontend: `frontend/src/features/reports/` report list, generic report page (month, Zone, School, Teacher, Manager filters, table, totals, state banner), Attendance columns; component tests
 
 ## Phase 4: US2 Payroll cost report (P1)
 
@@ -37,18 +37,18 @@
 - [x] T018a Test `PayrollFigures` returns the same totals as the run total and the run export for an approved and a draft run, and no figure for a month with no run
 - [x] T019 [US2] `PayrollReportSource`: totals by kind of person, Zone and School, run state, cycle table by month; "no run yet" gives NO_DATA; draft run is labelled
 - [x] T020 [US2] Tests: totals equal the run total, the run export and the dashboard payroll tile; Zone Manager and Teacher get 403 and no menu item
-- [ ] T021 [P] [US2] Frontend: Payroll columns and cycle table
+- [x] T021 [P] [US2] Frontend: Payroll columns and cycle table
 
 ## Phase 5: US3 CSV export and audit (P1)
 
 - [x] T022 [US3] Wire Export for both reports with the same filter and scope; tests that file rows equal screen rows and a user without Export is refused
-- [ ] T023 [P] [US3] Frontend Export button gated by the Export grant; download with the filter
+- [x] T023 [P] [US3] Frontend Export button gated by the Export grant; download with the filter
 
 ## Phase 6: US4 My Report (P2)
 
 - [x] T024 [US4] `MyReportSource`: a Teacher's own attendance, leave (009) and payslip history (via `PayrollFigures` own rows); a Manager's view of own Teachers uses the Attendance scope
 - [x] T025 [US4] Tests: Teacher cannot read another Teacher by filter or id; a Teacher moved out of a Manager's School disappears from later months
-- [ ] T026 [P] [US4] Frontend: MY ATTENDANCE → My Report page
+- [x] T026 [P] [US4] Frontend: MY ATTENDANCE → My Report page
 
 ## Phase 7: Polish and verification
 
