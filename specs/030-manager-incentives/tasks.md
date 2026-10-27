@@ -38,7 +38,7 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 - [x] T019 [US3] `PayrollLink`: on approve call `IncentiveIntake.offer` (`sourceRef = INCENTIVE:<id>`, amount, reason "Manager incentive: closed School <name>") in the same transaction as the decision; a refusal keeps status APPROVED with a visible payroll status text and is retried by the reconcile job
 - [x] T020 [US3] Listener for `PayrollAdjustmentApplied` kind INCENTIVE: set `PAID_IN_RUN` with `run_id` and `run_month`, write event; idempotent
 - [x] T021 [US3] Show payroll status (`IncentiveIntake.status`) on detail and list
-- [ ] T022 [P] [US3] Integration tests (SC-003, SC-007): approved incentive appears once in the next run with the Manager, counts in net pay once, applied at run approval; return and recompute keep one line; Manager who cannot be paid leaves it waiting and a later run takes it; run approved before the feature unchanged; Teachers' and other Managers' pay identical
+- [x] T022 [P] [US3] Integration tests (SC-003, SC-007): approved incentive appears once in the next run with the Manager, counts in net pay once, applied at run approval; return and recompute keep one line; Manager who cannot be paid leaves it waiting and a later run takes it; run approved before the feature unchanged; Teachers' and other Managers' pay identical
 
 ## Phase 6: User Story 4 - Lists, notifications, dashboard (P2)
 
@@ -52,10 +52,10 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 ## Phase 7: User Story 5 - Hold when the MoU stops counting (P3)
 
-- [ ] T030 [US5] `HoldService`: on `MouSubmitted` (any resubmit or reset) or `MouDecided` REJECTED for a School with an APPROVED incentive call `IncentiveIntake.withdraw`; true gives `HELD` (reason "MoU not approved"); false because the run awaits approval sets `mou_changed = true` and notifies the Director; false because applied changes nothing
-- [ ] T031 [US5] On `MouDecided` APPROVED for a HELD incentive offer again (same source reference) and return to APPROVED; clear `mou_changed` when the MoU is approved again
-- [ ] T032 [US5] Reconcile job also re-checks both directions (approved incentive with MoU not counting; held incentive whose MoU counts again)
-- [ ] T033 [P] [US5] Tests: hold then run does not take it; re-approve and next run takes it; run awaiting approval keeps it with the flag and notice; already paid never changes; no second incentive is ever created
+- [x] T030 [US5] `HoldService`: on `MouSubmitted` (any resubmit or reset) or `MouDecided` REJECTED for a School with an APPROVED incentive call `IncentiveIntake.withdraw`; true gives `HELD` (reason "MoU not approved"); false because the run awaits approval sets `mou_changed = true` and notifies the Director; false because applied changes nothing
+- [x] T031 [US5] On `MouDecided` APPROVED for a HELD incentive offer again (same source reference) and return to APPROVED; clear `mou_changed` when the MoU is approved again
+- [x] T032 [US5] Reconcile job also re-checks both directions (approved incentive with MoU not counting; held incentive whose MoU counts again)
+- [x] T033 [P] [US5] Tests: hold then run does not take it; re-approve and next run takes it; run awaiting approval keeps it with the flag and notice; already paid never changes; no second incentive is ever created
 
 ## Phase 8: Polish and documentation
 
@@ -63,7 +63,7 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 - [ ] T035 [P] Postman requests for the incentive API (`postman/`)
 - [ ] T036 Constitution PATCH 2.5.15: Sync Impact Report, Default role access matrix row "Incentives", OPERATIONS navigation (`.specify/memory/constitution.md`); renumber if another spec merges first
 - [ ] T037 Update `docs/spec-roadmap.md` rows 030, 013b and 028 (status, amendment A, tile) and `docs/spec-inputs/030-manager-incentives.md` if decisions changed
-- [ ] T038 Director reopen of a rejected incentive (`POST /{id}/reopen`, reason required, Director only, audited) so the rule "one incentive per School" still allows a corrected decision; tests
+- [x] T038 Director reopen of a rejected incentive (`POST /{id}/reopen`, reason required, Director only, audited) so the rule "one incentive per School" still allows a corrected decision; tests
 - [ ] T039 Run `quickstart.md` sections 1 to 9 and record results in `quickstart-results.md`; run the full backend and frontend test suites and the module-boundary (Modulith) verification
 
 ## Dependencies

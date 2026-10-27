@@ -30,14 +30,15 @@ class PayrollLink {
     boolean offer(UUID actor, Incentive incentive) {
         String school = schools.school(incentive.getSchoolId()).map(SchoolInfo::name).orElse("a School");
         OfferResult result = intake.offer(
-                actor,
+                actor == null ? IncentiveRecorder.SYSTEM_ACTOR : actor,
                 incentive.getEarnerManagerId(),
                 incentive.getAmount(),
                 "Manager incentive: closed School " + school,
                 incentive.sourceRef());
         if (result.accepted()) {
             recorder.record(actor, incentive.getId(), "OFFERED", "Offered to payroll");
-        } else {
+        } else if (actor != null) {
+            // the daily job tries again every night; only a person's action is written down, so the history stays readable
             recorder.record(actor, incentive.getId(), "OFFER_REFUSED", result.refusal());
         }
         return result.accepted();
@@ -45,7 +46,7 @@ class PayrollLink {
 
     /** true when nothing is left to pay; false when the run awaits approval or already applied it. */
     boolean withdraw(UUID actor, Incentive incentive, String reason) {
-        return intake.withdraw(actor, incentive.sourceRef(), reason);
+        return intake.withdraw(actor == null ? IncentiveRecorder.SYSTEM_ACTOR : actor, incentive.sourceRef(), reason);
     }
 
     OfferStatus status(Incentive incentive) {

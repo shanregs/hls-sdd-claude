@@ -27,11 +27,13 @@ public class ReconcileJob {
     private static final Logger log = LoggerFactory.getLogger(ReconcileJob.class);
 
     /** What one run did, for tests and the log. */
-    public record Result(int looked, int earned, int failed) {}
+    public record Result(int looked, int earned, int failed, int held, int released, int offered) {}
 
     private final SchoolDirectory schools;
     private final MouApprovals mou;
     private final EarningService earning;
+    private final HoldService holds;
+    private final IncentiveRepository incentives;
     private final Clock clock;
     private final boolean enabled;
 
@@ -39,11 +41,15 @@ public class ReconcileJob {
             SchoolDirectory schools,
             MouApprovals mou,
             EarningService earning,
+            HoldService holds,
+            IncentiveRepository incentives,
             Clock clock,
             @Value("${hls.incentive.reconcile.enabled:true}") boolean enabled) {
         this.schools = schools;
         this.mou = mou;
         this.earning = earning;
+        this.holds = holds;
+        this.incentives = incentives;
         this.clock = clock;
         this.enabled = enabled;
     }
@@ -52,7 +58,8 @@ public class ReconcileJob {
     void scheduled() {
         if (enabled) {
             Result result = runNow();
-            log.info("Incentive reconcile: looked at {} Schools, earned {}, failed {}", result.looked(), result.earned(), result.failed());
+            log.info("Incentive reconcile: looked at {} Schools, earned {}, held {}, released {}, offered {}, failed {}", result.looked(),
+                    result.earned(), result.held(), result.released(), result.offered(), result.failed());
         }
     }
 
@@ -79,6 +86,28 @@ public class ReconcileJob {
                 log.warn("Incentive reconcile failed for School {}", id, e);
             }
         }
-        return new Result(looked, earned, failed);
+        int held = 0;
+        int released = 0;
+        int offered = 0;
+        // both directions: approved incentives whose MoU stopped counting, held ones whose MoU counts again, lost offers
+        for (Incentive incentive : incentives.findAll()) {
+            if (incentive.getStatus() != IncentiveStatus.APPROVED && incentive.getStatus() != IncentiveStatus.HELD) {
+                continue;
+            }
+            try {
+                switch (holds.reevaluate(incentive.getSchoolId())) {
+                    case HELD -> held++;
+                    case RELEASED -> released++;
+                    case RETRIED_OFFER -> offered++;
+                    default -> {
+                        // nothing to repair
+                    }
+                }
+            } catch (RuntimeException e) {
+                failed++;
+                log.warn("Incentive reconcile could not check incentive {}", incentive.getId(), e);
+            }
+        }
+        return new Result(looked, earned, failed, held, released, offered);
     }
 }

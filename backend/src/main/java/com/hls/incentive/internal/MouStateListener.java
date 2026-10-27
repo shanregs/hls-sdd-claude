@@ -1,6 +1,7 @@
 package com.hls.incentive.internal;
 
 import com.hls.schoolbilling.api.MouDecided;
+import com.hls.schoolbilling.api.MouSubmitted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -16,20 +17,32 @@ class MouStateListener {
     private static final Logger log = LoggerFactory.getLogger(MouStateListener.class);
 
     private final EarningService earning;
+    private final HoldService holds;
 
-    MouStateListener(EarningService earning) {
+    MouStateListener(EarningService earning, HoldService holds) {
         this.earning = earning;
+        this.holds = holds;
     }
 
     @ApplicationModuleListener
     void onDecided(MouDecided event) {
-        if (!"APPROVED".equals(event.outcome())) {
-            return;
-        }
         try {
-            earning.earn(event.schoolId());
+            if ("APPROVED".equals(event.outcome())) {
+                earning.earn(event.schoolId());
+            }
+            holds.reevaluate(event.schoolId());
         } catch (RuntimeException e) {
-            log.warn("Could not look for an incentive for School {}; the daily job will retry", event.schoolId(), e);
+            log.warn("Could not update the incentive of School {} after a MoU decision; the daily job will retry", event.schoolId(), e);
+        }
+    }
+
+    /** A submission, resubmission or reset: an approved MoU may have stopped counting. */
+    @ApplicationModuleListener
+    void onSubmitted(MouSubmitted event) {
+        try {
+            holds.reevaluate(event.schoolId());
+        } catch (RuntimeException e) {
+            log.warn("Could not update the incentive of School {} after a MoU submission; the daily job will retry", event.schoolId(), e);
         }
     }
 }
