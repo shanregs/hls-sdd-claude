@@ -358,6 +358,10 @@ public class PermissionMatrixService {
     }
 
     /** Report defaults (spec 014a): Admin and Director read and export both reports, a Manager the Attendance one, a Teacher My Report. */
+    /** Recruitment, Teacher and Manager reports (spec 014c): Admin, Director and Manager. Expenses is Admin and Director only. */
+    private static final List<PermissionModule> PEOPLE_REPORTS =
+            List.of(PermissionModule.REPORT_RECRUITMENT, PermissionModule.REPORT_TEACHER, PermissionModule.REPORT_MANAGER);
+
     private void seedReports() {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
             for (PermissionAction action : PermissionModule.REPORT_ATTENDANCE.actions()) {
@@ -366,9 +370,22 @@ public class PermissionMatrixService {
             for (PermissionAction action : PermissionModule.REPORT_PAYROLL.actions()) {
                 seed(role, PermissionModule.REPORT_PAYROLL, action, true);
             }
+            for (PermissionModule report : PEOPLE_REPORTS) {
+                for (PermissionAction action : report.actions()) {
+                    seed(role, report, action, true);
+                }
+            }
+            for (PermissionAction action : PermissionModule.REPORT_EXPENSES.actions()) {
+                seed(role, PermissionModule.REPORT_EXPENSES, action, true);
+            }
         }
         for (PermissionAction action : PermissionModule.REPORT_ATTENDANCE.actions()) {
             seed(Role.MANAGER, PermissionModule.REPORT_ATTENDANCE, action, true);
+        }
+        for (PermissionModule report : PEOPLE_REPORTS) {
+            for (PermissionAction action : report.actions()) {
+                seed(Role.MANAGER, report, action, true);
+            }
         }
         seed(Role.TEACHER, PermissionModule.MY_REPORT, PermissionAction.VIEW, true);
         grants.invalidateAround();

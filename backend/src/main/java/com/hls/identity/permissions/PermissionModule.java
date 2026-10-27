@@ -78,6 +78,10 @@ public enum PermissionModule {
 
     REPORT_ATTENDANCE(VIEW, EXPORT),
     REPORT_PAYROLL(VIEW, EXPORT),
+    REPORT_RECRUITMENT(VIEW, EXPORT),
+    REPORT_TEACHER(VIEW, EXPORT),
+    REPORT_MANAGER(VIEW, EXPORT),
+    REPORT_EXPENSES(VIEW, EXPORT),
     MY_REPORT(VIEW);
 
     private final Set<PermissionAction> actions;

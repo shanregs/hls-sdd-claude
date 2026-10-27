@@ -65,6 +65,10 @@ public final class PermissionEligibility {
             PermissionModule.CONTENT,
             PermissionModule.REPORT_ATTENDANCE,
             PermissionModule.REPORT_PAYROLL,
+            PermissionModule.REPORT_RECRUITMENT,
+            PermissionModule.REPORT_TEACHER,
+            PermissionModule.REPORT_MANAGER,
+            PermissionModule.REPORT_EXPENSES,
             PermissionModule.MY_REPORT);
 
 
@@ -159,6 +163,10 @@ public final class PermissionEligibility {
     static final Map<PermissionModule, Set<Role>> REPORT_MODULES = Map.of(
             PermissionModule.REPORT_ATTENDANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.REPORT_PAYROLL, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.REPORT_RECRUITMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_TEACHER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_MANAGER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
             PermissionModule.MY_REPORT, EnumSet.of(Role.TEACHER));
 
     private PermissionEligibility() {}
