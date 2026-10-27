@@ -29,8 +29,8 @@
 - [X] T011a Test A2: value equals the marketing dashboard demand
 - [X] T012 [P] A6 (025) `tasks.assigned` and `tasks.completed` on `TaskManagerColumns`
 - [X] T012a Test A6: counts by month for two Managers; existing three columns unchanged; one bulk query
-- [ ] T013 [P] A7 (035) `ActivityManagerColumns` bean; check module-dependency test (`activitycalendar -> reporting.api`, no cycle) still passes
-- [ ] T013a Test A7: planned, done, missed, rescheduled equal `CalendarSummary.byManager` for the month
+- [X] T013 [P] A7 (035) `ActivityManagerColumns` bean; check module-dependency test (`activitycalendar -> reporting.api`, no cycle) still passes
+- [X] T013a Test A7: planned, done, missed, rescheduled equal `CalendarSummary.byManager` for the month
 - [ ] T014 [P] A8 (023) `marketing.visitsDone`, `marketing.wonInMonth` on `MarketingManagerColumns`
 - [ ] T014a Test A8: counts for a seeded month; `marketing.visitsMissed` and `marketing.won` unchanged
 - [ ] T015 Dashboard comparison regression: the new columns appear and existing column values are unchanged (028 tests)
