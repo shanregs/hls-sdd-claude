@@ -23,10 +23,10 @@
 - [X] T008a Test A9: totals per claimant equal My Expenses; Teachers with no claims absent
 - [X] T009 [P] A10 (015) `ExpenseQueries.budgetVsActual` delegating to `BudgetQueries.overview`
 - [X] T009a Test A10: rows equal the 015 budget screen; Head office row has a null zone; no budget gives null budget, real actual
-- [ ] T010 [P] A1 (016) `recruitment.api.RecruitmentFigures`; the dashboard service calls it
-- [ ] T010a Test A1: figures equal the existing dashboard output for a seeded season (regression test unchanged), zone filter works
-- [ ] T011 [P] A2 (023) `recruitment.api.DemandFigures`; marketing dashboard calls it
-- [ ] T011a Test A2: value equals the marketing dashboard demand
+- [X] T010 [P] A1 (016) `recruitment.api.RecruitmentFigures`; the dashboard service calls it
+- [X] T010a Test A1: figures equal the existing dashboard output for a seeded season (regression test unchanged), zone filter works
+- [X] T011 [P] A2 (023) `recruitment.api.DemandFigures`; marketing dashboard calls it
+- [X] T011a Test A2: value equals the marketing dashboard demand
 - [ ] T012 [P] A6 (025) `tasks.assigned` and `tasks.completed` on `TaskManagerColumns`
 - [ ] T012a Test A6: counts by month for two Managers; existing three columns unchanged; one bulk query
 - [ ] T013 [P] A7 (035) `ActivityManagerColumns` bean; check module-dependency test (`activitycalendar -> reporting.api`, no cycle) still passes
