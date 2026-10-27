@@ -27,8 +27,8 @@
 - [X] T010a Test A1: figures equal the existing dashboard output for a seeded season (regression test unchanged), zone filter works
 - [X] T011 [P] A2 (023) `recruitment.api.DemandFigures`; marketing dashboard calls it
 - [X] T011a Test A2: value equals the marketing dashboard demand
-- [ ] T012 [P] A6 (025) `tasks.assigned` and `tasks.completed` on `TaskManagerColumns`
-- [ ] T012a Test A6: counts by month for two Managers; existing three columns unchanged; one bulk query
+- [X] T012 [P] A6 (025) `tasks.assigned` and `tasks.completed` on `TaskManagerColumns`
+- [X] T012a Test A6: counts by month for two Managers; existing three columns unchanged; one bulk query
 - [ ] T013 [P] A7 (035) `ActivityManagerColumns` bean; check module-dependency test (`activitycalendar -> reporting.api`, no cycle) still passes
 - [ ] T013a Test A7: planned, done, missed, rescheduled equal `CalendarSummary.byManager` for the month
 - [ ] T014 [P] A8 (023) `marketing.visitsDone`, `marketing.wonInMonth` on `MarketingManagerColumns`
