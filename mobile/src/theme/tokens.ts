@@ -1,16 +1,18 @@
+import { CLASSIC_PRESET, type ThemeMode, type VariantColours } from "./builtinClassic";
+import { accentForVariant, headerTextOn } from "./contrast";
+
 /**
  * Design tokens for the mobile app.
  *
- * Copied from the web theme so both clients share one design system (Constitution Principle IV):
- * source of truth is `frontend/src/theme/tokens.ts` (palettes, spacing unit, font family). When the
- * web tokens change, update this file too. A shared package is planned for when a second mobile
- * spec needs more shared types (research.md §2).
+ * Colours come from the theme catalogue (spec 039): the server's presets, with Classic built in
+ * (`builtinClassic.ts`) as the fallback, so the phone no longer keeps its own copy of the web
+ * palette. Spacing and the touch target stay here (Constitution Principle IV).
  */
 export const spacingUnit = 8;
 
 export const fontFamily = undefined; // use the platform default (Roboto) on Android
 
-export type ThemeMode = "light" | "dark";
+export type { ThemeMode } from "./builtinClassic";
 
 export interface Palette {
   primary: string;
@@ -24,32 +26,40 @@ export interface Palette {
   border: string;
 }
 
-export const lightPalette: Palette = {
-  primary: "#1E5AA8",
-  onPrimary: "#FFFFFF",
-  secondary: "#0F7B6C",
-  error: "#B3261E",
-  background: "#F5F7FA",
-  surface: "#FFFFFF",
-  text: "#1B1F24",
-  textMuted: "#4A525C",
-  border: "rgba(0, 0, 0, 0.12)",
-};
+export function paletteFromColours(c: VariantColours): Palette {
+  return {
+    primary: c.primary,
+    onPrimary: c.onPrimary,
+    secondary: c.accent,
+    error: c.error,
+    background: c.background,
+    surface: c.surface,
+    text: c.text,
+    textMuted: c.textMuted,
+    border: c.border,
+  };
+}
 
-export const darkPalette: Palette = {
-  primary: "#8AB4F8",
-  onPrimary: "#0B1B33",
-  secondary: "#5FD6C0",
-  error: "#F2B8B5",
-  background: "#111418",
-  surface: "#1B1F24",
-  text: "#E6E9ED",
-  textMuted: "#A8B0BA",
-  border: "rgba(255, 255, 255, 0.16)",
-};
+export const lightPalette: Palette = paletteFromColours(CLASSIC_PRESET.light);
 
-export const paletteFor = (mode: ThemeMode): Palette =>
-  mode === "dark" ? darkPalette : lightPalette;
+export const darkPalette: Palette = paletteFromColours(CLASSIC_PRESET.dark);
+
+export const paletteFor = (mode: ThemeMode): Palette => (mode === "dark" ? darkPalette : lightPalette);
+
+export interface ThemeOptions {
+  /** The chosen preset's colours in this variant; Classic when omitted. */
+  colours?: VariantColours;
+  /** The user's own accent (primary) colour, re-derived for this variant when it does not pass. */
+  customAccent?: string | null;
+}
+
+/** The colours a variant actually uses once a custom accent is applied (as on the web). */
+export function resolveColours(mode: ThemeMode, options: ThemeOptions = {}): VariantColours {
+  const base = options.colours ?? CLASSIC_PRESET[mode];
+  if (!options.customAccent) return base;
+  const primary = accentForVariant(options.customAccent, mode === "dark", base.surface, base.background);
+  return { ...base, primary, onPrimary: headerTextOn(primary) };
+}
 
 /** Minimum touch target on Android (Material guidance and spec FR-016). */
 export const minTouchTarget = 48;

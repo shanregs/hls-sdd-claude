@@ -1,16 +1,13 @@
-import {
-  MD3DarkTheme,
-  MD3LightTheme,
-  type MD3Theme,
-} from "react-native-paper";
-import { paletteFor, type ThemeMode } from "./tokens";
+import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from "react-native-paper";
+import { paletteFromColours, resolveColours, type ThemeMode, type ThemeOptions } from "./tokens";
 
-export function buildPaperTheme(mode: ThemeMode): MD3Theme {
+export function buildPaperTheme(mode: ThemeMode, options: ThemeOptions = {}): MD3Theme {
   const base = mode === "dark" ? MD3DarkTheme : MD3LightTheme;
-  const p = paletteFor(mode);
+  const p = paletteFromColours(resolveColours(mode, options));
   return {
     ...base,
-    roundness: 2,
+    // Paper multiplies roundness by 4 dp, so 3 gives the 12 dp corners of spec 039.
+    roundness: 3,
     colors: {
       ...base.colors,
       primary: p.primary,

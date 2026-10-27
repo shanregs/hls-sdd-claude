@@ -1,0 +1,92 @@
+---
+
+description: "Task list for feature implementation"
+---
+
+# Tasks: User Themes
+
+**Input**: `/specs/039-user-themes/` (spec.md, plan.md, research.md, data-model.md, contracts/user-theme-api.md, quickstart.md)
+
+**Tests**: included. Contrast rules are tested first against shared vectors. Per-role endpoint tests are mandatory (Principle IX). Run one Maven test class at a time; Docker must be running for Testcontainers.
+
+**Organization**: Setup, Foundation, US1 (presets and mode), US2 (custom accent), US3 (preview and reset), US4 (phone offline), US5 (less flat look), Polish.
+
+## Format: `[ID] [P?] [Story] Description`
+
+## Phase 1: Setup
+
+- [X] T001 Verify `frontend/src/theme/{tokens.ts,ThemeModeProvider.tsx}`, `mobile/src/theme/{tokens.ts,themes.ts,ThemeProvider.tsx}`, `frontend/src/account/SettingsPage.tsx`, `mobile/src/screens/ProfileScreen.tsx`, the spec 018 outbox, and that the highest migration on main is V120 (V130 reserved for 030); STOP and report if different
+- [X] T002 [P] Create `backend/src/main/resources/themes/theme-presets.json` with the four presets (spec Assumptions values), status chip colours, derived-colour rules
+- [X] T003 [P] Create `specs/039-user-themes/contracts/contrast-vectors.json` (colour, variant, expected ratio, pass, suggested), including every preset pair and #FFEB3B
+
+## Phase 2: Foundation
+
+- [X] T004 Flyway `V140__create_user_preferences.sql` per data-model.md
+- [X] T005 [P] Tests for `ContrastRules` (ratio, check, adjust) against the vectors in `backend/src/test/java/com/hls/identity/preferences/ContrastRulesTest.java`
+- [X] T006 Implement `ContrastRules` and `ThemeCatalogue` loader in `backend/src/main/java/com/hls/identity/preferences/`
+- [X] T007 [P] Test that every shipped preset variant passes the rule (SC-002) in `ThemeCatalogueTest.java`
+- [X] T008 Entity, repository, `ThemeChanged` event and audit listener for `user_preferences`
+
+## Phase 3: US1 - Pick a preset and mode (P1)
+
+- [X] T009 [P] [US1] API tests: GET default, PUT, last-write-wins, unknown preset, 401, no cross-user access for each of the five roles in `UserThemeControllerTest.java`
+- [X] T010 [US1] `UserThemeService` and `UserThemeController` (GET, PUT) per contract
+- [X] T011 [P] [US1] Web `themeApi.ts` and `tokens.ts` rebuilt from the catalogue (`buildMuiTheme(variant)`); keep Classic built in
+- [X] T012 [US1] Extend `ThemeModeProvider.tsx`: load preference after sign-in, apply, save on change, local storage cache, migrate `hls-theme-mode` once; update `ThemeModeProvider.test.tsx`
+- [X] T013 [P] [US1] Web `ThemeSettingsPage.tsx` (preset cards, mode control) wired into Account with route and tests
+- [X] T014 [P] [US1] Mobile `themeApi.ts`, `builtinClassic.ts` (with equality test against the server Classic), replace the tokens copy in `tokens.ts`/`themes.ts`
+- [X] T015 [US1] Extend `ThemeProvider.tsx` (load, apply, save, migrate `hls.themePreference`) and the `ProfileScreen.tsx` theme section with tests
+
+## Phase 4: US2 - Custom accent (P1)
+
+- [X] T016 [P] [US2] Tests for the PUT 422 `ACCENT_UNREADABLE` and `POST /contrast-check` in `UserThemeControllerTest.java`
+- [X] T017 [US2] Add `customAccent` handling, validation, suggestion and the contrast-check endpoint
+- [X] T018 [P] [US2] Web `contrast.ts` and mobile `contrast.ts` with tests loading `contrast-vectors.json`
+- [X] T019 [US2] Web accent field with colour picker, inline errors, accept-suggestion button; per-variant re-derivation in `buildMuiTheme`
+- [X] T020 [US2] Mobile accent entry (hex field plus swatches), suggestion flow, per-variant re-derivation; touch targets 48 dp
+
+## Phase 5: US3 - Preview and reset (P2)
+
+- [X] T021 [P] [US3] Test DELETE reset and its audit event
+- [X] T022 [US3] Implement DELETE
+- [X] T023 [P] [US3] Web `ThemePreview.tsx` (header, button, card, table row, chips, ratios) and Reset with confirmation
+- [X] T024 [P] [US3] Mobile preview section and Reset
+
+## Phase 6: US4 - Phone offline (P2)
+
+- [X] T025 [US4] Persist last applied theme in AsyncStorage, apply before first paint and on the sign-in screen
+- [X] T026 [US4] Queue offline changes via the spec 018 outbox with `changedAt`; resolve with the server winner; tests for offline start, queued change, newer server row
+- [X] T027 [P] [US4] Web: apply local cache before render to avoid a flash; unsaved notice and retry on save failure
+
+## Phase 7: US5 - Less flat look (P2)
+
+- [ ] T028 [P] [US5] Web tokens: tinted background, primary app bar, 12 px radius, soft shadow (border in dark), tests
+- [ ] T029 [P] [US5] Shared status chip component/tokens on web and mobile; replace existing ad hoc status colours; tests per mode
+- [ ] T030 [US5] Web optional dark sidebar (`sidebarDark`) in AppShell and settings toggle; text contrast test
+- [X] T031 [P] [US5] Mobile header (primary app bar), card radius and elevation in Paper theme
+
+## Phase 8: Polish
+
+- [ ] T032 Run the existing a11y suite across all eight variants (SC-005); fix findings
+- [ ] T033 [P] Update `docs/` (running notes), Postman collection entries for the four endpoints
+- [ ] T034 Run quickstart.md on web and device; record results
+- [ ] T035 If the user asks: constitution PATCH 3.0.1 wording for Principle IV (not required)
+
+## Dependencies
+
+Foundation blocks all stories. US1 before US2 to US5 (US3 to US5 independent of each other after US1). Polish last.
+
+## Implementation notes
+
+- T007: the every-preset-variant check lives in `ContrastRulesTest.everyPresetVariantIsReadable` (backend) and `contrast.test.ts` (web); there is no separate `ThemeCatalogueTest`.
+- T008: a change is audited by publishing the existing `ProfileUpdated` event ("theme (preset, mode)"), not a new `ThemeChanged` event, so no new audit listener was needed. No colour history is kept.
+- T018: web and phone `contrast.ts` are both done and tested against the shared vectors.
+- T028: web radius 12, the tinted background and the card shadow or dark border are in `tokens.ts`; the primary app bar is still open.
+
+### Phone notes (impl/039-mobile)
+
+- T026: the spec 018 outbox turned out to be the spec 036 expense claim outbox (encrypted items, bills, stages). A theme change is one small "replace the whole preference" request where only the newest matters, so it uses a single pending slot in AsyncStorage (`hls.theme.pending`, with the user id and `changedAt`) and reuses that outbox's connectivity triggers (`startConnectivity`: foreground, network, a timer while something waits). The server keeps the later `changedAt` and returns the winner, which the phone adopts. A waiting change that belongs to another user is dropped.
+- T025: the phone caches the last applied theme and catalogue (`hls.theme`) and holds the first render until it is read, so the sign-in screen and an offline start show it with no flash. The old `hls.themePreference` value is migrated once (and uploaded once for a user with no saved theme).
+- T029 (phone half): `statusPresentation.ts` for leave now uses the shared chip colours (`BUILTIN_STATUS_CHIPS`); cancelled stays neutral. The attendance day colours are a separate day-state palette and were left alone. The web half is separate.
+- T031: the header (`Appbar.Header` in `AppShell`) uses the primary colour with its readable text colour; Paper `roundness` is 3 (12 dp corners). Card elevation was not changed beyond Paper's defaults.
+- Not possible here: T034 (device check). Everything above is covered by Jest only.
