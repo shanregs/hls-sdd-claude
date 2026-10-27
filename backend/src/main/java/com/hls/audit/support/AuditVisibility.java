@@ -53,6 +53,7 @@ public class AuditVisibility {
             Map.entry("CONTRACT", PermissionModule.SCHOOL_CONTRACTS),
             Map.entry("MOU_DOCUMENT", PermissionModule.SCHOOL_CONTRACTS),
             Map.entry("MOU_APPROVAL", PermissionModule.SCHOOL_CONTRACTS),
+            Map.entry("INCENTIVE", PermissionModule.MANAGER_INCENTIVES),
             Map.entry("TRAINING_SESSION", PermissionModule.TRAINING),
             Map.entry("TRAINING_PATTERN", PermissionModule.TRAINING),
             Map.entry("TRAINING_ASSIGNMENT", PermissionModule.TRAINING),

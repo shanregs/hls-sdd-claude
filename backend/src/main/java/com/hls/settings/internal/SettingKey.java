@@ -38,6 +38,9 @@ public enum SettingKey {
     TRAINING_GENERATION_HORIZON_MONTHS(
             "training.generation-horizon-months", Group.SYSTEM, "Months of monthly sessions kept ahead", "months",
             Type.INTEGER, 1, 12, "3", null),
+    INCENTIVE_AMOUNT(
+            "incentive.amount-per-school", Group.SYSTEM, "Manager incentive per closed School", "Rupees", Type.INTEGER, 0,
+            100000, "5000", null),
 
     PASSWORD_MIN_LENGTH(
             "password.min-length", Group.SECURITY, "Minimum password length", "characters", Type.INTEGER, 8, 64,

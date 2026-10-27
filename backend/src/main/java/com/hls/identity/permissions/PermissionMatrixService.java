@@ -109,6 +109,7 @@ public class PermissionMatrixService {
         seedContent();
         seedSchoolBilling();
         seedTraining();
+        seedManagerIncentives();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -316,6 +317,18 @@ public class PermissionMatrixService {
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EXPORT)) {
             seed(Role.MANAGER, PermissionModule.SCHOOL_BILLING, action, true);
         }
+        grants.invalidateAround();
+    }
+
+    /** Manager incentive defaults (spec 030): Admin views and exports, Director holds all, a Manager views and approves in their Zone. */
+    private void seedManagerIncentives() {
+        seed(Role.ADMIN, PermissionModule.MANAGER_INCENTIVES, PermissionAction.VIEW, true);
+        seed(Role.ADMIN, PermissionModule.MANAGER_INCENTIVES, PermissionAction.EXPORT, true);
+        for (PermissionAction action : PermissionModule.MANAGER_INCENTIVES.actions()) {
+            seed(Role.DIRECTOR, PermissionModule.MANAGER_INCENTIVES, action, true);
+        }
+        seed(Role.MANAGER, PermissionModule.MANAGER_INCENTIVES, PermissionAction.VIEW, true);
+        seed(Role.MANAGER, PermissionModule.MANAGER_INCENTIVES, PermissionAction.APPROVE, true);
         grants.invalidateAround();
     }
 

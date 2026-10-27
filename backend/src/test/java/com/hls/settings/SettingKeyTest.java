@@ -42,6 +42,17 @@ class SettingKeyTest {
     }
 
     @Test
+    void theIncentiveAmountIsAWholeRupeeSettingWithDefault5000() {
+        SettingKey amount = SettingKey.INCENTIVE_AMOUNT;
+        assertThat(amount.key()).isEqualTo("incentive.amount-per-school");
+        assertThat(amount.builtInDefault()).isEqualTo("5000");
+        assertThat(amount.normalize("0")).contains("0");
+        assertThat(amount.normalize("100000")).contains("100000");
+        assertThat(amount.normalize("100001")).isEmpty();
+        assertThat(amount.normalize("-1")).isEmpty();
+    }
+
+    @Test
     void everyDefaultIsInsideItsOwnRange() {
         for (SettingKey key : SettingKey.values()) {
             assertThat(key.normalize(key.builtInDefault())).as(key.key()).isPresent();
@@ -50,7 +61,7 @@ class SettingKeyTest {
 
     @Test
     void groupsSplitTheSeventeenSettingsAndKeysAreUnique() {
-        assertThat(SettingKey.of(Group.SYSTEM)).hasSize(9);
+        assertThat(SettingKey.of(Group.SYSTEM)).hasSize(10);
         assertThat(SettingKey.of(Group.SECURITY)).hasSize(8);
         assertThat(SettingKey.values()).extracting(SettingKey::key).doesNotHaveDuplicates();
         assertThat(SettingKey.byKey("lockout.duration-minutes")).contains(SettingKey.LOCKOUT_DURATION_MINUTES);

@@ -62,7 +62,8 @@ public final class PermissionEligibility {
             PermissionModule.TRAINING,
             PermissionModule.TRAINING_ATTENDANCE,
             PermissionModule.TRAINING_REGISTRATION,
-            PermissionModule.CONTENT);
+            PermissionModule.CONTENT,
+            PermissionModule.MANAGER_INCENTIVES);
 
 
     /** What the Content Contributor may hold (spec 029): own content, own notifications, dashboard, profile and own sessions. */
@@ -226,6 +227,16 @@ public final class PermissionEligibility {
         Set<Role> expensesOnly = EXPENSES_MODULES.get(module);
         if (expensesOnly != null && !expensesOnly.contains(role)) {
             return EnumSet.noneOf(PermissionAction.class);
+        }
+        // Manager incentives (spec 030): Admin views and exports but never approves (D5); Director holds all; a Manager views and
+        // approves within their own Zone; Teacher and System hold nothing.
+        if (module == PermissionModule.MANAGER_INCENTIVES) {
+            return switch (role) {
+                case ADMIN -> EnumSet.of(PermissionAction.VIEW, PermissionAction.EXPORT);
+                case DIRECTOR -> module.actions();
+                case MANAGER -> EnumSet.of(PermissionAction.VIEW, PermissionAction.APPROVE);
+                default -> EnumSet.noneOf(PermissionAction.class);
+            };
         }
         if (role == Role.SYSTEM && BUSINESS_MODULES.contains(module)) {
             return EnumSet.noneOf(PermissionAction.class);
