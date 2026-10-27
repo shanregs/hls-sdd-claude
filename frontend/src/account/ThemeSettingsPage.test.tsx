@@ -197,7 +197,7 @@ describe("ThemeSettingsPage (spec 039 US1 to US3)", () => {
     const user = userEvent.setup();
     render(<ThemeSettingsPage />);
 
-    await user.click(screen.getByRole("checkbox", { name: /Darker sidebar/ }));
+    await user.click(screen.getByRole("switch", { name: /Darker sidebar/ }));
 
     expect(savePreference).toHaveBeenCalledWith({ sidebarDark: true });
   });
