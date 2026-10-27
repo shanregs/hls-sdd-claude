@@ -153,6 +153,12 @@ export function adjustAccent(
   return null;
 }
 
+/** The same hue and saturation at another lightness (0 to 1); used for the dark sidebar shade. */
+export function withLightness(hex: string, lightness: number): string {
+  const [h, s] = toHsl(hex);
+  return toHex(h, s, lightness);
+}
+
 /** The accent to use in one variant: as entered when it passes, otherwise the adjusted colour. */
 export function accentForVariant(
   accent: string,

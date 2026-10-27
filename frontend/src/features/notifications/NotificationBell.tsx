@@ -51,6 +51,7 @@ export function NotificationBell() {
     <Tooltip title="Notifications">
       <IconButton
         component={RouterLink}
+        color="inherit"
         to={NOTIFICATIONS_ROUTE}
         aria-label={label}
         aria-live="polite"

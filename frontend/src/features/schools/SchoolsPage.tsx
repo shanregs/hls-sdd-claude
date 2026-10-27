@@ -24,6 +24,7 @@ import {
   type SchoolSummary,
 } from "./schoolsApi";
 import { RowActionButton } from "../common/RowActionButton";
+import { StatusChip } from "../../theme/StatusChip";
 
 const ROUTE = "/master-data/schools";
 
@@ -121,7 +122,7 @@ export function SchoolsPage() {
         params.row.manager ? (
           <span>{params.row.manager.displayName}</span>
         ) : (
-          <Chip size="small" color="warning" label="Needs a Manager" />
+          <StatusChip kind="pending" size="small" label="Needs a Manager" />
         ),
     },
     {

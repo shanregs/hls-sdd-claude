@@ -28,6 +28,7 @@ import {
   type Outcome,
   type RowResult,
 } from "./trainingApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 interface Props {
   sessionId: string;
@@ -234,7 +235,7 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
                           <Chip size="small" color="info" label="On leave" />
                         )}
                         {r.syncState === "CLASH" && (
-                          <Chip size="small" color="warning" label="Clash" />
+                          <StatusChip kind="pending" size="small" label="Clash" />
                         )}
                       </Stack>
                     </TableCell>
@@ -319,7 +320,7 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
                     )}
                     <TableCell aria-live="polite">
                       {result?.status === "SAVED" && (
-                        <Chip size="small" color="success" label="Saved" />
+                        <StatusChip kind="approved" size="small" label="Saved" />
                       )}
                       {result?.status === "SAVED_CLASH" && (
                         <Typography variant="body2" color="warning.main">

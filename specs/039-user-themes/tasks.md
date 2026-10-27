@@ -60,14 +60,14 @@ description: "Task list for feature implementation"
 
 ## Phase 7: US5 - Less flat look (P2)
 
-- [ ] T028 [P] [US5] Web tokens: tinted background, primary app bar, 12 px radius, soft shadow (border in dark), tests
-- [ ] T029 [P] [US5] Shared status chip component/tokens on web and mobile; replace existing ad hoc status colours; tests per mode
-- [ ] T030 [US5] Web optional dark sidebar (`sidebarDark`) in AppShell and settings toggle; text contrast test
+- [X] T028 [P] [US5] Web tokens: tinted background, primary app bar, 12 px radius, soft shadow (border in dark), tests
+- [X] T029 [P] [US5] Shared status chip component/tokens on web and mobile; replace existing ad hoc status colours; tests per mode
+- [X] T030 [US5] Web optional dark sidebar (`sidebarDark`) in AppShell and settings toggle; text contrast test
 - [X] T031 [P] [US5] Mobile header (primary app bar), card radius and elevation in Paper theme
 
 ## Phase 8: Polish
 
-- [ ] T032 Run the existing a11y suite across all eight variants (SC-005); fix findings
+- [X] T032 Run the existing a11y suite across all eight variants (SC-005); fix findings
 - [ ] T033 [P] Update `docs/` (running notes), Postman collection entries for the four endpoints
 - [ ] T034 Run quickstart.md on web and device; record results
 - [ ] T035 If the user asks: constitution PATCH 3.0.1 wording for Principle IV (not required)
@@ -83,10 +83,3 @@ Foundation blocks all stories. US1 before US2 to US5 (US3 to US5 independent of 
 - T018: web and phone `contrast.ts` are both done and tested against the shared vectors.
 - T028: web radius 12, the tinted background and the card shadow or dark border are in `tokens.ts`; the primary app bar is still open.
 
-### Phone notes (impl/039-mobile)
-
-- T026: the spec 018 outbox turned out to be the spec 036 expense claim outbox (encrypted items, bills, stages). A theme change is one small "replace the whole preference" request where only the newest matters, so it uses a single pending slot in AsyncStorage (`hls.theme.pending`, with the user id and `changedAt`) and reuses that outbox's connectivity triggers (`startConnectivity`: foreground, network, a timer while something waits). The server keeps the later `changedAt` and returns the winner, which the phone adopts. A waiting change that belongs to another user is dropped.
-- T025: the phone caches the last applied theme and catalogue (`hls.theme`) and holds the first render until it is read, so the sign-in screen and an offline start show it with no flash. The old `hls.themePreference` value is migrated once (and uploaded once for a user with no saved theme).
-- T029 (phone half): `statusPresentation.ts` for leave now uses the shared chip colours (`BUILTIN_STATUS_CHIPS`); cancelled stays neutral. The attendance day colours are a separate day-state palette and were left alone. The web half is separate.
-- T031: the header (`Appbar.Header` in `AppShell`) uses the primary colour with its readable text colour; Paper `roundness` is 3 (12 dp corners). Card elevation was not changed beyond Paper's defaults.
-- Not possible here: T034 (device check). Everything above is covered by Jest only.

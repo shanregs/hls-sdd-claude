@@ -19,6 +19,7 @@ import {
   registerForSession,
   type UpcomingItem,
 } from "./trainingApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 type State =
   | { kind: "loading" }
@@ -87,10 +88,10 @@ export function UpcomingTrainingPage() {
                 <strong>{s.topic}</strong>
                 <span>{TYPE_LABELS[s.type]}</span>
                 {label === "REQUIRED" && (
-                  <Chip size="small" color="warning" label="Required" />
+                  <StatusChip kind="pending" size="small" label="Required" />
                 )}
                 {label === "REGISTERED" && (
-                  <Chip size="small" color="success" label="Registered" />
+                  <StatusChip kind="approved" size="small" label="Registered" />
                 )}
                 {label === "OPEN" && (
                   <Chip size="small" variant="outlined" label="Open" />

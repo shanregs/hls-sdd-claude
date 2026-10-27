@@ -31,6 +31,7 @@ import {
   type TaskAction,
   type TaskDetail,
 } from "./taskApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 type Ask =
   | {
@@ -171,9 +172,9 @@ export function TaskDetailPage() {
         </Typography>
         <Chip label={STATUS_LABELS[task.status]} />
         {task.overdue && (
-          <Chip color="error" label={`${task.daysOverdue} days overdue`} />
+          <StatusChip kind="rejected" label={`${task.daysOverdue} days overdue`} />
         )}
-        {task.escalated && <Chip color="warning" label="Escalated" />}
+        {task.escalated && <StatusChip kind="pending" label="Escalated" />}
       </Stack>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
