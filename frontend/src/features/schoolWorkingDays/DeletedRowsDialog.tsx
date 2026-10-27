@@ -12,6 +12,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -105,26 +106,28 @@ export function DeletedRowsDialog({
             </Typography>
           )}
           {entries && entries.length > 0 && (
-            <Table size="small" aria-label="Deleted rows">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Month</TableCell>
-                  <TableCell>Last figure</TableCell>
-                  <TableCell>Deleted by</TableCell>
-                  <TableCell>When</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {entries.map((e, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{monthName(e.month)}</TableCell>
-                    <TableCell>{formatFigure(e.lastValue)}</TableCell>
-                    <TableCell>{e.deletedByName}</TableCell>
-                    <TableCell>{formatWhen(e.deletedAt)}</TableCell>
+            <TableContainer sx={{ maxWidth: "100%", overflowX: "auto" }}>
+              <Table size="small" aria-label="Deleted rows">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Month</TableCell>
+                    <TableCell>Last figure</TableCell>
+                    <TableCell>Deleted by</TableCell>
+                    <TableCell>When</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {entries.map((e, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{monthName(e.month)}</TableCell>
+                      <TableCell>{formatFigure(e.lastValue)}</TableCell>
+                      <TableCell>{e.deletedByName}</TableCell>
+                      <TableCell>{formatWhen(e.deletedAt)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </Stack>
       </DialogContent>
