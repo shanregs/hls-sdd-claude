@@ -25,10 +25,10 @@
 
 - [x] T012 Add bulk `rollupsOf(Collection<UUID>, YearMonth)` to `attendance/api/AttendanceReadApi.java` and its implementation (decided amendment to 008, additive)
 - [x] T012a Test `rollupsOf` equals `rollupOf` for each Teacher over 3 Teachers and 2 months, and uses a fixed number of queries
-- [ ] T013 [US1] `AttendanceReportSource` for Teachers: working days, present, absent, leave, LOP days, attendance %; roll-ups by School, Zone, organization; zero working days gives NO_DATA
-- [ ] T014 [US1] Manager rows from `ManagerAttendanceReadApi.months`: working days, checked-in days, leave, missed check-ins, Manager attendance %
-- [ ] T015 [US1] Month state: OPEN when not all people in scope are locked (`lockedTeachers`, manager lock); label in page and export
-- [ ] T016 [US1] Tests: figures equal the attendance grid and the 028 attendance tiles for a seeded month; a Zone Manager cannot read another Zone; hand-count of 20 of 25 days is 80%
+- [x] T013 [US1] `AttendanceReportSource` for Teachers: working days, present, absent, leave, LOP days, attendance %; roll-ups by School, Zone, organization; zero working days gives NO_DATA
+- [x] T014 [US1] Manager rows from `ManagerAttendanceReadApi.months`: working days, checked-in days, leave, missed check-ins, Manager attendance %
+- [x] T015 [US1] Month state: OPEN when not all people in scope are locked (`lockedTeachers`, manager lock); label in page and export
+- [x] T016 [US1] Tests: figures equal the attendance grid and the 028 attendance tiles for a seeded month; a Zone Manager cannot read another Zone; hand-count of 20 of 25 days is 80%
 - [ ] T017 [P] [US1] Frontend: `frontend/src/features/reports/` report list, generic report page (month, Zone, School, Teacher, Manager filters, table, totals, state banner), Attendance columns; component tests
 
 ## Phase 4: US2 Payroll cost report (P1)
@@ -46,14 +46,14 @@
 
 ## Phase 6: US4 My Report (P2)
 
-- [ ] T024 [US4] `MyReportSource`: a Teacher's own attendance, leave (009) and payslip history (via `PayrollFigures` own rows); a Manager's view of own Teachers uses the Attendance scope
-- [ ] T025 [US4] Tests: Teacher cannot read another Teacher by filter or id; a Teacher moved out of a Manager's School disappears from later months
+- [x] T024 [US4] `MyReportSource`: a Teacher's own attendance, leave (009) and payslip history (via `PayrollFigures` own rows); a Manager's view of own Teachers uses the Attendance scope
+- [x] T025 [US4] Tests: Teacher cannot read another Teacher by filter or id; a Teacher moved out of a Manager's School disappears from later months
 - [ ] T026 [P] [US4] Frontend: MY ATTENDANCE → My Report page
 
 ## Phase 7: Polish and verification
 
-- [ ] T027 Test report added on the framework with no framework change (SC-006), kept as a test fixture
-- [ ] T028 Source-failure test: one source throws, other columns still load (SC-005)
+- [x] T027 Test report added on the framework with no framework change (SC-006), kept as a test fixture
+- [x] T028 Source-failure test: one source throws, other columns still load (SC-005)
 - [ ] T029 Performance check at 500 Teachers and 50 Managers (first page under 3 s, export under 30 s)
 - [ ] T030 Check no migration was added (none expected); if one is needed, take the next free number above V120 on current main
 - [ ] T031 Update `docs/spec-roadmap.md` 014 row with the implemented state and the quickstart in `specs/014a-reports-framework/quickstart.md`; run the full backend and frontend suites

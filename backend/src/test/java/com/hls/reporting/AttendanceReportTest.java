@@ -207,4 +207,22 @@ class AttendanceReportTest extends AttendanceTestBase {
         assertThat(get(REPORT + "?month=2026-13", admin).status()).isEqualTo(400);
         assertThat(get(REPORT + "?zoneId=not-a-uuid", admin).status()).isEqualTo(400);
     }
+
+    @Test
+    void aTeacherMovedOutOfAManagersSchoolDisappearsFromLaterMonths() {
+        World w = newWorld();
+        UUID mover = newTeacher(w.admin(), w.schoolA(), 150).teacherId();
+        java.time.LocalDate firstOfThisMonth = YearMonth.from(today()).atDay(1);
+        Resp moved = placeTeacherRaw(w.admin(), mover, w.schoolB(), firstOfThisMonth);
+        assertThat(moved.status()).as(moved.body()).isEqualTo(200);
+
+        Resp before = get(REPORT + "?month=" + month(), w.managerA().token());
+        Resp after = get(REPORT + "?month=" + YearMonth.from(today()), w.managerA().token());
+
+        assertThat(rows(before, "teachers")).extracting(r -> r.get("id")).contains(mover.toString());
+        assertThat(rows(after, "teachers")).extracting(r -> r.get("id")).doesNotContain(mover.toString());
+        assertThat(after.body()).doesNotContain(mover.toString());
+        assertThat(get(REPORT + "?month=" + YearMonth.from(today()) + "&teacherId=" + mover, w.managerA().token()).status())
+                .isEqualTo(403);
+    }
 }
