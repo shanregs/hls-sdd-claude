@@ -192,4 +192,13 @@ describe("ThemeSettingsPage (spec 039 US1 to US3)", () => {
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(retrySave).toHaveBeenCalled();
   });
+
+  it("saves the darker sidebar option", async () => {
+    const user = userEvent.setup();
+    render(<ThemeSettingsPage />);
+
+    await user.click(screen.getByRole("checkbox", { name: /Darker sidebar/ }));
+
+    expect(savePreference).toHaveBeenCalledWith({ sidebarDark: true });
+  });
 });

@@ -1,5 +1,5 @@
 import { createTheme, type Theme } from "@mui/material/styles";
-import { accentForVariant, headerTextOn } from "./contrast";
+import { accentForVariant, headerTextOn, withLightness } from "./contrast";
 
 /**
  * One token set drives every theme (Constitution Principle IV: "one design system ... design
@@ -105,11 +105,55 @@ export function findPreset(
   );
 }
 
+export interface SidebarColours {
+  background: string;
+  text: string;
+  textMuted: string;
+}
+
+/** Tokens beyond MUI's own palette, read through `useTheme().hls` so they follow any ThemeProvider. */
+export interface HlsTokens {
+  sidebarDark: boolean;
+  sidebar: SidebarColours;
+  chips: Record<ChipKind, ChipColours>;
+}
+
+declare module "@mui/material/styles" {
+  interface Theme {
+    hls: HlsTokens;
+  }
+  interface ThemeOptions {
+    hls?: HlsTokens;
+  }
+}
+
 export interface ThemeOptions {
   /** The colours of the chosen preset in this variant; Classic when omitted. */
   colours?: VariantColours;
   /** The user's own accent (primary) colour, re-derived for this variant when it does not pass. */
   customAccent?: string | null;
+  /** The optional darker sidebar (web only). */
+  sidebarDark?: boolean;
+  /** Where the status chip colours come from; the built-in set when omitted. */
+  catalogue?: ThemeCatalogue;
+}
+
+/**
+ * The darker sidebar: in light mode a deep shade of the primary colour with light text, in dark mode
+ * the page background (darker than the surface) with the normal text colours.
+ */
+export function sidebarColours(
+  mode: ThemeMode,
+  c: VariantColours,
+): SidebarColours {
+  if (mode === "dark") {
+    return { background: c.background, text: c.text, textMuted: c.textMuted };
+  }
+  return {
+    background: withLightness(c.primary, 0.16),
+    text: "#F2F5F9",
+    textMuted: "#C5CCD6",
+  };
 }
 
 /** The colours a variant actually uses once a custom accent is applied. */
@@ -146,6 +190,11 @@ export function buildMuiTheme(
       background: { default: c.background, paper: c.surface },
       text: { primary: c.text, secondary: c.textMuted },
       divider: c.border,
+    },
+    hls: {
+      sidebarDark: options.sidebarDark ?? false,
+      sidebar: sidebarColours(mode, c),
+      chips: (options.catalogue ?? BUILTIN_CATALOGUE).statusChips[mode],
     },
     typography,
     spacing: spacingUnit,

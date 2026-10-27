@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import presetFile from "../../../backend/src/main/resources/themes/theme-presets.json";
-import { passes } from "./contrast";
+import { passes, ratio } from "./contrast";
 import {
   BUILTIN_CATALOGUE,
   buildMuiTheme,
   CLASSIC_PRESET,
   findPreset,
   resolveColours,
+  sidebarColours,
   type ThemeCatalogue,
 } from "./tokens";
 
@@ -58,5 +59,40 @@ describe("theme tokens (spec 039)", () => {
       border: string;
     };
     expect(card.border).toContain("1px solid");
+  });
+
+  it("the darker sidebar keeps its text readable in every preset variant", () => {
+    for (const preset of server.presets) {
+      for (const mode of ["light", "dark"] as const) {
+        const colours = resolveColours(mode, { colours: preset[mode] });
+        const sidebar = sidebarColours(mode, colours);
+        const label = `${preset.id} ${mode}`;
+        expect(
+          ratio(sidebar.text, sidebar.background),
+          label,
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          ratio(sidebar.textMuted, sidebar.background),
+          `${label} muted`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it("keeps the darker sidebar readable with an own accent", () => {
+    for (const mode of ["light", "dark"] as const) {
+      const colours = resolveColours(mode, { customAccent: "#FFEB3B" });
+      const sidebar = sidebarColours(mode, colours);
+      expect(ratio(sidebar.text, sidebar.background)).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  });
+
+  it("carries the sidebar option and the status chip colours on the theme", () => {
+    const theme = buildMuiTheme("dark", { sidebarDark: true });
+    expect(theme.hls.sidebarDark).toBe(true);
+    expect(theme.hls.chips).toEqual(BUILTIN_CATALOGUE.statusChips.dark);
+    expect(buildMuiTheme("light").hls.sidebarDark).toBe(false);
   });
 });

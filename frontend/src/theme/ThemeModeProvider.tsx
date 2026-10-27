@@ -268,6 +268,8 @@ export function ThemeModeProvider({ children }: { children: ReactNode }) {
     return buildMuiTheme(mode, {
       colours: preset[mode],
       customAccent: state.preference.customAccent,
+      sidebarDark: state.preference.sidebarDark,
+      catalogue: state.catalogue,
     });
   }, [mode, state]);
 

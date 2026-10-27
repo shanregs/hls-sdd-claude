@@ -41,16 +41,16 @@ export function AppShell() {
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          bgcolor: "background.paper",
-          color: "text.primary",
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          // The header takes the theme colour, with text chosen to read on it (spec 039 US5).
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
         }}
         elevation={0}
       >
         <Toolbar sx={{ gap: 1 }}>
           <IconButton
             aria-label="Open navigation"
+            color="inherit"
             edge="start"
             onClick={() => setMobileOpen(true)}
             sx={{ display: { xs: "inline-flex", sm: "none" } }}
@@ -59,6 +59,7 @@ export function AppShell() {
           </IconButton>
           <IconButton
             aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+            color="inherit"
             edge="start"
             onClick={() => setCollapsed((c) => !c)}
             sx={{ display: { xs: "none", sm: "inline-flex" } }}
@@ -74,7 +75,13 @@ export function AppShell() {
             sx={{ display: { xs: "none", sm: "flex" } }}
           >
             {user.roles.map((role) => (
-              <Chip key={role} label={role} size="small" />
+              <Chip
+                key={role}
+                label={role}
+                size="small"
+                variant="outlined"
+                sx={{ color: "inherit", borderColor: "currentColor" }}
+              />
             ))}
           </Stack>
           <NotificationBell />
@@ -82,6 +89,7 @@ export function AppShell() {
             aria-label={
               mode === "dark" ? "Switch to light theme" : "Switch to dark theme"
             }
+            color="inherit"
             onClick={toggleMode}
           >
             {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
@@ -92,7 +100,7 @@ export function AppShell() {
           >
             {user.displayName}
           </Typography>
-          <Button size="small" onClick={() => logout()}>
+          <Button size="small" color="inherit" onClick={() => logout()}>
             Logout
           </Button>
         </Toolbar>

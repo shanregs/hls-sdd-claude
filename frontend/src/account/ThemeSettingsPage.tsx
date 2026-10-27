@@ -9,7 +9,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
   Stack,
+  Switch,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -186,6 +188,23 @@ export function ThemeSettingsPage() {
             );
           })}
         </Box>
+      </Box>
+
+      <Box component="section" aria-labelledby="theme-sidebar-heading">
+        <Typography id="theme-sidebar-heading" variant="subtitle1" gutterBottom>
+          Sidebar
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={preference.sidebarDark}
+              onChange={(_, checked) =>
+                void savePreference({ sidebarDark: checked })
+              }
+            />
+          }
+          label="Darker sidebar (web only)"
+        />
       </Box>
 
       <Box component="section" aria-labelledby="theme-accent-heading">

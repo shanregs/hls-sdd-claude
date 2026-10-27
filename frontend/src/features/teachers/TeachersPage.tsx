@@ -31,6 +31,7 @@ import {
 import { RowActionButton } from "../common/RowActionButton";
 import { MovementsDialog } from "../transfers/MovementsDialog";
 import { TRANSFERS_ROUTE } from "../transfers/transfersApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 const ROUTE = "/master-data/teachers";
 const DESIGNATIONS_ROUTE = "/master-data/designations";
@@ -160,7 +161,7 @@ export function TeachersPage() {
             {e.designation.retired ? " (retired)" : ""}
           </span>
         ) : (
-          <Chip size="small" color="warning" label="designation missing" />
+          <StatusChip kind="pending" size="small" label="designation missing" />
         );
       },
     },
