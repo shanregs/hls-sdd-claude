@@ -9,7 +9,7 @@
 - [ ] T001 Add `REPORT_ATTENDANCE` (View, Export), `REPORT_PAYROLL` (View, Export) and `MY_REPORT` (View) to `backend/src/main/java/com/hls/identity/permissions/PermissionModule.java`
 - [ ] T002 Set eligibility and seeded defaults (Admin, Director: both reports; Manager: Attendance; Teacher: MY_REPORT; no System) in `PermissionEligibility.java` and the seeder; test that Manager cannot be granted `REPORT_PAYROLL` by default
 - [ ] T003 [P] Add the REPORTS section and items (Attendance, Payroll, My Report) to `NavigationCatalog.java`; update its tests and the access-model menu expectations
-- [ ] T004 [P] Note the amendment to spec 002 (per-report keys replace the single REPORTS row) in `specs/002-access-model-app-shell`
+- [ ] T004 [P] Record the decided amendment to spec 002 (per-report keys replace the single REPORTS row) in `specs/002-access-model-app-shell/spec.md`, and add a test that the permission matrix lists the three new modules and no `REPORTS` module
 
 ## Phase 2: Framework (blocks every story)
 
@@ -23,7 +23,8 @@
 
 ## Phase 3: US1 Attendance and LOP report (P1) MVP
 
-- [ ] T012 Add bulk `rollupsOf(Collection<UUID>, YearMonth)` to `attendance/api/AttendanceReadApi.java` and its implementation (additive amendment to 008); test it returns the same as `rollupOf`
+- [ ] T012 Add bulk `rollupsOf(Collection<UUID>, YearMonth)` to `attendance/api/AttendanceReadApi.java` and its implementation (decided amendment to 008, additive)
+- [ ] T012a Test `rollupsOf` equals `rollupOf` for each Teacher over 3 Teachers and 2 months, and uses a fixed number of queries
 - [ ] T013 [US1] `AttendanceReportSource` for Teachers: working days, present, absent, leave, LOP days, attendance %; roll-ups by School, Zone, organization; zero working days gives NO_DATA
 - [ ] T014 [US1] Manager rows from `ManagerAttendanceReadApi.months`: working days, checked-in days, leave, missed check-ins, Manager attendance %
 - [ ] T015 [US1] Month state: OPEN when not all people in scope are locked (`lockedTeachers`, manager lock); label in page and export
@@ -32,7 +33,8 @@
 
 ## Phase 4: US2 Payroll cost report (P1)
 
-- [ ] T018 Add `payroll/api/PayrollFigures` (read-only: run state for a month; per person gross, LOP, reimbursements, net, kind, Zone and School) and implement in `payroll/run/internal` over the existing run data (additive amendment to 013b); also expose it for 014b
+- [ ] T018 Add `payroll/api/PayrollFigures` (read-only: run state for a month; per person gross, LOP, reimbursements, net, kind, Zone and School) and implement in `payroll/run/internal` over the existing run data (decided amendment to 013b, read-only and additive); also reused by 014b
+- [ ] T018a Test `PayrollFigures` returns the same totals as the run total and the run export for an approved and a draft run, and no figure for a month with no run
 - [ ] T019 [US2] `PayrollReportSource`: totals by kind of person, Zone and School, run state, cycle table by month; "no run yet" gives NO_DATA; draft run is labelled
 - [ ] T020 [US2] Tests: totals equal the run total, the run export and the dashboard payroll tile; Zone Manager and Teacher get 403 and no menu item
 - [ ] T021 [P] [US2] Frontend: Payroll columns and cycle table

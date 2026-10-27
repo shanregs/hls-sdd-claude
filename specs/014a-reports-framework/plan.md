@@ -42,7 +42,7 @@ No violations. Needs a re-check after 014b adds cross-module margin reads.
   `PermissionModule` enum has no report entry, `NavigationCatalog` has no REPORTS section. 014a adds the REPORTS section,
   the modules `REPORT_ATTENDANCE` and `REPORT_PAYROLL` (View, Export) and `MY_REPORT` (View) to `PermissionModule`, their
   eligibility in `PermissionEligibility` (no Teacher grant on the two report modules, no System), their defaults, and nav
-  items. The sketch row `REPORTS: V V —` in spec 002 is superseded by per-report keys; recorded here as an amendment to 002.
+  items. The sketch row `REPORTS: V V —` in spec 002 is superseded by per-report keys (amendment to 002, decided).
 - **Attendance**: `AttendanceReadApi.rollupOf`, `lockedTeachers`, `ManagerAttendanceReadApi.months` and `LossOfPayDays`
   give the figures; `WorkingCalendar` and `SchoolWorkingDays` give working days. Per-person calls: use the bulk forms
   (`months`, `lockedTeachers`); `rollupOf` is per Teacher, so the report needs a bulk method (task T012 adds
@@ -105,12 +105,13 @@ backend/src/main/java/com/hls/identity/...                       (modules, eligi
 frontend/src/features/reports/
 ```
 
-## Risks and open points for the user
+## Decided amendments (accepted 2026-10-27)
 
-1. A new `PayrollFigures` interface is an amendment to 013b (read-only, additive). Needs approval at plan review.
-2. A bulk rollup method on `AttendanceReadApi` is an additive amendment to 008.
-3. Amends spec 002: per-report keys replace the single REPORTS row in its sketch.
-4. For 014b, 022 and 027 amendments are listed in `docs/spec-inputs/014b-school-reports-margin.md`.
+1. 013b: new read-only `payroll.api.PayrollFigures` (tasks T018, T018a).
+2. 008: bulk `AttendanceReadApi.rollupsOf` (tasks T012, T012a).
+3. 002: per-report permission keys replace the single REPORTS row (tasks T001, T004).
+
+Open points: for 014b, 022 and 027 amendments are listed in `docs/spec-inputs/014b-school-reports-margin.md`.
 
 ## Complexity Tracking
 
