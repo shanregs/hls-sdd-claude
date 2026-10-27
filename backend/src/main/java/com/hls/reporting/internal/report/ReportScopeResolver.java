@@ -48,6 +48,30 @@ public class ReportScopeResolver {
             String school,
             String teacher,
             String manager) {
+        return request(scope, offered, month, zone, school, teacher, manager, null);
+    }
+
+    /** As above, with the season filter (spec 014c A0); a season is free text, trimmed, and refused when the report has no season filter. */
+    @Transactional(readOnly = true)
+    public ReportRequest request(
+            ReportScope scope,
+            Set<ReportFilter> offered,
+            YearMonth month,
+            String zone,
+            String school,
+            String teacher,
+            String manager,
+            String season) {
+        String seasonText = null;
+        if (season != null && !season.isBlank()) {
+            if (!offered.contains(ReportFilter.SEASON)) {
+                throw new DashboardInvalidInputException("This report has no season filter.");
+            }
+            seasonText = season.trim();
+            if (seasonText.length() > 100) {
+                throw new DashboardInvalidInputException("The season filter is not valid.");
+            }
+        }
         UUID zoneId = filter(ReportFilter.ZONE, offered, zone);
         UUID schoolId = filter(ReportFilter.SCHOOL, offered, school);
         UUID teacherId = filter(ReportFilter.TEACHER, offered, teacher);
@@ -64,7 +88,7 @@ public class ReportScopeResolver {
                 throw new DashboardInvalidInputException("That School is not in the chosen Zone.");
             }
         }
-        return new ReportRequest(month, zoneId, schoolId, teacherId, managerId);
+        return new ReportRequest(month, zoneId, schoolId, teacherId, managerId, seasonText);
     }
 
     /** Parses a month written as YYYY-MM. */

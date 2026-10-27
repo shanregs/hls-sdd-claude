@@ -43,8 +43,9 @@ public class ReportController {
             @RequestParam(required = false) String zoneId,
             @RequestParam(required = false) String schoolId,
             @RequestParam(required = false) String teacherId,
-            @RequestParam(required = false) String managerId) {
-        return service.read(CallerContext.userId(jwt), CallerContext.roles(jwt), key, month, zoneId, schoolId, teacherId, managerId);
+            @RequestParam(required = false) String managerId,
+            @RequestParam(required = false) String season) {
+        return service.read(CallerContext.userId(jwt), CallerContext.roles(jwt), key, month, zoneId, schoolId, teacherId, managerId, season);
     }
 
     @GetMapping("/{key}/export")
@@ -55,9 +56,10 @@ public class ReportController {
             @RequestParam(required = false) String zoneId,
             @RequestParam(required = false) String schoolId,
             @RequestParam(required = false) String teacherId,
-            @RequestParam(required = false) String managerId) {
+            @RequestParam(required = false) String managerId,
+            @RequestParam(required = false) String season) {
         ReportService.CsvFile file = service.export(
-                CallerContext.userId(jwt), CallerContext.roles(jwt), key, month, zoneId, schoolId, teacherId, managerId);
+                CallerContext.userId(jwt), CallerContext.roles(jwt), key, month, zoneId, schoolId, teacherId, managerId, season);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("text/csv; charset=utf-8"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.fileName()).build().toString())

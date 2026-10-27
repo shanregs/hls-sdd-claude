@@ -124,7 +124,13 @@ public class ReportService implements DisposableBean {
 
     public ReportPage read(
             UUID userId, Set<Role> roles, String key, String month, String zone, String school, String teacher, String manager) {
-        Prepared p = prepare(userId, roles, key, PermissionAction.VIEW, month, zone, school, teacher, manager);
+        return read(userId, roles, key, month, zone, school, teacher, manager, null);
+    }
+
+    public ReportPage read(
+            UUID userId, Set<Role> roles, String key, String month, String zone, String school, String teacher, String manager,
+            String season) {
+        Prepared p = prepare(userId, roles, key, PermissionAction.VIEW, month, zone, school, teacher, manager, season);
         return readPage(p);
     }
 
@@ -132,7 +138,14 @@ public class ReportService implements DisposableBean {
     @Transactional
     public CsvFile export(
             UUID userId, Set<Role> roles, String key, String month, String zone, String school, String teacher, String manager) {
-        Prepared p = prepare(userId, roles, key, PermissionAction.EXPORT, month, zone, school, teacher, manager);
+        return export(userId, roles, key, month, zone, school, teacher, manager, null);
+    }
+
+    @Transactional
+    public CsvFile export(
+            UUID userId, Set<Role> roles, String key, String month, String zone, String school, String teacher, String manager,
+            String season) {
+        Prepared p = prepare(userId, roles, key, PermissionAction.EXPORT, month, zone, school, teacher, manager, season);
         if (!p.source().definition().exportAllowed()) {
             throw new DashboardNotFoundException("Report not found.");
         }
@@ -150,7 +163,7 @@ public class ReportService implements DisposableBean {
 
     private Prepared prepare(
             UUID userId, Set<Role> roles, String key, PermissionAction action, String month, String zone, String school,
-            String teacher, String manager) {
+            String teacher, String manager, String season) {
         ReportSource source = registry.find(key).orElseThrow(() -> new DashboardNotFoundException("Report not found."));
         ReportDefinition d = source.definition();
         guard.require(roles, d.module(), action);
@@ -158,7 +171,7 @@ public class ReportService implements DisposableBean {
         YearMonth chosen = month == null || month.isBlank()
                 ? DefaultMonth.choose(lastFinal(source, userId, roles, scope), YearMonth.from(zones.today()))
                 : ReportScopeResolver.month(month);
-        ReportRequest request = scopes.request(scope, d.filters(), chosen, zone, school, teacher, manager);
+        ReportRequest request = scopes.request(scope, d.filters(), chosen, zone, school, teacher, manager, season);
         return new Prepared(source, new ReportRequestContext(userId, roles, zones.today(), scope, request), request);
     }
 
@@ -242,6 +255,9 @@ public class ReportService implements DisposableBean {
         }
         if (r.managerId() != null) {
             parts.add("manager=" + r.managerId());
+        }
+        if (r.season() != null) {
+            parts.add("season=" + r.season());
         }
         return String.join("; ", parts);
     }

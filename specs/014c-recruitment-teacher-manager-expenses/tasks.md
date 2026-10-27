@@ -9,7 +9,7 @@
 - [X] T001 Add `REPORT_RECRUITMENT`, `REPORT_TEACHER`, `REPORT_MANAGER`, `REPORT_EXPENSES` (View, Export) to `backend/src/main/java/com/hls/identity/permissions/PermissionModule.java`
 - [X] T002 Eligibility and defaults (Admin, Director all four; Manager Recruitment, Teacher, Manager; none for Teacher or System; `REPORT_EXPENSES` not grantable to Manager) in `PermissionEligibility.java` and the seeder; test the matrix
 - [X] T003 [P] REPORTS nav items for the four reports in `NavigationCatalog.java`; update its tests and the access-model menu expectations
-- [ ] T004 A0 (amendment to 014a, additive): `ReportFilter.SEASON` and `ReportRequest.season` with the old constructor kept; framework test that existing reports are unaffected and a season is parsed from the query
+- [X] T004 A0 (amendment to 014a, additive): `ReportFilter.SEASON` and `ReportRequest.season` with the old constructor kept; framework test that existing reports are unaffected and a season is parsed from the query
 
 ## Phase 2: Read-only amendments to merged modules (each with its test)
 
