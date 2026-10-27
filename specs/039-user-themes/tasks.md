@@ -61,7 +61,7 @@ description: "Task list for feature implementation"
 ## Phase 7: US5 - Less flat look (P2)
 
 - [X] T028 [P] [US5] Web tokens: tinted background, primary app bar, 12 px radius, soft shadow (border in dark), tests
-- [ ] T029 [P] [US5] Shared status chip component/tokens on web and mobile; replace existing ad hoc status colours; tests per mode
+- [X] T029 [P] [US5] Shared status chip component/tokens on web and mobile; replace existing ad hoc status colours; tests per mode
 - [X] T030 [US5] Web optional dark sidebar (`sidebarDark`) in AppShell and settings toggle; text contrast test
 - [X] T031 [P] [US5] Mobile header (primary app bar), card radius and elevation in Paper theme
 
