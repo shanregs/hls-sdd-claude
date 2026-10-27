@@ -19,6 +19,7 @@ Answered by the product owner ("defaults", the recommended option for all five):
 - Q: Margin when a Teacher moves School mid-month (014b)? → A: Pay is split by placement days to match the School due lines.
 - Q: Does a Zone Manager see pay-derived figures? → A: The Zone Manager sees margin per School and per Teacher (D14), but not the payroll report (so in 014a the Payroll report stays Admin and Director only).
 - Q: Default month and unlocked months? → A: Default is the last locked month; unlocked or unapproved months can be chosen and carry a warning label.
+- Q: May 014a make additive changes to merged specs? → A: Yes, decided 2026-10-27: 013b gains a read-only `payroll.api.PayrollFigures`; 008 gains a bulk `AttendanceReadApi.rollupsOf`; the single REPORTS row of 002 is replaced by per-report permission keys.
 
 ## User Scenarios & Testing *(mandatory)*
 
