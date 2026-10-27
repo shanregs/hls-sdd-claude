@@ -122,6 +122,8 @@ class HoldTest extends IncentiveTestBase {
         assertThat(status(c)).isEqualTo("APPROVED");
         assertThat(adjustmentStatuses(c)).isEqualTo("WAITING");
         assertThat(eventKinds(c.id())).contains("MOU_CHANGED");
+        settle();
+        assertThat(notifications(c.mou().director().userId(), "INCENTIVE_MOU_CHANGED")).isEqualTo(1);
         // a second look changes nothing and writes no second entry
         reconcile.runNow();
         assertThat(eventKinds(c.id()).stream().filter("MOU_CHANGED"::equals).count()).isEqualTo(1);

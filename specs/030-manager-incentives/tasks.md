@@ -44,11 +44,11 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 - [x] T023 [P] [US4] `IncentiveQueries`: list with filters (status, Manager, Zone, month, q), sort, batch name lookups, scope (Admin and Director all; Zone Manager own Zone; Manager own), `actions` per row, `mine`, `summary` with totals per Manager and month
 - [x] T024 [P] [US4] `GET /no-earner` (Admin, Director) and `GET /export.csv` (EXPORT, formula-safe cells)
-- [ ] T025 [P] [US4] Notification types `INCENTIVE_PENDING`, `INCENTIVE_DECIDED` and `IncentiveEventListener` in `notification` (recipients per [contracts/module-interfaces.md](contracts/module-interfaces.md)); tests
-- [ ] T026 [P] [US4] `incentive.api.IncentiveSummary` implementation and the 028 tile plus Director approvals-inbox entry via the `reporting` SPI; tests
+- [x] T025 [P] [US4] Notification types `INCENTIVE_PENDING`, `INCENTIVE_DECIDED` and `IncentiveEventListener` in `notification` (recipients per [contracts/module-interfaces.md](contracts/module-interfaces.md)); tests
+- [x] T026 [P] [US4] `incentive.api.IncentiveSummary` implementation and the 028 tile plus Director approvals-inbox entry via the `reporting` SPI; tests
 - [ ] T027 [US4] Frontend `features/incentives`: list with filters and totals, detail drawer with history and payroll status, approve and reject dialogs (reason), My Incentives, No-earner tab, CSV export, route and menu entry; loading, empty and error states; DD/MM/YYYY and Rupee format
 - [ ] T028 [P] [US4] Frontend tests (Vitest) for list, filters, approve and reject flow, role-based buttons, empty states; accessibility tests (WCAG 2.2 AA, keyboard, phone width, dark mode)
-- [ ] T029 [P] [US4] Scope tests for every endpoint including export and direct links (SC-004)
+- [x] T029 [P] [US4] Scope tests for every endpoint including export and direct links (SC-004)
 
 ## Phase 7: User Story 5 - Hold when the MoU stops counting (P3)
 
