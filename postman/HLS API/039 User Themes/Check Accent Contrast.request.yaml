@@ -1,0 +1,15 @@
+$kind: http-request
+name: Check Accent Contrast
+description: "Pure check, writes nothing. Returns the light and dark ratios with pass flags and a suggested readable colour. Try #FFEB3B to see a refusal."
+url: "{{baseUrl}}/api/v1/me/theme/contrast-check"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "accent": "#FFEB3B",
+      "preset": "classic"
+    }
+order: 4000
