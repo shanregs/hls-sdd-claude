@@ -167,6 +167,7 @@ What creates a notification (inside the same transaction as the action, so a ref
   same person within 10 minutes become one notification ("updated 3 days of your attendance in October 2026").
   The Teacher's own marks and the Leave marks made by an approved leave create none.
 - A supervisor **locks or reopens** a month: each Teacher is told once.
+- Later specs add their own events (training, MoU approval, tasks, transfers, payroll, marketing); they use the same bell and list. The full list is in `docs/spec-roadmap.md` section 5.
 
 Notifications older than 90 days are deleted every night at 02:30 (`hls.notification.retention.enabled`, default
 on). The demo data adds: Tara a read "leave approved", an unread "leave rejected" and an attendance notice;
