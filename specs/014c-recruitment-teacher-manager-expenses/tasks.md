@@ -19,10 +19,10 @@
 - [X] T006a Test A4: per-Teacher counts equal the 026 Teacher screen; sum over Teachers of a Manager equals `byManager`
 - [X] T007 [P] A5 (027) `TeacherMovementSource.movementsBetween` in `teacher.api`, implemented in `transfer`
 - [X] T007a Test A5: an Approved and an Applied transfer and a replacement counted in their month only; Draft and Rejected excluded
-- [ ] T008 [P] A9 (015) `ExpenseQueries.claimedBy`
-- [ ] T008a Test A9: totals per claimant equal My Expenses; Teachers with no claims absent
-- [ ] T009 [P] A10 (015) `ExpenseQueries.budgetVsActual` delegating to `BudgetQueries.overview`
-- [ ] T009a Test A10: rows equal the 015 budget screen; Head office row has a null zone; no budget gives null budget, real actual
+- [X] T008 [P] A9 (015) `ExpenseQueries.claimedBy`
+- [X] T008a Test A9: totals per claimant equal My Expenses; Teachers with no claims absent
+- [X] T009 [P] A10 (015) `ExpenseQueries.budgetVsActual` delegating to `BudgetQueries.overview`
+- [X] T009a Test A10: rows equal the 015 budget screen; Head office row has a null zone; no budget gives null budget, real actual
 - [ ] T010 [P] A1 (016) `recruitment.api.RecruitmentFigures`; the dashboard service calls it
 - [ ] T010a Test A1: figures equal the existing dashboard output for a seeded season (regression test unchanged), zone filter works
 - [ ] T011 [P] A2 (023) `recruitment.api.DemandFigures`; marketing dashboard calls it
