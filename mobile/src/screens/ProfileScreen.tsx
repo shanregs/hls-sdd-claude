@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, HelperText, SegmentedButtons, Text, TextInput } from "react-native-paper";
+import { ActivityIndicator, Button, HelperText, Text, TextInput } from "react-native-paper";
 import { getProfile, updateProfile, type AccountProfile } from "../api/profileApi";
 import { ApiError, NoConnectionError } from "../api/errors";
 import { useSignOutGuard } from "../auth/useSignOutGuard";
-import { useThemePreference, type ThemePreference } from "../theme/ThemeProvider";
+import { ThemeSection } from "../theme/ThemeSection";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { Screen } from "./Screen";
 
@@ -20,7 +20,6 @@ export function ProfileScreen({
   onOpenPrivacy: () => void;
 }) {
   const { requestLogout, dialog } = useSignOutGuard();
-  const { preference, setPreference } = useThemePreference();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -139,18 +138,7 @@ export function ProfileScreen({
         </View>
       ) : null}
 
-      <Text variant="titleMedium" style={styles.heading}>
-        Appearance
-      </Text>
-      <SegmentedButtons
-        value={preference}
-        onValueChange={(value) => setPreference(value as ThemePreference)}
-        buttons={[
-          { value: "system", label: "Device", accessibilityLabel: "Follow device theme" },
-          { value: "light", label: "Light", accessibilityLabel: "Light theme" },
-          { value: "dark", label: "Dark", accessibilityLabel: "Dark theme" },
-        ]}
-      />
+      <ThemeSection />
 
       <Button mode="outlined" onPress={onOpenDevices} contentStyle={styles.buttonContent} accessibilityLabel="Signed-in devices">
         Signed-in devices
@@ -168,6 +156,5 @@ export function ProfileScreen({
 
 const styles = StyleSheet.create({
   form: { gap: spacingUnit },
-  heading: { marginTop: spacingUnit * 2 },
   buttonContent: { minHeight: minTouchTarget },
 });
