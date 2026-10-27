@@ -26,6 +26,12 @@ collections), 013b (payslips), 027 (placement), 017a (substitution), 023, 026. D
 Out of scope: Teacher, Recruitment, Manager, Expenses reports (014c), payroll cost report (014a), cost to HLS beyond net
 pay, charts, scheduled output.
 
+## Prerequisites (amendments to merged specs, to be done before or with 014b)
+
+- **022**: expose the fee per Teacher per School for a month (today `TeacherBilled` has a total and a School id list only).
+- **027**: expose placement days per Teacher per School per month, to split pay.
+- **013b**: `PayrollFigures` (decided in 014a).
+
 ## What 014b needs from other modules (verified against main on 2026-10-27)
 
 | Need | State on main |
