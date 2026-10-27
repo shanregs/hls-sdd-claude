@@ -7,12 +7,12 @@ import { AuthProvider } from "./auth/useAuth";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeModeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeModeProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>
-      </AuthProvider>
-    </ThemeModeProvider>
+      </ThemeModeProvider>
+    </AuthProvider>
   </StrictMode>,
 );

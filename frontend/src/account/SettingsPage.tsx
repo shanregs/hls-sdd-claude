@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../auth/useAuth";
+import { ThemeSettingsPage } from "./ThemeSettingsPage";
 import {
   changePassword,
   getProfile,
@@ -308,7 +309,7 @@ export function SettingsPage() {
   const { authFetch } = useAuth();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"profile" | "password">("profile");
+  const [tab, setTab] = useState<"profile" | "password" | "theme">("profile");
 
   useEffect(() => {
     let cancelled = false;
@@ -354,6 +355,12 @@ export function SettingsPage() {
               id="settings-tab-password"
               aria-controls="settings-panel"
             />
+            <Tab
+              label="Theme"
+              value="theme"
+              id="settings-tab-theme"
+              aria-controls="settings-panel"
+            />
           </Tabs>
           <Box
             role="tabpanel"
@@ -361,11 +368,11 @@ export function SettingsPage() {
             aria-labelledby={`settings-tab-${tab}`}
             sx={{ p: 2 }}
           >
-            {tab === "profile" ? (
+            {tab === "profile" && (
               <ProfileSection profile={profile} onSaved={setProfile} />
-            ) : (
-              <ChangePasswordForm />
             )}
+            {tab === "password" && <ChangePasswordForm />}
+            {tab === "theme" && <ThemeSettingsPage />}
           </Box>
         </Paper>
       )}
