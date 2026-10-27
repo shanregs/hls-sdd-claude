@@ -16,7 +16,17 @@
 - A Zone Manager has no access to Payroll or Expenses.
 - Version 1 is CSV only, every export audited, per-report permission keys, figures read from the owning module.
 
-Open questions for 014c are in `clarification-questions.md`; each has a default recorded under Assumptions.
+### Session 2026-10-27 (014c)
+
+Answered by the product owner ("defaults", the recommended option A for all five):
+
+- Q: Recruitment period? -> A: Season filter replaces the month; default the current season; no month-state label.
+- Q: Manager productivity assigned/completed and activity counts? -> A: 025 and 035 each contribute `ManagerColumns`.
+- Q: Zone Manager's own expense claimed? -> A: Shown on their own row; the Expenses report stays closed to them.
+- Q: Teacher report rows and scope? -> A: Teachers placed or in training in the month plus those exited in it; scope by the placement on the last day (or exit date).
+- Q: Teacher training attendance source? -> A: 008 attendance roll-up (no 024 change).
+
+The questions and options are in `clarification-questions.md`; the answers are also reflected under Assumptions.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -185,6 +195,7 @@ System grant are possible on any of them; `REPORT_EXPENSES` is not eligible for 
 ## Assumptions
 
 - Built on the 014a contract (`ReportSource`, `ReportContext`, `ReportPage`, `Cell`, `DefaultMonth`, `ReportCsvWriter`, `ReportExportAudit`), by those names; 014a is being implemented in parallel on `impl/014a-reports-framework`, and the plan re-checks the names against it.
+- The one framework addition is a season filter and request field (plan A0), additive and made after 014a merges; no report logic changes.
 - Recruitment uses a season filter instead of the month (default: the current season); the month-state label does not apply. (Q1)
 - Manager productivity builds task and activity figures with the `ManagerColumns` pattern, so common columns equal the dashboard by construction. (Q2)
 - A Zone Manager sees their own Manager-productivity row including their own expense claimed, but has no Expenses report. (Q3)

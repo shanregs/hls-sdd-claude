@@ -1,7 +1,7 @@
 # Clarification Questions: 014c Recruitment, Teacher, Manager and Expenses Reports
 
-2026-10-27. Please answer with a letter per question ("defaults" means the recommended option A for all). Each default is
-already written into Assumptions of `spec.md`, so an unanswered question changes nothing. Plan and tasks follow the answers.
+2026-10-27. **Answered** the same day by the product owner: "defaults", meaning option A (the recommended one) for all five
+questions. The answers are recorded in the Clarifications section of `spec.md`.
 
 ## Q1. Recruitment report: month or season?
 
