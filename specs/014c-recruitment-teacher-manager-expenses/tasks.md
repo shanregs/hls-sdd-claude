@@ -17,8 +17,8 @@
 - [X] T005a Test A3: status, effective date and joining date for 3 Teachers, unknown ids absent, fixed query count
 - [X] T006 [P] A4 (026) `PerformanceSummary.byTeacher`
 - [X] T006a Test A4: per-Teacher counts equal the 026 Teacher screen; sum over Teachers of a Manager equals `byManager`
-- [ ] T007 [P] A5 (027) `TeacherMovementSource.movementsBetween` in `teacher.api`, implemented in `transfer`
-- [ ] T007a Test A5: an Approved and an Applied transfer and a replacement counted in their month only; Draft and Rejected excluded
+- [X] T007 [P] A5 (027) `TeacherMovementSource.movementsBetween` in `teacher.api`, implemented in `transfer`
+- [X] T007a Test A5: an Approved and an Applied transfer and a replacement counted in their month only; Draft and Rejected excluded
 - [ ] T008 [P] A9 (015) `ExpenseQueries.claimedBy`
 - [ ] T008a Test A9: totals per claimant equal My Expenses; Teachers with no claims absent
 - [ ] T009 [P] A10 (015) `ExpenseQueries.budgetVsActual` delegating to `BudgetQueries.overview`
