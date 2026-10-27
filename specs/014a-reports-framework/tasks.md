@@ -33,15 +33,15 @@
 
 ## Phase 4: US2 Payroll cost report (P1)
 
-- [ ] T018 Add `payroll/api/PayrollFigures` (read-only: run state for a month; per person gross, LOP, reimbursements, net, kind, Zone and School) and implement in `payroll/run/internal` over the existing run data (decided amendment to 013b, read-only and additive); also reused by 014b
-- [ ] T018a Test `PayrollFigures` returns the same totals as the run total and the run export for an approved and a draft run, and no figure for a month with no run
-- [ ] T019 [US2] `PayrollReportSource`: totals by kind of person, Zone and School, run state, cycle table by month; "no run yet" gives NO_DATA; draft run is labelled
-- [ ] T020 [US2] Tests: totals equal the run total, the run export and the dashboard payroll tile; Zone Manager and Teacher get 403 and no menu item
+- [x] T018 Add `payroll/api/PayrollFigures` (read-only: run state for a month; per person gross, LOP, reimbursements, net, kind, Zone and School) and implement in `payroll/run/internal` over the existing run data (decided amendment to 013b, read-only and additive); also reused by 014b
+- [x] T018a Test `PayrollFigures` returns the same totals as the run total and the run export for an approved and a draft run, and no figure for a month with no run
+- [x] T019 [US2] `PayrollReportSource`: totals by kind of person, Zone and School, run state, cycle table by month; "no run yet" gives NO_DATA; draft run is labelled
+- [x] T020 [US2] Tests: totals equal the run total, the run export and the dashboard payroll tile; Zone Manager and Teacher get 403 and no menu item
 - [ ] T021 [P] [US2] Frontend: Payroll columns and cycle table
 
 ## Phase 5: US3 CSV export and audit (P1)
 
-- [ ] T022 [US3] Wire Export for both reports with the same filter and scope; tests that file rows equal screen rows and a user without Export is refused
+- [x] T022 [US3] Wire Export for both reports with the same filter and scope; tests that file rows equal screen rows and a user without Export is refused
 - [ ] T023 [P] [US3] Frontend Export button gated by the Export grant; download with the filter
 
 ## Phase 6: US4 My Report (P2)
