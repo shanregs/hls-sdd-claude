@@ -46,13 +46,13 @@
 
 - [X] T020 [US2] `ExpensesReportSource` with sections `spend`, `budget`, `pending` (labelled as of today), `costs`; "no Schools won" and "no Teachers" states
 - [X] T021 [US2] Tests: figures equal 015 screens and the dashboard expense tile; Zone Manager and Teacher get 403 and no menu item; Head office row
-- [ ] T022 [P] [US2] Frontend
+- [X] T022 [P] [US2] Frontend
 
 ## Phase 5: US3 Teacher (P1)
 
-- [ ] T023 [US3] `TeacherReportSource`: sections `byStatus` and `teachers`; list rule of Q4; Zone and School from the last-day placement (exit date for exited); training days from `rollupsOf`; joined/exited from A3, issues and observations from A4, movements from A5
-- [ ] T024 [US3] Scope through `TeacherScopeQueries`; Zone Manager sees own Teachers only; mid-month mover appears once
-- [ ] T025 [US3] Tests: status counts add to rows; exited in month listed once and marked; exited earlier not listed; no placement shows "not placed"; counts equal 026 and 027 screens
+- [X] T023 [US3] `TeacherReportSource`: sections `byStatus` and `teachers`; list rule of Q4; Zone and School from the last-day placement (exit date for exited); training days from `rollupsOf`; joined/exited from A3, issues and observations from A4, movements from A5
+- [X] T024 [US3] Scope through `TeacherScopeQueries`; Zone Manager sees own Teachers only; mid-month mover appears once
+- [X] T025 [US3] Tests: status counts add to rows; exited in month listed once and marked; exited earlier not listed; no placement shows "not placed"; counts equal 026 and 027 screens
 - [ ] T026 [P] [US3] Frontend
 
 ## Phase 6: US4 Recruitment (P2)
