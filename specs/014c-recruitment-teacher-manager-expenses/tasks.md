@@ -37,9 +37,9 @@
 
 ## Phase 3: US1 Manager productivity (P1) MVP
 
-- [ ] T016 [US1] `ManagerReportSource` in `reporting/internal/report/`: inject all `ManagerColumns`, add attendance % (`ManagerAttendanceReadApi.months`), training days (`ManagerTrainingDays.attendedDaysOf`), expense claimed (A9); month state from the Manager lock
-- [ ] T017 [US1] Scope: Admin and Director all Managers; Zone Manager own row only; Zone and Manager filters outside scope refused
-- [ ] T018 [US1] Tests: common columns equal the dashboard comparison table; no planned activity gives NO_DATA; activity source down gives NOT_AVAILABLE for those columns only; Zone Manager sees own row and own expense (Q3); open label
+- [X] T016 [US1] `ManagerReportSource` in `reporting/internal/report/`: inject all `ManagerColumns`, add attendance % (`ManagerAttendanceReadApi.months`), training days (`ManagerTrainingDays.attendedDaysOf`), expense claimed (A9); month state from the Manager lock
+- [X] T017 [US1] Scope: Admin and Director all Managers; Zone Manager own row only; Zone and Manager filters outside scope refused
+- [X] T018 [US1] Tests: common columns equal the dashboard comparison table; no planned activity gives NO_DATA; activity source down gives NOT_AVAILABLE for those columns only; Zone Manager sees own row and own expense (Q3); open label
 - [ ] T019 [P] [US1] Frontend column definitions and page test
 
 ## Phase 4: US2 Expenses (P1)
