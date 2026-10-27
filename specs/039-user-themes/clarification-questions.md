@@ -1,5 +1,7 @@
 # Clarification Questions: 039 User Themes
 
+**ANSWERED 2026-10-27: option A (defaults) for Q1, Q2 and Q3.**
+
 Defaults are already applied in spec.md (Assumptions); answer only to change them.
 
 ## Q1. What happens to an unreadable custom accent?

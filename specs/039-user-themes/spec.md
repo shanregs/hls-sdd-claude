@@ -8,6 +8,14 @@
 
 **Input**: User description: "Personal themes for the HLS web app and Android app: preset themes with light and dark variants, own accent colour with a readability check, live preview, reset, saved per user on the server, last choice remembered on the phone, a less flat look." (see docs/spec-inputs/039-user-themes.md)
 
+## Clarifications
+
+### Session 2026-10-27
+
+- Q: Unreadable custom accent? -> A: Refuse as entered, offer an adjusted passing colour to accept.
+- Q: Darker web sidebar? -> A: Per-user opt-in, default off.
+- Q: Custom accent in light vs dark? -> A: One accent stored, auto-adjusted per variant.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Pick a preset theme and mode (Priority: P1)
