@@ -6,10 +6,10 @@
 
 ## Phase 1: Setup and permissions
 
-- [ ] T001 Add `REPORT_ATTENDANCE` (View, Export), `REPORT_PAYROLL` (View, Export) and `MY_REPORT` (View) to `backend/src/main/java/com/hls/identity/permissions/PermissionModule.java`
-- [ ] T002 Set eligibility and seeded defaults (Admin, Director: both reports; Manager: Attendance; Teacher: MY_REPORT; no System) in `PermissionEligibility.java` and the seeder; test that Manager cannot be granted `REPORT_PAYROLL` by default
-- [ ] T003 [P] Add the REPORTS section and items (Attendance, Payroll, My Report) to `NavigationCatalog.java`; update its tests and the access-model menu expectations
-- [ ] T004 [P] Record the decided amendment to spec 002 (per-report keys replace the single REPORTS row) in `specs/002-access-model-app-shell/spec.md`, and add a test that the permission matrix lists the three new modules and no `REPORTS` module
+- [x] T001 Add `REPORT_ATTENDANCE` (View, Export), `REPORT_PAYROLL` (View, Export) and `MY_REPORT` (View) to `backend/src/main/java/com/hls/identity/permissions/PermissionModule.java`
+- [x] T002 Set eligibility and seeded defaults (Admin, Director: both reports; Manager: Attendance; Teacher: MY_REPORT; no System) in `PermissionEligibility.java` and the seeder; test that Manager cannot be granted `REPORT_PAYROLL` by default
+- [x] T003 [P] Add the REPORTS section and items (Attendance, Payroll, My Report) to `NavigationCatalog.java`; update its tests and the access-model menu expectations
+- [x] T004 [P] Record the decided amendment to spec 002 (per-report keys replace the single REPORTS row) in `specs/002-access-model-app-shell/spec.md`, and add a test that the permission matrix lists the three new modules and no `REPORTS` module
 
 ## Phase 2: Framework (blocks every story)
 
