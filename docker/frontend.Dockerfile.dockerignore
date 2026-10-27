@@ -1,5 +1,7 @@
 **
 !frontend/
 !docker/nginx.*.conf
+!backend/src/main/resources/themes/theme-presets.json
+!specs/039-user-themes/contracts/contrast-vectors.json
 frontend/node_modules
 frontend/dist
