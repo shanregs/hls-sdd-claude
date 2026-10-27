@@ -46,7 +46,7 @@
 
 - [X] T020 [US2] `ExpensesReportSource` with sections `spend`, `budget`, `pending` (labelled as of today), `costs`; "no Schools won" and "no Teachers" states
 - [X] T021 [US2] Tests: figures equal 015 screens and the dashboard expense tile; Zone Manager and Teacher get 403 and no menu item; Head office row
-- [X] T022 [P] [US2] Frontend
+- [ ] T022 [P] [US2] Frontend
 
 ## Phase 5: US3 Teacher (P1)
 
