@@ -54,9 +54,9 @@
 
 - [x] T027 Test report added on the framework with no framework change (SC-006), kept as a test fixture
 - [x] T028 Source-failure test: one source throws, other columns still load (SC-005)
-- [ ] T029 Performance check at 500 Teachers and 50 Managers (first page under 3 s, export under 30 s)
-- [ ] T030 Check no migration was added (none expected); if one is needed, take the next free number above V120 on current main
-- [ ] T031 Update `docs/spec-roadmap.md` 014 row with the implemented state and the quickstart in `specs/014a-reports-framework/quickstart.md`; run the full backend and frontend suites
+- [x] T029 Performance check at 500 Teachers and 50 Managers (first page under 3 s, export under 30 s)
+- [x] T030 Check no migration was added (none expected); if one is needed, take the next free number above V120 on current main
+- [x] T031 Update `docs/spec-roadmap.md` 014 row with the implemented state and the quickstart in `specs/014a-reports-framework/quickstart.md`; run the full backend and frontend suites
 
 ## Dependencies
 
