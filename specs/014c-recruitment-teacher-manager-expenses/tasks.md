@@ -15,8 +15,8 @@
 
 - [X] T005 [P] A3 (005) `TeacherDirectory.lifecycle` bulk; confirm the joining-date field first and record the fallback if absent
 - [X] T005a Test A3: status, effective date and joining date for 3 Teachers, unknown ids absent, fixed query count
-- [ ] T006 [P] A4 (026) `PerformanceSummary.byTeacher`
-- [ ] T006a Test A4: per-Teacher counts equal the 026 Teacher screen; sum over Teachers of a Manager equals `byManager`
+- [X] T006 [P] A4 (026) `PerformanceSummary.byTeacher`
+- [X] T006a Test A4: per-Teacher counts equal the 026 Teacher screen; sum over Teachers of a Manager equals `byManager`
 - [ ] T007 [P] A5 (027) `TeacherMovementSource.movementsBetween` in `teacher.api`, implemented in `transfer`
 - [ ] T007a Test A5: an Approved and an Applied transfer and a replacement counted in their month only; Draft and Rejected excluded
 - [ ] T008 [P] A9 (015) `ExpenseQueries.claimedBy`
