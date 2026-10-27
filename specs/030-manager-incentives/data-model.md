@@ -40,7 +40,7 @@ State transitions:
 
 ```text
 (created) PENDING_APPROVAL --approve--> APPROVED --run applies--> PAID_IN_RUN (final)
-PENDING_APPROVAL --reject(reason)--> REJECTED --reopen (Director, reason)--> PENDING_APPROVAL
+PENDING_APPROVAL --reject(reason)--> REJECTED --reopen (Director or the School's Zone Manager, reason)--> PENDING_APPROVAL
 APPROVED --MoU stops counting, offer withdrawn--> HELD --MoU approved again, offer again--> APPROVED
 APPROVED --MoU changes while run awaits approval--> APPROVED with mou_changed = true
 ```

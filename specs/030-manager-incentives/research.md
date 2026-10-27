@@ -45,7 +45,7 @@ A no-earner row is replaced by an incentive if a later check finds an earner (fo
 
 **D-5 Unique per School.** `school_id` is unique on `incentive`, so duplicate events, the reconcile job and re-approval cannot create
 a second row (an insert conflict is read back as "already earned"). A rejected incentive is final for that School (a rejection is a
-business decision); the Director may reopen it with a reason (tasks T038) so the rule "once per School" holds.
+business decision); the Director, or the Zone Manager for Schools in their Zone, may reopen it with a reason (tasks T038; decided 2026-10-27) so the rule "once per School" holds.
 
 **D-6 Amount.** `SettingKey.INCENTIVE_AMOUNT` default 5000.00 read at creation and stored; later changes affect new rows only.
 
@@ -90,6 +90,10 @@ implementation they are adapted in `reporting`, not in `incentive`.
 - 011: one new setting. 010: two new notification types. 002/004: new permission module and nav item. Constitution: PATCH 2.5.15.
 - 014 (reports) may later read `IncentiveSummary` for Manager productivity.
 
-## 4. Open points that need no user decision now
+## 4. Decided by the user on 2026-10-27
 
-- Whether a rejected incentive may be reopened (D-5): planned as Director only, with a reason. Flagged in the report.
+- A rejected incentive may be reopened with a reason by the Director or the Zone Manager of the School's Zone (D-5).
+- A MoU withdrawn while a run awaits approval: the incentive keeps its line in the run, is flagged `mou_changed` and the Director is notified (D-9).
+- Go-live is the time migration V130 runs (D-3).
+
+No open decisions remain.

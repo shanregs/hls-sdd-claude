@@ -63,7 +63,7 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 - [ ] T035 [P] Postman requests for the incentive API (`postman/`)
 - [ ] T036 Constitution PATCH 2.5.15: Sync Impact Report, Default role access matrix row "Incentives", OPERATIONS navigation (`.specify/memory/constitution.md`); renumber if another spec merges first
 - [ ] T037 Update `docs/spec-roadmap.md` rows 030, 013b and 028 (status, amendment A, tile) and `docs/spec-inputs/030-manager-incentives.md` if decisions changed
-- [ ] T038 Director reopen of a rejected incentive (`POST /{id}/reopen`, reason required, Director only, audited) so the rule "one incentive per School" still allows a corrected decision; tests
+- [ ] T038 Reopen of a rejected incentive by the Director or the Zone Manager of the School's Zone (`POST /{id}/reopen`, reason required, same scope and no-Zone-Manager rules as approve, audited); uses the existing `APPROVE` grant so permission eligibility and access-model seeds need no change, but add tests that Admin, Teacher and System are refused and a Zone Manager of another Zone gets 404 so the rule "one incentive per School" still allows a corrected decision; tests
 - [ ] T039 Run `quickstart.md` sections 1 to 9 and record results in `quickstart-results.md`; run the full backend and frontend test suites and the module-boundary (Modulith) verification
 
 ## Dependencies

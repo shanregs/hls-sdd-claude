@@ -10,7 +10,7 @@ Teacher and System: 403.
 | GET `/{id}` | VIEW | detail with School, Zone, earner, MoU link, status, history (`incentive_event`), payroll status text |
 | POST `/{id}/approve` | APPROVE | body `{version}`; Director, or Zone Manager of the School's Zone (also when the earner); 409 if already decided (names decider) |
 | POST `/{id}/reject` | APPROVE | body `{version, reason}` reason required, at most 500 |
-| POST `/{id}/reopen` | APPROVE (Director only) | body `{version, reason}`; REJECTED back to PENDING_APPROVAL |
+| POST `/{id}/reopen` | APPROVE (Director, or Zone Manager of the School's Zone) | body `{version, reason}`; REJECTED back to PENDING_APPROVAL |
 | GET `/summary` | VIEW | counts and totals per status, and per Manager and month (`from`, `to`) |
 | GET `/export.csv` | EXPORT | same filters as the list; formula cells neutralised |
 | GET `/no-earner` | VIEW (Admin, Director) | Schools with an approved MoU and no incentive, reason, resolved flag |

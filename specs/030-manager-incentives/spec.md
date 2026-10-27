@@ -18,6 +18,9 @@ The user answered "defaults" for all five questions in `clarification-questions.
 - Q: Which payroll month pays it? -> A: The next run that includes the Manager after the incentive is approved (usually the month of approval), the rule 013b already uses for waiting adjustments.
 - Q: Is the amount always Rs 5,000? -> A: One amount for every School, kept as a setting (default Rs 5,000) and frozen on each incentive. No per-incentive change, no thresholds.
 - Q: What if the MoU is rejected or sent back to pending after the incentive is approved? -> A: Hold the incentive (no run takes it) until the MoU is approved again. After payment it is never taken back automatically; the Admin uses a Correction adjustment in payroll.
+- Q: Can a rejected incentive be reopened? -> A: Yes, with a reason, by the Director or the Zone Manager of the School's Zone (same people who decide); it returns to pending approval. Still one incentive per School.
+- Q: A MoU is withdrawn while a pay run awaits approval? -> A: The incentive keeps its line in that run, is flagged "MoU changed" and the Director is notified; the run's reviewer decides.
+- Q: What is go-live? -> A: The time the incentive database migration runs; MoUs approved before it earn nothing.
 - Q: Do MoUs approved before go-live earn? -> A: No. Only MoUs approved after go-live earn. A MoU shown as "approved (before approval step)" has no approval date and is listed as "excluded, approved before the approval step"; it never earns.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -137,6 +140,7 @@ If the MoU stops counting as approved (rejected, or sent back to pending by a do
 
 - **FR-006**: Only the Director, or the Zone Manager of the School's Zone, MAY approve or reject an incentive (D5). Admin, Teacher and System MUST NOT. A School with no Zone Manager MUST be decided by the Director only.
 - **FR-007**: A Manager MAY approve an incentive they earned (D5) when they are otherwise permitted to (the Zone Manager of that School's Zone); the incentive MUST then be marked as approved by the earner, and the audit record MUST name both earner and approver.
+- **FR-008a**: A rejected incentive MAY be reopened with a required reason (at most 500 characters) by the Director or the Zone Manager of the School's Zone; it returns to pending approval, is audited, and never creates a second incentive.
 - **FR-008**: Rejection MUST require a reason (at most 500 characters) that is kept and shown to the earner. A decision MUST be taken once; concurrent decisions MUST result in exactly one recorded decision.
 
 **Payment through payroll**
@@ -165,8 +169,8 @@ If the MoU stops counting as approved (rejected, or sent back to pending by a do
 | Role     | Menu (section → item) | Default actions | Data scope |
 | -------- | --------------------- | --------------- | ---------- |
 | Admin    | OPERATIONS → Incentives | View, Export | Org-wide |
-| Director | OPERATIONS → Incentives (and approvals inbox) | View, Approve, Export | Org-wide |
-| Manager  | OPERATIONS → Incentives (Zone Manager: Zone's Schools; any Manager: own) | View own; a Zone Manager approves within own Zone, including one they earned | Assigned (Zone) and Own |
+| Director | OPERATIONS → Incentives (and approvals inbox) | View, Approve (reject, reopen), Export | Org-wide |
+| Manager  | OPERATIONS → Incentives (Zone Manager: Zone's Schools; any Manager: own) | View own; a Zone Manager approves, rejects and reopens within own Zone, including one they earned | Assigned (Zone) and Own |
 | Teacher  | none | none | None |
 | System   | none | none | None |
 
