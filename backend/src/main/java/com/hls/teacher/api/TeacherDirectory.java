@@ -68,6 +68,16 @@ public interface TeacherDirectory {
     /** Bulk form of {@link #salaryOn}; a Teacher with no salary on the date is absent from the map. One query. */
     Map<UUID, SalaryOn> salariesOn(Collection<UUID> teacherIds, LocalDate date);
 
+    /**
+     * A Teacher's status, the date it took effect and the joining date (spec 014c A3). Teacher has no joining-date field
+     * (checked 2026-10-27), so {@code joinedOn} is the start of the Teacher's earliest ACTIVE placement and is null for a
+     * Teacher never placed. For an EXITED Teacher {@code statusEffectiveOn} is the exit date.
+     */
+    record Lifecycle(String status, LocalDate statusEffectiveOn, LocalDate joinedOn) {}
+
+    /** Bulk lifecycle of the given Teachers; unknown ids are absent. A fixed number of queries (two). */
+    Map<UUID, Lifecycle> lifecycle(Collection<UUID> teacherIds);
+
     /** The ids of the Teachers holding each given designation (a designation nobody holds is absent). One query. */
     Map<UUID, List<UUID>> teachersByDesignation(Collection<UUID> designationIds);
 }

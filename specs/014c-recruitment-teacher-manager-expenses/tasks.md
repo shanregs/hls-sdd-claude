@@ -13,8 +13,8 @@
 
 ## Phase 2: Read-only amendments to merged modules (each with its test)
 
-- [ ] T005 [P] A3 (005) `TeacherDirectory.lifecycle` bulk; confirm the joining-date field first and record the fallback if absent
-- [ ] T005a Test A3: status, effective date and joining date for 3 Teachers, unknown ids absent, fixed query count
+- [X] T005 [P] A3 (005) `TeacherDirectory.lifecycle` bulk; confirm the joining-date field first and record the fallback if absent
+- [X] T005a Test A3: status, effective date and joining date for 3 Teachers, unknown ids absent, fixed query count
 - [ ] T006 [P] A4 (026) `PerformanceSummary.byTeacher`
 - [ ] T006a Test A4: per-Teacher counts equal the 026 Teacher screen; sum over Teachers of a Manager equals `byManager`
 - [ ] T007 [P] A5 (027) `TeacherMovementSource.movementsBetween` in `teacher.api`, implemented in `transfer`

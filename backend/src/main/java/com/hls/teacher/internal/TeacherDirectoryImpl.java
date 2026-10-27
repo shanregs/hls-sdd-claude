@@ -152,6 +152,22 @@ class TeacherDirectoryImpl implements TeacherDirectory {
         return result;
     }
 
+    @Override
+    public Map<UUID, Lifecycle> lifecycle(Collection<UUID> teacherIds) {
+        if (teacherIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, LocalDate> firstPlaced = new HashMap<>();
+        for (PlacementSpan span : placements.spansOverlapping(teacherIds, LocalDate.of(1900, 1, 1), LocalDate.of(9999, 12, 31))) {
+            firstPlaced.merge(span.teacherId(), span.startsOn(), (a, b) -> a.isBefore(b) ? a : b);
+        }
+        Map<UUID, Lifecycle> result = new HashMap<>();
+        for (Teacher t : teachers.findAllById(teacherIds)) {
+            result.put(t.getId(), new Lifecycle(t.getStatus().name(), t.getStatusEffectiveOn(), firstPlaced.get(t.getId())));
+        }
+        return result;
+    }
+
     private static TeacherInfo toInfo(Teacher t) {
         return new TeacherInfo(t.getId(), t.getName(), t.getStatus().name(), t.getUserId());
     }
