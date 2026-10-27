@@ -31,8 +31,8 @@
 - [X] T012a Test A6: counts by month for two Managers; existing three columns unchanged; one bulk query
 - [X] T013 [P] A7 (035) `ActivityManagerColumns` bean; check module-dependency test (`activitycalendar -> reporting.api`, no cycle) still passes
 - [X] T013a Test A7: planned, done, missed, rescheduled equal `CalendarSummary.byManager` for the month
-- [ ] T014 [P] A8 (023) `marketing.visitsDone`, `marketing.wonInMonth` on `MarketingManagerColumns`
-- [ ] T014a Test A8: counts for a seeded month; `marketing.visitsMissed` and `marketing.won` unchanged
+- [X] T014 [P] A8 (023) `marketing.visitsDone`, `marketing.wonInMonth` on `MarketingManagerColumns`
+- [X] T014a Test A8: counts for a seeded month; `marketing.visitsMissed` and `marketing.won` unchanged
 - [ ] T015 Dashboard comparison regression: the new columns appear and existing column values are unchanged (028 tests)
 
 ## Phase 3: US1 Manager productivity (P1) MVP
