@@ -199,6 +199,13 @@ public class MonthLockService {
         publisher.publishEvent(new AttendanceMonthLocked(teacherId, month, actorUserId));
     }
 
+    /** The live (not frozen) rollups of many Teachers, loading everything in bulk (spec 014a). */
+    public Map<UUID, Rollup> liveRollups(Collection<UUID> teacherIds, YearMonth month) {
+        Map<UUID, Rollup> result = new HashMap<>();
+        calculate(teacherIds, month).forEach((id, calc) -> result.put(id, calc.rollup()));
+        return result;
+    }
+
     /** The rollup and unmarked days for many Teachers, loading everything in bulk. */
     private Map<UUID, Calculation> calculate(Collection<UUID> teacherIds, YearMonth month) {
         if (teacherIds.isEmpty()) {

@@ -28,13 +28,19 @@ class AttendanceReadApiImpl implements AttendanceReadApi {
     private final TeacherDirectory teachers;
     private final AttendanceMarkRepository marks;
     private final StatusCodeCatalog codes;
+    private final MonthLockService lockService;
+    private final TeacherMonthRepository monthRows;
 
     AttendanceReadApiImpl(
             TeacherMonthViewService views,
             TeacherMonthLock monthLock,
             TeacherDirectory teachers,
             AttendanceMarkRepository marks,
-            StatusCodeCatalog codes) {
+            StatusCodeCatalog codes,
+            MonthLockService lockService,
+            TeacherMonthRepository monthRows) {
+        this.lockService = lockService;
+        this.monthRows = monthRows;
         this.views = views;
         this.monthLock = monthLock;
         this.teachers = teachers;
@@ -60,6 +66,34 @@ class AttendanceReadApiImpl implements AttendanceReadApi {
     @Transactional(readOnly = true)
     public RollupView rollupOf(UUID teacherId, YearMonth month) {
         return month(teacherId, month).map(TeacherMonthView::rollup).orElse(NONE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<UUID, RollupView> rollupsOf(java.util.Collection<UUID> teacherIds, YearMonth month) {
+        java.util.Map<UUID, RollupView> result = new java.util.LinkedHashMap<>();
+        if (teacherIds.isEmpty()) {
+            return result;
+        }
+        java.util.Set<UUID> known = teachers.teacherInfo(teacherIds).keySet();
+        java.util.Map<UUID, TeacherMonth> locked = new java.util.HashMap<>();
+        for (TeacherMonth row : monthRows.findByTeacherIdInAndYearMonth(known, month.toString())) {
+            if (row.getState() == MonthState.LOCKED) {
+                locked.put(row.getTeacherId(), row);
+            }
+        }
+        List<UUID> open = known.stream().filter(id -> !locked.containsKey(id)).toList();
+        java.util.Map<UUID, Rollup> live = lockService.liveRollups(open, month);
+        for (UUID id : teacherIds) {
+            if (!known.contains(id)) {
+                result.put(id, NONE);
+            } else if (locked.containsKey(id)) {
+                result.put(id, TeacherMonthViewService.toView(locked.get(id).frozenRollup(), true));
+            } else {
+                result.put(id, TeacherMonthViewService.toView(live.get(id), false));
+            }
+        }
+        return result;
     }
 
     @Override
