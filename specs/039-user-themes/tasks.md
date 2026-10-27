@@ -68,7 +68,7 @@ description: "Task list for feature implementation"
 ## Phase 8: Polish
 
 - [X] T032 Run the existing a11y suite across all eight variants (SC-005); fix findings
-- [ ] T033 [P] Update `docs/` (running notes), Postman collection entries for the four endpoints
+- [X] T033 [P] Update `docs/` (running notes), Postman collection entries for the four endpoints
 - [ ] T034 Run quickstart.md on web and device; record results
 - [ ] T035 If the user asks: constitution PATCH 3.0.1 wording for Principle IV (not required)
 

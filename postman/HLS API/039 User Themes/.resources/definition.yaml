@@ -1,0 +1,3 @@
+$kind: collection
+description: "User themes (spec 039). Any signed-in user; every call acts on the caller, with no user id and no permission key. 422 codes: ACCENT_UNREADABLE (with failures and a suggested colour), UNKNOWN_PRESET, INVALID_COLOUR, INVALID_MODE."
+order: 39000

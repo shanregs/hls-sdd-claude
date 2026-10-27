@@ -1,0 +1,19 @@
+$kind: http-request
+name: Save My Theme
+description: "Replaces the whole preference. customAccent is null or #RRGGBB; variant (light or dark) is the look in use, so the accent is checked against it. If the stored changedAt is later, nothing is written and the stored row comes back with applied false. 422 ACCENT_UNREADABLE carries a suggested colour."
+url: "{{baseUrl}}/api/v1/me/theme"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "preset": "classic",
+      "mode": "device",
+      "customAccent": "#1E5AA8",
+      "sidebarDark": false,
+      "changedAt": "2026-10-28T09:00:00Z",
+      "variant": "light"
+    }
+order: 2000
