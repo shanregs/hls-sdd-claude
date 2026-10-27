@@ -5,19 +5,19 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 ## Phase 1: Setup
 
-- [ ] T001 Create module package `com.hls.incentive` with `package-info.java` (Modulith named interface `api`) in `backend/src/main/java/com/hls/incentive/`
-- [ ] T002 Re-check migration numbers on `origin/main` (V95 029, V100 031, V110 024, V120 022) and write `V130__create_incentives.sql`: `incentive_program` (seeded `starts_at = now()`), `incentive` (unique `school_id`, indexes), `no_earner` (unique `school_id`), `incentive_event` with append-only trigger (`backend/src/main/resources/db/migration/`)
-- [ ] T003 [P] Add `SettingKey.INCENTIVE_AMOUNT` (`incentive.amount-per-school`, default 5000, range 0 to 100000) and its test (`settings/internal/SettingKey.java`)
-- [ ] T004 [P] Add `PermissionModule.MANAGER_INCENTIVES(VIEW, APPROVE, EXPORT)`, eligibility (APPROVE not for Admin; none for Teacher and System), seeds (Admin VIEW, EXPORT; Director all; Manager VIEW, APPROVE), `NavigationCatalog` OPERATIONS item "Incentives", `AuditVisibility` mapping for `INCENTIVE` entities, and update the access-model tests
+- [x] T001 Create module package `com.hls.incentive` with `package-info.java` (Modulith named interface `api`) in `backend/src/main/java/com/hls/incentive/`
+- [x] T002 Re-check migration numbers on `origin/main` (V95 029, V100 031, V110 024, V120 022) and write `V130__create_incentives.sql`: `incentive_program` (seeded `starts_at = now()`), `incentive` (unique `school_id`, indexes), `no_earner` (unique `school_id`), `incentive_event` with append-only trigger (`backend/src/main/resources/db/migration/`)
+- [x] T003 [P] Add `SettingKey.INCENTIVE_AMOUNT` (`incentive.amount-per-school`, default 5000, range 0 to 100000) and its test (`settings/internal/SettingKey.java`)
+- [x] T004 [P] Add `PermissionModule.MANAGER_INCENTIVES(VIEW, APPROVE, EXPORT)`, eligibility (APPROVE not for Admin; none for Teacher and System), seeds (Admin VIEW, EXPORT; Director all; Manager VIEW, APPROVE), `NavigationCatalog` OPERATIONS item "Incentives", `AuditVisibility` mapping for `INCENTIVE` entities, and update the access-model tests
 
 ## Phase 2: Foundational - 013b amendment A (blocks US3 and US5)
 
-- [ ] T005 Add `payroll.api.IncentiveIntake` (`offer`, `withdraw`, `status`, `OfferStatus`) per [contracts/payroll-incentive-intake.md](contracts/payroll-incentive-intake.md) (`backend/src/main/java/com/hls/payroll/api/IncentiveIntake.java`)
-- [ ] T006 Implement `IncentiveIntakeImpl` in `payroll.run.internal`: offer (idempotent per `sourceRef`, MANAGER only, amount above zero, re-offer after withdrawal), withdraw (false when awaiting approval or applied), status; extract the status derivation shared with `ReimbursementIntakeImpl` without changing 015 behaviour
-- [ ] T007 In `AdjustmentService` keep refusing manual `INCENTIVE` but change the reserved text to say it arrives only through the incentive intake; payslip label already exists (verify `PayslipRenderer`)
-- [ ] T008 [P] Tests for the intake: offer twice gives one adjustment; draft run takes it; recompute and return keep one line; approval applies and publishes `PayrollAdjustmentApplied` kind INCENTIVE; withdraw refused when awaiting approval or applied; person who cannot be paid keeps it waiting; non-Manager refused (`backend/src/test/java/com/hls/payroll/...`)
-- [ ] T009 [P] Regression: the existing 013b and 015 payroll and reimbursement tests still pass unchanged
-- [ ] T010 Record amendment A in `specs/013b-payroll-run/` (a short "Amendments" note in `plan.md` or `research.md`) and in `docs/spec-roadmap.md` row 013b/030
+- [x] T005 Add `payroll.api.IncentiveIntake` (`offer`, `withdraw`, `status`, `OfferStatus`) per [contracts/payroll-incentive-intake.md](contracts/payroll-incentive-intake.md) (`backend/src/main/java/com/hls/payroll/api/IncentiveIntake.java`)
+- [x] T006 Implement `IncentiveIntakeImpl` in `payroll.run.internal`: offer (idempotent per `sourceRef`, MANAGER only, amount above zero, re-offer after withdrawal), withdraw (false when awaiting approval or applied), status; extract the status derivation shared with `ReimbursementIntakeImpl` without changing 015 behaviour
+- [x] T007 In `AdjustmentService` keep refusing manual `INCENTIVE` but change the reserved text to say it arrives only through the incentive intake; payslip label already exists (verify `PayslipRenderer`)
+- [x] T008 [P] Tests for the intake: offer twice gives one adjustment; draft run takes it; recompute and return keep one line; approval applies and publishes `PayrollAdjustmentApplied` kind INCENTIVE; withdraw refused when awaiting approval or applied; person who cannot be paid keeps it waiting; non-Manager refused (`backend/src/test/java/com/hls/payroll/...`)
+- [x] T009 [P] Regression: the existing 013b and 015 payroll and reimbursement tests still pass unchanged
+- [x] T010 Record amendment A in `specs/013b-payroll-run/` (a short "Amendments" note in `plan.md` or `research.md`) and in `docs/spec-roadmap.md` row 013b/030
 
 ## Phase 3: User Story 1 - Earn on MoU approval (P1)
 
