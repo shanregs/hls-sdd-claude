@@ -10,6 +10,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
@@ -69,34 +70,36 @@ export function HistoryDialog({ row, onClose }: HistoryDialogProps) {
           <Typography>No changes recorded.</Typography>
         )}
         {entries && entries.length > 0 && (
-          <Table size="small" aria-label="Change history">
-            <TableHead>
-              <TableRow>
-                <TableCell>When</TableCell>
-                <TableCell>Change</TableCell>
-                <TableCell>From</TableCell>
-                <TableCell>To</TableCell>
-                <TableCell>By</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {entries.map((e, index) => (
-                <TableRow key={index}>
-                  <TableCell>{formatWhen(e.occurredAt)}</TableCell>
-                  <TableCell>{ACTION_LABELS[e.action]}</TableCell>
-                  <TableCell>
-                    {e.oldValue === null ? "-" : formatFigure(e.oldValue)}
-                  </TableCell>
-                  <TableCell>
-                    {e.newValue === null ? "-" : formatFigure(e.newValue)}
-                  </TableCell>
-                  <TableCell>
-                    {e.actorName} ({e.actorRoles})
-                  </TableCell>
+          <TableContainer sx={{ maxWidth: "100%", overflowX: "auto" }}>
+            <Table size="small" aria-label="Change history">
+              <TableHead>
+                <TableRow>
+                  <TableCell>When</TableCell>
+                  <TableCell>Change</TableCell>
+                  <TableCell>From</TableCell>
+                  <TableCell>To</TableCell>
+                  <TableCell>By</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {entries.map((e, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{formatWhen(e.occurredAt)}</TableCell>
+                    <TableCell>{ACTION_LABELS[e.action]}</TableCell>
+                    <TableCell>
+                      {e.oldValue === null ? "-" : formatFigure(e.oldValue)}
+                    </TableCell>
+                    <TableCell>
+                      {e.newValue === null ? "-" : formatFigure(e.newValue)}
+                    </TableCell>
+                    <TableCell>
+                      {e.actorName} ({e.actorRoles})
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </DialogContent>
       <DialogActions>
