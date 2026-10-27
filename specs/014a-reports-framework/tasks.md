@@ -13,18 +13,18 @@
 
 ## Phase 2: Framework (blocks every story)
 
-- [ ] T005 [P] Contract types in `backend/src/main/java/com/hls/reporting/api/`: `ReportDefinition`, `ReportSource`, `ReportContext`, `ReportPage`, `ReportRequest`, `Cell` (value, NO_DATA, NOT_AVAILABLE, NOT_MATCHED), `MonthState`
-- [ ] T006 `ReportScopeResolver` in `reporting/internal/report/`: Admin and Director org-wide, Manager through the Manager's Zones, Schools and Teachers, Teacher own; refuses a Zone, School, Teacher or Manager filter outside scope (reuse `ZoneResolver`)
-- [ ] T007 [P] `DefaultMonth` (last locked month, else current) with a test for no locked month
-- [ ] T008 `ReportRegistry` (sources found by key, menu per caller from grants) and `ReportService` (grant check, scope, fail-soft per column using the `AreaReader` time limit)
-- [ ] T009 [P] `ReportCsvWriter`: header block (report, month, filter, month state, time made), streaming, formula neutralisation for `=`, `+`, `-`, `@`; unit tests
-- [ ] T010 `ReportExportAudit`: writes who, report, filter and time through the audit module; test that every export writes one row
-- [ ] T011 `ReportController` in `reporting/web/`: `GET /api/reports`, `GET /api/reports/{key}`, `GET /api/reports/{key}/export`; extend the advice; integration test for 403 on a missing grant and for a missing Export grant
+- [x] T005 [P] Contract types in `backend/src/main/java/com/hls/reporting/api/`: `ReportDefinition`, `ReportSource`, `ReportContext`, `ReportPage`, `ReportRequest`, `Cell` (value, NO_DATA, NOT_AVAILABLE, NOT_MATCHED), `MonthState`
+- [x] T006 `ReportScopeResolver` in `reporting/internal/report/`: Admin and Director org-wide, Manager through the Manager's Zones, Schools and Teachers, Teacher own; refuses a Zone, School, Teacher or Manager filter outside scope (reuse `ZoneResolver`)
+- [x] T007 [P] `DefaultMonth` (last locked month, else current) with a test for no locked month
+- [x] T008 `ReportRegistry` (sources found by key, menu per caller from grants) and `ReportService` (grant check, scope, fail-soft per column using the `AreaReader` time limit)
+- [x] T009 [P] `ReportCsvWriter`: header block (report, month, filter, month state, time made), streaming, formula neutralisation for `=`, `+`, `-`, `@`; unit tests
+- [x] T010 `ReportExportAudit`: writes who, report, filter and time through the audit module; test that every export writes one row
+- [x] T011 `ReportController` in `reporting/web/`: `GET /api/reports`, `GET /api/reports/{key}`, `GET /api/reports/{key}/export`; extend the advice; integration test for 403 on a missing grant and for a missing Export grant
 
 ## Phase 3: US1 Attendance and LOP report (P1) MVP
 
-- [ ] T012 Add bulk `rollupsOf(Collection<UUID>, YearMonth)` to `attendance/api/AttendanceReadApi.java` and its implementation (decided amendment to 008, additive)
-- [ ] T012a Test `rollupsOf` equals `rollupOf` for each Teacher over 3 Teachers and 2 months, and uses a fixed number of queries
+- [x] T012 Add bulk `rollupsOf(Collection<UUID>, YearMonth)` to `attendance/api/AttendanceReadApi.java` and its implementation (decided amendment to 008, additive)
+- [x] T012a Test `rollupsOf` equals `rollupOf` for each Teacher over 3 Teachers and 2 months, and uses a fixed number of queries
 - [ ] T013 [US1] `AttendanceReportSource` for Teachers: working days, present, absent, leave, LOP days, attendance %; roll-ups by School, Zone, organization; zero working days gives NO_DATA
 - [ ] T014 [US1] Manager rows from `ManagerAttendanceReadApi.months`: working days, checked-in days, leave, missed check-ins, Manager attendance %
 - [ ] T015 [US1] Month state: OPEN when not all people in scope are locked (`lockedTeachers`, manager lock); label in page and export
