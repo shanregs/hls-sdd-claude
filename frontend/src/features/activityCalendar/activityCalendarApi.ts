@@ -9,12 +9,7 @@ import {
 export const ACTIVITY_CALENDAR_ROUTE = "/operations/activity-calendar";
 
 export type CalendarKind =
-  | "CAMPUS_DRIVE"
-  | "SCHOOL_VISIT"
-  | "CALL"
-  | "MEETING"
-  | "TASK"
-  | "TRAINING";
+  "CAMPUS_DRIVE" | "SCHOOL_VISIT" | "CALL" | "MEETING" | "TASK" | "TRAINING";
 
 export type CalendarStatus = "PLANNED" | "DONE" | "MISSED" | "CANCELLED";
 
@@ -64,6 +59,8 @@ export interface CalendarItem {
   zoneName: string | null;
   place: string | null;
   link?: CalendarLink | null;
+  /** Spec 040: logged on the spot without a plan. */
+  sameDay?: boolean;
 }
 
 export interface Counts {
@@ -137,6 +134,7 @@ export interface CalendarQuery {
   zoneId?: string;
   kind?: string;
   status?: string;
+  sameDay?: boolean;
 }
 
 const BASE = "/api/v1/activity-calendar";
@@ -145,7 +143,7 @@ export function getCalendar(
   authFetch: AuthFetch,
   query: CalendarQuery,
 ): Promise<ApiResult<CalendarResponse>> {
-  const qs = queryString({ ...query });
+  const qs = queryString({ ...query, sameDay: query.sameDay || undefined });
   return getJson(
     authFetch,
     `${BASE}${qs ? `?${qs}` : ""}`,

@@ -53,7 +53,7 @@ same-day request on its own business day (data-model.md).
   `COMPLETED` is stored as `VERIFIED` (research D7). For `type = OBSERVATION` with a Teacher link, the open observation
   due is satisfied. No assignee and no date in the body.
 - `POST /tasks/{id}/done-on-the-spot` (new; Edit on TASKS; the assignee only; the task is open and due today):
-  `{ completionNote }` (10-2000). `200 { id, status: "VERIFIED", sameDay: true }`. `409` if not open or not due today.
+  `{ completionNote }` (10-2000). `200` the task detail (as the other task actions), now `VERIFIED` with `sameDay: true`. `409` if not open or not due today.
 - `GET /tasks` gains `sameDay`; items gain `sameDay`. Same-day items are never returned by the verification queue.
 
 ## 4. Visits
@@ -61,11 +61,11 @@ same-day request on its own business day (data-model.md).
 - `POST /marketing/activities/same-day` (new; Create on MARKETING; Manager for themselves):
   `{ kind: "SCHOOL_VISIT"|"SCHOOL_CALL"|..., targetType, targetId, outcome, notes, followUpOn? }`. `201` the activity with
   `status: "COMPLETED"`, `sameDay: true`, `activityDate` = today. The target must be in scope (`404` otherwise).
-- `GET /marketing/activities` and `GET /activity-calendar` gain `sameDay`; entries gain `sameDay`.
+- ``GET /marketing/activities` and `GET /activity-calendar` gain `sameDay`; entries gain `sameDay`.
 
 ## 5. Report
 
-`GET /reports/same-day?month=YYYY-MM&zoneId=` (new). Returns only the sections the caller has View on:
+`GET /reports/same-day?month=YYYY-MM` (new; a Zone filter is not built yet). Returns only the sections the caller has View on:
 `{ month, leave: Rows, covers: Rows, tasks: Rows, visits: Rows }` where `Rows = { byManager: [{managerId, name, count}],
 bySchool: [{schoolId, name, count}] }`. Scope applies (a Manager sees assigned Managers/Schools only). A section the
 caller cannot view is omitted, not empty.
@@ -89,3 +89,11 @@ and creates nothing. Without the header,
 | System | none | none |
 
 Each control is hidden when the permission is not granted; no new menu item.
+
+
+## 8. As built (2026-10-28)
+
+- Leave types for the recorder: `GET /leave/types` (Approve on LEAVE_MANAGEMENT).
+- `POST /me/leave/preview` returns `takesEffectAtOnce`; the per-part `parts` list is not built.
+- The report counts leave days, cover days (half day 0.5), tasks and visits. Per-Manager for leave is the School's Manager.
+- Phone: tasks can be logged offline; a visit can be queued only if the connection is lost after the School was chosen.

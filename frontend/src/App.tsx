@@ -12,6 +12,7 @@ import { AppShell } from "./app/AppShell";
 import { RouteGuard } from "./app/RouteGuard";
 import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
 import { DashboardRouter } from "./dashboards/DashboardRouter";
+import { SameDayReport } from "./features/dashboard/SameDayReport";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
@@ -121,6 +122,14 @@ export function App() {
           element={
             <RouteGuard>
               <DashboardRouter />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/dashboard/same-day"
+          element={
+            <RouteGuard>
+              <SameDayReport />
             </RouteGuard>
           }
         />

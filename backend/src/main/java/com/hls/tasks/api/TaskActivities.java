@@ -25,7 +25,23 @@ public interface TaskActivities {
             String linkedType,
             UUID linkedId,
             String status,
-            LocalDate completedOn) {}
+            LocalDate completedOn,
+            boolean sameDay) {
+
+        public ActivityEntry(
+                String kind,
+                UUID id,
+                UUID ownerUserId,
+                LocalDate date,
+                LocalDate originalDate,
+                String place,
+                String linkedType,
+                UUID linkedId,
+                String status,
+                LocalDate completedOn) {
+            this(kind, id, ownerUserId, date, originalDate, place, linkedType, linkedId, status, completedOn, false);
+        }
+    }
 
     /** Non-cancelled tasks due between the dates (inclusive); a null owner means everyone's. */
     List<PlannedActivity> plannedBetween(LocalDate from, LocalDate to, UUID ownerUserId);

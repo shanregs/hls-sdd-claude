@@ -57,6 +57,11 @@ class SameDayTaskApiTest extends TaskTestBase {
         assertThat(resp.body()).contains("\"status\":\"VERIFIED\"");
         String id = (String) resp.map().get("id");
         assertThat(events(id)).containsSubsequence("CREATED", "COMPLETED", "VERIFIED");
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from task_history where task_id = ? and note like '%sameDay=true%auto-accepted%'",
+                        Integer.class,
+                        UUID.fromString(id)))
+                .isEqualTo(1);
         Resp awaiting = get(BASE + "?view=awaiting", admin);
         assertThat(awaiting.body()).doesNotContain(id);
         Resp sameDayOnly = get(BASE + "?sameDay=true", admin);
