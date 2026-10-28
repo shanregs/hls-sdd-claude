@@ -63,7 +63,7 @@
 
 ## Phase 7: US5 Export and polish
 
-- [ ] T030 [US5] Export for all four through the 014a writer and audit; tests: rows equal screen, refusal without Export, one audit row per export, formula neutralisation on names
+- [x] T030 [US5] Export for all four through the 014a writer and audit; tests: rows equal screen, refusal without Export, one audit row per export, formula neutralisation on names
 - [ ] T031 SC-006 check: no 014a framework file changed except T004 (record in the PR); SC-005 source-failure test per report
 - [ ] T032 Performance check at 500 Teachers and 50 Managers (first page under 3 s, export under 30 s)
 - [ ] T033 Check no migration was added; if one is needed take the next free number above V140 on current main and open branches
