@@ -141,7 +141,7 @@ Admin and Director can see which leave days, substitutions, tasks and visits wer
 | Teacher  | LEAVE → Apply Leave (today now takes effect at once) | Create same-day leave for self | Own |
 | System   | None | None | None |
 
-**New permission keys**: None; same-day recording uses the existing Approve action of Leave Management (the right to approve leave includes recording it for today), and the existing Create action of Substitution, Manager Tasks and Visits. The same-day filter needs only View.
+**New permission keys**: None; same-day recording uses the existing Approve action of Leave Management (the right to approve leave includes recording it for today), the existing Edit action of Substitution (cover), and the existing Create action of Manager Tasks and Visits. The same-day filter needs only View.
 
 ## Success Criteria *(mandatory)*
 

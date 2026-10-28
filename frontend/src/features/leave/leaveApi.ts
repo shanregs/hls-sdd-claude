@@ -31,6 +31,16 @@ export interface LeavePreview {
   workingDays: number;
   days: { date: string; value: number }[];
   problems: string[];
+  /** Spec 040: the request starts today on a working day, so it is Approved the moment it is saved. */
+  takesEffectAtOnce?: boolean;
+}
+
+/** The other half of a request split at today: the same-day part and the later part point at each other. */
+export interface LeaveOtherPart {
+  id: string;
+  firstDate: string;
+  lastDate: string;
+  status: LeaveStatus;
 }
 
 export interface LeaveRequestView {
@@ -53,7 +63,38 @@ export interface LeaveRequestView {
   cancelledBy: "TEACHER" | "SUPERVISOR" | null;
   createdAt: string;
   version: number;
+  /** Spec 040: recorded for today and approved at once. */
+  sameDay?: boolean;
+  recordedByName?: string | null;
+  otherPart?: LeaveOtherPart | null;
   allowedActions: LeaveAction[];
+}
+
+export interface RecordSameDayLeave {
+  teacherId: string;
+  leaveTypeId: string;
+  firstDate: string;
+  lastDate: string;
+  halfDayStart: boolean;
+  halfDayEnd: boolean;
+  reason: string;
+}
+
+export function getSupervisorLeaveTypes(
+  authFetch: AuthFetch,
+): Promise<ApiResult<LeaveType[]>> {
+  return getJson(
+    authFetch,
+    "/api/v1/leave/types",
+    "Could not load the leave types.",
+  );
+}
+
+export function recordSameDayLeave(
+  authFetch: AuthFetch,
+  body: RecordSameDayLeave,
+): Promise<ApiResult<LeaveRequestView>> {
+  return sendJson(authFetch, "POST", "/api/v1/leave/same-day", body);
 }
 
 export function getLeaveTypes(
@@ -111,12 +152,14 @@ export function getLeaveList(
   params: {
     status?: LeaveStatus | "";
     month?: string;
+    sameDay?: boolean;
     page?: number;
     size?: number;
   },
 ): Promise<ApiResult<LeaveListResponse>> {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
+  if (params.sameDay) query.set("sameDay", "true");
   if (params.month) query.set("month", params.month);
   query.set("page", String(params.page ?? 0));
   query.set("size", String(params.size ?? 25));

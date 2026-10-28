@@ -212,6 +212,13 @@ export function ApplyLeavePage() {
                   {p}
                 </Alert>
               ))}
+              {shownPreview.problems.length === 0 &&
+                shownPreview.takesEffectAtOnce && (
+                  <Alert severity="info" sx={{ mb: 1 }}>
+                    Leave that starts today takes effect at once. Nobody needs
+                    to approve it.
+                  </Alert>
+                )}
               {shownPreview.problems.length === 0 && (
                 <Typography>
                   This covers {shownPreview.workingDays} working{" "}

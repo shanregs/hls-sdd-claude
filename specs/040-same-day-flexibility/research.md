@@ -171,3 +171,10 @@ the audit event detail carries `sameDay=true`, and the existing Change History s
 **Decision**: Same-day leave publishes the existing `LeaveRequested` and `LeaveDecided` (Approved) events so the Manager
 and the Teacher are notified by the current listeners; no new notification type. A Manager's own cover or task creates no
 notification to themselves.
+
+## D11. Prerequisites verified (T001-T003, 2026-10-28)
+
+- Found as planned: `LeaveRequestService` (`submit`, `evaluate`, `cancelOwn`), `LeaveDecisionService` (`approve`, `revoke`), `LeaveAttendance` (`businessToday`, `workingDays`, `problems`, `apply`, `remove`), `SubstitutionService` (`cover`, `assign`, `release`), `AbsenceListener`, `TaskService` (`complete`, `verify`, `completeLinked`), `UnpaidDayClassifier`, `PayRulesImpl.teacherUnpaid`. The business date helper is `com.hls.designation.api.BusinessDate` (`today()`); leave uses `LeaveAttendance.businessToday()`.
+- Grants: `LEAVE_MANAGEMENT` has View and Approve for Admin, Director, Manager (no Create exists). `SUBSTITUTION` has View and Edit for the same roles; the cover endpoint already needs Edit. `TASKS`: Admin and Director all actions, Manager View, Create, Edit. `MARKETING`: View, Create, Edit for the three roles.
+- Status codes: only **L** (Leave) and **A** (Absent) have category LEAVE (V14, V15). No paid LEAVE-category code exists, so every LEAVE mark is deducted (D1 stands).
+- Decided (D4, D7): an Absent mark set by a supervisor is replaced by same-day leave, any other supervisor-set non-L mark refuses; a same-day observation is a task record that satisfies the due, with no ratings form.

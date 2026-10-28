@@ -42,7 +42,9 @@ describe("SubstitutionsPage", () => {
   });
 
   it("lists the requirements with status and a link to each", async () => {
-    authFetch.mockResolvedValue(json({ content: [REQ], page: 0, size: 25, totalElements: 1 }));
+    authFetch.mockResolvedValue(
+      json({ content: [REQ], page: 0, size: 25, totalElements: 1 }),
+    );
     render(
       <MemoryRouter>
         <SubstitutionsPage />
@@ -57,13 +59,63 @@ describe("SubstitutionsPage", () => {
   });
 
   it("says so when there is nothing to do", async () => {
-    authFetch.mockResolvedValue(json({ content: [], page: 0, size: 25, totalElements: 0 }));
+    authFetch.mockResolvedValue(
+      json({ content: [], page: 0, size: 25, totalElements: 0 }),
+    );
     render(
       <MemoryRouter>
         <SubstitutionsPage />
       </MemoryRouter>,
     );
-    expect(await screen.findByText("No substitution requirements.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("No substitution requirements."),
+    ).toBeInTheDocument();
+  });
+
+  it("lists Manager covers apart from the requirements, with the same-day and ended labels", async () => {
+    authFetch.mockImplementation(async (url: string) => {
+      if (String(url).includes("/manager-covers")) {
+        return json({
+          content: [
+            {
+              requirementId: "r9",
+              date: "2026-10-05",
+              schoolId: "s1",
+              schoolName: "Demo School One",
+              replacedTeacherId: "t1",
+              replacedTeacherName: "Tara Teacher",
+              managerName: "Manoj Manager",
+              recordedByName: "Manoj Manager",
+              dayValue: 1,
+              sameDay: true,
+              state: "ACTIVE",
+              endedBy: null,
+              label: "Manager cover",
+            },
+          ],
+          page: 0,
+          size: 25,
+          totalElements: 1,
+        });
+      }
+      return json({ content: [], page: 0, size: 25, totalElements: 0 });
+    });
+    render(
+      <MemoryRouter>
+        <SubstitutionsPage />
+      </MemoryRouter>,
+    );
+    await userEvent.click(
+      await screen.findByRole("combobox", { name: "Show" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Manager covers" }),
+    );
+
+    const table = await screen.findByRole("table", { name: "Manager covers" });
+    expect(table).toHaveTextContent("Manoj Manager");
+    expect(table).toHaveTextContent("Manager cover");
+    expect(table).toHaveTextContent("Same-day");
   });
 });
 
@@ -76,7 +128,10 @@ describe("SubstitutionDetailPage", () => {
     return render(
       <MemoryRouter initialEntries={["/operations/substitutions/r1"]}>
         <Routes>
-          <Route path="/operations/substitutions/:id" element={<SubstitutionDetailPage />} />
+          <Route
+            path="/operations/substitutions/:id"
+            element={<SubstitutionDetailPage />}
+          />
         </Routes>
       </MemoryRouter>,
     );
@@ -84,47 +139,84 @@ describe("SubstitutionDetailPage", () => {
 
   it("shows who is free, disables the unavailable, and assigns the chosen Teacher", async () => {
     authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (init?.method === "POST") return json({ ...REQ, status: "ASSIGNED", version: 1 });
+      if (init?.method === "POST")
+        return json({ ...REQ, status: "ASSIGNED", version: 1 });
       if (url.endsWith("/candidates")) {
         return json([
-          { teacherId: "b1", name: "Bina Bench", available: true, reason: null, current: false },
-          { teacherId: "b2", name: "Busy Bee", available: false, reason: "Teaching at Demo School Two that day", current: false },
+          {
+            teacherId: "b1",
+            name: "Bina Bench",
+            available: true,
+            reason: null,
+            current: false,
+          },
+          {
+            teacherId: "b2",
+            name: "Busy Bee",
+            available: false,
+            reason: "Teaching at Demo School Two that day",
+            current: false,
+          },
         ]);
       }
       return json({ requirement: REQ, history: [] });
     });
     renderDetail();
     expect(await screen.findByText("Bina Bench")).toBeInTheDocument();
-    expect(screen.getByText(/Not available: Teaching at Demo School Two/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Assign Busy Bee" })).toBeDisabled();
-    await userEvent.click(screen.getByRole("button", { name: "Assign Bina Bench" }));
+    expect(
+      screen.getByText(/Not available: Teaching at Demo School Two/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Assign Busy Bee" }),
+    ).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Assign Bina Bench" }),
+    );
     const post = authFetch.mock.calls.find((c) => c[1]?.method === "POST");
     expect(post?.[0]).toBe("/api/v1/substitutions/r1/assign");
-    expect(JSON.parse(post?.[1].body)).toEqual({ substituteTeacherId: "b1", version: 0 });
+    expect(JSON.parse(post?.[1].body)).toEqual({
+      substituteTeacherId: "b1",
+      version: 0,
+    });
   });
 
   it("offers School informed only once there is an outcome, prefilled with the Principal", async () => {
     authFetch.mockImplementation(async (url: string) => {
       if (url.endsWith("/candidates")) return json([]);
       return json({
-        requirement: { ...REQ, status: "MANAGER_COVER", coverName: "Manoj Manager" },
+        requirement: {
+          ...REQ,
+          status: "MANAGER_COVER",
+          coverName: "Manoj Manager",
+        },
         history: [],
       });
     });
     renderDetail();
-    expect(await screen.findByText("Covered by Manoj Manager")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Covered by Manoj Manager"),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Who was told")).toHaveValue("Mrs. Rani");
-    expect(screen.getByRole("button", { name: "Record School informed" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record School informed" }),
+    ).toBeEnabled();
   });
 
   it("shows a cancelled requirement without actions", async () => {
     authFetch.mockImplementation(async (url: string) => {
       if (url.endsWith("/candidates")) return json([]);
-      return json({ requirement: { ...REQ, status: "CANCELLED" }, history: [] });
+      return json({
+        requirement: { ...REQ, status: "CANCELLED" },
+        history: [],
+      });
     });
     renderDetail();
-    expect(await screen.findByText(/cancelled because the absence was withdrawn/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Assign/ })).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/cancelled because the absence was withdrawn/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Assign/ }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -135,7 +227,16 @@ describe("MySubstitutionsPage", () => {
 
   it("lists only the days I cover, never the absent Teacher", async () => {
     authFetch.mockResolvedValue(
-      json([{ id: "r1", schoolId: "s1", schoolName: "Demo School One", dutyDate: "2026-10-05", dayValue: 0.5, status: "ASSIGNED" }]),
+      json([
+        {
+          id: "r1",
+          schoolId: "s1",
+          schoolName: "Demo School One",
+          dutyDate: "2026-10-05",
+          dayValue: 0.5,
+          status: "ASSIGNED",
+        },
+      ]),
     );
     render(<MySubstitutionsPage />);
     expect(await screen.findByText("Demo School One")).toBeInTheDocument();
@@ -146,6 +247,8 @@ describe("MySubstitutionsPage", () => {
   it("explains an empty list", async () => {
     authFetch.mockResolvedValue(json([]));
     render(<MySubstitutionsPage />);
-    expect(await screen.findByText("You have no substitution days.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("You have no substitution days."),
+    ).toBeInTheDocument();
   });
 });

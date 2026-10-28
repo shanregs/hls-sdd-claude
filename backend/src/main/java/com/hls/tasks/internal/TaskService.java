@@ -5,6 +5,7 @@ import com.hls.files.api.FileStore;
 import com.hls.files.api.FileStore.FileContent;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
+import com.hls.audit.api.SameDayDetail;
 import com.hls.identity.user.Role;
 import com.hls.organization.api.ManagerQueries;
 import com.hls.school.api.CallerContext;
@@ -33,6 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class TaskService implements TaskCreation, TaskProgress {
+
+    /** The source recorded for work logged on the spot (spec 040). */
+    public static final String SAME_DAY_SOURCE = "SAME_DAY";
 
     public static final int DEFAULT_ESCALATE_DAYS = 3;
     public static final int MAX_EVIDENCE = 5;
@@ -317,6 +321,121 @@ public class TaskService implements TaskCreation, TaskProgress {
             events.publishEvent(new TaskAssigned(task.getId(), task.getTitle(), task.getAssigneeUserId(), actor, task.getDueOn()));
         }
         return task;
+    }
+
+    // ------------------------------------------------------------------ same-day (spec 040)
+
+    /** The longest an offline same-day log may wait on the phone before it is sent (spec 040 FR-017). */
+    public static final int OFFLINE_WINDOW_DAYS = 7;
+
+    public record SameDayRequest(
+            TaskType type,
+            String title,
+            String description,
+            String linkedType,
+            UUID linkedId,
+            String linkedLabel,
+            String place,
+            String status,
+            String completionNote,
+            UUID clientKey,
+            LocalDate capturedOn) {}
+
+    public record SameDayResult(UUID id, TaskStatus status, boolean sameDay) {}
+
+    /**
+     * A Manager logs their own work for today with no plan (spec 040 FR-010, FR-011). It is saved as In progress, or as
+     * final in one step: Completed and accepted, so it never waits in Awaiting verification. A repeat of the same phone
+     * key returns the first record.
+     */
+    @Transactional
+    public SameDayResult logSameDay(Caller caller, SameDayRequest request) {
+        if (!caller.roles().contains(com.hls.identity.user.Role.MANAGER)) {
+            throw new ForbiddenFieldException("Only a Manager can log same-day work.");
+        }
+        if (request.clientKey() != null) {
+            Task existing = tasks.findByClientKey(request.clientKey()).orElse(null);
+            if (existing != null) {
+                return new SameDayResult(existing.getId(), existing.getStatus(), existing.isSameDay());
+            }
+        }
+        boolean completed = "COMPLETED".equals(request.status());
+        if (!completed && !"IN_PROGRESS".equals(request.status())) {
+            throw new InvalidInputException("Save the task as In progress or Completed.");
+        }
+        String note = completed ? required(request.completionNote(), 10, 2000, "The completion note") : null;
+        LocalDate day = activityDay(request);
+        UUID by = caller.userId();
+        Task task = build(
+                new CreateRequest(
+                        request.type(),
+                        request.title(),
+                        request.description(),
+                        by,
+                        day,
+                        null,
+                        request.linkedType(),
+                        request.linkedId(),
+                        request.linkedLabel(),
+                        request.place()),
+                by,
+                SAME_DAY_SOURCE,
+                null,
+                null);
+        task.setSameDay(true);
+        task.setClientKey(request.clientKey());
+        recorder.change(task, "SAME_DAY", by, "sameDay", false, true, SameDayDetail.of(by, null));
+        if (completed) {
+            finishOnTheSpot(task, by, note);
+            if (request.type() == TaskType.OBSERVATION && request.linkedId() != null && request.linkedType() != null) {
+                completeLinked(TaskType.OBSERVATION, request.linkedType(), request.linkedId(), by, note);
+            }
+        } else {
+            recorder.change(task, "STARTED", by, "status", TaskStatus.ASSIGNED, TaskStatus.IN_PROGRESS, "same-day");
+            task.moveTo(TaskStatus.IN_PROGRESS, clock.instant());
+        }
+        tasks.saveAndFlush(task);
+        return new SameDayResult(task.getId(), task.getStatus(), true);
+    }
+
+    /** A task planned for today by someone else is marked done on the spot: final at once, no verification. */
+    @Transactional
+    public SameDayResult markDoneOnTheSpot(Caller caller, UUID id, String completionNote) {
+        Task task = visible(caller, id);
+        requireAssignee(task, caller);
+        if (!task.getStatus().isOpen()) {
+            throw new ConflictException("Only an open task can be marked done on the spot. It is " + label(task.getStatus()) + ".");
+        }
+        if (!task.getDueOn().equals(businessDate.today())) {
+            throw new ConflictException("Only a task due today can be marked done on the spot.");
+        }
+        String note = required(completionNote, 10, 2000, "The completion note");
+        task.setSameDay(true);
+        recorder.change(task, "SAME_DAY", caller.userId(), "sameDay", false, true, SameDayDetail.of(caller.userId(), null));
+        finishOnTheSpot(task, caller.userId(), note);
+        tasks.saveAndFlush(task);
+        return new SameDayResult(task.getId(), task.getStatus(), true);
+    }
+
+    /** Completed and accepted in one step: the history keeps both steps, by the same Manager (research D7). */
+    private void finishOnTheSpot(Task task, UUID by, String note) {
+        TaskStatus before = task.getStatus();
+        task.complete(note, clock.instant());
+        recorder.change(task, "COMPLETED", by, "status", before, TaskStatus.COMPLETED, note);
+        task.verify(by, clock.instant());
+        recorder.change(task, "VERIFIED", by, "status", TaskStatus.COMPLETED, TaskStatus.VERIFIED, "same-day, auto-accepted");
+    }
+
+    /** Today, or for an offline replay the day it was logged on the phone: never in the future, at most 7 days back. */
+    private LocalDate activityDay(SameDayRequest request) {
+        LocalDate today = businessDate.today();
+        if (request.clientKey() == null || request.capturedOn() == null) {
+            return today;
+        }
+        if (request.capturedOn().isAfter(today) || request.capturedOn().isBefore(today.minusDays(OFFLINE_WINDOW_DAYS))) {
+            throw new ConflictException("DATE_NOT_ALLOWED: this was logged more than " + OFFLINE_WINDOW_DAYS + " days ago or on a future date.");
+        }
+        return request.capturedOn();
     }
 
     // ------------------------------------------------------------------ the assignee
