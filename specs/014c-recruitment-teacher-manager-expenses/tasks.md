@@ -57,8 +57,8 @@
 
 ## Phase 6: US4 Recruitment (P2)
 
-- [ ] T027 [US4] `RecruitmentReportSource` with season filter (T004), colleges and totals from A1, induction from `InductionProgress`, ready to deploy from `SupplySource`, demand from A2; selected zero gives NO_DATA ratio; missing providers give NOT_AVAILABLE
-- [ ] T028 [US4] Tests: equals the 016 and 023 dashboards; Zone Manager sees exactly the 016 view
+- [x] T027 [US4] `RecruitmentReportSource` with season filter (T004), colleges and totals from A1, induction from `InductionProgress`, ready to deploy from `SupplySource`, demand from A2; selected zero gives NO_DATA ratio; missing providers give NOT_AVAILABLE
+- [x] T028 [US4] Tests: equals the 016 and 023 dashboards; Zone Manager sees exactly the 016 view
 - [ ] T029 [P] [US4] Frontend season picker and columns
 
 ## Phase 7: US5 Export and polish
