@@ -41,7 +41,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Manager productivity (spec 014c US1): one row per Manager with the columns of every {@link ManagerColumns} bean (tasks,
@@ -79,6 +82,7 @@ class ManagerReportSource implements ReportSource {
     private final ExpenseQueries expenses;
     private final ManagerQueries managers;
     private final SchoolDirectory schools;
+    private final TransactionTemplate isolated;
 
     ManagerReportSource(
             List<ManagerColumns> sources,
@@ -86,13 +90,18 @@ class ManagerReportSource implements ReportSource {
             ManagerTrainingDays training,
             ExpenseQueries expenses,
             ManagerQueries managers,
-            SchoolDirectory schools) {
+            SchoolDirectory schools,
+            PlatformTransactionManager transactionManager) {
         this.sources = List.copyOf(sources);
         this.attendance = attendance;
         this.training = training;
         this.expenses = expenses;
         this.managers = managers;
         this.schools = schools;
+        // each optional source runs in its own read-only transaction, so one that fails cannot poison the section
+        this.isolated = new TransactionTemplate(transactionManager);
+        this.isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.isolated.setReadOnly(true);
         List<SharedColumn> all = new ArrayList<>();
         for (ManagerColumns source : sources) {
             for (ManagerColumns.Column c : source.columns()) {
@@ -171,7 +180,7 @@ class ManagerReportSource implements ReportSource {
         TileContext tileContext = new ReportTileContext(ctx);
         for (ManagerColumns source : sources) {
             try {
-                bySource.put(source, source.figures(tileContext, userIds));
+                bySource.put(source, isolated.execute(status -> source.figures(tileContext, userIds)));
             } catch (RuntimeException e) {
                 LOG.warn("Manager column source {} could not be read", source.getClass().getSimpleName(), e);
                 failed.add(source);
@@ -180,13 +189,13 @@ class ManagerReportSource implements ReportSource {
         Map<UUID, ManagerMonth> months = attendance.months(managerIds, month);
         Map<UUID, Map<LocalDate, BigDecimal>> trainingDays = null;
         try {
-            trainingDays = training.attendedDaysOf(managerIds, month.atDay(1), month.atEndOfMonth());
+            trainingDays = isolated.execute(status -> training.attendedDaysOf(managerIds, month.atDay(1), month.atEndOfMonth()));
         } catch (RuntimeException e) {
             LOG.warn("Training days could not be read", e);
         }
         Map<UUID, ExpenseQueries.ClaimedTotal> claimed = null;
         try {
-            claimed = expenses.claimedBy(month.atDay(1), month.atEndOfMonth(), userIds);
+            claimed = isolated.execute(status -> expenses.claimedBy(month.atDay(1), month.atEndOfMonth(), userIds));
         } catch (RuntimeException e) {
             LOG.warn("Expense claimed could not be read", e);
         }

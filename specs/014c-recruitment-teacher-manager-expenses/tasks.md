@@ -64,7 +64,8 @@
 ## Phase 7: US5 Export and polish
 
 - [x] T030 [US5] Export for all four through the 014a writer and audit; tests: rows equal screen, refusal without Export, one audit row per export, formula neutralisation on names
-- [ ] T031 SC-006 check: no 014a framework file changed except T004 (record in the PR); SC-005 source-failure test per report
+- [x] T031 SC-006 check: no 014a framework file changed except T004 (record in the PR); SC-005 source-failure test per report
+  - Result: against the 014a branch (753d03d) only the T004 season additions changed in `reporting` (ReportFilter, ReportRequest, ReportScopeResolver, ReportService, ReportController). SC-005 tests: `ReportSourceDownTest` (Teacher, Expenses, Recruitment, Manager) and `ManagerReportSourceDownTest`. They found that a failing source marked the section transaction rollback-only and failed the whole section, so the Teacher, Manager and Recruitment sources now read each optional source in its own read-only transaction (as `ActivityCalendarService` does).
 - [ ] T032 Performance check at 500 Teachers and 50 Managers (first page under 3 s, export under 30 s)
 - [ ] T033 Check no migration was added; if one is needed take the next free number above V140 on current main and open branches
 - [ ] T034 Update `docs/spec-roadmap.md` 014 row; run the full backend and frontend suites; manual walkthrough from `quickstart.md`

@@ -42,6 +42,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -97,6 +100,7 @@ class TeacherReportSource implements ReportSource {
     private final AttendanceReadApi attendance;
     private final SchoolDirectory schools;
     private final ManagerQueries managers;
+    private final TransactionTemplate isolated;
 
     TeacherReportSource(
             TeacherDirectory teachers,
@@ -104,13 +108,18 @@ class TeacherReportSource implements ReportSource {
             PerformanceSummary performance,
             AttendanceReadApi attendance,
             SchoolDirectory schools,
-            ManagerQueries managers) {
+            ManagerQueries managers,
+            PlatformTransactionManager transactionManager) {
         this.teachers = teachers;
         this.movements = movements;
         this.performance = performance;
         this.attendance = attendance;
         this.schools = schools;
         this.managers = managers;
+        // each optional source runs in its own read-only transaction, so one that fails cannot poison the section
+        this.isolated = new TransactionTemplate(transactionManager);
+        this.isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.isolated.setReadOnly(true);
     }
 
     @Override
@@ -336,9 +345,9 @@ class TeacherReportSource implements ReportSource {
         return managers.currentSchoolIds(List.of(managerId)).getOrDefault(managerId, Set.of());
     }
 
-    private static <T> T read(String what, java.util.function.Supplier<T> source) {
+    private <T> T read(String what, java.util.function.Supplier<T> source) {
         try {
-            return source.get();
+            return isolated.execute(status -> source.get());
         } catch (RuntimeException e) {
             LOG.warn("Teacher report: {} could not be read", what, e);
             return null;

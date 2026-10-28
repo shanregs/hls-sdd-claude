@@ -24,6 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * The Recruitment report (spec 014c US4): the funnel per college and in total for a season, from {@link RecruitmentFigures}
@@ -56,16 +59,22 @@ class RecruitmentReportSource implements ReportSource {
     private final DemandFigures demand;
     private final ObjectProvider<InductionProgress> induction;
     private final ObjectProvider<SupplySource> supply;
+    private final TransactionTemplate isolated;
 
     RecruitmentReportSource(
             RecruitmentFigures figures,
             DemandFigures demand,
             ObjectProvider<InductionProgress> induction,
-            ObjectProvider<SupplySource> supply) {
+            ObjectProvider<SupplySource> supply,
+            PlatformTransactionManager transactionManager) {
         this.figures = figures;
         this.demand = demand;
         this.induction = induction;
         this.supply = supply;
+        // demand and supply run in their own read-only transaction, so one that fails cannot poison the section
+        this.isolated = new TransactionTemplate(transactionManager);
+        this.isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.isolated.setReadOnly(true);
     }
 
     @Override
@@ -131,7 +140,7 @@ class RecruitmentReportSource implements ReportSource {
         if (ctx.scope().orgWide()) {
             Cell demandCell;
             try {
-                demandCell = Cell.of(demand.vacantPositionsOfWonSchools());
+                demandCell = Cell.of(isolated.execute(status -> demand.vacantPositionsOfWonSchools()));
             } catch (RuntimeException e) {
                 LOG.warn("Demand could not be read", e);
                 demandCell = Cell.notAvailable();
@@ -140,7 +149,7 @@ class RecruitmentReportSource implements ReportSource {
             SupplySource source = supply.getIfAvailable();
             if (source != null) {
                 try {
-                    OptionalInt ready = source.readyToDeployCount();
+                    OptionalInt ready = isolated.execute(status -> source.readyToDeployCount());
                     supplyCell = ready.isPresent() ? Cell.of((long) ready.getAsInt()) : Cell.notAvailable();
                 } catch (RuntimeException e) {
                     LOG.warn("Supply could not be read", e);
