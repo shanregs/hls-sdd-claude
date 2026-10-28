@@ -6,7 +6,7 @@ All additive. Callers apply their own permission and scope (the owning module do
 
 | Key | Module key | Filters | Sections | Month state |
 | --- | --- | --- | --- | --- |
-| `margin` | `REPORT_MARGIN` | ZONE, SCHOOL, TEACHER | `schools`, `zones`, `teachers` | pay run (none / draft / approved) |
+| `margin` | `REPORT_MARGIN` | ZONE, SCHOOL | `schools`, `zones`, `teachers` | pay run (none / draft / approved) |
 | `collections` | `REPORT_COLLECTIONS` | ZONE, SCHOOL | `month`, `ageing` | none, noted "as of <date>" |
 | `school` | `REPORT_SCHOOL` | ZONE, SCHOOL | `schools` | attendance lock |
 
@@ -17,9 +17,9 @@ Permission keys (View, Export): Admin and Director org-wide; Manager for own Sch
 ## Amendments
 
 **A1 (022)** `schoolbilling.api.SchoolReceivables`
-- `List<TeacherSchoolBilled> billedPerTeacherAndSchool(Collection<UUID> teacherIds, Collection<UUID> schoolIds, YearMonth from, YearMonth to)`; either collection may be empty to mean "any"; `TeacherSchoolBilled(teacherId, schoolId, month, amount, workedDays, monthDays)`. Same cancelled-due rule as `billedPerTeacher`; one grouped query.
+- `List<TeacherSchoolBilled> billedPerTeacherAndSchool(Collection<UUID> teacherIds, Collection<UUID> schoolIds, YearMonth from, YearMonth to)`; an empty collection means an empty result, never "any": an org-wide caller passes all School ids, a Zone Manager with no Schools gets nothing; `TeacherSchoolBilled(teacherId, schoolId, month, amount, workedDays, monthDays)`. Same cancelled-due rule as `billedPerTeacher`; one grouped query.
 - `Map<UUID, SchoolAgeing> ageing(Collection<UUID> schoolIds, LocalDate asOf)`; `SchoolAgeing(schoolId, outstanding, notYetDue, d0to30, d31to60, d61to90, over90)`, built with the same bucket rule as the Ageing screen (`LedgerQueryService.bucketsOf`).
-- Test: per Teacher and School the amounts add up to `billedPerTeacher`; ageing equals the 022 Ageing screen for the same School and date; buckets plus not yet due equal outstanding.
+- Test: an empty School set returns nothing; per Teacher and School the amounts add up to `billedPerTeacher`; ageing equals the 022 Ageing screen for the same School and date; buckets plus not yet due equal outstanding.
 
 **A2 (022)** `schoolbilling.api.SchoolContracts`
 - `Map<UUID, ContractView> contractsOfAll(Collection<UUID> schoolIds, LocalDate date)`; a School with no contract in effect is absent.

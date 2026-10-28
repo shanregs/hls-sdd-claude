@@ -13,10 +13,16 @@
 ### Carried from 014a (answered 2026-10-27)
 
 - Which pay figure for margin? Payslip net pay.
-- Margin when a Teacher moves School mid-month? The pay is split by placement days to match the School due lines.
+- Margin when a Teacher moves School mid-month? The pay is split by the working days billed at each School, to match the School due lines.
 - Does a Zone Manager see pay-derived figures? Margin per School and per Teacher (decision D14), but not the Payroll report.
 - Default month and unlocked months? The default is the last locked month; an unlocked or unapproved month can be chosen and carries a warning label.
 - Version 1 is CSV only, every export is audited, each report has its own permission keys, and figures are read from the owning module.
+
+### Session 2026-10-28 (analysis fixes)
+
+- Q: Is the split basis the placement days or the billed days? -> A: The working days billed at each School on the due line; they equal the placement working days and make fee and pay agree by construction, so no change to 027 is needed.
+- Q: Is the Margin Teacher filter offered? -> A: No. A Teacher with two Schools has two rows, so the page's Teacher filter cannot work; Margin offers the Zone and School filters.
+- Q: Which default month and warning label does each report use? -> A: Margin the last approved pay run, School the last locked attendance month, Collections the current month; each labels what is unfinished for that report.
 
 ### Session 2026-10-28
 
@@ -74,7 +80,7 @@ The Admin or Director opens REPORTS → School and sees one row per School for t
 
 **Acceptance Scenarios**:
 
-1. **Given** a School with three Teachers placed on the last day of the month, **When** the report is opened, **Then** Teachers placed shows 3 and the contract end shows the date on the School's contract.
+1. **Given** a School with three Teachers placed on the last day of the month, **When** the report is opened, **Then** Teachers placed shows 3 (Teachers whose placement covers the last day) and the contract end shows the date on the School's contract.
 2. **Given** a School whose Teachers have locked attendance, **When** the report is opened, **Then** attendance % equals the Attendance report's figure for that School and month.
 3. **Given** substitution requirements raised for a School in the month, **When** the report is opened, **Then** the cover figure shows how many were covered by a substitute, by the Manager, or left open, equal to the Substitution screen.
 4. **Given** observations done and performance issues open for a School's Teachers, **When** the report is opened, **Then** the counts equal the Teacher Performance screen for the same Teachers.
@@ -98,7 +104,7 @@ All three reports use the 014a framework unchanged: the month and Zone filters (
 2. **Given** a person without Export, **When** they ask for the file directly, **Then** it is refused, and the screen still opens if they hold View.
 3. **Given** a Teacher or the System role, **When** they ask for any of the three reports, **Then** it is refused and no REPORTS item shows.
 4. **Given** a Zone Manager, **When** they ask for a Zone or School outside their area, **Then** it is refused.
-5. **Given** a month that is not yet locked or approved, **When** it is chosen, **Then** the report carries a warning label naming what is unfinished (attendance not locked, payroll not approved, or both).
+5. **Given** a month that is not yet final for the report, **When** it is chosen, **Then** the report carries a warning label naming what is unfinished for that report: payroll not approved (Margin), attendance not locked (School), or "as of <date>" (Collections).
 6. **Given** a name that starts with a formula character in the exported file, **When** it is written, **Then** it is neutralised as in the other reports.
 7. **Given** one source module is slow or down, **When** a report is opened, **Then** only that report's figures from that source say "not available" and every other figure still shows.
 
@@ -113,23 +119,25 @@ All three reports use the 014a framework unchanged: the month and Zone filters (
 - A month before billing or payroll began: "no data yet" for the missing side.
 - A School transferred between Zones mid-month: rows follow the School's Zone on the last day of the month, as in the 014c Teacher report.
 - Margin is negative: shown as a negative number, never hidden.
+- A Teacher who moved Schools mid-month counts in Teachers placed at the School of the last day, while the Attendance % of a School counts Teachers at their latest placement in the month, as the Attendance report does; the two can differ for a mover, and the report says which rule each column follows.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide three read-only reports under REPORTS: Margin, Collections and School, on the 014a framework unchanged (month filter, Zone and School filters, month-state label, CSV export with header block, audit of every export, permission keys).
-- **FR-002**: Margin MUST show, for each Teacher and School in the month, the fee (the School Billing due line), the net pay (the payslip net, as paid) and the margin (fee less pay), with totals per School and per Zone.
-- **FR-003**: When a Teacher is placed in more than one School in the month, Margin MUST split the payslip net pay between the Schools in proportion to the placement days in each, so that the split pays add up to the payslip net and each School's pay is set against that School's own due line.
+- **FR-002**: Margin MUST show, for each Teacher and School in the month, the fee (the School Billing due line), the pay (that School's share of the payslip net, as paid; the whole net when the Teacher is at one School) and the margin (fee less pay), with totals per School and per Zone.
+- **FR-003**: When a Teacher is placed in more than one School in the month, Margin MUST split the payslip net pay between the Schools in proportion to the working days billed at each School (the days on the School's due line for the Teacher), so that the split pays add up to the payslip net and each School's pay is set against that School's own due line.
 - **FR-004**: A Teacher with a fee but no payslip, or a payslip but no fee, MUST be shown as "not matched" with the reason and MUST be left out of every total; a missing figure MUST never be shown as 0.
 - **FR-005**: Margin MUST label a month whose payroll run is a draft or awaiting approval with "payroll not approved, figures may change", and MUST say "no data yet" for pay and margin when the month has no run.
 - **FR-006**: Collections MUST show for each School, Zone and the organization the billed, collected and outstanding amounts and the outstanding amount in the age buckets 0 to 30, 31 to 60, 61 to 90 and over 90 days past due, plus a "not yet due" figure, such that the buckets and "not yet due" add up to outstanding.
 - **FR-007**: Collections figures MUST equal the School Billing screens for the same School and month, ageing as of the day the report is read.
+- **FR-007a**: Collections MUST show two parts: the dues of the chosen month (billed, collected, outstanding) and the position across all months as of today (outstanding with its age buckets), so that the age buckets and "not yet due" add up to the outstanding of that position, not of the chosen month.
 - **FR-008**: The School report MUST show, per School and month: Teachers placed on the last day of the month, the contract end, attendance %, substitution cover (covered by a substitute, by the Manager, open), observations done, open performance issues, billed, collected, outstanding, and the prospect-to-active stage.
 - **FR-009**: Every figure MUST be read from the module that owns its meaning through that module's published interface, and MUST equal the figure on the owning screen for the same filter; the reports MUST NOT recompute fees, pay, dues, attendance or stages.
 - **FR-010**: Margin MUST be available to Admin, Director and, for their own Schools, the Zone Manager (decision D14); Collections and School MUST be available to Admin, Director and, for their own Schools, the Zone Manager; Teacher and System MUST have no access to any of the three.
 - **FR-011**: The Zone Manager MUST NOT gain access to the Payroll report through Margin; Margin shows the fee, the net pay and the margin of Teachers at the Zone Manager's own Schools only, and nothing about any other Teacher.
-- **FR-012**: The default month MUST be the last month that is locked for attendance and approved for payroll (else the current month); a month that is not locked or approved MUST be selectable and MUST carry a warning label.
+- **FR-012**: The default month MUST be, for Margin, the last month with an approved pay run; for School, the last month whose attendance is locked; for Collections, the current month; each falls back to the current month when there is none. A month that is not final MUST be selectable and MUST carry a warning label naming what is unfinished for that report (Margin: payroll not approved; School: attendance not locked; Collections: figures are as of today).
 - **FR-013**: A source that is slow or fails MUST show "not available" for its own figures only; the rest of the report MUST still load.
 - **FR-014**: Each export MUST write exactly one audit entry (who, which report, which filter, when) and MUST neutralise any cell that starts with a formula character.
 - **FR-015**: The first page of each report MUST appear within 3 seconds and the export within 30 seconds at 500 Teachers and 50 Managers, and the number of database statements MUST NOT grow with the number of Teachers or Schools.
@@ -140,7 +148,7 @@ All three reports use the 014a framework unchanged: the month and Zone filters (
 - **Margin Row**: one Teacher in one School for a month with the fee, the net pay (after the placement-day split), the margin, and a state (value, no data yet, not available, not matched with a reason).
 - **Collections Row**: one School, Zone or the organization for a month with billed, collected, outstanding, the four age buckets and not yet due.
 - **School Row**: one School for a month with its people, attendance, substitution, performance, billing and prospect-stage figures.
-- **Placement Split**: the share of a Teacher's payslip net pay that belongs to each School, from the days placed there in the month.
+- **Pay Split**: the share of a Teacher's payslip net pay that belongs to each School, from the working days billed at that School in the month.
 - **Age Bucket**: a range of days past the due date (0 to 30, 31 to 60, 61 to 90, over 90) that groups outstanding amounts.
 
 ## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
@@ -175,6 +183,6 @@ All three reports use the 014a framework unchanged: the month and Zone filters (
 - The pay is the payslip net pay of the approved or draft run (013b) read through `PayrollFigures` (added by 014a); cost to HLS beyond net pay (employer contributions, expenses, incentives) is out of scope.
 - Ageing is as of the day the report is read, and a past month's dues are aged as of today; the report states the "as of" date in its header.
 - Amounts are shown in rupees with two decimals; the split of a payslip is rounded to the paisa and any remainder paisa goes to the School with the most days.
-- Prerequisite read-only amendments to merged specs (to be done before or with the plan): 022 exposes the fee per Teacher per School for a month; 027 or the billing placement data exposes placement days per Teacher per School per month; 013b `PayrollFigures` already exists from 014a.
+- Prerequisite read-only amendments to merged specs (listed in the plan): 022 exposes the fee and the billed working days per Teacher per School for a month, and the ageing; 017a, 026, 023, 008 and 005 expose per-School figures; 013b `PayrollFigures` already exists from 014a. No change to 027 is needed because the due lines already carry the billed days.
 - Out of scope: the Teacher, Recruitment, Manager and Expenses reports (014c), the Payroll cost report (014a), charts and scheduled output, and any cost to HLS beyond net pay.
 - Dependencies: 014a (framework), 012 and 022 (contracts, dues, collections), 013b (payslips), 027 (placement), 017a (substitution), 023 (prospects), 026 (performance), 008 (attendance).

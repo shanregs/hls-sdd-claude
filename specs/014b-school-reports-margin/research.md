@@ -62,7 +62,11 @@ Fee and pay are rupees with two decimals. Split pays are rounded half-even to th
 
 ## D10. Filters
 
-Margin: ZONE, SCHOOL, TEACHER. Collections: ZONE, SCHOOL. School: ZONE, SCHOOL. No new `ReportFilter`; the 014a filters and scope resolver are unchanged.
+Margin: ZONE, SCHOOL. Collections: ZONE, SCHOOL. School: ZONE, SCHOOL. No new `ReportFilter`; the 014a filters and scope resolver are unchanged. Margin has no TEACHER filter: the generic page takes its options from the row ids of a `teachers` section and uses them as the filter value and key, and a Teacher at two Schools has two rows (analysis finding F2).
+
+## D11. Empty means empty
+
+Every bulk read added here returns nothing for an empty id set. An org-wide caller passes all School ids from `SchoolDirectory.allSchools()`; a Zone Manager with no Schools gets an empty report and never a wider one (analysis finding F3).
 
 ## Open items
 

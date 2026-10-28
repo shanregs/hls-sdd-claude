@@ -4,7 +4,7 @@ No table and no migration. Everything below is computed at read time and returne
 
 ## Margin report (`margin`, key `REPORT_MARGIN`)
 
-Filters: ZONE, SCHOOL, TEACHER. Month state from the pay run (research D4).
+Filters: ZONE, SCHOOL. Month state from the pay run (research D4). The `teachers` section row id is `teacherId:schoolId`; it is not a filter value.
 
 **Section `schools`** (totals): one row per School: Zone, Teachers matched, Fee, Pay, Margin. Totals row: organization (or the caller's scope).
 
@@ -18,7 +18,7 @@ Filters: ZONE, SCHOOL, TEACHER. Month state from the pay run (research D4).
 | School, Zone | where the fee line is |
 | Billed days | `due_line.worked_days` at this School, as a share of `month_days` |
 | Fee | sum of `due_line.amount` for the Teacher at this School in the month (after cancelled dues are dropped) |
-| Pay | split share of the payslip net (below) |
+| Pay | this School's share of the payslip net (below); the whole net for a Teacher at one School |
 | Margin | Fee less Pay |
 | Status | matched, or "not matched: reason" |
 
@@ -59,7 +59,7 @@ Filters: ZONE, SCHOOL. Month state from attendance lock. Section `schools`: one 
 | Column | Source |
 | --- | --- |
 | Zone | School directory |
-| Teachers placed | placements covering the last day of the month |
+| Teachers placed | Teachers whose placement covers the last day of the month (a mover counts at the School of the last day; Attendance % counts Teachers at their latest placement in the month) |
 | Contract end | `ContractView.endsOn` of the contract in effect that day (no data yet if none) |
 | Attendance % | `SchoolAttendance` (equals the Attendance report `schools` row) |
 | Substitution: by substitute, by Manager, open | days of requirements raised for the School in the month |

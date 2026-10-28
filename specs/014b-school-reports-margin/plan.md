@@ -8,7 +8,7 @@
 
 Three `ReportSource` beans (Margin, Collections, School) on the 014a framework, in a new module `schoolreports` that reads the owning modules through their `api` packages only, as 014c's `peoplereports` does. No table, no migration, no new endpoint: the 014a controller serves them and the generic web page renders them.
 
-The only new arithmetic is the pay split. It uses the working days each due line already bills at each School (`due_line.worked_days`), so the split matches the due lines by construction and **no 027 amendment is needed** (research D1). Everything else is a read-only, bulk amendment to a merged module (022, 017a, 026, 023, 008, 005), each with a test that its figure equals the owning screen.
+The only new arithmetic is the pay split. It uses the working days each due line already bills at each School (`due_line.worked_days`), so the split matches the due lines by construction and **no 027 amendment is needed** (research D1; the Margin report has no Teacher filter, D10). Everything else is a read-only, bulk amendment to a merged module (022, 017a, 026, 023, 008, 005), each with a test that its figure equals the owning screen.
 
 ## Technical Context
 
