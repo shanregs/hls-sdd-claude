@@ -108,7 +108,7 @@ export function MonthGrid({
                       color={STATUS_COLOR[item.status]}
                       onClick={() => onOpen(item)}
                       aria-label={`${KIND_LABELS[item.kind]} ${formatDate(item.date)} ${STATUS_LABELS[item.status]}`}
-                      label={`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}`}
+                      label={`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}${item.sameDay ? " · same-day" : ""}`}
                       sx={{
                         maxWidth: "100%",
                         textDecoration:

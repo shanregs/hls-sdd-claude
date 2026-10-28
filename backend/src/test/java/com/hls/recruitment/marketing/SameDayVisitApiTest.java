@@ -41,6 +41,9 @@ class SameDayVisitApiTest extends MarketingTestBase {
         assertThat(resp.map().get("date")).isEqualTo(today.toString());
         Resp listed = get(M + "/activities?sameDay=true&from=" + today + "&to=" + today, manager.token());
         assertThat(listed.body()).contains((String) resp.map().get("id"));
+        Resp calendar = get("/api/v1/activity-calendar?sameDay=true", admin);
+        assertThat(calendar.status()).as(calendar.body()).isEqualTo(200);
+        assertThat(calendar.body()).contains((String) resp.map().get("id")).contains("\"sameDay\":true");
     }
 
     @Test

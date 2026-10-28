@@ -308,3 +308,5 @@ Added for spec 013a (salary structures), which treats an approved day of Loss-of
   attendance keeps a leave mark only while the request is approved, so other modules identify an approved Loss-of-Pay
   day without reading leave tables. A half day keeps its day value on the mark.
 - No other requirement changes.
+
+> **Amended by spec 040 (2026-10-28):** Leave recorded for today is Approved at once and flagged same-day; a request that runs past today is split in two; a Manager, Admin or Director may record leave for a Teacher for today (`POST /api/v1/leave/same-day`, Approve action); a day a supervisor marked Absent is replaced by same-day leave.

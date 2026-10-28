@@ -49,10 +49,15 @@ public class ActivityCalendarController {
             @RequestParam(required = false) String zoneId,
             @RequestParam(required = false) String kind,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "false") boolean sameDay,
             @AuthenticationPrincipal Jwt jwt) {
         guard.require(CallerContext.roles(jwt), PermissionModule.ACTIVITY_CALENDAR, PermissionAction.VIEW);
         YearMonth wanted = parse(month);
-        return calendar.month(caller(jwt), wanted, filters(managerId, zoneId, kind, status));
+        Filters wantedFilters = filters(managerId, zoneId, kind, status);
+        return calendar.month(
+                caller(jwt),
+                wanted,
+                new Filters(wantedFilters.managerId(), wantedFilters.zoneId(), wantedFilters.kind(), wantedFilters.status(), sameDay));
     }
 
     /** Missed and rescheduled items for the period (up to 93 days; default the current month), grouped by Manager. */
