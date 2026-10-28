@@ -66,6 +66,8 @@ export function NavigationDrawer({
   const theme = useTheme();
   const isPhone = useMediaQuery(theme.breakpoints.down("sm"));
   const [hiddenSections, setHiddenSections] = useState(loadCollapsedSections);
+  // The optional darker sidebar (spec 039 US5) comes from the theme, so it follows any provider.
+  const sidebar = theme.hls?.sidebarDark ? theme.hls.sidebar : null;
 
   const toggleSection = (section: string) => {
     setHiddenSections((current) => {
@@ -103,10 +105,12 @@ export function NavigationDrawer({
                   sx={{
                     mt: 1,
                     py: 0.5,
-                    color: "primary.main",
-                    bgcolor: "action.hover",
+                    color: sidebar ? sidebar.text : "primary.main",
+                    bgcolor: sidebar
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "action.hover",
                     borderLeft: 4,
-                    borderColor: "primary.main",
+                    borderColor: sidebar ? sidebar.textMuted : "primary.main",
                   }}
                 >
                   <ListItemText
@@ -140,7 +144,16 @@ export function NavigationDrawer({
                     key={item.route}
                     selected={location.pathname === item.route}
                     onClick={() => handleSelect(item.route)}
-                    sx={{ pl: collapsed ? 2 : 4 }}
+                    sx={{
+                      pl: collapsed ? 2 : 4,
+                      ...(sidebar && {
+                        color: sidebar.text,
+                        "&.Mui-selected, &.Mui-selected:hover": {
+                          bgcolor: "rgba(255, 255, 255, 0.16)",
+                        },
+                        "&:hover": { bgcolor: "rgba(255, 255, 255, 0.10)" },
+                      }),
+                    }}
                   >
                     <ListItemText
                       primary={item.label}
@@ -170,6 +183,10 @@ export function NavigationDrawer({
           "& .MuiDrawer-paper": {
             width: DRAWER_WIDTH,
             boxSizing: "border-box",
+            ...(sidebar && {
+              backgroundColor: sidebar.background,
+              color: sidebar.text,
+            }),
           },
         }}
       >
@@ -190,6 +207,10 @@ export function NavigationDrawer({
           width,
           boxSizing: "border-box",
           overflowX: "hidden",
+          ...(sidebar && {
+            backgroundColor: sidebar.background,
+            color: sidebar.text,
+          }),
         },
       }}
     >

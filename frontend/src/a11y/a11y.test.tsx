@@ -1,10 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, type Theme } from "@mui/material/styles";
 import { MemoryRouter, useSearchParams } from "react-router-dom";
 import { useEffect, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
-import { buildMuiTheme, type ThemeMode } from "../theme/tokens";
+import {
+  buildMuiTheme,
+  type ThemeMode,
+  type ThemePreset,
+} from "../theme/tokens";
 import { SignInPage } from "../auth/SignInPage";
 import { OtpEntryPage } from "../auth/OtpEntryPage";
 import { ForgotPasswordPage } from "../auth/ForgotPasswordPage";
@@ -91,6 +95,8 @@ import { ActivityDialog } from "../features/marketing/ActivityDialog";
 import { ProposalForm } from "../features/marketing/ProposalForm";
 import { WinDialog } from "../features/marketing/WinDialog";
 import { SettingsPage } from "../account/SettingsPage";
+import { ThemeSettingsPage } from "../account/ThemeSettingsPage";
+import presetFile from "../../../backend/src/main/resources/themes/theme-presets.json";
 import { TeacherAttendancePage } from "../features/attendance/TeacherAttendancePage";
 import { AttendanceGridPage } from "../features/attendance/AttendanceGridPage";
 import { ApplyLeavePage } from "../features/leave/ApplyLeavePage";
@@ -1394,16 +1400,38 @@ vi.mock("../auth/useAuth", () => ({
   }),
 }));
 
-vi.mock("../theme/ThemeModeProvider", () => ({
-  useThemeMode: () => ({ mode: "light", toggleMode: vi.fn() }),
-}));
+vi.mock("../theme/ThemeModeProvider", async () => {
+  const { BUILTIN_CATALOGUE } = await import("../theme/tokens");
+  return {
+    useThemeMode: () => ({
+      mode: "light",
+      toggleMode: vi.fn(),
+      preference: {
+        preset: "classic",
+        mode: "device",
+        customAccent: null,
+        sidebarDark: false,
+        changedAt: null,
+      },
+      catalogue: BUILTIN_CATALOGUE,
+      savePreference: vi.fn(),
+      resetPreference: vi.fn(),
+      unsaved: false,
+      retrySave: vi.fn(),
+    }),
+  };
+});
 
-function renderWithChrome(ui: ReactElement, mode: ThemeMode) {
+function renderWithTheme(ui: ReactElement, theme: Theme) {
   return render(
-    <ThemeProvider theme={buildMuiTheme(mode)}>
+    <ThemeProvider theme={theme}>
       <MemoryRouter>{ui}</MemoryRouter>
     </ThemeProvider>,
   );
+}
+
+function renderWithChrome(ui: ReactElement, mode: ThemeMode) {
+  return renderWithTheme(ui, buildMuiTheme(mode));
 }
 
 /** The year screen needs a School and year in the address; the harness has one plain router, so set them on mount. */
@@ -1752,6 +1780,11 @@ const pages: PageCase[] = [
     settle: () => screen.findByRole("button", { name: "Edit" }),
   },
   {
+    name: "ThemeSettingsPage",
+    render: () => <ThemeSettingsPage />,
+    settle: () => screen.findByRole("radiogroup", { name: "Theme" }),
+  },
+  {
     name: "RolePermissionsGrid",
     render: () => <RolePermissionsGrid />,
     settle: () =>
@@ -2069,5 +2102,75 @@ describe.each(["light", "dark"] as const)(
       // axe on the larger bordered tables is slow in jsdom; the default 5s is too tight under load (30s still timed out on a busy machine).
       120_000,
     );
+  },
+);
+
+/**
+ * Spec 039 (SC-005): the key screens again under every preset, in light and dark, and the shell with
+ * the darker sidebar. axe cannot compute colour contrast in jsdom, so the ratios themselves are
+ * asserted in theme/contrast.test.ts, theme/tokens.test.ts and app/AppShell.test.tsx.
+ */
+const VARIANT_PAGES = [
+  "AppShell",
+  "SignInPage",
+  "ProfilePage",
+  "ThemeSettingsPage",
+  "SettingsPage",
+  "SchoolWorkingDaysPage",
+  "ContractsListPage",
+  "ManagerDashboard",
+];
+
+const presets = (presetFile as unknown as { presets: ThemePreset[] }).presets;
+
+const variants = presets.flatMap((preset) =>
+  (["light", "dark"] as const).map(
+    (mode) => [preset.id, mode, preset] as const,
+  ),
+);
+
+async function axeSummary(target: HTMLElement): Promise<string[]> {
+  const results = await axe(target, {
+    runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag22aa"] },
+  });
+  return results.violations.map(
+    (violation) =>
+      `${violation.id}: ${violation.help} (${violation.nodes.length} node(s))`,
+  );
+}
+
+describe.each(variants)(
+  "Accessibility with the %s theme in %s mode (spec 039 SC-005)",
+  (_id, mode, preset) => {
+    const theme = buildMuiTheme(mode, { colours: preset[mode] });
+
+    it.each(
+      pages
+        .filter((page) => VARIANT_PAGES.includes(page.name))
+        .map((page) => [page.name, page] as const),
+    )(
+      "%s has no critical WCAG 2.2 AA violations",
+      async (_name, page) => {
+        const { container } = renderWithTheme(page.render(), theme);
+        if (page.settle) {
+          await page.settle();
+        }
+        expect(
+          await axeSummary(page.axeTarget ? page.axeTarget() : container),
+        ).toEqual([]);
+      },
+      120_000,
+    );
+
+    it("AppShell with the darker sidebar has no critical WCAG 2.2 AA violations", async () => {
+      const dark = buildMuiTheme(mode, {
+        colours: preset[mode],
+        sidebarDark: true,
+      });
+      const shell = pages.find((page) => page.name === "AppShell")!;
+      const { container } = renderWithTheme(shell.render(), dark);
+      await shell.settle?.();
+      expect(await axeSummary(container)).toEqual([]);
+    }, 120_000);
   },
 );

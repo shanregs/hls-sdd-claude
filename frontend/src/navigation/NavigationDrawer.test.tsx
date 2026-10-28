@@ -2,6 +2,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ThemeProvider } from "@mui/material/styles";
+import { buildMuiTheme } from "../theme/tokens";
 import { NavigationDrawer } from "./NavigationDrawer";
 
 const mockAccessModel = vi.fn();
@@ -186,5 +188,72 @@ describe("NavigationDrawer (User Story 1, FR-006/FR-007/FR-008)", () => {
       );
       expect(screen.queryByText("User Management")).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("NavigationDrawer darker sidebar (spec 039 US5, T030)", () => {
+  const fixture = {
+    accessModel: {
+      roles: ["TEACHER"],
+      navigation: [
+        {
+          section: "ACCOUNT",
+          items: [
+            {
+              label: "My Profile",
+              route: "/account/profile",
+              actions: ["VIEW"],
+            },
+          ],
+        },
+      ],
+      dataScope: {},
+    },
+    loading: false,
+  };
+
+  function renderThemed(sidebarDark: boolean) {
+    mockAccessModel.mockReturnValue(fixture);
+    const theme = buildMuiTheme("light", { sidebarDark });
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter>
+          <NavigationDrawer
+            mobileOpen={false}
+            onMobileClose={vi.fn()}
+            collapsed={false}
+          />
+        </MemoryRouter>
+      </ThemeProvider>,
+    );
+    return theme;
+  }
+
+  /** jsdom ignores selector specificity in getComputedStyle, so the emitted CSS rule is checked instead. */
+  function paperRules(): string {
+    const rules = document.head.innerHTML.match(
+      /[^{}]*\.MuiDrawer-paper\{[^}]*\}/g,
+    );
+    return (rules ?? []).join(" ");
+  }
+
+  it("paints the sidebar in the dark shade when the user opted in", () => {
+    const theme = renderThemed(true);
+    const { background, text } = theme.hls.sidebar;
+    expect(paperRules().toLowerCase()).toContain(
+      `background-color:${background.toLowerCase()}`,
+    );
+    expect(paperRules().toLowerCase()).toContain(`color:${text.toLowerCase()}`);
+  });
+
+  it("keeps the normal sidebar by default", () => {
+    // Earlier tests leave their rules in the document; start from a clean head.
+    document.head
+      .querySelectorAll("style[data-emotion]")
+      .forEach((n) => n.remove());
+    const theme = renderThemed(false);
+    expect(paperRules().toLowerCase()).not.toContain(
+      `background-color:${theme.hls.sidebar.background.toLowerCase()}`,
+    );
   });
 });

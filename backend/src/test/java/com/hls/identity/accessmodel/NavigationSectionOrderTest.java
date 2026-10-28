@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Spec 002 FR-008a: the navigation sections always run Dashboard, Master Data, Operations, System,
- * Audit, Account (a section a role does not have is simply left out), and the items inside a
+ * Spec 002 FR-008a: the navigation sections always run Dashboard, Master Data, Attendance & Leave,
+ * Payroll & Finance, Planning & Training, Recruitment, Marketing, System, Audit, Account (a section a role does not have is simply left out), and the items inside a
  * section keep their own order.
  */
 class NavigationSectionOrderTest extends IntegrationTestBase {
@@ -34,25 +34,25 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void adminSeesDashboardMasterDataOperationsSystemAuditAccount() {
         assertThat(sectionsFor(Role.ADMIN))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "AUDIT", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "AUDIT", "ACCOUNT");
     }
 
     @Test
     void directorKeepsTheSameOrderWithoutTheAuditSection() {
         assertThat(sectionsFor(Role.DIRECTOR))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "ACCOUNT");
     }
 
     @Test
     void managerSeesDashboardMasterDataOperationsAccount() {
         assertThat(sectionsFor(Role.MANAGER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "REPORTS", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "REPORTS", "ACCOUNT");
     }
 
     @Test
     void teacherSeesMyAttendanceInTheOperationsSlotBeforeAccount() {
         assertThat(sectionsFor(Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "OPERATIONS", "LEAVE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "PAYROLL & FINANCE", "ACCOUNT");
     }
 
     @Test
@@ -84,7 +84,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void aUserWithSeveralRolesGetsOneCombinedOrder() {
         assertThat(sectionsFor(Role.MANAGER, Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "OPERATIONS", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "LEAVE", "REPORTS", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "REPORTS", "ACCOUNT");
     }
 
     @Test
@@ -106,7 +106,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     }
 
     @Test
-    void schoolContractsIsAnOperationsItemForAdminDirectorAndManagerOnly() {
+    void schoolContractsIsAPayrollAndFinanceItemForAdminDirectorAndManagerOnly() {
         for (Role role : Role.values()) {
             var navigation = client.get()
                     .uri("/api/v1/me/access-model")
@@ -116,7 +116,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
                     .returnResult()
                     .getResponseBody();
             boolean has = navigation.navigation().stream()
-                    .filter(s -> s.section().equals("OPERATIONS"))
+                    .filter(s -> s.section().equals("PAYROLL & FINANCE"))
                     .flatMap(s -> s.items().stream())
                     .anyMatch(i -> i.label().equals("School Contracts")
                             && i.route().equals("/operations/school-contracts"));

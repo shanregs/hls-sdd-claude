@@ -9,7 +9,7 @@ export function badgeText(count: number | null): string | null {
 }
 
 /** The header bell with the unread count. It renders nothing when the server's navigation does not offer Notifications. */
-export function NotificationBell({ onOpen }: { onOpen: () => void }) {
+export function NotificationBell({ onOpen, color }: { onOpen: () => void; color?: string }) {
   const { enabled, count } = useNotifications();
   if (!enabled) return null;
   const text = badgeText(count);
@@ -17,7 +17,7 @@ export function NotificationBell({ onOpen }: { onOpen: () => void }) {
   const label = count === null ? "Notifications, count unavailable" : `Notifications, ${count} unread`;
   return (
     <View style={styles.wrap}>
-      <Appbar.Action icon="bell-outline" onPress={onOpen} accessibilityLabel={label} />
+      <Appbar.Action icon="bell-outline" color={color} onPress={onOpen} accessibilityLabel={label} />
       {text !== null ? (
         <Badge style={styles.badge} size={18} importantForAccessibility="no">
           {text}

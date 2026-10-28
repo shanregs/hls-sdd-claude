@@ -4,7 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -34,6 +33,7 @@ import {
   type BudgetDetail,
   type BudgetOverview,
 } from "./expensesApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 function thisMonth(): string {
   const now = new Date();
@@ -118,7 +118,7 @@ export function BudgetVersusActualPage() {
         </TableCell>
         <TableCell>
           {a.over ? (
-            <Chip size="small" color="error" label="Over budget" />
+            <StatusChip kind="rejected" size="small" label="Over budget" />
           ) : (
             ""
           )}

@@ -4,6 +4,7 @@ import {
   type CalendarKind,
   type CalendarSummary,
 } from "./activityCalendarApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 /** The counts above the calendar; marked partial when a source could not be read. */
 export function SummaryBar({
@@ -22,11 +23,11 @@ export function SummaryBar({
     <Box aria-label="Summary" role="region" sx={{ mb: 2 }}>
       <Stack direction="row" useFlexGap spacing={1} sx={{ flexWrap: "wrap" }}>
         <Chip label={`Planned ${summary.planned}`} />
-        <Chip color="success" label={`Done ${summary.done}`} />
+        <StatusChip kind="approved" label={`Done ${summary.done}`} />
         <Chip label={`Done late ${summary.doneLate}`} />
-        <Chip color="error" label={`Missed ${summary.missed}`} />
+        <StatusChip kind="rejected" label={`Missed ${summary.missed}`} />
         <Chip label={`Cancelled ${summary.cancelled}`} />
-        <Chip color="warning" label={`Rescheduled ${summary.rescheduled}`} />
+        <StatusChip kind="pending" label={`Rescheduled ${summary.rescheduled}`} />
         <Chip variant="outlined" label={`Total ${total}`} />
       </Stack>
       {kinds.length > 0 && (

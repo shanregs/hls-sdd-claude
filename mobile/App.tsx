@@ -9,6 +9,7 @@ import { installLocationHeaders } from "./src/location/LocationGate";
 import { LocationConsentProvider } from "./src/location/LocationConsent";
 import { enableSecureWindow } from "./src/security/secureWindow";
 import { ThemeProvider } from "./src/theme/ThemeProvider";
+import { ThemeSync } from "./src/theme/ThemeSync";
 
 export default function App() {
   useEffect(() => installDeviceIntegrityHeader(), []);
@@ -23,6 +24,7 @@ export default function App() {
         <ThemeProvider>
           <LocationConsentProvider>
             <AuthProvider>
+              <ThemeSync />
               <RootNavigator />
               <StatusBar style="auto" />
             </AuthProvider>
