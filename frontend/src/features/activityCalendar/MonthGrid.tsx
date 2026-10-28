@@ -59,110 +59,123 @@ export function MonthGrid({
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   return (
-    <Box
-      role="grid"
-      aria-label="Month calendar"
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-        gap: 0.5,
-        overflowX: "auto",
-      }}
-    >
-      {WEEKDAYS.map((d) => (
-        <Typography
-          key={d}
-          role="columnheader"
-          variant="caption"
-          sx={{ fontWeight: 600, textAlign: "center" }}
-        >
-          {d}
-        </Typography>
-      ))}
-      {cells.map((day, index) => (
-        <Box
-          key={index}
-          role="gridcell"
-          sx={{
-            minHeight: 96,
-            minWidth: 0,
-            p: 0.5,
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 1,
-            opacity: day === null ? 0.3 : 1,
-          }}
-        >
-          {day !== null && (
-            <>
-              <Typography variant="caption" color="text.secondary">
-                {day}
-              </Typography>
-              {(byDay.get(day) ?? []).slice(0, MAX_PER_DAY).map((item) => (
-                <Box key={item.key} sx={{ mt: 0.5 }}>
-                  <Chip
-                    size="small"
-                    clickable
-                    color={STATUS_COLOR[item.status]}
-                    onClick={() => onOpen(item)}
-                    aria-label={`${KIND_LABELS[item.kind]} ${formatDate(item.date)} ${STATUS_LABELS[item.status]}`}
-                    label={`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}`}
-                    sx={{
-                      maxWidth: "100%",
-                      textDecoration:
-                        item.status === "CANCELLED" ? "line-through" : "none",
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    color="text.secondary"
-                    sx={{ overflowWrap: "anywhere" }}
-                  >
-                    {item.people.map((p) => p.name).join(", ")}
-                    {" · "}
-                    {item.place ?? "No place recorded"}
-                    {management && !item.zoneName ? " · No Zone" : ""}
-                  </Typography>
-                  {item.rescheduled && item.originalDate && (
-                    <Typography variant="caption" component="div" color="warning.main">
-                      Rescheduled, first planned {formatDate(item.originalDate)}
+    <Box sx={{ overflowX: "auto", maxWidth: "100%", pb: 1 }}>
+      <Box
+        role="grid"
+        aria-label="Month calendar"
+        sx={{
+          display: "grid",
+          // wide enough to read a day; narrower screens scroll sideways inside this box
+          gridTemplateColumns: "repeat(7, minmax(120px, 1fr))",
+          minWidth: 7 * 120 + 6 * 4,
+          gap: 0.5,
+        }}
+      >
+        {WEEKDAYS.map((d) => (
+          <Typography
+            key={d}
+            role="columnheader"
+            variant="caption"
+            sx={{ fontWeight: 600, textAlign: "center" }}
+          >
+            {d}
+          </Typography>
+        ))}
+        {cells.map((day, index) => (
+          <Box
+            key={index}
+            role="gridcell"
+            sx={{
+              minHeight: 96,
+              minWidth: 0,
+              p: 0.5,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              opacity: day === null ? 0.3 : 1,
+            }}
+          >
+            {day !== null && (
+              <>
+                <Typography variant="caption" color="text.secondary">
+                  {day}
+                </Typography>
+                {(byDay.get(day) ?? []).slice(0, MAX_PER_DAY).map((item) => (
+                  <Box key={item.key} sx={{ mt: 0.5 }}>
+                    <Chip
+                      size="small"
+                      clickable
+                      color={STATUS_COLOR[item.status]}
+                      onClick={() => onOpen(item)}
+                      aria-label={`${KIND_LABELS[item.kind]} ${formatDate(item.date)} ${STATUS_LABELS[item.status]}`}
+                      label={`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}`}
+                      sx={{
+                        maxWidth: "100%",
+                        textDecoration:
+                          item.status === "CANCELLED" ? "line-through" : "none",
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      component="div"
+                      color="text.secondary"
+                      sx={{ overflowWrap: "anywhere" }}
+                    >
+                      {item.people.map((p) => p.name).join(", ")}
+                      {" · "}
+                      {item.place ?? "No place recorded"}
+                      {management && !item.zoneName ? " · No Zone" : ""}
                     </Typography>
-                  )}
+                    {item.rescheduled && item.originalDate && (
+                      <Typography
+                        variant="caption"
+                        component="div"
+                        color="warning.main"
+                      >
+                        Rescheduled, first planned{" "}
+                        {formatDate(item.originalDate)}
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+                {(byDay.get(day)?.length ?? 0) > MAX_PER_DAY && (
+                  <Button size="small" onClick={() => setExpanded(day)}>
+                    {`${(byDay.get(day)?.length ?? 0) - MAX_PER_DAY} more`}
+                  </Button>
+                )}
+              </>
+            )}
+          </Box>
+        ))}
+        {expanded !== null && (
+          <Dialog
+            open
+            onClose={() => setExpanded(null)}
+            fullWidth
+            maxWidth="sm"
+          >
+            <DialogTitle>{`Activities on ${String(expanded).padStart(2, "0")}/${String(mon).padStart(2, "0")}/${year}`}</DialogTitle>
+            <DialogContent>
+              {(byDay.get(expanded) ?? []).map((item) => (
+                <Box key={item.key} sx={{ mb: 1 }}>
+                  <Button
+                    onClick={() => {
+                      setExpanded(null);
+                      onOpen(item);
+                    }}
+                    aria-label={`Open ${KIND_LABELS[item.kind]} ${STATUS_LABELS[item.status]} ${item.people.map((p) => p.name).join(", ")}`}
+                  >
+                    {`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]} · ${item.people.map((p) => p.name).join(", ")}`}
+                  </Button>
                 </Box>
               ))}
-              {(byDay.get(day)?.length ?? 0) > MAX_PER_DAY && (
-                <Button size="small" onClick={() => setExpanded(day)}>
-                  {`${(byDay.get(day)?.length ?? 0) - MAX_PER_DAY} more`}
-                </Button>
-              )}
-            </>
-          )}
-        </Box>
-      ))}
-      {expanded !== null && (
-        <Dialog open onClose={() => setExpanded(null)} fullWidth maxWidth="sm">
-          <DialogTitle>{`Activities on ${String(expanded).padStart(2, "0")}/${String(mon).padStart(2, "0")}/${year}`}</DialogTitle>
-          <DialogContent>
-            {(byDay.get(expanded) ?? []).map((item) => (
-              <Box key={item.key} sx={{ mb: 1 }}>
-                <Button
-                  onClick={() => {
-                    setExpanded(null);
-                    onOpen(item);
-                  }}
-                  aria-label={`Open ${KIND_LABELS[item.kind]} ${STATUS_LABELS[item.status]} ${item.people.map((p) => p.name).join(", ")}`}
-                >
-                  {`${KIND_LABELS[item.kind]} · ${STATUS_LABELS[item.status]} · ${item.people.map((p) => p.name).join(", ")}`}
-                </Button>
-              </Box>
-            ))}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setExpanded(null)}>Close</Button>
-          </DialogActions>
-        </Dialog>
-      )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setExpanded(null)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+        )}
+      </Box>
     </Box>
   );
 }
