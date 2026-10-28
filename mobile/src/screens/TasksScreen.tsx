@@ -9,6 +9,8 @@ import { useAuth } from "../auth/AuthProvider";
 import { useInnerBack } from "../navigation/InnerBack";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { AddTaskForm } from "../tasks/AddTaskForm";
+import { LogTaskTodayForm } from "../tasks/LogTaskTodayForm";
+import { useSameDayLog } from "../sameDay/useSameDayLog";
 import { TaskCard } from "../tasks/TaskCard";
 import { TaskDetailPane } from "../tasks/TaskDetailPane";
 import { TASK_VIEWS } from "../tasks/taskMessages";
@@ -27,10 +29,13 @@ export function TasksScreen({ initialView }: { initialView?: TaskView }) {
   const counts = useTaskSummary();
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [logging, setLogging] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
   const { canCreate } = useMenuActions(TASKS_ROUTE);
   const { state } = useAuth();
   const myUserId = state.status === "signedIn" ? state.user.id : null;
   const canAdd = useCanAddTask(canCreate, myUserId);
+  const sameDay = useSameDayLog(myUserId);
 
   const reloadAll = () => {
     tasks.reload({ quiet: true });
@@ -41,7 +46,29 @@ export function TasksScreen({ initialView }: { initialView?: TaskView }) {
     setOpenId(null);
     reloadAll();
   };
-  useInnerBack(openId !== null || adding, () => (adding ? setAdding(false) : closeDetail()));
+  useInnerBack(openId !== null || adding || logging, () =>
+    logging ? setLogging(false) : adding ? setAdding(false) : closeDetail(),
+  );
+
+  if (logging && myUserId) {
+    return (
+      <Screen>
+        <LogTaskTodayForm
+          myUserId={myUserId}
+          onCancel={() => setLogging(false)}
+          onDone={(result) => {
+            setLogging(false);
+            setSaved(
+              result === "QUEUED"
+                ? "Saved on this phone. It will be sent when you are back online."
+                : "Logged for today.",
+            );
+            reloadAll();
+          }}
+        />
+      </Screen>
+    );
+  }
 
   if (adding && myUserId) {
     return (
@@ -71,6 +98,21 @@ export function TasksScreen({ initialView }: { initialView?: TaskView }) {
 
   return (
     <Screen onRefresh={reloadAll}>
+      {saved ? (
+        <HelperText type="info" visible accessibilityLiveRegion="polite">
+          {saved}
+        </HelperText>
+      ) : null}
+      {sameDay.waiting.length > 0 ? (
+        <HelperText type="info" visible accessibilityLiveRegion="polite">
+          {sameDay.waiting.length} logged for today and waiting to be sent.
+        </HelperText>
+      ) : null}
+      {canAdd ? (
+        <Button mode="outlined" onPress={() => setLogging(true)} contentStyle={styles.button} accessibilityLabel="Log a task for today">
+          Log a task for today
+        </Button>
+      ) : null}
       {canAdd ? (
         <Button mode="contained" onPress={() => setAdding(true)} contentStyle={styles.button} accessibilityLabel="Add a task for me">
           Add a task for me
