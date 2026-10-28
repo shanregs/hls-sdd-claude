@@ -102,16 +102,27 @@ export function ManagementDashboard({ title }: { title: string }) {
         </Typography>
       )}
       {state.kind === "ready" && state.manifest.inbox && <InboxPanel />}
-      {state.kind === "ready" &&
-        state.manifest.areas.map((area) => (
-          <AreaSection
-            key={area.area}
-            area={area}
-            filter={filter}
-            refreshToken={refreshToken}
-            onTaken={onTaken}
-          />
-        ))}
+      {state.kind === "ready" && (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(460px, 100%), 1fr))",
+            gap: 2,
+            alignItems: "start",
+          }}
+        >
+          {state.manifest.areas.map((area) => (
+            <AreaSection
+              key={area.area}
+              area={area}
+              filter={filter}
+              refreshToken={refreshToken}
+              onTaken={onTaken}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }

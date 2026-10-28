@@ -43,12 +43,12 @@ class TrainingAccessModelTest extends IntegrationTestBase {
     void adminAndDirectorSeeTheCalendarAndExceptionsInOperations() {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
             var response = accessModelFor(role);
-            var calendar = item(response, "OPERATIONS", "Training Calendar");
+            var calendar = item(response, "PLANNING & TRAINING", "Training Calendar");
             assertThat(calendar).as(role.name()).isNotNull();
             assertThat(calendar.route()).isEqualTo("/operations/training");
             assertThat(calendar.actions()).containsExactly("VIEW", "CREATE", "EDIT", "DELETE", "EXPORT");
-            assertThat(item(response, "OPERATIONS", "Training Exceptions").route()).isEqualTo("/operations/training/exceptions");
-            assertThat(item(response, "OPERATIONS", "My Training")).isNull();
+            assertThat(item(response, "PLANNING & TRAINING", "Training Exceptions").route()).isEqualTo("/operations/training/exceptions");
+            assertThat(item(response, "PLANNING & TRAINING", "My Training")).isNull();
             assertThat(response.dataScope())
                     .containsEntry("TRAINING", "ORG_WIDE")
                     .containsEntry("TRAINING_ATTENDANCE", "ORG_WIDE")
@@ -60,11 +60,11 @@ class TrainingAccessModelTest extends IntegrationTestBase {
     void aManagerSeesMyTrainingWithViewOnlyAndAssignedScope() {
         var response = accessModelFor(Role.MANAGER);
 
-        var mine = item(response, "OPERATIONS", "My Training");
+        var mine = item(response, "PLANNING & TRAINING", "My Training");
         assertThat(mine).isNotNull();
         assertThat(mine.route()).isEqualTo("/operations/my-training");
         assertThat(mine.actions()).containsExactly("VIEW");
-        assertThat(item(response, "OPERATIONS", "Training Calendar")).isNull();
+        assertThat(item(response, "PLANNING & TRAINING", "Training Calendar")).isNull();
         assertThat(response.dataScope()).containsEntry("TRAINING", "ASSIGNED").containsEntry("TRAINING_ATTENDANCE", "ASSIGNED");
     }
 
@@ -75,7 +75,7 @@ class TrainingAccessModelTest extends IntegrationTestBase {
         assertThat(item(response, "MY ATTENDANCE", "Upcoming Training").route()).isEqualTo("/my-attendance/training");
         assertThat(item(response, "MY ATTENDANCE", "My Training History").route()).isEqualTo("/my-attendance/training/history");
         assertThat(item(response, "MY ATTENDANCE", "Upcoming Training").actions()).containsExactly("VIEW", "CREATE", "EDIT");
-        assertThat(item(response, "OPERATIONS", "Training Calendar")).isNull();
+        assertThat(item(response, "PLANNING & TRAINING", "Training Calendar")).isNull();
         assertThat(response.dataScope()).containsEntry("TRAINING_REGISTRATION", "OWN").doesNotContainKeys("TRAINING", "TRAINING_ATTENDANCE");
     }
 
