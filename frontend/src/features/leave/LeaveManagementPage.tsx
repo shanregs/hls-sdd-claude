@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
+  Button,
   Chip,
   IconButton,
   MenuItem,
@@ -33,6 +34,7 @@ import {
 } from "./leaveApi";
 import { LeaveDecisionDialog, type Decision } from "./LeaveDecisionDialog";
 import { LeaveStatusChip } from "./LeaveStatusChip";
+import { RecordSameDayLeaveDialog } from "./RecordSameDayLeaveDialog";
 
 const PAGE_SIZE = 25;
 
@@ -59,8 +61,14 @@ export function LeaveManagementPage() {
   const [params] = useSearchParams();
   const [status, setStatus] = useState<LeaveStatus | "">(() => {
     const wanted = params.get("status");
-    return wanted === "APPROVED" || wanted === "REJECTED" || wanted === "CANCELLED" ? wanted : "PENDING";
+    return wanted === "APPROVED" ||
+      wanted === "REJECTED" ||
+      wanted === "CANCELLED"
+      ? wanted
+      : "PENDING";
   });
+  const [sameDayOnly, setSameDayOnly] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<LeaveRequestView[] | null>(null);
   const [total, setTotal] = useState(0);
@@ -77,6 +85,7 @@ export function LeaveManagementPage() {
     (async () => {
       const result = await getLeaveList(authFetch, {
         status,
+        sameDay: sameDayOnly,
         page,
         size: PAGE_SIZE,
       });
@@ -94,7 +103,7 @@ export function LeaveManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, status, page, reload]);
+  }, [authFetch, status, sameDayOnly, page, reload]);
 
   const submitDecision = async (text: string): Promise<string | null> => {
     if (!active) return null;
@@ -141,6 +150,25 @@ export function LeaveManagementPage() {
           <MenuItem value="REJECTED">Rejected</MenuItem>
           <MenuItem value="CANCELLED">Cancelled</MenuItem>
         </TextField>
+        <TextField
+          select
+          size="small"
+          label="Recorded"
+          value={sameDayOnly ? "SAME_DAY" : "ALL"}
+          onChange={(e) => {
+            setSameDayOnly(e.target.value === "SAME_DAY");
+            setPage(0);
+          }}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="ALL">All</MenuItem>
+          <MenuItem value="SAME_DAY">Same-day only</MenuItem>
+        </TextField>
+        {canDecide && (
+          <Button variant="outlined" onClick={() => setRecording(true)}>
+            Record same-day leave
+          </Button>
+        )}
       </Stack>
       {error && (
         <Alert severity="error" role="alert" sx={{ mb: 2 }}>
@@ -179,7 +207,7 @@ export function LeaveManagementPage() {
                     <TableCell align="right">{r.workingDays}</TableCell>
                     <TableCell>{r.reason}</TableCell>
                     <TableCell>
-                      <LeaveStatusChip status={r.status} />
+                      <LeaveStatusChip status={r.status} sameDay={r.sameDay} />
                     </TableCell>
                     <TableCell>
                       {canDecide && r.allowedActions.includes("APPROVE") && (
@@ -238,6 +266,15 @@ export function LeaveManagementPage() {
           count={Math.ceil(total / PAGE_SIZE)}
           page={page + 1}
           onChange={(_, p) => setPage(p - 1)}
+        />
+      )}
+      {recording && (
+        <RecordSameDayLeaveDialog
+          onClose={() => setRecording(false)}
+          onRecorded={() => {
+            setRecording(false);
+            setReload((n) => n + 1);
+          }}
         />
       )}
       {active && (

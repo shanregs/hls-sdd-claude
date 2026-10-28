@@ -13,6 +13,9 @@ interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificationExec
     Optional<Task> findFirstBySourceAndSourceKeyAndStatusIn(String source, String sourceKey, Collection<TaskStatus> statuses);
 
     /** Open tasks whose due date is before the given day: the candidates of the daily check. */
+    /** The task an offline replay already created for this phone key (spec 040). */
+    Optional<Task> findByClientKey(java.util.UUID clientKey);
+
     List<Task> findByStatusInAndDueOnBefore(Collection<TaskStatus> statuses, LocalDate day);
 
     List<Task> findByParentTaskIdOrderByCreatedAt(UUID parentTaskId);

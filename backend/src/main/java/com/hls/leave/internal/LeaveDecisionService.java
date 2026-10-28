@@ -75,6 +75,7 @@ public class LeaveDecisionService {
             LeaveStatus status,
             UUID teacherId,
             UUID schoolId,
+            Boolean sameDay,
             YearMonth month,
             int page,
             int size) {
@@ -88,6 +89,7 @@ public class LeaveDecisionService {
                 s.teacherIds(),
                 teacherId,
                 schoolId,
+                sameDay,
                 from,
                 to,
                 PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100)));

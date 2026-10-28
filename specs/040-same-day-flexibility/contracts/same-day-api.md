@@ -36,7 +36,7 @@ same-day request on its own business day (data-model.md).
 
 ## 2. Substitution
 
-- `POST /substitutions/{id}/cover` (existing; Create on SUBSTITUTION): body unchanged. The result gains `sameDay`. It is
+- `POST /substitutions/{id}/cover` (existing; Edit on SUBSTITUTION, unchanged): body unchanged. The result gains `sameDay`. It is
   accepted from `OPEN` or `ASSIGNED` with no earlier step, on or after the duty date within the existing limits.
 - `GET /substitutions/manager-covers?from=&to=&managerId=&schoolId=&sameDay=&page=&size=` (new; View on SUBSTITUTION,
   scope applied): items `{ requirementId, date, school {id,name}, managerId, managerName, replacedTeacher {id,name},

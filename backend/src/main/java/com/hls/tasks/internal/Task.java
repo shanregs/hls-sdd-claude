@@ -91,6 +91,12 @@ public class Task {
     @Column(name = "cancel_reason")
     private String cancelReason;
 
+    @Column(name = "same_day", nullable = false)
+    private boolean sameDay;
+
+    @Column(name = "client_key")
+    private java.util.UUID clientKey;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -300,5 +306,21 @@ public class Task {
 
     void markEscalated(Instant now) {
         this.escalatedAt = now;
+    }
+
+    public boolean isSameDay() {
+        return sameDay;
+    }
+
+    public void setSameDay(boolean sameDay) {
+        this.sameDay = sameDay;
+    }
+
+    public java.util.UUID getClientKey() {
+        return clientKey;
+    }
+
+    public void setClientKey(java.util.UUID clientKey) {
+        this.clientKey = clientKey;
     }
 }

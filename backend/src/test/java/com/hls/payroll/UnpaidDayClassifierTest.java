@@ -53,8 +53,19 @@ class UnpaidDayClassifierTest {
     }
 
     @Test
-    void approvedCasualOrSickLeaveIsNotUnpaid() {
-        assertThat(classify(List.of(mark(6, "LEAVE", "1.00", CASUAL_REQUEST)), Set.of(nov(6)))).isEmpty();
+    void approvedCasualOrSickLeaveIsUnpaidToo() {
+        // spec 040 FR-003 (amends 013a): every Teacher leave day is deducted whatever the leave type
+        assertThat(classify(List.of(mark(6, "LEAVE", "1.00", CASUAL_REQUEST)), Set.of(nov(6))))
+                .containsExactly(new UnpaidDay(nov(6), BigDecimal.ONE));
+        assertThat(classify(List.of(mark(6, "LEAVE", "0.50", CASUAL_REQUEST)), Set.of(nov(6))))
+                .containsExactly(new UnpaidDay(nov(6), HALF));
+    }
+
+    @Test
+    void aDateIsDeductedOnceEvenWhenItsMarkWasReplacedByLeave() {
+        // an Absent mark replaced by same-day leave is one mark per date, so one deduction (spec 040 FR-003)
+        assertThat(classify(List.of(mark(6, "LEAVE", "1.00", CASUAL_REQUEST)), Set.of(nov(6), nov(7))))
+                .hasSize(1);
     }
 
     @Test

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,9 +57,10 @@ public class ActivityController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "false") boolean mine,
             @RequestParam(required = false) UUID prospect,
+            @RequestParam(required = false) Boolean sameDay,
             @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.VIEW);
-        return activities.list(CallerContext.userId(jwt), CallerContext.roles(jwt), from, to, mine, prospect);
+        return activities.list(CallerContext.userId(jwt), CallerContext.roles(jwt), from, to, mine, prospect, sameDay);
     }
 
     @GetMapping("/activities/{id}")
@@ -72,6 +74,37 @@ public class ActivityController {
         require(jwt, PermissionAction.CREATE);
         return ResponseEntity.status(201).body(activities.plan(CallerContext.userId(jwt), CallerContext.roles(jwt), request));
     }
+
+    /** Spec 040: a visit logged for today with no plan; saved already Completed. */
+    @PostMapping("/activities/same-day")
+    public ResponseEntity<ActivityDto> logSameDay(
+            @RequestBody SameDayBody body,
+            @RequestHeader(value = "Idempotency-Key", required = false) UUID key,
+            @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.CREATE);
+        return ResponseEntity.status(201)
+                .body(activities.logSameDay(
+                        CallerContext.userId(jwt),
+                        CallerContext.roles(jwt),
+                        new ActivityService.SameDayRequest(
+                                body.prospectId(),
+                                body.schoolId(),
+                                body.type(),
+                                body.outcome(),
+                                body.notes(),
+                                body.followUpOn(),
+                                key,
+                                body.capturedOn())));
+    }
+
+    public record SameDayBody(
+            UUID prospectId,
+            UUID schoolId,
+            String type,
+            String outcome,
+            String notes,
+            LocalDate followUpOn,
+            LocalDate capturedOn) {}
 
     @PostMapping("/activities/{id}/complete")
     public ActivityDto complete(@PathVariable UUID id, @RequestBody CompleteRequest request, @AuthenticationPrincipal Jwt jwt) {

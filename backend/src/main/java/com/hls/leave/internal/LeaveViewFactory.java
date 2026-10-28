@@ -49,8 +49,15 @@ public class LeaveViewFactory {
             String cancelledBy,
             Instant createdAt,
             Long version,
+            boolean sameDay,
+            String recordedByName,
+            OtherPart otherPart,
             List<String> allowedActions) {}
 
+    /** The other half of a request split at today (spec 040): the same-day part and the later part point at each other. */
+    public record OtherPart(UUID id, LocalDate firstDate, LocalDate lastDate, String status) {}
+
+    private final LeaveRequestRepository requests;
     private final TeacherDirectory teachers;
     private final SchoolDirectory schools;
     private final LeaveTypeCatalog types;
@@ -58,11 +65,13 @@ public class LeaveViewFactory {
     private final LeaveAttendance attendance;
 
     public LeaveViewFactory(
+            LeaveRequestRepository requests,
             TeacherDirectory teachers,
             SchoolDirectory schools,
             LeaveTypeCatalog types,
             AppUserRepository users,
             LeaveAttendance attendance) {
+        this.requests = requests;
         this.teachers = teachers;
         this.schools = schools;
         this.types = types;
@@ -92,13 +101,23 @@ public class LeaveViewFactory {
         Map<UUID, String> typeNames = types.namesById();
         Map<UUID, String> userNames = users
                 .findAllById(requests.stream()
-                        .map(LeaveRequest::getDecidedByUserId)
+                        .flatMap(r -> java.util.stream.Stream.of(r.getDecidedByUserId(), r.getCreatedByUserId()))
                         .filter(java.util.Objects::nonNull)
                         .distinct()
                         .toList())
                 .stream()
                 .collect(Collectors.toMap(AppUser::getId, AppUser::getDisplayName, (a, b) -> a));
         LocalDate today = attendance.businessToday();
+        Map<UUID, LeaveRequest> parts = new java.util.HashMap<>();
+        var linkedIds = requests.stream()
+                .filter(r -> r.isSameDay() || r.getLinkedRequestId() != null)
+                .flatMap(r -> java.util.stream.Stream.of(r.getId(), r.getLinkedRequestId()))
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        if (!linkedIds.isEmpty()) {
+            this.requests.findPartsOf(linkedIds).forEach(p -> parts.put(p.getId(), p));
+        }
         return requests.stream()
                 .map(r -> new LeaveView(
                         r.getId(),
@@ -120,6 +139,9 @@ public class LeaveViewFactory {
                         r.getCancelledByKind(),
                         r.getCreatedAt(),
                         r.getVersion(),
+                        r.isSameDay(),
+                        r.isSameDay() ? userNames.getOrDefault(r.getCreatedByUserId(), "Unknown user") : null,
+                        otherPart(r, parts),
                         allowed(r, perspective, today)))
                 .toList();
     }
@@ -127,7 +149,8 @@ public class LeaveViewFactory {
     static List<String> allowed(LeaveRequest r, Perspective perspective, LocalDate today) {
         if (perspective == Perspective.OWN) {
             boolean cancellable = r.getStatus() == LeaveStatus.PENDING
-                    || (r.getStatus() == LeaveStatus.APPROVED && r.getFirstDate().isAfter(today));
+                    || (r.getStatus() == LeaveStatus.APPROVED
+                            && (r.getFirstDate().isAfter(today) || (r.isSameDay() && r.getFirstDate().equals(today))));
             return cancellable ? List.of("CANCEL") : List.of();
         }
         return switch (r.getStatus()) {
@@ -135,6 +158,21 @@ public class LeaveViewFactory {
             case APPROVED -> List.of("REVOKE");
             default -> List.of();
         };
+    }
+
+    private static OtherPart otherPart(LeaveRequest r, Map<UUID, LeaveRequest> parts) {
+        LeaveRequest other = null;
+        if (r.getLinkedRequestId() != null) {
+            other = parts.get(r.getLinkedRequestId());
+        } else if (r.isSameDay()) {
+            other = parts.values().stream()
+                    .filter(p -> r.getId().equals(p.getLinkedRequestId()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        return other == null
+                ? null
+                : new OtherPart(other.getId(), other.getFirstDate(), other.getLastDate(), other.getStatus().name());
     }
 
     /** Convenience for callers that need a map by id. */

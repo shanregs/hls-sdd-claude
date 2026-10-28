@@ -48,6 +48,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
               and (:orgWide = true or r.teacherId in :teacherIds)
               and (cast(:teacherId as uuid) is null or r.teacherId = :teacherId)
               and (cast(:schoolId as uuid) is null or r.schoolId = :schoolId)
+              and (cast(:sameDay as boolean) is null or r.sameDay = :sameDay)
               and r.firstDate <= :monthEnd and r.lastDate >= :monthStart
             order by r.createdAt desc
             """)
@@ -57,9 +58,14 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID
             @Param("teacherIds") Collection<UUID> teacherIds,
             @Param("teacherId") UUID teacherId,
             @Param("schoolId") UUID schoolId,
+            @Param("sameDay") Boolean sameDay,
             @Param("monthStart") LocalDate monthStart,
             @Param("monthEnd") LocalDate monthEnd,
             Pageable pageable);
+
+    /** The later parts of split requests, found from the same-day parts they are linked to (spec 040), and the reverse. */
+    @Query("select r from LeaveRequest r where r.linkedRequestId in :ids or r.id in :ids")
+    List<LeaveRequest> findPartsOf(@Param("ids") Collection<UUID> ids);
 
     @Query("""
             select count(r) from LeaveRequest r

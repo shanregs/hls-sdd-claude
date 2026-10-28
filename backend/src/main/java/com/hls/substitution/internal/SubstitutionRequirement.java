@@ -73,6 +73,9 @@ public class SubstitutionRequirement {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "same_day", nullable = false)
+    private boolean sameDay;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -108,6 +111,7 @@ public class SubstitutionRequirement {
     }
 
     public void assign(UUID substituteTeacherId, String note, Instant now) {
+        this.sameDay = false;
         this.status = RequirementStatus.ASSIGNED;
         this.substituteTeacherId = substituteTeacherId;
         this.coverUserId = null;
@@ -117,6 +121,7 @@ public class SubstitutionRequirement {
     }
 
     public void release(String reason, Instant now) {
+        this.sameDay = false;
         this.status = RequirementStatus.OPEN;
         this.substituteTeacherId = null;
         this.coverUserId = null;
@@ -135,6 +140,7 @@ public class SubstitutionRequirement {
     }
 
     public void cancel(Instant now) {
+        this.sameDay = false;
         this.status = RequirementStatus.CANCELLED;
         this.substituteTeacherId = null;
         this.coverUserId = null;
@@ -233,5 +239,13 @@ public class SubstitutionRequirement {
 
     public Long getVersion() {
         return version;
+    }
+
+    public boolean isSameDay() {
+        return sameDay;
+    }
+
+    public void setSameDay(boolean sameDay) {
+        this.sameDay = sameDay;
     }
 }
