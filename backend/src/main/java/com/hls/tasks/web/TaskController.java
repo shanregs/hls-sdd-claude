@@ -170,10 +170,12 @@ public class TaskController {
 
     /** Spec 040: a task planned for today is marked done on the spot; final at once. */
     @PostMapping("/{id}/done-on-the-spot")
-    public TaskService.SameDayResult doneOnTheSpot(
+    public TaskQueries.Detail doneOnTheSpot(
             @PathVariable UUID id, @RequestBody NoteBody body, @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.EDIT);
-        return service.markDoneOnTheSpot(caller(jwt), id, body == null ? null : body.note());
+        Caller caller = caller(jwt);
+        service.markDoneOnTheSpot(caller, id, body == null ? null : body.note());
+        return queries.detail(caller, id);
     }
 
     @GetMapping("/{id}")
