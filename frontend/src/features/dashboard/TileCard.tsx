@@ -29,7 +29,15 @@ const STATE_TEXT = {
  */
 export function TileCard({ definition, result, onRetry }: TileCardProps) {
   return (
-    <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2,
+        minWidth: 0,
+        // A table needs the whole row, not one narrow tile.
+        ...(result?.table ? { gridColumn: "1 / -1" } : {}),
+      }}
+    >
       <Typography variant="subtitle2" color="text.secondary" component="p">
         {definition.label}
       </Typography>

@@ -155,7 +155,9 @@ export function ActivityCalendarPage() {
         sx={{ alignItems: "center", mb: 2, flexWrap: "wrap" }}
         useFlexGap
       >
-        <Button onClick={() => setMonth(shift(month, -1))}>Previous month</Button>
+        <Button onClick={() => setMonth(shift(month, -1))}>
+          Previous month
+        </Button>
         <Typography component="h2" variant="h6" aria-live="polite">
           {monthTitle(month)}
         </Typography>
@@ -179,7 +181,10 @@ export function ActivityCalendarPage() {
             value={managerId}
             onChange={(e) => setManagerId(e.target.value)}
             sx={{ minWidth: 160 }}
-            slotProps={{ select: { native: true } }}
+            slotProps={{
+              select: { native: true },
+              inputLabel: { shrink: true },
+            }}
           >
             <option value="">All Managers</option>
             {(choices?.managers ?? []).map((m) => (
@@ -196,7 +201,10 @@ export function ActivityCalendarPage() {
           value={zoneId}
           onChange={(e) => setZoneId(e.target.value)}
           sx={{ minWidth: 140 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All Zones</option>
           {(choices?.zones ?? []).map((z) => (
@@ -212,11 +220,18 @@ export function ActivityCalendarPage() {
           value={kind}
           onChange={(e) => setKind(e.target.value)}
           sx={{ minWidth: 160 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All kinds</option>
           {(Object.keys(KIND_LABELS) as CalendarKind[]).map((k) => (
-            <option key={k} value={k} disabled={k === "TRAINING" && !trainingAvailable}>
+            <option
+              key={k}
+              value={k}
+              disabled={k === "TRAINING" && !trainingAvailable}
+            >
               {k === "TRAINING" && !trainingAvailable
                 ? "Training: not available yet"
                 : KIND_LABELS[k]}
@@ -230,7 +245,10 @@ export function ActivityCalendarPage() {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           sx={{ minWidth: 140 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All statuses</option>
           {(Object.keys(STATUS_LABELS) as CalendarStatus[]).map((st) => (
@@ -290,7 +308,10 @@ export function ActivityCalendarPage() {
                 {s.note}
               </Alert>
             ))}
-          <SummaryBar summary={state.data.summary} partial={state.data.partial} />
+          <SummaryBar
+            summary={state.data.summary}
+            partial={state.data.partial}
+          />
           <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
             <Button
               variant={view === "grid" ? "contained" : "outlined"}
