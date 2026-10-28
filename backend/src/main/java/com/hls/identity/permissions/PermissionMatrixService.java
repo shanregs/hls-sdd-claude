@@ -109,6 +109,7 @@ public class PermissionMatrixService {
         seedContent();
         seedSchoolBilling();
         seedTraining();
+        seedReports();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.DELETE, true);
@@ -353,6 +354,40 @@ public class PermissionMatrixService {
         for (PermissionAction action : PermissionModule.TRAINING_REGISTRATION.actions()) {
             seed(Role.TEACHER, PermissionModule.TRAINING_REGISTRATION, action, true);
         }
+        grants.invalidateAround();
+    }
+
+    /** Report defaults (spec 014a): Admin and Director read and export both reports, a Manager the Attendance one, a Teacher My Report. */
+    /** Recruitment, Teacher and Manager reports (spec 014c): Admin, Director and Manager. Expenses is Admin and Director only. */
+    private static final List<PermissionModule> PEOPLE_REPORTS =
+            List.of(PermissionModule.REPORT_RECRUITMENT, PermissionModule.REPORT_TEACHER, PermissionModule.REPORT_MANAGER);
+
+    private void seedReports() {
+        for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
+            for (PermissionAction action : PermissionModule.REPORT_ATTENDANCE.actions()) {
+                seed(role, PermissionModule.REPORT_ATTENDANCE, action, true);
+            }
+            for (PermissionAction action : PermissionModule.REPORT_PAYROLL.actions()) {
+                seed(role, PermissionModule.REPORT_PAYROLL, action, true);
+            }
+            for (PermissionModule report : PEOPLE_REPORTS) {
+                for (PermissionAction action : report.actions()) {
+                    seed(role, report, action, true);
+                }
+            }
+            for (PermissionAction action : PermissionModule.REPORT_EXPENSES.actions()) {
+                seed(role, PermissionModule.REPORT_EXPENSES, action, true);
+            }
+        }
+        for (PermissionAction action : PermissionModule.REPORT_ATTENDANCE.actions()) {
+            seed(Role.MANAGER, PermissionModule.REPORT_ATTENDANCE, action, true);
+        }
+        for (PermissionModule report : PEOPLE_REPORTS) {
+            for (PermissionAction action : report.actions()) {
+                seed(Role.MANAGER, report, action, true);
+            }
+        }
+        seed(Role.TEACHER, PermissionModule.MY_REPORT, PermissionAction.VIEW, true);
         grants.invalidateAround();
     }
 

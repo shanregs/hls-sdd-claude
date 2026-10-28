@@ -357,3 +357,7 @@ phone width, with no horizontal page scroll at any width.
 ## Amended by 029
 
 Spec 029 (Content Management) adds a sixth fixed role, **Content Contributor** (Constitution 3.0.0). Wherever this spec says "the five fixed roles", read six: the role picker and the access model list the new role, its menu is Dashboard, My Content, Notifications and Account, and it has no mobile sign-in. No other behaviour of this spec changes.
+
+## Amended by 014a
+
+Spec 014a (Reports Framework) replaces the single `REPORTS` row in the Module x Role sketch above with per-report permission keys: `REPORT_ATTENDANCE` (View, Export), `REPORT_PAYROLL` (View, Export) and `MY_REPORT` (View). There is no `REPORTS` module key. The navigation gains a REPORTS section (Attendance Report, Payroll Report) and a Teacher's "My Report" under MY ATTENDANCE. Payroll is never eligible for a Zone Manager or Teacher; System holds none of the three.

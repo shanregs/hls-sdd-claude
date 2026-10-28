@@ -123,6 +123,39 @@ class PerformanceQueriesTest extends PerformanceTestBase {
         assertThat(get(PERF + "/summary?from=" + today() + "&to=" + today().minusDays(1), s.director()).status()).isEqualTo(400);
     }
 
+    /** Spec 014c A4: per-Teacher counts equal the Teacher screen and add up to the Manager's row. */
+    @Test
+    void thePerTeacherSummaryMatchesTheTeacherScreenAndAddsUpToTheManager() {
+        Setup s = setup();
+        UUID second = anotherTeacher(s);
+        UUID third = anotherTeacher(s);
+        observe(s.managerToken(), s.teacherId(), "GOOD", 4);
+        observe(s.managerToken(), second, "NEEDS_IMPROVEMENT", 3);
+        observe(s.managerToken(), second, "GOOD", 5);
+        plan(s.director(), s.teacherId(), today().plusDays(3), "MANAGEMENT_PLAN");
+        plan(s.director(), third, today().plusDays(1), "MANAGEMENT_PLAN");
+        jdbc.update("update observation_plan set planned_on = ? where teacher_id = ?", today().minusDays(2), third);
+
+        Map<UUID, PerformanceSummary.Counts> byTeacher = summary.byTeacher(today().minusDays(7), today());
+
+        assertThat(byTeacher.get(s.teacherId()).observationsDone()).isEqualTo(1);
+        assertThat(byTeacher.get(second).observationsDone()).isEqualTo(2);
+        assertThat(byTeacher.get(second).openIssues()).isEqualTo(1);
+        assertThat(byTeacher.get(third).observationsOverdue()).isEqualTo(1);
+        assertThat(byTeacher.get(third).observationsDone()).isZero();
+        for (UUID teacher : List.of(s.teacherId(), second)) {
+            Map<String, Object> view = get(PERF + "/teachers/" + teacher, s.managerToken()).map();
+            assertThat((List<?>) view.get("observations")).hasSize((int) byTeacher.get(teacher).observationsDone());
+            assertThat(((List<?>) view.get("issues")).size()).isGreaterThanOrEqualTo((int) byTeacher.get(teacher).openIssues());
+        }
+        PerformanceSummary.Counts manager = summary.byManager(today().minusDays(7), today()).get(s.managerUserId());
+        List<UUID> mine = List.of(s.teacherId(), second, third);
+        assertThat(mine.stream().mapToLong(t -> byTeacher.get(t).observationsDone()).sum()).isEqualTo(manager.observationsDone());
+        assertThat(mine.stream().mapToLong(t -> byTeacher.get(t).observationsPlanned()).sum()).isEqualTo(manager.observationsPlanned());
+        assertThat(mine.stream().mapToLong(t -> byTeacher.get(t).observationsOverdue()).sum()).isEqualTo(manager.observationsOverdue());
+        assertThat(mine.stream().mapToLong(t -> byTeacher.get(t).openIssues()).sum()).isEqualTo(manager.openIssues());
+    }
+
     private UUID zoneOf(Setup s) {
         return s.zoneId();
     }

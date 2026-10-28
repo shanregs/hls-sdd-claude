@@ -3,6 +3,7 @@ package com.hls.reporting.web;
 import com.hls.reporting.internal.DashboardForbiddenException;
 import com.hls.reporting.internal.DashboardInvalidInputException;
 import com.hls.reporting.internal.DashboardNotFoundException;
+import com.hls.reporting.api.ReportOutOfScopeException;
 import com.hls.school.api.Reason;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,6 +20,11 @@ public class DashboardExceptionAdvice {
 
     @ExceptionHandler(DashboardForbiddenException.class)
     ResponseEntity<Reason> forbidden(DashboardForbiddenException e) {
+        return ResponseEntity.status(403).body(new Reason(e.getMessage()));
+    }
+
+    @ExceptionHandler(ReportOutOfScopeException.class)
+    ResponseEntity<Reason> outOfScope(ReportOutOfScopeException e) {
         return ResponseEntity.status(403).body(new Reason(e.getMessage()));
     }
 

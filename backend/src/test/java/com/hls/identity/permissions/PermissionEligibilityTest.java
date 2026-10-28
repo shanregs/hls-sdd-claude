@@ -404,4 +404,51 @@ class PermissionEligibilityTest extends IntegrationTestBase {
                 .isEqualTo(PermissionModule.TRAINING_REGISTRATION.actions());
         assertThat(PermissionEligibility.actionsFor(Role.ADMIN, PermissionModule.TRAINING_REGISTRATION)).isEmpty();
     }
+
+    @Test
+    void reportModulesAreListedPerReportAndPayrollIsNotForManagersOrTeachers() {
+        String admin = signInAs(Role.ADMIN).token();
+        Resp resp = get(MATRIX, admin);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> modules = (List<Map<String, Object>>) resp.map().get("modules");
+        List<Object> names = modules.stream().map(m -> m.get("module")).toList();
+        assertThat(names).contains("REPORT_ATTENDANCE", "REPORT_PAYROLL", "MY_REPORT").doesNotContain("REPORTS");
+
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, PermissionModule.REPORT_PAYROLL)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.REPORT_PAYROLL)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.REPORT_ATTENDANCE)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, PermissionModule.REPORT_ATTENDANCE)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, PermissionModule.MY_REPORT)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, PermissionModule.REPORT_ATTENDANCE))
+                .containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, PermissionModule.MY_REPORT))
+                .containsExactly(PermissionAction.VIEW);
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.REPORT_PAYROLL, PermissionAction.VIEW)).isFalse();
+        assertThat(matrix.isGranted(Role.DIRECTOR, PermissionModule.REPORT_PAYROLL, PermissionAction.EXPORT)).isTrue();
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.REPORT_ATTENDANCE, PermissionAction.VIEW)).isTrue();
+        assertThat(matrix.isGranted(Role.TEACHER, PermissionModule.MY_REPORT, PermissionAction.VIEW)).isTrue();
+    }
+
+    @Test
+    void peopleReportsAreForStaffAndExpensesIsNotForManagers() {
+        for (PermissionModule m : List.of(PermissionModule.REPORT_RECRUITMENT, PermissionModule.REPORT_TEACHER, PermissionModule.REPORT_MANAGER)) {
+            assertThat(PermissionEligibility.actionsFor(Role.ADMIN, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.DIRECTOR, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.MANAGER, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.TEACHER, m)).isEmpty();
+            assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, m)).isEmpty();
+            assertThat(matrix.isGranted(Role.ADMIN, m, PermissionAction.EXPORT)).isTrue();
+            assertThat(matrix.isGranted(Role.DIRECTOR, m, PermissionAction.VIEW)).isTrue();
+            assertThat(matrix.isGranted(Role.MANAGER, m, PermissionAction.VIEW)).isTrue();
+            assertThat(matrix.isGranted(Role.TEACHER, m, PermissionAction.VIEW)).isFalse();
+        }
+        PermissionModule expenses = PermissionModule.REPORT_EXPENSES;
+        assertThat(PermissionEligibility.actionsFor(Role.ADMIN, expenses)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+        assertThat(PermissionEligibility.actionsFor(Role.DIRECTOR, expenses)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, expenses)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.TEACHER, expenses)).isEmpty();
+        assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, expenses)).isEmpty();
+        assertThat(matrix.isGranted(Role.DIRECTOR, expenses, PermissionAction.EXPORT)).isTrue();
+        assertThat(matrix.isGranted(Role.MANAGER, expenses, PermissionAction.VIEW)).isFalse();
+    }
 }

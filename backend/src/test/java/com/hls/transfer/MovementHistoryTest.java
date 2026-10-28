@@ -102,6 +102,36 @@ class MovementHistoryTest extends TransferTestBase {
         assertThat(source.transferredTeacherIds()).contains(direct.t1());
     }
 
+    /** Spec 014c A5: counted in their effective month only; Draft and Rejected excluded; Applied counted. */
+    @Test
+    void movementsBetweenCountsApprovedAndAppliedRequestsInTheirMonthOnly() {
+        World w = world();
+        java.time.LocalDate day = in(3);
+        UUID approved = newTransfer(w.managerA().token(), w.t1(), w.schoolB1(), day);
+        assertThat(approve(w.director(), approved).status()).isEqualTo(200);
+        World r = world();
+        UUID replacement = newReplacement(r.managerA().token(), r.t1(), r.t3(), day);
+        assertThat(approve(r.director(), replacement).status()).isEqualTo(200);
+        World d = world();
+        UUID draft = newTransfer(d.managerA().token(), d.t1(), d.schoolB1(), day);
+        World x = world();
+        UUID rejected = newTransfer(x.managerA().token(), x.t1(), x.schoolB1(), day);
+        assertThat(reject(x.director(), rejected, "No").status()).isEqualTo(200);
+
+        Map<UUID, TeacherMovementSource.Movements> inRange = source.movementsBetween(day, day);
+
+        assertThat(inRange.get(w.t1())).isEqualTo(new TeacherMovementSource.Movements(1, 0));
+        assertThat(inRange.get(r.t1())).isEqualTo(new TeacherMovementSource.Movements(0, 1));
+        assertThat(inRange).doesNotContainKeys(r.t3(), d.t1(), x.t1());
+        assertThat(source.movementsBetween(day.plusDays(1), day.plusDays(40))).doesNotContainKeys(w.t1(), r.t1());
+        assertThat(source.movementsBetween(day.minusDays(40), day.minusDays(1))).doesNotContainKeys(w.t1(), r.t1());
+
+        // an Approved request whose date has arrived is Applied, and still counted
+        jdbc.update("update movement_request set effective_on = ? where id = ?", java.time.LocalDate.now(), approved);
+        assertThat(source.movementsBetween(java.time.LocalDate.now(), java.time.LocalDate.now()).get(w.t1()))
+                .isEqualTo(new TeacherMovementSource.Movements(1, 0));
+    }
+
     @Test
     void theTeacherListFiltersByMovementInsideTheCallersScope() {
         World w = world();

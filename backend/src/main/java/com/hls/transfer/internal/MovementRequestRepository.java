@@ -13,6 +13,8 @@ interface MovementRequestRepository extends JpaRepository<MovementRequest, UUID>
 
     List<MovementRequest> findByStatus(String status);
 
+    List<MovementRequest> findByStatusAndEffectiveOnBetween(String status, java.time.LocalDate from, java.time.LocalDate to);
+
     @Query("""
             select r from MovementRequest r
             where r.teacherId = :teacherId or r.replacementTeacherId = :teacherId

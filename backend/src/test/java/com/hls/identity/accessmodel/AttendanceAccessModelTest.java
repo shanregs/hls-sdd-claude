@@ -66,7 +66,10 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
                     .containsEntry("ATTENDANCE", "ORG_WIDE")
                     .containsEntry("ATTENDANCE_SETUP", "ORG_WIDE");
             assertThat(labels(response, "MY ATTENDANCE")).isEmpty();
+            assertThat(labels(response, "REPORTS")).containsExactly(
+                    "Attendance Report", "Payroll Report", "Recruitment Report", "Teacher Report", "Manager Report", "Expenses Report");
         }
+        assertThat(labels(accessModelFor(Role.MANAGER), "REPORTS")).containsExactly("Attendance Report", "Recruitment Report", "Teacher Report", "Manager Report");
         assertThat(actionsOf(accessModelFor(Role.ADMIN), "Attendance"))
                 .containsExactly("VIEW", "CREATE", "EDIT", "DELETE", "PROCESS", "EXPORT");
         assertThat(actionsOf(accessModelFor(Role.DIRECTOR), "Attendance"))
@@ -91,7 +94,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
     void teacherSeesOwnAttendanceOnly() {
         var response = accessModelFor(Role.TEACHER);
 
-        assertThat(labels(response, "MY ATTENDANCE")).containsExactly("My Attendance", "Attendance History", "My Substitutions", "Upcoming Training", "My Training History");
+        assertThat(labels(response, "MY ATTENDANCE")).containsExactly("My Attendance", "Attendance History", "My Substitutions", "Upcoming Training", "My Training History", "My Report");
         assertThat(labels(response, "PAYROLL & FINANCE")).containsExactly("My Expenses");
         assertThat(actionsOf(response, "My Attendance")).containsExactly("VIEW", "CREATE", "EDIT");
         assertThat(response.dataScope()).containsEntry("MY_ATTENDANCE", "OWN");

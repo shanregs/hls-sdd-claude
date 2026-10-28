@@ -34,19 +34,19 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void adminSeesDashboardMasterDataOperationsSystemAuditAccount() {
         assertThat(sectionsFor(Role.ADMIN))
-                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "AUDIT", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "AUDIT", "ACCOUNT");
     }
 
     @Test
     void directorKeepsTheSameOrderWithoutTheAuditSection() {
         assertThat(sectionsFor(Role.DIRECTOR))
-                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "SYSTEM", "REPORTS", "ACCOUNT");
     }
 
     @Test
     void managerSeesDashboardMasterDataOperationsAccount() {
         assertThat(sectionsFor(Role.MANAGER))
-                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "MY ATTENDANCE", "REPORTS", "ACCOUNT");
     }
 
     @Test
@@ -84,7 +84,7 @@ class NavigationSectionOrderTest extends IntegrationTestBase {
     @Test
     void aUserWithSeveralRolesGetsOneCombinedOrder() {
         assertThat(sectionsFor(Role.MANAGER, Role.TEACHER))
-                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "ACCOUNT");
+                .containsExactly("Dashboard", "MASTER DATA", "MY ATTENDANCE", "LEAVE", "ATTENDANCE & LEAVE", "PAYROLL & FINANCE", "PLANNING & TRAINING", "RECRUITMENT", "MARKETING", "REPORTS", "ACCOUNT");
     }
 
     @Test

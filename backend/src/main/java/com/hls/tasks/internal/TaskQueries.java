@@ -219,6 +219,46 @@ public class TaskQueries {
         return result;
     }
 
+    /** Tasks assigned (created in the month, not cancelled) and completed (completed or verified in the month) per assignee. */
+    public record MonthCounts(long assigned, long completed) {}
+
+    /**
+     * Spec 014c A6: one bulk query for the assignees; the month is read in the business time zone. Assignees with neither
+     * are absent.
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, MonthCounts> monthCountsByAssignee(java.util.Set<UUID> assignees, java.time.YearMonth month) {
+        if (assignees.isEmpty()) {
+            return Map.of();
+        }
+        java.time.ZoneId zone = businessDate.zone();
+        Instant from = month.atDay(1).atStartOfDay(zone).toInstant();
+        Instant to = month.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        Specification<Task> spec = (root, q, cb) -> cb.and(
+                root.get("assigneeUserId").in(assignees),
+                cb.notEqual(root.get("status"), TaskStatus.CANCELLED),
+                cb.or(
+                        cb.and(cb.greaterThanOrEqualTo(root.<Instant>get("createdAt"), from), cb.lessThan(root.<Instant>get("createdAt"), to)),
+                        cb.and(
+                                cb.greaterThanOrEqualTo(root.<Instant>get("completedAt"), from),
+                                cb.lessThan(root.<Instant>get("completedAt"), to))));
+        Map<UUID, long[]> counts = new HashMap<>();
+        for (Task t : tasks.findAll(spec)) {
+            long[] c = counts.computeIfAbsent(t.getAssigneeUserId(), k -> new long[2]);
+            Instant created = t.getCreatedAt();
+            if (!created.isBefore(from) && created.isBefore(to)) {
+                c[0]++;
+            }
+            Instant completed = t.getCompletedAt();
+            if (completed != null && !completed.isBefore(from) && completed.isBefore(to)) {
+                c[1]++;
+            }
+        }
+        Map<UUID, MonthCounts> result = new HashMap<>();
+        counts.forEach((id, c) -> result.put(id, new MonthCounts(c[0], c[1])));
+        return result;
+    }
+
     @Transactional(readOnly = true)
     public Detail detail(Caller caller, UUID id) {
         Task task = service.visible(caller, id);

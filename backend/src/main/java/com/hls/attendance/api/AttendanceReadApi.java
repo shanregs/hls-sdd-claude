@@ -14,6 +14,13 @@ public interface AttendanceReadApi {
     /** The month's rollup: frozen at lock time when the month is locked, otherwise computed live. */
     RollupView rollupOf(UUID teacherId, YearMonth month);
 
+    /**
+     * Bulk form of {@link #rollupOf} (spec 014a): every asked Teacher is in the map, with the same figures {@code rollupOf}
+     * gives (frozen when locked, live otherwise; zero figures for a Teacher the module does not know). A fixed number of
+     * queries however many Teachers are asked.
+     */
+    java.util.Map<UUID, RollupView> rollupsOf(java.util.Collection<UUID> teacherIds, YearMonth month);
+
     /** The Teacher's marks in the month, oldest date first. */
     List<MarkView> marksOf(UUID teacherId, YearMonth month);
 

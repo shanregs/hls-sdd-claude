@@ -62,7 +62,14 @@ public final class PermissionEligibility {
             PermissionModule.TRAINING,
             PermissionModule.TRAINING_ATTENDANCE,
             PermissionModule.TRAINING_REGISTRATION,
-            PermissionModule.CONTENT);
+            PermissionModule.CONTENT,
+            PermissionModule.REPORT_ATTENDANCE,
+            PermissionModule.REPORT_PAYROLL,
+            PermissionModule.REPORT_RECRUITMENT,
+            PermissionModule.REPORT_TEACHER,
+            PermissionModule.REPORT_MANAGER,
+            PermissionModule.REPORT_EXPENSES,
+            PermissionModule.MY_REPORT);
 
 
     /** What the Content Contributor may hold (spec 029): own content, own notifications, dashboard, profile and own sessions. */
@@ -149,6 +156,19 @@ public final class PermissionEligibility {
             PermissionModule.TRAINING_ATTENDANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.TRAINING_REGISTRATION, EnumSet.of(Role.TEACHER));
 
+    /**
+     * Reports (spec 014a): Attendance is for the three staff roles; Payroll is never available to a Zone Manager or Teacher;
+     * My Report is the Teacher's own. System holds none of it (business data).
+     */
+    static final Map<PermissionModule, Set<Role>> REPORT_MODULES = Map.of(
+            PermissionModule.REPORT_ATTENDANCE, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_PAYROLL, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.REPORT_RECRUITMENT, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_TEACHER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_MANAGER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.MY_REPORT, EnumSet.of(Role.TEACHER));
+
     private PermissionEligibility() {}
 
     /** The actions of {@code module} that may be granted to {@code role}; empty when none apply. */
@@ -214,6 +234,10 @@ public final class PermissionEligibility {
         // MoU approval (spec 031): Admin keeps the MoU but never approves it.
         if (role == Role.ADMIN && module == PermissionModule.SCHOOL_CONTRACTS) {
             return EnumSet.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT);
+        }
+        Set<Role> reportsOnly = REPORT_MODULES.get(module);
+        if (reportsOnly != null && !reportsOnly.contains(role)) {
+            return EnumSet.noneOf(PermissionAction.class);
         }
         Set<Role> payrollOnly = PAYROLL_MODULES.get(module);
         if (payrollOnly != null && !payrollOnly.contains(role)) {
