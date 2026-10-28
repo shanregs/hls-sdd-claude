@@ -57,6 +57,38 @@ const MENU = {
       canExport: true,
       defaultMonth: "2026-09",
     },
+    {
+      key: "manager",
+      title: "Manager productivity",
+      filters: ["ZONE", "MANAGER"],
+      hasMonthState: true,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
+      key: "expenses",
+      title: "Expenses",
+      filters: ["ZONE"],
+      hasMonthState: false,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
+      key: "teacher",
+      title: "Teacher report",
+      filters: ["ZONE", "SCHOOL", "TEACHER", "MANAGER"],
+      hasMonthState: true,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
+      key: "recruitment",
+      title: "Recruitment",
+      filters: ["SEASON"],
+      hasMonthState: false,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
   ],
   zones: [{ id: "z1", name: "North" }],
   schools: [{ id: "s1", name: "Greenfield" }],
@@ -142,6 +174,99 @@ const PAYROLL = {
   ],
 };
 
+const notAvailable = { state: "NOT_AVAILABLE", value: null };
+
+const RECRUITMENT = {
+  key: "recruitment",
+  title: "Recruitment",
+  month: "2026-09",
+  monthState: "NONE",
+  notes: ["Season 2026-27."],
+  sections: [
+    {
+      key: "colleges",
+      title: "Colleges",
+      columns: [
+        { key: "city", label: "City", unit: "TEXT" },
+        { key: "selected", label: "Selected", unit: "COUNT" },
+        { key: "ratio", label: "Joining ratio", unit: "TEXT" },
+        { key: "inducted", label: "Induction completed", unit: "COUNT" },
+      ],
+      rows: [
+        {
+          id: "c1",
+          label: "Hill College",
+          cells: [cell("Pune"), cell(0), noData, notAvailable],
+        },
+      ],
+      totals: null,
+      failed: false,
+      note: null,
+    },
+  ],
+};
+
+function onePage(
+  key: string,
+  title: string,
+  monthState: string,
+  columns: { key: string; label: string; unit: string }[],
+  cells: unknown[],
+) {
+  return {
+    key,
+    title,
+    month: "2026-09",
+    monthState,
+    notes: [],
+    sections: [
+      {
+        key: "main",
+        title: "Main",
+        columns,
+        rows: [{ id: "r1", label: "Row one", cells }],
+        totals: null,
+        failed: false,
+        note: null,
+      },
+    ],
+  };
+}
+
+// The pages of the 014c reports. The screen is the generic one: columns and cells come from the server.
+const PEOPLE_PAGES: Record<string, ReturnType<typeof onePage>> = {
+  manager: onePage(
+    "manager",
+    "Manager productivity",
+    "LOCKED",
+    [
+      { key: "percent", label: "Attendance %", unit: "PERCENT" },
+      { key: "claimed", label: "Expense claimed", unit: "RUPEES" },
+    ],
+    [cell(92.5), noData],
+  ),
+  expenses: onePage(
+    "expenses",
+    "Expenses",
+    "NONE",
+    [
+      { key: "actual", label: "Actual", unit: "RUPEES" },
+      { key: "budget", label: "Budget", unit: "RUPEES" },
+    ],
+    [cell(114400), noData],
+  ),
+  teacher: onePage(
+    "teacher",
+    "Teacher report",
+    "OPEN",
+    [
+      { key: "tenure", label: "Tenure (days)", unit: "DAYS" },
+      { key: "observations", label: "Observations done", unit: "COUNT" },
+    ],
+    [cell(120), notAvailable],
+  ),
+};
+
 const saved: string[] = [];
 
 function respond(url: string): Response {
@@ -159,6 +284,10 @@ function respond(url: string): Response {
   }
   if (url.startsWith("/api/v1/reports/attendance")) return json(ATTENDANCE);
   if (url.startsWith("/api/v1/reports/payroll")) return json(PAYROLL);
+  if (url.startsWith("/api/v1/reports/recruitment")) return json(RECRUITMENT);
+  for (const [k, page] of Object.entries(PEOPLE_PAGES)) {
+    if (url.startsWith(`/api/v1/reports/${k}`)) return json(page);
+  }
   return json({}, 404);
 }
 
@@ -272,6 +401,50 @@ describe("Reports (spec 014a)", () => {
     expect(
       screen.getByText(/No pay run for this month yet/),
     ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["manager", "92.5%", "No data"],
+    ["expenses", /1,14,400/, "No data"],
+    ["teacher", "120", "Not available"],
+  ] as const)(
+    "shows the %s report from what the server sends, saying why a figure is missing",
+    async (key, figure, missing) => {
+      grantFor(`/reports/${key}`, ["VIEW", "EXPORT"]);
+      renderPage(key);
+
+      const table = await screen.findByRole("table", { name: "Main" });
+      expect(within(table).getByText(figure)).toBeInTheDocument();
+      expect(within(table).getByText(missing)).toBeInTheDocument();
+    },
+  );
+
+  it("asks for a season instead of a month and sends the season the person types", async () => {
+    grantFor("/reports/recruitment", ["VIEW", "EXPORT"]);
+    const user = userEvent.setup();
+    renderPage("recruitment");
+    await screen.findByText("Hill College");
+
+    expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Season"), "2026-27{Enter}");
+
+    await waitFor(() =>
+      expect(authFetch).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^\/api\/v1\/reports\/recruitment\?.*season=2026-27/,
+        ),
+      ),
+    );
+  });
+
+  it("says why a recruitment figure is missing instead of showing 0", async () => {
+    grantFor("/reports/recruitment", ["VIEW"]);
+    renderPage("recruitment");
+
+    const table = await screen.findByRole("table", { name: "Colleges" });
+    expect(within(table).getByText("No data")).toBeInTheDocument();
+    expect(within(table).getByText("Not available")).toBeInTheDocument();
+    expect(screen.getByText("Season 2026-27.")).toBeInTheDocument();
   });
 
   it("refuses a report that is not in the person menu", async () => {

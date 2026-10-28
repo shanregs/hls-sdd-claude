@@ -10,7 +10,12 @@ export type CellState = "VALUE" | "NO_DATA" | "NOT_AVAILABLE" | "NOT_MATCHED";
 export type Unit = "COUNT" | "DAYS" | "PERCENT" | "RUPEES" | "TEXT";
 export type MonthState =
   "LOCKED" | "OPEN" | "DRAFT" | "APPROVED" | "PAID" | "NONE";
-export type ReportFilterKey = "ZONE" | "SCHOOL" | "TEACHER" | "MANAGER";
+export type ReportFilterKey =
+  | "ZONE"
+  | "SCHOOL"
+  | "TEACHER"
+  | "MANAGER"
+  | "SEASON";
 
 export interface Cell {
   state: CellState;
@@ -74,6 +79,8 @@ export interface ReportFilters {
   schoolId?: string;
   teacherId?: string;
   managerId?: string;
+  /** A recruitment season label (spec 014c); a report that offers it has no month. */
+  season?: string;
 }
 
 const BASE = "/api/v1/reports";

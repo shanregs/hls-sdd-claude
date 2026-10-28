@@ -40,26 +40,26 @@
 - [X] T016 [US1] `ManagerReportSource` in `reporting/internal/report/`: inject all `ManagerColumns`, add attendance % (`ManagerAttendanceReadApi.months`), training days (`ManagerTrainingDays.attendedDaysOf`), expense claimed (A9); month state from the Manager lock
 - [X] T017 [US1] Scope: Admin and Director all Managers; Zone Manager own row only; Zone and Manager filters outside scope refused
 - [X] T018 [US1] Tests: common columns equal the dashboard comparison table; no planned activity gives NO_DATA; activity source down gives NOT_AVAILABLE for those columns only; Zone Manager sees own row and own expense (Q3); open label
-- [ ] T019 [P] [US1] Frontend column definitions and page test
+- [x] T019 [P] [US1] Frontend column definitions and page test
 
 ## Phase 4: US2 Expenses (P1)
 
 - [X] T020 [US2] `ExpensesReportSource` with sections `spend`, `budget`, `pending` (labelled as of today), `costs`; "no Schools won" and "no Teachers" states
 - [X] T021 [US2] Tests: figures equal 015 screens and the dashboard expense tile; Zone Manager and Teacher get 403 and no menu item; Head office row
-- [ ] T022 [P] [US2] Frontend
+- [x] T022 [P] [US2] Frontend
 
 ## Phase 5: US3 Teacher (P1)
 
 - [X] T023 [US3] `TeacherReportSource`: sections `byStatus` and `teachers`; list rule of Q4; Zone and School from the last-day placement (exit date for exited); training days from `rollupsOf`; joined/exited from A3, issues and observations from A4, movements from A5
 - [X] T024 [US3] Scope through `TeacherScopeQueries`; Zone Manager sees own Teachers only; mid-month mover appears once
 - [X] T025 [US3] Tests: status counts add to rows; exited in month listed once and marked; exited earlier not listed; no placement shows "not placed"; counts equal 026 and 027 screens
-- [ ] T026 [P] [US3] Frontend
+- [x] T026 [P] [US3] Frontend
 
 ## Phase 6: US4 Recruitment (P2)
 
 - [x] T027 [US4] `RecruitmentReportSource` with season filter (T004), colleges and totals from A1, induction from `InductionProgress`, ready to deploy from `SupplySource`, demand from A2; selected zero gives NO_DATA ratio; missing providers give NOT_AVAILABLE
 - [x] T028 [US4] Tests: equals the 016 and 023 dashboards; Zone Manager sees exactly the 016 view
-- [ ] T029 [P] [US4] Frontend season picker and columns
+- [x] T029 [P] [US4] Frontend season picker and columns
 
 ## Phase 7: US5 Export and polish
 

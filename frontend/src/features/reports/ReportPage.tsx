@@ -64,6 +64,7 @@ export function ReportPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [teacherOptions, setTeacherOptions] = useState<Named[]>([]);
   const [managerOptions, setManagerOptions] = useState<Named[]>([]);
+  const [seasonDraft, setSeasonDraft] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -154,6 +155,11 @@ export function ReportPage() {
 
   const { menu, item } = state;
   const offers = new Set(item.filters);
+  const bySeason = offers.has("SEASON");
+  const commitSeason = () => {
+    const text = seasonDraft.trim();
+    if ((filters.season ?? "") !== text) change({ season: text || undefined });
+  };
 
   return (
     <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
@@ -162,7 +168,8 @@ export function ReportPage() {
           {title}
         </Typography>
         <Typography color="text.secondary">
-          Pick a month and, where offered, narrow it down. You see only the
+          {bySeason ? "Pick a season" : "Pick a month"} and, where offered,
+          narrow it down. You see only the
           people and Schools in your area.
         </Typography>
       </Box>
@@ -172,14 +179,30 @@ export function ReportPage() {
           direction="row"
           sx={{ gap: 2, flexWrap: "wrap", alignItems: "flex-start" }}
         >
-          <TextField
-            label="Month"
-            type="month"
-            value={filters.month ?? ""}
-            onChange={(e) => change({ month: e.target.value })}
-            slotProps={{ inputLabel: { shrink: true } }}
-            sx={{ minWidth: 200 }}
-          />
+          {bySeason ? (
+            <TextField
+              label="Season"
+              value={seasonDraft}
+              placeholder="All seasons"
+              helperText="For example 2026-27. Leave empty for all seasons."
+              onChange={(e) => setSeasonDraft(e.target.value)}
+              onBlur={commitSeason}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitSeason();
+              }}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ minWidth: 200 }}
+            />
+          ) : (
+            <TextField
+              label="Month"
+              type="month"
+              value={filters.month ?? ""}
+              onChange={(e) => change({ month: e.target.value })}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ minWidth: 200 }}
+            />
+          )}
           {offers.has("ZONE") && menu.zones.length > 0 && (
             <TextField
               select
@@ -297,6 +320,11 @@ export function ReportPage() {
                 label={`Month state: ${MONTH_STATE_LABELS[page.monthState]}`}
                 sx={{ mr: 1 }}
               />
+              {page.notes.join(" ")}
+            </Alert>
+          )}
+          {!item.hasMonthState && page.notes.length > 0 && (
+            <Alert severity="info" icon={false}>
               {page.notes.join(" ")}
             </Alert>
           )}
