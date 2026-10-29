@@ -430,6 +430,25 @@ class PermissionEligibilityTest extends IntegrationTestBase {
     }
 
     @Test
+    void schoolReportsAreForStaffAndNeverForTeachersSystemOrThePayrollReport() {
+        for (PermissionModule m : List.of(PermissionModule.REPORT_MARGIN, PermissionModule.REPORT_COLLECTIONS, PermissionModule.REPORT_SCHOOL)) {
+            assertThat(PermissionEligibility.actionsFor(Role.ADMIN, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.DIRECTOR, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.MANAGER, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);
+            assertThat(PermissionEligibility.actionsFor(Role.TEACHER, m)).isEmpty();
+            assertThat(PermissionEligibility.actionsFor(Role.SYSTEM, m)).isEmpty();
+            assertThat(matrix.isGranted(Role.ADMIN, m, PermissionAction.EXPORT)).isTrue();
+            assertThat(matrix.isGranted(Role.DIRECTOR, m, PermissionAction.VIEW)).isTrue();
+            assertThat(matrix.isGranted(Role.MANAGER, m, PermissionAction.VIEW)).isTrue();
+            assertThat(matrix.isGranted(Role.MANAGER, m, PermissionAction.EXPORT)).isTrue();
+            assertThat(matrix.isGranted(Role.TEACHER, m, PermissionAction.VIEW)).isFalse();
+        }
+        // Margin gives the Zone Manager no way into the Payroll report (spec 014b FR-011).
+        assertThat(PermissionEligibility.actionsFor(Role.MANAGER, PermissionModule.REPORT_PAYROLL)).isEmpty();
+        assertThat(matrix.isGranted(Role.MANAGER, PermissionModule.REPORT_PAYROLL, PermissionAction.VIEW)).isFalse();
+    }
+
+    @Test
     void peopleReportsAreForStaffAndExpensesIsNotForManagers() {
         for (PermissionModule m : List.of(PermissionModule.REPORT_RECRUITMENT, PermissionModule.REPORT_TEACHER, PermissionModule.REPORT_MANAGER)) {
             assertThat(PermissionEligibility.actionsFor(Role.ADMIN, m)).containsExactly(PermissionAction.VIEW, PermissionAction.EXPORT);

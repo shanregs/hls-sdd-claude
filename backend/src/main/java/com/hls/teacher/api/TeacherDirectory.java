@@ -40,6 +40,12 @@ public interface TeacherDirectory {
     /** Ids of Teachers with an ACTIVE placement overlapping {@code from..to} inclusive. */
     Set<UUID> teachersPlacedDuring(LocalDate from, LocalDate to);
 
+    /**
+     * How many Teachers have an ACTIVE placement covering {@code date} at each given School, in a fixed number of queries
+     * (spec 014b A7). A School with nobody placed is absent, and an empty set gives an empty map.
+     */
+    Map<UUID, Integer> placedCountBySchool(Collection<UUID> schoolIds, LocalDate date);
+
     /** A Teacher's designation and optional employee id (spec 005a); either may be null. */
     record TeacherEmployment(UUID teacherId, UUID designationId, String employeeId) {}
 

@@ -67,6 +67,72 @@ class SchoolReceivablesImpl implements SchoolReceivables {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TeacherSchoolBilled> billedPerTeacherAndSchool(
+            Collection<UUID> teacherIds, Collection<UUID> schoolIds, YearMonth from, YearMonth to) {
+        if (schoolIds == null) {
+            throw new IllegalArgumentException("schoolIds is required");
+        }
+        if (schoolIds.isEmpty() || (teacherIds != null && teacherIds.isEmpty())) {
+            return List.of();
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("schools", schoolIds)
+                .addValue("from", java.sql.Date.valueOf(from.atDay(1)))
+                .addValue("to", java.sql.Date.valueOf(to.atDay(1)));
+        String teacherFilter = "";
+        if (teacherIds != null) {
+            teacherFilter = " and l.teacher_id in (:ids)";
+            params.addValue("ids", teacherIds);
+        }
+        List<TeacherSchoolBilled> out = new ArrayList<>();
+        store.named().query(
+                """
+                select l.teacher_id, d.school_id, d.month, sum(l.amount) as amount,
+                       least(sum(l.worked_days), max(l.month_days)) as worked_days, max(l.month_days) as month_days
+                from due_line l join monthly_due d on d.id = l.due_id
+                where d.school_id in (:schools) and d.cancelled_at is null and d.month between :from and :to
+                """ + teacherFilter + """
+
+                group by l.teacher_id, d.school_id, d.month
+                order by d.month, l.teacher_id, d.school_id
+                """,
+                params,
+                rs -> {
+                    out.add(new TeacherSchoolBilled(
+                            rs.getObject("teacher_id", UUID.class),
+                            rs.getObject("school_id", UUID.class),
+                            YearMonth.from(rs.getDate("month").toLocalDate()),
+                            rs.getBigDecimal("amount"),
+                            rs.getBigDecimal("worked_days"),
+                            rs.getBigDecimal("month_days")));
+                });
+        return out;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, SchoolAgeing> ageing(Collection<UUID> schoolIds, LocalDate asOf) {
+        if (schoolIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, BigDecimal[]> perSchool = new HashMap<>();
+        for (DueRecord d : store.duesOfSchools(Set.copyOf(schoolIds))) {
+            if (d.cancelled() || d.balance().signum() <= 0) {
+                continue;
+            }
+            BigDecimal[] mine = perSchool.computeIfAbsent(d.schoolId(), k -> new BigDecimal[] {ZERO, ZERO, ZERO, ZERO, ZERO});
+            BigDecimal[] part = LedgerQueryService.bucketsOf(java.time.temporal.ChronoUnit.DAYS.between(d.dueOn(), asOf), d.balance());
+            for (int i = 0; i < mine.length; i++) {
+                mine[i] = mine[i].add(part[i]);
+            }
+        }
+        Map<UUID, SchoolAgeing> out = new LinkedHashMap<>();
+        perSchool.forEach((id, b) -> out.put(id, new SchoolAgeing(
+                id, b[0].add(b[1]).add(b[2]).add(b[3]).add(b[4]), b[0], b[1], b[2], b[3], b[4])));
+        return out;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<UUID, List<SchoolMonth>> schoolMonths(Collection<UUID> schoolIds, YearMonth from, YearMonth to) {
         LocalDate today = businessDate.today();
         Map<UUID, List<SchoolMonth>> out = new LinkedHashMap<>();

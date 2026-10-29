@@ -156,6 +156,31 @@ class PerformanceQueriesTest extends PerformanceTestBase {
         assertThat(mine.stream().mapToLong(t -> byTeacher.get(t).openIssues()).sum()).isEqualTo(manager.openIssues());
     }
 
+    /** Spec 014b A4: per-School counts add up to the Manager's row and the Zone's row, one grouped read. */
+    @Test
+    void thePerSchoolSummaryAddsUpToTheManagerAndTheZone() {
+        Setup s = setup();
+        UUID second = anotherTeacher(s);
+        UUID third = anotherTeacher(s);
+        observe(s.managerToken(), s.teacherId(), "GOOD", 4);
+        observe(s.managerToken(), second, "NEEDS_IMPROVEMENT", 3);
+        plan(s.director(), third, today().plusDays(1), "MANAGEMENT_PLAN");
+        jdbc.update("update observation_plan set planned_on = ? where teacher_id = ?", today().minusDays(2), third);
+
+        Map<UUID, PerformanceSummary.Counts> bySchool = summary.bySchool(today().minusDays(7), today());
+        PerformanceSummary.Counts mine = bySchool.get(s.schoolId());
+        PerformanceSummary.Counts manager = summary.byManager(today().minusDays(7), today()).get(s.managerUserId());
+
+        assertThat(mine).isNotNull();
+        assertThat(mine.observationsDone()).isEqualTo(2);
+        assertThat(mine.observationsOverdue()).isEqualTo(1);
+        assertThat(mine.openIssues()).isEqualTo(1);
+        assertThat(mine.observationsDone()).isEqualTo(manager.observationsDone());
+        assertThat(mine.observationsPlanned()).isEqualTo(manager.observationsPlanned());
+        assertThat(mine.openIssues()).isEqualTo(manager.openIssues());
+        assertThat(bySchool).doesNotContainKey(UUID.randomUUID());
+    }
+
     private UUID zoneOf(Setup s) {
         return s.zoneId();
     }

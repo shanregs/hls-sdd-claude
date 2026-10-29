@@ -69,6 +69,9 @@ public final class PermissionEligibility {
             PermissionModule.REPORT_TEACHER,
             PermissionModule.REPORT_MANAGER,
             PermissionModule.REPORT_EXPENSES,
+            PermissionModule.REPORT_MARGIN,
+            PermissionModule.REPORT_COLLECTIONS,
+            PermissionModule.REPORT_SCHOOL,
             PermissionModule.MY_REPORT);
 
 
@@ -167,6 +170,9 @@ public final class PermissionEligibility {
             PermissionModule.REPORT_TEACHER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.REPORT_MANAGER, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.REPORT_EXPENSES, EnumSet.of(Role.ADMIN, Role.DIRECTOR),
+            PermissionModule.REPORT_MARGIN, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_COLLECTIONS, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
+            PermissionModule.REPORT_SCHOOL, EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER),
             PermissionModule.MY_REPORT, EnumSet.of(Role.TEACHER));
 
     private PermissionEligibility() {}

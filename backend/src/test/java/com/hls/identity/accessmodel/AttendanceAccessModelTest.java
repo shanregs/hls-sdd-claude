@@ -67,9 +67,11 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
                     .containsEntry("ATTENDANCE_SETUP", "ORG_WIDE");
             assertThat(labels(response, "MY ATTENDANCE")).isEmpty();
             assertThat(labels(response, "REPORTS")).containsExactly(
-                    "Attendance Report", "Payroll Report", "Recruitment Report", "Teacher Report", "Manager Report", "Expenses Report");
+                    "Attendance Report", "Payroll Report", "Recruitment Report", "Teacher Report", "Manager Report", "Expenses Report",
+                    "Margin Report", "Collections Report", "School Report");
         }
-        assertThat(labels(accessModelFor(Role.MANAGER), "REPORTS")).containsExactly("Attendance Report", "Recruitment Report", "Teacher Report", "Manager Report");
+        assertThat(labels(accessModelFor(Role.MANAGER), "REPORTS")).containsExactly(
+                "Attendance Report", "Recruitment Report", "Teacher Report", "Manager Report", "Margin Report", "Collections Report", "School Report");
         assertThat(actionsOf(accessModelFor(Role.ADMIN), "Attendance"))
                 .containsExactly("VIEW", "CREATE", "EDIT", "DELETE", "PROCESS", "EXPORT");
         assertThat(actionsOf(accessModelFor(Role.DIRECTOR), "Attendance"))

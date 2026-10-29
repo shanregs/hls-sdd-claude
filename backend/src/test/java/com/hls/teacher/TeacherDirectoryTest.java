@@ -44,6 +44,26 @@ class TeacherDirectoryTest extends MasterDataTestBase {
         assertThat(spans.get(0).covers(today.minusDays(10))).isFalse();
     }
 
+    /** Spec 014b A7: the count per School equals the Teachers placed there on the date; a mover counts only where they are. */
+    @Test
+    void placedCountBySchoolCountsTheTeachersWhosePlacementCoversTheDate() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID stays = teacher(admin);
+        UUID mover = teacher(admin);
+        UUID first = schoolInNewZone(admin)[2];
+        UUID second = schoolInNewZone(admin)[2];
+        UUID empty = schoolInNewZone(admin)[2];
+        placeTeacherRaw(admin, stays, first, today.minusDays(20));
+        placeTeacherRaw(admin, mover, first, today.minusDays(20));
+        placeTeacherRaw(admin, mover, second, today.minusDays(10));
+
+        assertThat(directory.placedCountBySchool(Set.of(first, second, empty), today.minusDays(15)))
+                .containsEntry(first, 2).doesNotContainKey(second).doesNotContainKey(empty);
+        assertThat(directory.placedCountBySchool(Set.of(first, second, empty), today))
+                .containsEntry(first, 1).containsEntry(second, 1).doesNotContainKey(empty);
+        assertThat(directory.placedCountBySchool(Set.of(), today)).isEmpty();
+    }
+
     @Test
     void anExitedTeacherIsNotPlacedOnOrAfterTheExitDay() {
         String admin = signInAs(Role.ADMIN).token();

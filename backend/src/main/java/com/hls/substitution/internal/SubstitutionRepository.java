@@ -81,4 +81,15 @@ public interface SubstitutionRepository extends JpaRepository<SubstitutionRequir
             """)
     BigDecimal coveredOn(
             @Param("teacherId") UUID teacherId, @Param("date") LocalDate date, @Param("excludeId") UUID excludeId);
+
+    /** Day values of the live requirements of the Schools in the range, by School and status (spec 014b A3). */
+    @Query("""
+            select r.schoolId, r.status, sum(r.dayValue) from SubstitutionRequirement r
+            where r.schoolId in :schoolIds
+              and r.status <> com.hls.substitution.internal.RequirementStatus.CANCELLED
+              and r.dutyDate between :from and :to
+            group by r.schoolId, r.status
+            """)
+    List<Object[]> daysBySchoolAndStatus(
+            @Param("schoolIds") Collection<UUID> schoolIds, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }
