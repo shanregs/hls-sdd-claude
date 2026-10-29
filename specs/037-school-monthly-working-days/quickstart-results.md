@@ -84,3 +84,18 @@ Backend checks re-run on 2026-10-27 with `mvn -o` (JDK 25): `SchoolWorkingDaysAp
 
 Demo records were added to the local database (School One 2027, School Two 2027 and 2028); reset with
 `docker compose -f docker-compose.local.yml down -v`.
+
+## Browser run (2026-10-29, Selenium, headless Chrome 156, local Docker stack)
+
+`e2e/test_school_working_days.py` (run `pytest -v` in `e2e/`): 6 of 6 pass.
+
+| Step | Result |
+| --- | --- |
+| 4 edit, 25.3 and 32 refused ("Enter 0 to 31, in half days."), Cancel leaves the figure | Pass |
+| 8 two windows: second save gets "Changed by someone else" with the current figure; edit after a delete in the other window gets "deleted by someone else", the row leaves the grid and is not recreated (also after reload) | Pass |
+| 9 Director: Add works, no Delete button | Pass |
+| 10 Manager: not-authorized page | Pass |
+| 11 375 px wide: no horizontal page scroll | Pass |
+| SC-001 add one figure | 2.8 to 3.3 s scripted (a floor, not a person's time) |
+
+SC-002 was not measured by a person; accepted on 2026-10-29 on the scripted run (decision: user). T045 ticked.
