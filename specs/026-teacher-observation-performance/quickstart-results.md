@@ -85,3 +85,20 @@ checks used a Teacher outside Manoj's scope (Lakshmi Priya, School Two, no Manag
 
 Notes: the walkthrough created demo records on the local database (Karthik Raja's observations and issues, one Tara feedback
 withdrawn); reset with `docker compose -f docker-compose.local.yml down -v`.
+
+## Browser run (2026-10-29, Selenium, headless Chrome 156, local Docker stack)
+
+`e2e/test_teacher_performance.py` (run `python -m pytest test_teacher_performance.py -v` in `e2e/`): 4 of 4 pass.
+
+| Section | Result |
+| --- | --- |
+| 1 Director plans an observation for Karthik Raja; planning the same Teacher again leaves one plan with the new date and reason | Pass |
+| 1 the Manager sees the plan in Planned | Pass |
+| 2 Manager opens the Teacher page, starts an observation, rates every area 2, shows Average 2, chooses Needs improvement, submits: "Permission not recorded" shown | Pass |
+| 2 the submitted observation completes the task (Planned list empty for the Teacher) | Pass |
+| 3 Needs improvement opens an Open issue at once (Issues list) | Pass |
+| 6 Teacher account: not-authorized page | Pass |
+| 375 px: Observations, Planned, Issues and Principal feedback lists have no horizontal page scroll | Pass |
+
+Not run in the browser: Manager B scope (one Manager in the demo seed), the correction/version, Not held, corrective action and referral screens, feedback (section 4), the 027 path, and section 7. T056 stays unticked for those and the full-suite runs.
+The run leaves demo records (a Needs improvement observation and an Open issue for Karthik Raja); reset with `docker compose -f docker-compose.local.yml down -v`.
