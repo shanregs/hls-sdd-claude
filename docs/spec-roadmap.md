@@ -31,7 +31,7 @@ salary → approval → payslip), with **Office expenses** and **School receivab
 | Salary and payroll for Teachers **and Managers**, structures by designation, LOP, incentives, reimbursements, Director approval, month lock, payslips (10) | **013a, 013b** (re-scoped) | Not started |
 | Office expenses: bill, category, area, approver, budget vs actual, cost per school and per Teacher (11) | 015 (re-scoped), 036 (mobile bill capture) | Not started |
 | School receivables: invoices, fee terms, collections, ageing, follow-up and escalation (12) | **022** (re-scoped), 012b | Not started; 012 holds the contract and positions |
-| Dashboard and reports: 12 tiles incl. attendance, payroll, expenses, receivables (14–16) | 028 (expanded), 014 (expanded) | 028 implemented (walkthrough pending); 014a implemented (walkthrough pending), 014c implemented (walkthrough pending), 014b not started |
+| Dashboard and reports: 12 tiles incl. attendance, payroll, expenses, receivables (14–16) | 028 (expanded), 014 (expanded) | 028 implemented (walkthrough pending); 014a implemented (walkthrough pending), 014c implemented (walkthrough pending), 014b implemented on branch `impl/014b-school-reports` (PR #151 draft; backend tests written but not yet run, walkthrough pending) |
 | Content: prepared, submitted, reviewed, approved (3, 14) | 029 | Not started |
 | Incentive: ₹5,000 per closed School, paid through manager payroll (5, 10, 13) | 030 | Implemented on branch `impl/030-manager-incentives` (backend and web done; backend tests and quickstart need a Docker run) |
 

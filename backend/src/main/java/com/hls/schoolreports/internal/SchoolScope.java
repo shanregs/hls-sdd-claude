@@ -40,6 +40,17 @@ class SchoolScope {
         return ctx.memo("schoolreports.schools", () -> compute(ctx));
     }
 
+    /** The ids of every School the scope allows, ignoring the request filters; null for an organization-wide scope. */
+    Set<UUID> visibleSchoolIds(ReportScope scope) {
+        if (scope.orgWide()) {
+            return null;
+        }
+        return schools.allSchools().stream()
+                .filter(s -> scope.allowsSchool(s.id(), s.zoneId()))
+                .map(SchoolInfo::id)
+                .collect(Collectors.toSet());
+    }
+
     private List<SchoolInfo> compute(ReportContext ctx) {
         ReportScope scope = ctx.scope();
         Set<UUID> zones = scope.zoneIds();
