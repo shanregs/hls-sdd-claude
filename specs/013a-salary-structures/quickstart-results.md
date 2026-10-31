@@ -119,3 +119,15 @@ pay rules to sign off.**
   3. A half-day absence is the policy fraction (0.5 by default) of a day, taken from the mark's day value (1.00 or 0.50).
   4. For a Teacher placed in two Schools, `workingDaysInMonth` is that of the School placed in last; each unpaid day is
      still valued over its own School's month.
+
+## Accessibility pass (T049), code and test review
+
+Done by reading the screens (People and Designation defaults tabs, person salary, designation default, pay policy) and running the component and axe tests; **nobody has used a real keyboard-only session, a screen reader or a phone-width browser**. Contrast comes from the shared theme tokens, which the axe tests check in light and dark.
+
+Checked and fine: every form field has a label and the required ones are marked; helper and error text is the field's `aria-describedby` and the field is `aria-invalid`; server errors and success messages are alerts; loading spinners have names; tables have names and header cells; pagination has a name; filter rows stack at phone width; tables scroll inside their own container.
+
+Fixed:
+- Salary Structures tabs had no panel: each tab now has `aria-controls`, and the content sits in a `role="tabpanel"` named by the selected tab.
+- On a submit with errors the focus stayed on the button, so a keyboard user had to hunt for the problem. The three forms (person salary, designation default, pay policy) now move the focus to the first invalid field (`focusFirstInvalid` in `validation.ts`).
+
+Tests added: `SalaryStructures.test.tsx` (tab linked to a named panel) and `PersonSalary.test.tsx` (focus on the first invalid field). Run alone with `npx vitest run --pool=forks`: `src/features/payroll` and the three `schoolbilling` page tests, 16 files, 183 tests, all pass; `src/a11y/a11y.test.tsx` run alone (result in the commit message of the pass). Not done: the manual keyboard, screen-reader and phone-width check, and SC-005 timings (T050).
