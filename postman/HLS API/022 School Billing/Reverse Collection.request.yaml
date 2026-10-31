@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reverse Collection
+description: "Reverses a collection, for example a bounced cheque. A reason is required. Needs SCHOOL_BILLING.EDIT."
+url: "{{baseUrl}}/api/v1/school-billing/collections/{{billingCollectionId}}/reverse"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "reason": "Cheque bounced" }
+order: 13000

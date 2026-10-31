@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Due
+description: "One due with its per-Teacher lines and the working shown on each (for example 25000.00 x 14.0 working days at the School / 21.0 working days in the month), adjustments and allocations. 404 when the due is outside the caller scope. Needs SCHOOL_BILLING.VIEW."
+url: "{{baseUrl}}/api/v1/school-billing/dues/{{dueId}}"
+method: GET
+order: 6000

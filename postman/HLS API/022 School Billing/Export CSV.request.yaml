@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export CSV
+description: "CSV download (text/csv, attachment school-billing-<view>.csv). view is overview (needs month), ageing (optional asOf) or ledger (needs schoolId); zoneId, managerId and schoolId narrow it with the same scope as the screen. 400 for another view. Needs SCHOOL_BILLING.EXPORT."
+url: "{{baseUrl}}/api/v1/school-billing/export?view=overview&month={{month}}"
+method: GET
+order: 14000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Overview
+description: "School-month totals for a month: billed, collected, outstanding and overdue per School, with the Zone and Manager roll-up. Optional filters zoneId, managerId and schoolId. 400 when the month is not YYYY-MM. Needs SCHOOL_BILLING.VIEW; a Zone Manager sees only their Zone."
+url: "{{baseUrl}}/api/v1/school-billing/overview?month={{month}}"
+method: GET
+order: 1000

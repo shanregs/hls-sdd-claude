@@ -46,6 +46,9 @@ variables:
   planVersion: ""
   issueId: ""
   issueVersion: ""
+  dueId: ""
+  billingAdjustmentId: ""
+  billingCollectionId: ""
 auth:
   - id: d2f95a8d-318a-4265-b479-fdd587e14f17
     type: bearer

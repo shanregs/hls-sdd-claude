@@ -1,0 +1,26 @@
+$kind: http-request
+name: Record Collection
+description: "Records money received from a School. mode is BANK, CASH, CHEQUE or UPI; receivedOn cannot be in the future. allocations are optional (dueId and amount each, together not above the amount). 409 for a likely duplicate (same School, amount, date, mode and reference) unless confirmDuplicate is true. 201. Needs SCHOOL_BILLING.CREATE."
+url: "{{baseUrl}}/api/v1/school-billing/collections"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "schoolId": "{{schoolId}}",
+      "amount": 25000.00,
+      "receivedOn": "2026-11-20",
+      "mode": "BANK",
+      "reference": "NEFT-884213",
+      "receiver": "Accounts",
+      "comment": "November dues",
+      "allocations": [ { "dueId": "{{dueId}}", "amount": 25000.00 } ],
+      "confirmDuplicate": false
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code === 200 || pm.response.code === 201) { const r = pm.response.json(); if (r.id) { pm.collectionVariables.set('billingCollectionId', r.id); } }"
+    language: text/javascript
+order: 11000

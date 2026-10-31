@@ -1,0 +1,15 @@
+$kind: http-request
+name: Raise Dues
+description: "Raises the monthly due of each School for the month (every School in scope when schoolIds is omitted). A whole month is the exact position salary; a part month is salary x working days at the School / working days in the month, rounded half up. A School already raised for the month is skipped and reported. Needs SCHOOL_BILLING.EDIT."
+url: "{{baseUrl}}/api/v1/school-billing/dues/raise"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "month": "{{month}}",
+      "schoolIds": ["{{schoolId}}"]
+    }
+order: 4000

@@ -40,3 +40,5 @@ The 032 requests use the collection variables `month` (`YYYY-MM`), `date` (`YYYY
 `HLS - Local.environment.yaml` is pre-filled with the **dev-only demo** Admin
 (`asha.admin` / `Password123!`, created by `scripts/run-backend.ps1`'s demo seed) and the demo
 Teacher phone. Dev and Prod stay blank on purpose. See `docs/running-locally.md`.
+
+The 022 requests (School Billing) use the collection variables `month` (`YYYY-MM`), `schoolId`, `dueId`, `billingAdjustmentId` and `billingCollectionId`; List Dues, Add Adjustment and Record Collection save the ones the next request needs. Sign in as an Admin or Director (SCHOOL_BILLING grants); a Zone Manager sees only their Zone.

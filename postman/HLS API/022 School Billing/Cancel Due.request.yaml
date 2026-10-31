@@ -1,0 +1,12 @@
+$kind: http-request
+name: Cancel Due
+description: "Cancels a raised due; a reason is required. Needs SCHOOL_BILLING.APPROVE (Admin and Director)."
+url: "{{baseUrl}}/api/v1/school-billing/dues/{{dueId}}/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "reason": "Raised against the wrong contract" }
+order: 7000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reverse Adjustment
+description: "Reverses an adjustment by adding an opposite entry; the original stays on the ledger. A reason is required. Needs SCHOOL_BILLING.EDIT."
+url: "{{baseUrl}}/api/v1/school-billing/adjustments/{{billingAdjustmentId}}/reverse"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "reason": "Adjustment entered in error" }
+order: 9000
