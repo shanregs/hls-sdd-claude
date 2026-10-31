@@ -52,13 +52,16 @@ Visits: Completed, in Activity Calendar with the chip.
 ## 7. Offline (FR-017)
 
 On the phone, switch to airplane mode, log a task for today, reconnect. Expect it to sync once (send twice via the retry
-button: still one record) with the day it was logged as its date.
+button: still one record) with the day it was logged as its date. Also with airplane mode on from the start, open Visits > Log a visit for today: the
+Schools last loaded on the phone are offered (search works on them), and the visit is kept as same-day and sent on reconnect.
+With no School list saved yet the form says so.
 
 ## 8. Visibility (US4, SC-005)
 
 As Admin: filter Leave Management, Substitution, Manager Tasks, Visits and Activity Calendar by Same-day: exactly the
 items above. Change History for one of them shows who recorded it, for whom, when and "auto-accepted". Open
-`/reports/same-day` for this month: counts per Manager and School match.
+`/reports/same-day` for this month: counts per Manager and School match; choosing a Zone narrows every section to that
+Zone (a Manager sees only their own Zones, another Zone is refused).
 
 ## 9. Concurrency (SC-006)
 

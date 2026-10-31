@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Link,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Stack,
   Typography,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
@@ -20,6 +22,7 @@ import {
   type ApiResult,
   type AuthFetch,
 } from "../common/masterDataApi";
+import { getMenu, type Named } from "../reports/reportsApi";
 
 export interface SameDayRow {
   id: string;
@@ -37,10 +40,12 @@ export type SameDayReportData = Record<string, SameDaySection>;
 export function getSameDayReport(
   authFetch: AuthFetch,
   month: string,
+  zoneId?: string,
 ): Promise<ApiResult<SameDayReportData>> {
+  const zone = zoneId ? `&zoneId=${encodeURIComponent(zoneId)}` : "";
   return getJson(
     authFetch,
-    `/api/v1/reports/same-day?month=${encodeURIComponent(month)}`,
+    `/api/v1/reports/same-day?month=${encodeURIComponent(month)}${zone}`,
     "Could not load the same-day report.",
   );
 }
@@ -94,13 +99,31 @@ function CountTable({ label, rows }: { label: string; rows: SameDayRow[] }) {
 export function SameDayReport() {
   const { authFetch } = useAuth();
   const [month, setMonth] = useState(currentMonth());
+  const [zoneId, setZoneId] = useState("");
+  const [zones, setZones] = useState<Named[]>([]);
   const [data, setData] = useState<SameDayReportData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // the Zones the caller may filter by (the same list the other reports offer); no list means no filter
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const menu = await getMenu(authFetch);
+      if (!cancelled && menu.ok) setZones(menu.data.zones);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const result = await getSameDayReport(authFetch, month);
+      const result = await getSameDayReport(
+        authFetch,
+        month,
+        zoneId || undefined,
+      );
       if (cancelled) return;
       if (result.ok) {
         setData(result.data);
@@ -113,7 +136,7 @@ export function SameDayReport() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, month]);
+  }, [authFetch, month, zoneId]);
 
   return (
     <Box>
@@ -127,15 +150,37 @@ export function SameDayReport() {
         Leave, covers, tasks and visits recorded for the day without prior
         approval. Nothing here waits for a decision.
       </Typography>
-      <TextField
-        type="month"
-        size="small"
-        label="Month"
-        value={month}
-        onChange={(e) => e.target.value && setMonth(e.target.value)}
-        slotProps={{ inputLabel: { shrink: true } }}
-        sx={{ mb: 2 }}
-      />
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{ mb: 2, flexWrap: "wrap", rowGap: 1 }}
+      >
+        <TextField
+          type="month"
+          size="small"
+          label="Month"
+          value={month}
+          onChange={(e) => e.target.value && setMonth(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+        {zones.length > 0 && (
+          <TextField
+            select
+            size="small"
+            label="Zone"
+            value={zoneId}
+            onChange={(e) => setZoneId(e.target.value)}
+            sx={{ minWidth: 200 }}
+          >
+            <MenuItem value="">All Zones</MenuItem>
+            {zones.map((z) => (
+              <MenuItem key={z.id} value={z.id}>
+                {z.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+      </Stack>
       {error && (
         <Alert severity="error" role="alert">
           {error}

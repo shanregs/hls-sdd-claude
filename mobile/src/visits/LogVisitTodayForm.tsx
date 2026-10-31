@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, HelperText, RadioButton, Text, TextInput } from "react-native-paper";
-import { ApiError } from "../api/errors";
+import { ApiError, NoConnectionError } from "../api/errors";
 import { listProspects, type Prospect, type VisitKind } from "../api/marketingApi";
+import { cacheProspects, readListCache } from "../outbox/listCache";
 import { useAction } from "../manager/useAction";
 import { useSameDayLog, type LogResult } from "../sameDay/useSameDayLog";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
@@ -10,6 +11,11 @@ import { MAX_VISIT_TEXT } from "./CompleteVisitForm";
 import { VISIT_KINDS, visitKindText } from "./visitMessages";
 
 const PAGE_SIZE = 25;
+
+export const NO_CACHED_SCHOOLS =
+  "There is no connection and no School list is saved on this phone yet. Connect once to load the list, then you can log visits offline.";
+export const OFFLINE_SCHOOLS =
+  "No connection. Showing the Schools saved on this phone. The visit will be sent when you are back online.";
 
 interface Props {
   myUserId: string;
@@ -20,13 +26,15 @@ interface Props {
 
 /**
  * Logs a visit that happened today with no plan (spec 040 US3): a prospect or School, the kind and the outcome. It is saved
- * already Completed, for today. If the connection is lost after the School is chosen, it waits on the phone and is sent later.
+ * already Completed, for today. With no connection the School is chosen from the list saved on this phone, and the visit waits
+ * on the phone, flagged same-day, and is sent later.
  */
 export function LogVisitTodayForm({ myUserId, onDone, onCancel }: Props) {
   const log = useSameDayLog(myUserId);
   const [query, setQuery] = useState("");
   const [prospects, setProspects] = useState<Prospect[] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [chosen, setChosen] = useState<Prospect | null>(null);
   const [kind, setKind] = useState<VisitKind>("VISIT");
   const [outcome, setOutcome] = useState("");
@@ -39,18 +47,31 @@ export function LogVisitTodayForm({ myUserId, onDone, onCancel }: Props) {
         if (!cancelled) {
           setProspects(page.content);
           setFailed(null);
+          setOffline(false);
+          void cacheProspects(myUserId, page.content);
         }
       })
-      .catch((error: unknown) => {
+      .catch(async (error: unknown) => {
+        if (error instanceof NoConnectionError) {
+          const saved = (await readListCache(myUserId))?.prospects ?? [];
+          if (cancelled) return;
+          const needle = query.trim().toLowerCase();
+          const shown = saved.filter((p) => needle === "" || p.name.toLowerCase().includes(needle));
+          setProspects(shown.slice(0, PAGE_SIZE));
+          setOffline(true);
+          setFailed(saved.length === 0 ? NO_CACHED_SCHOOLS : null);
+          return;
+        }
         if (!cancelled) {
           setProspects([]);
+          setOffline(false);
           setFailed(error instanceof ApiError ? error.message : "The list could not be loaded.");
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [query]);
+  }, [query, myUserId]);
 
   const send = useAction(async () => {
     const result = await log.logVisit(
@@ -81,6 +102,7 @@ export function LogVisitTodayForm({ myUserId, onDone, onCancel }: Props) {
         accessibilityLabel="Search a School or prospect"
       />
       {chosen ? <Text variant="titleSmall">Chosen: {chosen.name}</Text> : null}
+      {offline && !failed ? <Text variant="bodySmall">{OFFLINE_SCHOOLS}</Text> : null}
       {failed ? (
         <HelperText type="error" visible accessibilityRole="alert">
           {failed}
