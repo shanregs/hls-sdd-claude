@@ -102,7 +102,10 @@ public class AdjustmentService {
         PayAdjustment.AdjustmentKind kind = parse(PayAdjustment.AdjustmentKind.class, kindText, "kind");
         if (RESERVED_BY.containsKey(kind)) {
             throw new InvalidInputException("The kind " + kindText.trim().toUpperCase(Locale.ROOT)
-                    + " is created by " + RESERVED_BY.get(kind) + ", not by hand.");
+                    + " is created by " + RESERVED_BY.get(kind) + ", not by hand."
+                    + (kind == PayAdjustment.AdjustmentKind.INCENTIVE
+                            ? " It arrives only through the incentive intake when an incentive is approved."
+                            : ""));
         }
         if (personId == null) {
             throw new InvalidInputException("The person is required.");

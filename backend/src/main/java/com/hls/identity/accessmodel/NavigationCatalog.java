@@ -342,6 +342,14 @@ public final class NavigationCatalog {
                     306,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
+                    "Incentives",
+                    "/operations/incentives",
+                    PermissionModule.MANAGER_INCENTIVES,
+                    PermissionAction.VIEW,
+                    "PAYROLL & FINANCE",
+                    307,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
+            new NavItem(
                     "Manager Tasks",
                     "/operations/tasks",
                     PermissionModule.TASKS,

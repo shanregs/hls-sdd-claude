@@ -55,7 +55,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
             // "MoU Approvals" needs Approve on School Contracts: the Director has it, Admin never does (spec 031)
             assertThat(labels(response, "ATTENDANCE & LEAVE")).containsExactly("Attendance", "Manager Attendance", "Leave Management", "Manager Leave", "Substitutions", "Transfers & Replacements");
             // "MoU Approvals" needs Approve on School Contracts: the Director has it, Admin never does (spec 031)
-            List<String> expectedFinance = new java.util.ArrayList<>(List.of("Payroll", "Salary Structures", "Expenses", "My Expenses", "School Contracts", "School Billing"));
+            List<String> expectedFinance = new java.util.ArrayList<>(List.of("Payroll", "Salary Structures", "Expenses", "My Expenses", "School Contracts", "School Billing", "Incentives"));
             if (role == Role.DIRECTOR) {
                 expectedFinance.add(5, "MoU Approvals");
             }
@@ -84,7 +84,7 @@ class AttendanceAccessModelTest extends IntegrationTestBase {
         var response = accessModelFor(Role.MANAGER);
 
         assertThat(labels(response, "ATTENDANCE & LEAVE")).containsExactly("Teacher Attendance", "Leave Management", "Substitutions", "Transfers & Replacements");
-        assertThat(labels(response, "PAYROLL & FINANCE")).containsExactly("My Expenses", "School Contracts", "MoU Approvals", "School Billing");
+        assertThat(labels(response, "PAYROLL & FINANCE")).containsExactly("My Expenses", "School Contracts", "MoU Approvals", "School Billing", "Incentives");
         assertThat(labels(response, "PLANNING & TRAINING")).containsExactly("My Activity Calendar", "My Training", "My Tasks", "Teacher Performance", "My Content");
         assertThat(actionsOf(response, "Teacher Attendance")).containsExactly("VIEW", "CREATE", "EDIT");
         assertThat(response.dataScope())

@@ -147,22 +147,7 @@ class ReimbursementIntakeImpl implements ReimbursementIntake {
     }
 
     private OfferStatus statusOf(PayAdjustment adjustment) {
-        return switch (adjustment.getStatus()) {
-            case APPLIED -> OfferStatus.APPLIED;
-            case WITHDRAWN -> OfferStatus.WITHDRAWN;
-            case WAITING -> {
-                if (adjustment.getAttachedRunId() == null) {
-                    yield OfferStatus.WAITING;
-                }
-                yield runs.findById(adjustment.getAttachedRunId())
-                        .map(run -> switch (run.getStatus()) {
-                            case DRAFT -> OfferStatus.HELD_BY_DRAFT;
-                            case AWAITING_APPROVAL -> OfferStatus.HELD_AWAITING_APPROVAL;
-                            default -> OfferStatus.WAITING;
-                        })
-                        .orElse(OfferStatus.WAITING);
-            }
-        };
+        return IntakeStatus.of(adjustment, runs, OfferStatus.class);
     }
 
     private Optional<Person> personOf(UUID userId) {

@@ -48,6 +48,7 @@ import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ContentDetailPage } from "./features/content/ContentDetailPage";
 import { ContentPage } from "./features/content/ContentPage";
+import { IncentivesPage } from "./features/incentives/IncentivesPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ExceptionsPage } from "./features/training/ExceptionsPage";
 import { HistoryPage } from "./features/training/HistoryPage";
@@ -611,6 +612,22 @@ export function App() {
           element={
             <RouteGuard>
               <ContentDetailPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/incentives"
+          element={
+            <RouteGuard>
+              <IncentivesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/incentives/:id"
+          element={
+            <RouteGuard>
+              <IncentivesPage />
             </RouteGuard>
           }
         />

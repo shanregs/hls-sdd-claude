@@ -203,3 +203,14 @@ new at module level.
 ## Complexity Tracking
 
 No violations. Table intentionally omitted.
+
+## Amendments
+
+- **Amendment A (spec 030, Manager incentives).** Additive: `payroll.api.IncentiveIntake` (`offer`, `withdraw`, `status`,
+  `OfferStatus`) and `IncentiveIntakeImpl` in `payroll.run.internal`, the same shape as 015's `ReimbursementIntake`. It
+  creates and withdraws `INCENTIVE` adjustments for a payroll Manager, idempotent per source reference
+  (`INCENTIVE:<incentive id>`); a draft run takes them, approval applies them and publishes `PayrollAdjustmentApplied`
+  with kind `INCENTIVE`. The status derivation is shared with the reimbursement intake (`IntakeStatus`), with no change
+  to 015. `AdjustmentService` still refuses manual recording of `INCENTIVE`, and its refusal now says the kind arrives
+  only through the incentive intake. No migration (V53 already allows the kind and the source reference). Run
+  behaviour for runs without incentives is unchanged.

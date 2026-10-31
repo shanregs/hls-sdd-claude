@@ -1,0 +1,6 @@
+$kind: http-request
+name: Detail
+description: "One incentive with its history and the actions allowed for the caller; read version for the decisions."
+url: "{{baseUrl}}/api/v1/incentives/{{incentiveId}}"
+method: GET
+order: 6000

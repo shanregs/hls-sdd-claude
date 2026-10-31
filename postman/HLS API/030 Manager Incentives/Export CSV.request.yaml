@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export CSV
+description: "CSV of the filtered list. Needs MANAGER_INCENTIVES.EXPORT; audited."
+url: "{{baseUrl}}/api/v1/incentives/export.csv?status=APPROVED"
+method: GET
+order: 5000
