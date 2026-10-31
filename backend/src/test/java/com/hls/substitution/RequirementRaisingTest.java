@@ -40,14 +40,28 @@ class RequirementRaisingTest extends SubstitutionTestBase {
     @Test
     void theTeacherMarkingThemselvesAbsentRaisesItToo() {
         World w = newWorld();
-        LocalDate day = today();
+        LocalDate day = recentWorkingDay();
 
         Resp resp = put("/api/v1/attendance/me/marks/" + day, w.teacherA().token(), java.util.Map.of("statusCode", "A", "dayValue", 1));
 
         assertThat(resp.status()).as(resp.body()).isEqualTo(200);
-        if (!java.time.DayOfWeek.SUNDAY.equals(day.getDayOfWeek())) {
-            assertThat(requirementRows(w.teacherA().teacherId(), day)).hasSize(1);
+        assertThat(requirementRows(w.teacherA().teacherId(), day)).hasSize(1);
+    }
+
+    /**
+     * The latest day a Teacher may still mark for themselves that is neither a Sunday nor a holiday. The shared test
+     * database can hold holidays inserted by the dev-seeder tests (including today's), and none raises a requirement.
+     */
+    private LocalDate recentWorkingDay() {
+        for (int back = 0; back <= com.hls.attendance.internal.BusinessCalendar.SELF_MARK_WINDOW_DAYS; back++) {
+            LocalDate candidate = today().minusDays(back);
+            Integer holidays = jdbc.queryForObject(
+                    "select count(*) from attendance_non_working_date where on_date = ?", Integer.class, candidate);
+            if (!java.time.DayOfWeek.SUNDAY.equals(candidate.getDayOfWeek()) && holidays == 0) {
+                return candidate;
+            }
         }
+        throw new IllegalStateException("no working day in the self-mark window");
     }
 
     @Test

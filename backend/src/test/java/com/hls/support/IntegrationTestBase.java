@@ -37,7 +37,9 @@ public abstract class IntegrationTestBase {
     private static final AtomicLong PHONE_SEQUENCE = new AtomicLong(9_500_000_000L);
 
     @ServiceConnection
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            // every cached Spring context keeps its own connection pool open against this one database
+            .withCommand("postgres", "-c", "max_connections=500");
 
     static {
         postgres.start();

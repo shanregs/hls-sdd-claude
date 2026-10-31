@@ -12,12 +12,16 @@ class LeaveAuditTest extends LeaveTestBase {
 
     private static final String HISTORY = "/api/v1/audit/change-history?size=200&entityType=";
 
-    /** Change History is filled after the transaction commits, so give it a moment. */
-    private String history(String token, String entityType, String mustContain) throws InterruptedException {
+    /**
+     * Change History is filled after the transaction commits, by listeners that run on their own threads and may finish
+     * out of order, so wait until every expected entry is there, not just the last one written.
+     */
+    private String history(String token, String entityType, String... mustContain) throws InterruptedException {
         String body = "";
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 100; i++) {
             body = get(HISTORY + entityType, token).body();
-            if (mustContain == null || body.contains(mustContain)) {
+            String current = body;
+            if (java.util.Arrays.stream(mustContain).allMatch(current::contains)) {
                 return body;
             }
             Thread.sleep(200);
@@ -40,7 +44,17 @@ class LeaveAuditTest extends LeaveTestBase {
         post(SUP + "/" + revoked + "/approve", w.managerA().token(), Map.of("version", 0));
         post(SUP + "/" + revoked + "/revoke", w.managerA().token(), Map.of("reason", "Needed at school", "version", 1));
 
-        String log = history(w.admin(), "LEAVE_REQUEST", "Needed at school");
+        String log = history(
+                w.admin(),
+                "LEAVE_REQUEST",
+                approved,
+                rejected,
+                cancelled,
+                revoked,
+                "APPROVED - Enjoy",
+                "REJECTED - Exams that week",
+                "CANCELLED - cancelled by the Teacher",
+                "CANCELLED - revoked: Needed at school");
 
         for (String id : new String[] {approved, rejected, cancelled, revoked}) {
             assertThat(log).as("created " + id).contains(id);
