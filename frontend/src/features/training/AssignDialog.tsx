@@ -14,12 +14,14 @@ import { useAuth } from "../../auth/useAuth";
 import { listManagers } from "../managers/managersApi";
 import { listSchools } from "../schools/schoolsApi";
 import { listZones } from "../zones/zonesApi";
+import { PersonPicker } from "./PersonPicker";
 import {
   GROUP_LABELS,
   assignPeople,
   previewAssignment,
   type AssignBody,
   type AssignPreview,
+  type FoundPerson,
 } from "./trainingApi";
 
 interface Props {
@@ -34,6 +36,7 @@ interface Choice {
 }
 
 const NEEDS_REF = new Set(["SCHOOL", "MANAGER", "ZONE"]);
+const INDIVIDUAL = "INDIVIDUAL";
 
 /** Assign a group to a session: pick the group, see how many are new, already assigned or refused, then confirm. */
 export function AssignDialog({ sessionId, onAssigned, onCancel }: Props) {
@@ -44,6 +47,9 @@ export function AssignDialog({ sessionId, onAssigned, onCancel }: Props) {
   const [preview, setPreview] = useState<AssignPreview | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [personKind, setPersonKind] = useState<FoundPerson["kind"]>("TEACHER");
+  const [picked, setPicked] = useState<FoundPerson[]>([]);
+  const [pickerKey, setPickerKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,16 +87,24 @@ export function AssignDialog({ sessionId, onAssigned, onCancel }: Props) {
   }, [authFetch, groupKind]);
 
   function body(): AssignBody {
+    if (groupKind === INDIVIDUAL) {
+      return { personKind, ids: picked.map((p) => p.id) };
+    }
     return { groupKind, groupRef: NEEDS_REF.has(groupKind) ? groupRef : null };
   }
 
   function missingRef(): boolean {
+    if (groupKind === INDIVIDUAL) return picked.length === 0;
     return NEEDS_REF.has(groupKind) && !groupRef;
   }
 
   async function check() {
     if (missingRef()) {
-      setFailure("Choose which one.");
+      setFailure(
+        groupKind === INDIVIDUAL
+          ? "Choose at least one person."
+          : "Choose which one.",
+      );
       return;
     }
     setFailure(null);
@@ -128,15 +142,84 @@ export function AssignDialog({ sessionId, onAssigned, onCancel }: Props) {
               setGroupRef("");
               setPreview(null);
               setChoices([]);
+              setPicked([]);
             }}
             slotProps={{ select: { native: true } }}
           >
+            <option value={INDIVIDUAL}>Specific people</option>
             {Object.entries(GROUP_LABELS).map(([kind, label]) => (
               <option key={kind} value={kind}>
                 {label}
               </option>
             ))}
           </TextField>
+          {groupKind === INDIVIDUAL && (
+            <>
+              <TextField
+                select
+                label="Kind of person"
+                value={personKind}
+                onChange={(e) => {
+                  setPersonKind(e.target.value as FoundPerson["kind"]);
+                  setPicked([]);
+                  setPreview(null);
+                }}
+                slotProps={{ select: { native: true } }}
+              >
+                <option value="TEACHER">Teachers</option>
+                <option value="MANAGER">Managers</option>
+              </TextField>
+              <PersonPicker
+                key={pickerKey}
+                label="Find a person to add"
+                kind={personKind}
+                value={null}
+                exclude={picked.map((p) => p.id)}
+                onChange={(person) => {
+                  if (!person) return;
+                  setPicked((prev) => [...prev, person]);
+                  setPreview(null);
+                  setPickerKey((k) => k + 1);
+                }}
+              />
+              {picked.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nobody chosen yet.
+                </Typography>
+              ) : (
+                <Stack
+                  component="ul"
+                  aria-label="People to assign"
+                  sx={{ m: 0, p: 0, listStyle: "none" }}
+                >
+                  {picked.map((p) => (
+                    <Stack
+                      key={p.id}
+                      component="li"
+                      direction="row"
+                      sx={{
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography>{p.name}</Typography>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setPicked((prev) =>
+                            prev.filter((x) => x.id !== p.id),
+                          );
+                          setPreview(null);
+                        }}
+                      >
+                        Remove {p.name}
+                      </Button>
+                    </Stack>
+                  ))}
+                </Stack>
+              )}
+            </>
+          )}
           {NEEDS_REF.has(groupKind) && (
             <TextField
               select

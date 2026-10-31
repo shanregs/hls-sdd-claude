@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  Box,
   Button,
   Chip,
   Dialog,
@@ -25,9 +26,11 @@ import {
   syncAttendance,
   type AttendanceInput,
   type AttendanceRow,
+  type FoundPerson,
   type Outcome,
   type RowResult,
 } from "./trainingApi";
+import { PersonPicker } from "./PersonPicker";
 import { StatusChip } from "../../theme/StatusChip";
 
 interface Props {
@@ -77,7 +80,7 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [walkInOpen, setWalkInOpen] = useState(false);
-  const [walkInId, setWalkInId] = useState("");
+  const [walkInPerson, setWalkInPerson] = useState<FoundPerson | null>(null);
 
   const load = useCallback(async () => {
     const result = await getAttendance(authFetch, sessionId);
@@ -152,26 +155,28 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
   }
 
   async function walkIn() {
-    if (!walkInId.trim()) return;
-    const kind =
-      rows.find((r) => r.personId === walkInId.trim())?.personKind ?? "TEACHER";
+    if (!walkInPerson) {
+      setFailure("Choose the person who walked in.");
+      return;
+    }
     const result = await addWalkIn(
       authFetch,
       sessionId,
-      kind,
-      walkInId.trim(),
+      walkInPerson.kind,
+      walkInPerson.id,
       1,
     );
     if (!result.ok) {
       setFailure(result.reason);
       return;
     }
+    setFailure(null);
     setResults((prev) => ({
       ...prev,
-      [walkInId.trim()]: result.data.results[0],
+      [walkInPerson.id]: result.data.results[0],
     }));
     setWalkInOpen(false);
-    setWalkInId("");
+    setWalkInPerson(null);
     await load();
     onSaved();
   }
@@ -235,7 +240,11 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
                           <Chip size="small" color="info" label="On leave" />
                         )}
                         {r.syncState === "CLASH" && (
-                          <StatusChip kind="pending" size="small" label="Clash" />
+                          <StatusChip
+                            kind="pending"
+                            size="small"
+                            label="Clash"
+                          />
                         )}
                       </Stack>
                     </TableCell>
@@ -320,7 +329,11 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
                     )}
                     <TableCell aria-live="polite">
                       {result?.status === "SAVED" && (
-                        <StatusChip kind="approved" size="small" label="Saved" />
+                        <StatusChip
+                          kind="approved"
+                          size="small"
+                          label="Saved"
+                        />
                       )}
                       {result?.status === "SAVED_CLASH" && (
                         <Typography variant="body2" color="warning.main">
@@ -350,14 +363,24 @@ export function AttendanceGrid({ sessionId, onSaved, onClose }: Props) {
           </Table>
         )}
         {walkInOpen && (
-          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-            <TextField
-              size="small"
-              label="Walk-in person id"
-              value={walkInId}
-              onChange={(e) => setWalkInId(e.target.value)}
-            />
-            <Button variant="contained" onClick={() => void walkIn()}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mt: 2, alignItems: "flex-start" }}
+          >
+            <Box sx={{ flexGrow: 1 }}>
+              <PersonPicker
+                label="Person who walked in"
+                value={walkInPerson}
+                onChange={setWalkInPerson}
+                exclude={rows.map((r) => r.personId)}
+              />
+            </Box>
+            <Button
+              variant="contained"
+              sx={{ mt: 1 }}
+              onClick={() => void walkIn()}
+            >
               Add walk-in
             </Button>
           </Stack>

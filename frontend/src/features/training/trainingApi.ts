@@ -777,3 +777,29 @@ export function getUpcoming(
     "Could not load your upcoming training.",
   );
 }
+
+// ------------------------------------------------------------------ people search (assign and walk-in pickers)
+
+export interface FoundPerson {
+  kind: "TEACHER" | "MANAGER";
+  id: string;
+  name: string;
+}
+
+export const PERSON_KIND_LABELS: Record<FoundPerson["kind"], string> = {
+  TEACHER: "Teacher",
+  MANAGER: "Manager",
+};
+
+/** Up to 20 people the caller may pick, by part of the name; a Manager only gets their own Teachers. */
+export function searchPeople(
+  authFetch: AuthFetch,
+  query: string,
+  kind?: FoundPerson["kind"],
+): Promise<ApiResult<FoundPerson[]>> {
+  return getJson<FoundPerson[]>(
+    authFetch,
+    `${BASE}/people?${queryString({ q: query.trim(), kind })}`,
+    "Could not search for people.",
+  );
+}

@@ -56,6 +56,7 @@ excused, walkIns, noShows, rate}`.
 | `GET /sessions/{id}/attendance` | Roster rows (assigned, registered, walk-ins) with outcome, `onLeave` suggestion, `syncState`, `clashNote`, and history. Manager: only their Teachers. |
 | `PUT /sessions/{id}/attendance` | Bulk save: `{rows:[{personKind, personId, outcome, dayValue, reason, certificateNote, internalRemark, version}]}`. Session date must be today or past. One transaction. |
 | `POST /sessions/{id}/walk-ins` | `{personKind, personId, dayValue}`; recorded Present, not counted as expected. |
+| `GET /people?kind&q` | `TRAINING` Edit or `TRAINING_ATTENDANCE` Edit | Person picker for individual assignment and walk-ins: up to 20 `{kind, id, name}`, Teachers (ACTIVE or ON_LEAVE) and active Managers. Manager: only their Teachers. Teacher: 403. |
 | `POST /sessions/{id}/attendance/{entryId}/sync` | Retry the 008 write after a clash is resolved. |
 
 `PUT` response: `{results:[{personId, status: SAVED | SAVED_CLASH | REFUSED, code, message}], counts}`. REFUSED codes:
