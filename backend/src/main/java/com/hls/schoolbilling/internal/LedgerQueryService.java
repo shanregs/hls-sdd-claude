@@ -292,7 +292,7 @@ public class LedgerQueryService {
 
     // ---- ageing
 
-    private static BigDecimal[] bucketsOf(long days, BigDecimal amount) {
+    static BigDecimal[] bucketsOf(long days, BigDecimal amount) {
         BigDecimal[] b = {ZERO, ZERO, ZERO, ZERO, ZERO};
         int i = days <= 0 ? 0 : days <= 30 ? 1 : days <= 60 ? 2 : days <= 90 ? 3 : 4;
         b[i] = amount;

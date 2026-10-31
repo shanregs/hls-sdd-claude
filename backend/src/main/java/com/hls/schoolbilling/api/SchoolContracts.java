@@ -19,6 +19,12 @@ public interface SchoolContracts {
     /** The position the Teacher fills on {@code date} and its salary; empty while the Teacher is unmapped. */
     Optional<TeacherPosition> positionOf(UUID teacherId, LocalDate date);
 
+    /**
+     * {@link #contractOf} for many Schools at once, in a fixed number of queries; a School with no contract in effect on
+     * {@code date} is absent, and an empty set of Schools gives an empty map (spec 014b A2).
+     */
+    java.util.Map<UUID, ContractView> contractsOfAll(java.util.Collection<UUID> schoolIds, LocalDate date);
+
     /** Live contracts of the School overlapping {@code from..to} inclusive, oldest first. */
     List<ContractView> contractsOverlapping(UUID schoolId, LocalDate from, LocalDate to);
 

@@ -69,6 +69,9 @@ public class AuditVisibility {
             Map.entry("REPORT_EXPORT_TEACHER", PermissionModule.REPORT_TEACHER),
             Map.entry("REPORT_EXPORT_MANAGER", PermissionModule.REPORT_MANAGER),
             Map.entry("REPORT_EXPORT_EXPENSES", PermissionModule.REPORT_EXPENSES),
+            Map.entry("REPORT_EXPORT_MARGIN", PermissionModule.REPORT_MARGIN),
+            Map.entry("REPORT_EXPORT_COLLECTIONS", PermissionModule.REPORT_COLLECTIONS),
+            Map.entry("REPORT_EXPORT_SCHOOL", PermissionModule.REPORT_SCHOOL),
             Map.entry("SCHOOL_WORKING_DAYS", PermissionModule.SCHOOL_WORKING_DAYS),
             Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT),
             Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION));

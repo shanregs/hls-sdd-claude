@@ -183,10 +183,26 @@ class AttendanceReportSource implements ReportSource {
         }
         List<Row> rows = groups.entrySet().stream()
                 .sorted(Comparator.comparing(e -> names.get(e.getKey()), String.CASE_INSENSITIVE_ORDER))
-                .map(e -> totalsRow(e.getKey().toString(), names.get(e.getKey()), e.getValue(), true))
+                .map(e -> bySchool
+                        ? schoolRow(SchoolAttendanceImpl.rollupOf(e.getKey(), e.getValue()), names.get(e.getKey()))
+                        : totalsRow(e.getKey().toString(), names.get(e.getKey()), e.getValue(), true))
                 .toList();
         Row total = data.rows().isEmpty() ? null : totalsRow("total", "Organization", data.rows(), true);
         return Section.of(key, title, ROLLUP_COLUMNS, rows, total);
+    }
+
+    private static Row schoolRow(com.hls.attendance.api.SchoolAttendance.SchoolRollup r, String label) {
+        return new Row(
+                r.schoolId().toString(),
+                label,
+                List.of(
+                        Cell.of(r.teachers()),
+                        Cell.of(r.working()),
+                        Cell.of(r.present()),
+                        Cell.of(r.absent()),
+                        Cell.of(r.leave()),
+                        Cell.of(r.lossOfPay()),
+                        percent(r.present(), r.working())));
     }
 
     private static Row totalsRow(String id, String label, List<TeacherFigures> group, boolean withCount) {
@@ -228,7 +244,11 @@ class AttendanceReportSource implements ReportSource {
 
     private TeacherData loadTeachers(ReportContext ctx) {
         YearMonth month = ctx.month();
-        Set<UUID> ids = teachersInScope(ctx, month);
+        return figuresOf(teachersInScope(ctx, month), month);
+    }
+
+    /** The figures of the given Teachers for the month; the School rollup (spec 014b A6) reads the same rows. */
+    TeacherData figuresOf(Set<UUID> ids, YearMonth month) {
         if (ids.isEmpty()) {
             return new TeacherData(List.of(), false);
         }

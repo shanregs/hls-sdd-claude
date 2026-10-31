@@ -344,10 +344,17 @@ public class PerformanceQueries implements PerformanceSummary {
         return tally(from, to, Dimension.TEACHER);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, Counts> bySchool(LocalDate from, LocalDate to) {
+        return tally(from, to, Dimension.SCHOOL);
+    }
+
     private enum Dimension {
         MANAGER,
         ZONE,
-        TEACHER
+        TEACHER,
+        SCHOOL
     }
 
     private Map<UUID, Counts> tally(LocalDate from, LocalDate to, boolean byManager) {
@@ -369,18 +376,18 @@ public class PerformanceQueries implements PerformanceSummary {
         allIssues.forEach(i -> schoolIds.add(i.schoolId));
         Map<UUID, UUID> zoneOf = dim == Dimension.ZONE ? facts.schoolZones(schoolIds) : Map.of();
         for (Observation o : done) {
-            bump(table, key(dim, o.teacherId, o.managerUserId, zoneOf.get(o.schoolId)), 0);
+            bump(table, key(dim, o.teacherId, o.managerUserId, zoneOf.get(o.schoolId), o.schoolId), 0);
         }
         for (ObservationPlan p : open) {
             UUID manager = byManager ? facts.find(p.teacherId).map(TeacherContext::managerUserId).orElse(null) : null;
-            UUID key = key(dim, p.teacherId, manager, zoneOf.get(p.schoolId));
+            UUID key = key(dim, p.teacherId, manager, zoneOf.get(p.schoolId), p.schoolId);
             bump(table, key, 1);
             if (p.plannedOn.isBefore(today)) {
                 bump(table, key, 2);
             }
         }
         for (PerformanceIssue i : allIssues) {
-            UUID key = key(dim, i.teacherId, i.managerUserId, zoneOf.get(i.schoolId));
+            UUID key = key(dim, i.teacherId, i.managerUserId, zoneOf.get(i.schoolId), i.schoolId);
             if (i.status == IssueStatus.OPEN || i.status == IssueStatus.UNDER_CORRECTION) {
                 bump(table, key, 3);
             }
@@ -393,7 +400,7 @@ public class PerformanceQueries implements PerformanceSummary {
         for (Referral r : referrals.findAll()) {
             PerformanceIssue i = issueById.get(r.issueId);
             if (i != null && !r.referredOn.isBefore(from) && !r.referredOn.isAfter(to)) {
-                bump(table, key(dim, i.teacherId, i.managerUserId, zoneOf.get(i.schoolId)), 4);
+                bump(table, key(dim, i.teacherId, i.managerUserId, zoneOf.get(i.schoolId), i.schoolId), 4);
             }
         }
         Map<UUID, Counts> result = new HashMap<>();
@@ -405,11 +412,12 @@ public class PerformanceQueries implements PerformanceSummary {
         return result;
     }
 
-    private static UUID key(Dimension dim, UUID teacher, UUID manager, UUID zone) {
+    private static UUID key(Dimension dim, UUID teacher, UUID manager, UUID zone, UUID school) {
         return switch (dim) {
             case MANAGER -> manager;
             case ZONE -> zone;
             case TEACHER -> teacher;
+            case SCHOOL -> school;
         };
     }
 

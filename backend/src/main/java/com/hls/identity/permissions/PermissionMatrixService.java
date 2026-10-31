@@ -358,9 +358,18 @@ public class PermissionMatrixService {
     }
 
     /** Report defaults (spec 014a): Admin and Director read and export both reports, a Manager the Attendance one, a Teacher My Report. */
-    /** Recruitment, Teacher and Manager reports (spec 014c): Admin, Director and Manager. Expenses is Admin and Director only. */
+    /**
+     * Recruitment, Teacher and Manager reports (spec 014c) and Margin, Collections and School (spec 014b): Admin, Director
+     * and Manager (own Schools). Expenses is Admin and Director only.
+     */
     private static final List<PermissionModule> PEOPLE_REPORTS =
-            List.of(PermissionModule.REPORT_RECRUITMENT, PermissionModule.REPORT_TEACHER, PermissionModule.REPORT_MANAGER);
+            List.of(
+                    PermissionModule.REPORT_RECRUITMENT,
+                    PermissionModule.REPORT_TEACHER,
+                    PermissionModule.REPORT_MANAGER,
+                    PermissionModule.REPORT_MARGIN,
+                    PermissionModule.REPORT_COLLECTIONS,
+                    PermissionModule.REPORT_SCHOOL);
 
     private void seedReports() {
         for (Role role : List.of(Role.ADMIN, Role.DIRECTOR)) {
