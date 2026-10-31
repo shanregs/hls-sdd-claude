@@ -69,6 +69,12 @@ public class MarketingActivity {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "same_day", nullable = false)
+    private boolean sameDay;
+
+    @Column(name = "client_key")
+    private java.util.UUID clientKey;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -168,5 +174,21 @@ public class MarketingActivity {
     public void cancel(String reason) {
         this.status = ActivityStatus.CANCELLED;
         this.cancelReason = reason;
+    }
+
+    public boolean isSameDay() {
+        return sameDay;
+    }
+
+    public void setSameDay(boolean sameDay) {
+        this.sameDay = sameDay;
+    }
+
+    public java.util.UUID getClientKey() {
+        return clientKey;
+    }
+
+    public void setClientKey(java.util.UUID clientKey) {
+        this.clientKey = clientKey;
     }
 }

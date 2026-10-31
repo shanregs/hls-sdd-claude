@@ -26,7 +26,30 @@ public record CalendarItem(
         UUID zoneId,
         String zoneName,
         String place,
-        @JsonInclude(JsonInclude.Include.NON_NULL) Link link) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) Link link,
+        boolean sameDay) {
+
+    /** The form that does not say whether the item was logged on the spot (spec 040): it was not. */
+    public CalendarItem(
+            String key,
+            UUID activityId,
+            String kind,
+            String subKind,
+            LocalDate date,
+            String status,
+            boolean doneLate,
+            LocalDate completedOn,
+            boolean rescheduled,
+            LocalDate originalDate,
+            Integer daysMoved,
+            Integer daysLate,
+            List<Person> people,
+            UUID zoneId,
+            String zoneName,
+            String place,
+            Link link) {
+        this(key, activityId, kind, subKind, date, status, doneLate, completedOn, rescheduled, originalDate, daysMoved, daysLate, people, zoneId, zoneName, place, link, false);
+    }
 
     /** The owner or an attending Manager; {@code manager} tells a Manager from another user such as the Admin who created it. */
     public record Person(UUID userId, String name, String zoneName, boolean manager) {}

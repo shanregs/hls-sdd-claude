@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  Checkbox,
+  FormControlLabel,
   Alert,
   Box,
   Button,
@@ -99,6 +101,7 @@ export function ActivityCalendarPage() {
   const [zoneId, setZoneId] = useState(saved.zoneId ?? "");
   const [kind, setKind] = useState(saved.kind ?? "");
   const [status, setStatus] = useState(saved.status ?? "");
+  const [sameDayOnly, setSameDayOnly] = useState(false);
   const [view, setView] = useState<"grid" | "list">(saved.view ?? "grid");
   const [tab, setTab] = useState<"calendar" | "attention">("calendar");
   const [choices, setChoices] = useState<FiltersResponse | null>(null);
@@ -127,20 +130,23 @@ export function ActivityCalendarPage() {
       zoneId: zoneId || undefined,
       kind: kind || undefined,
       status: status || undefined,
+      sameDay: sameDayOnly,
     });
     setState(
       result.ok
         ? { kind: "ready", data: result.data }
         : { kind: "error", reason: result.reason },
     );
-  }, [authFetch, month, managerId, zoneId, kind, status]);
+  }, [authFetch, month, managerId, zoneId, kind, status, sameDayOnly]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- month and filter driven fetch
     void load();
   }, [load]);
 
-  const filtered = Boolean(managerId || zoneId || kind || status);
+  const filtered = Boolean(
+    managerId || zoneId || kind || status || sameDayOnly,
+  );
   const trainingAvailable =
     choices?.kinds?.find((k) => k.kind === "TRAINING")?.available ?? false;
 
@@ -257,9 +263,19 @@ export function ActivityCalendarPage() {
             </option>
           ))}
         </TextField>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={sameDayOnly}
+              onChange={(e) => setSameDayOnly(e.target.checked)}
+            />
+          }
+          label="Same-day only"
+        />
         {filtered && (
           <Button
             onClick={() => {
+              setSameDayOnly(false);
               setManagerId("");
               setZoneId("");
               setKind("");

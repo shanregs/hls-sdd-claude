@@ -59,8 +59,12 @@ public class ActivityCalendarService {
     }
 
     /** The optional filters of the calendar; all combine, none widens a Manager's scope. */
-    public record Filters(UUID managerId, UUID zoneId, String kind, String status) {
-        public static final Filters NONE = new Filters(null, null, null, null);
+    public record Filters(UUID managerId, UUID zoneId, String kind, String status, boolean sameDay) {
+        public static final Filters NONE = new Filters(null, null, null, null, false);
+
+        public Filters(UUID managerId, UUID zoneId, String kind, String status) {
+            this(managerId, zoneId, kind, status, false);
+        }
     }
 
     public static final List<String> KINDS = List.of("CAMPUS_DRIVE", "SCHOOL_VISIT", "CALL", "MEETING", "TASK", "TRAINING");
@@ -232,6 +236,7 @@ public class ActivityCalendarService {
                 .filter(i -> f.zoneId() == null || f.zoneId().equals(i.zoneId()))
                 .filter(i -> f.kind() == null || f.kind().equals(i.kind()))
                 .filter(i -> f.status() == null || f.status().equals(i.status()))
+                .filter(i -> !f.sameDay() || i.sameDay())
                 .toList();
     }
 
@@ -314,7 +319,8 @@ public class ActivityCalendarService {
                     zone == null ? null : zone.id(),
                     zone == null ? null : zone.name(),
                     e.place(),
-                    linkFor(groupOf.get(e), caller, mayView)));
+                    linkFor(groupOf.get(e), caller, mayView),
+                    e.sameDay()));
         }
         items.sort(Comparator.comparing(CalendarItem::date).thenComparing(CalendarItem::kind).thenComparing(CalendarItem::key));
         return items;

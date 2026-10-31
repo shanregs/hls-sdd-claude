@@ -39,6 +39,8 @@ import { DesignationDialog } from "../features/designations/DesignationDialog";
 import { SchoolWorkingDaysPage } from "../features/schoolWorkingDays/SchoolWorkingDaysPage";
 import { YearEntryPage } from "../features/schoolWorkingDays/YearEntryPage";
 import { AddRowDialog } from "../features/schoolWorkingDays/AddRowDialog";
+import { RecordSameDayLeaveDialog } from "../features/leave/RecordSameDayLeaveDialog";
+import { LogSameDayDialog } from "../features/tasks/LogSameDayDialog";
 import { DeleteDialog } from "../features/schoolWorkingDays/DeleteDialog";
 import { HistoryDialog } from "../features/schoolWorkingDays/HistoryDialog";
 import { CopyYearDialog } from "../features/schoolWorkingDays/CopyYearDialog";
@@ -759,7 +761,7 @@ const authFetch = vi.fn(async (input: RequestInfo) => {
     clientType: "WEB",
     appVersion: null,
   };
-  if (url === "/api/v1/me/leave/types") {
+  if (url === "/api/v1/me/leave/types" || url === "/api/v1/leave/types") {
     return {
       ok: true,
       json: async () => [
@@ -1634,6 +1636,26 @@ const pages: PageCase[] = [
     name: "YearEntryPage",
     render: () => <YearEntryPageForSchool />,
     settle: () => screen.findByLabelText("January 2027"),
+  },
+  {
+    name: "RecordSameDayLeaveDialog",
+    render: () => (
+      <RecordSameDayLeaveDialog onClose={vi.fn()} onRecorded={vi.fn()} />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
+  },
+  {
+    name: "LogSameDayDialog (tasks)",
+    render: () => (
+      <LogSameDayDialog
+        types={[{ value: "SCHOOL_VISIT", label: "School visit" }]}
+        onClose={vi.fn()}
+        onLogged={vi.fn()}
+      />
+    ),
+    settle: () => screen.findByRole("dialog"),
+    axeTarget: () => document.body,
   },
   {
     name: "AddRowDialog",

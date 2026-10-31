@@ -11,6 +11,9 @@ import { useInnerBack } from "../navigation/InnerBack";
 import { minTouchTarget, spacingUnit } from "../theme/tokens";
 import { VisitCard } from "../visits/VisitCard";
 import { PlanVisitForm } from "../visits/PlanVisitForm";
+import { LogVisitTodayForm } from "../visits/LogVisitTodayForm";
+import { useAuth } from "../auth/AuthProvider";
+import { useSameDayLog } from "../sameDay/useSameDayLog";
 import { VisitDetailPane } from "../visits/VisitDetailPane";
 import { filterVisits, groupVisits, useVisits, VISIT_FILTERS, type VisitFilter } from "../visits/useVisits";
 import { Screen } from "./Screen";
@@ -32,13 +35,40 @@ export function VisitsScreen() {
   const { status, view, message, reload } = useVisits(month);
   const [openId, setOpenId] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
+  const [logging, setLogging] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
+  const { state: auth } = useAuth();
+  const myUserId = auth.status === "signedIn" ? auth.user.id : null;
+  const sameDay = useSameDayLog(myUserId);
 
   // Leaving a detail reloads the list quietly, since the visit may have changed or gone while it was open.
   const closeDetail = () => {
     setOpenId(null);
     reload({ quiet: true });
   };
-  useInnerBack(openId !== null || planning, () => (planning ? setPlanning(false) : closeDetail()));
+  useInnerBack(openId !== null || planning || logging, () =>
+    logging ? setLogging(false) : planning ? setPlanning(false) : closeDetail(),
+  );
+
+  if (logging && myUserId) {
+    return (
+      <Screen>
+        <LogVisitTodayForm
+          myUserId={myUserId}
+          onCancel={() => setLogging(false)}
+          onDone={(result) => {
+            setLogging(false);
+            setSaved(
+              result === "QUEUED"
+                ? "Saved on this phone. It will be sent when you are back online."
+                : "Visit logged for today.",
+            );
+            reload({ quiet: true });
+          }}
+        />
+      </Screen>
+    );
+  }
 
   if (planning) {
     return (
@@ -74,6 +104,21 @@ export function VisitsScreen() {
 
   return (
     <Screen onRefresh={() => reload({ quiet: true })}>
+      {saved ? (
+        <Text variant="bodyMedium" accessibilityLiveRegion="polite">
+          {saved}
+        </Text>
+      ) : null}
+      {sameDay.waiting.length > 0 ? (
+        <Text variant="bodyMedium" accessibilityLiveRegion="polite">
+          {sameDay.waiting.length} logged for today and waiting to be sent.
+        </Text>
+      ) : null}
+      {canCreate ? (
+        <Button mode="outlined" onPress={() => setLogging(true)} contentStyle={styles.button} accessibilityLabel="Log a visit for today">
+          Log a visit for today
+        </Button>
+      ) : null}
       {canCreate ? (
         <Button mode="contained" onPress={() => setPlanning(true)} contentStyle={styles.button} accessibilityLabel="Plan a visit">
           Plan a visit

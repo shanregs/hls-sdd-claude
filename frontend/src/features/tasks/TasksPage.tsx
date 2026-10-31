@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  Link as RouterLink,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import {
+  Checkbox,
+  FormControlLabel,
   Alert,
   Box,
   Button,
@@ -25,6 +31,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
+import { LogSameDayDialog } from "./LogSameDayDialog";
 import { useAccessModel } from "../../access-model/useAccessModel";
 import { formatDate, todayIso } from "../teachers/formatters";
 import {
@@ -56,7 +63,14 @@ type Rows =
   | { kind: "error"; reason: string }
   | { kind: "ready"; rows: TaskRow[] };
 
-const TASK_VIEWS: TaskView[] = ["today", "upcoming", "overdue", "awaiting", "done", "all"];
+const TASK_VIEWS: TaskView[] = [
+  "today",
+  "upcoming",
+  "overdue",
+  "awaiting",
+  "done",
+  "all",
+];
 
 /**
  * OPERATIONS -> My Tasks (Manager) or Manager Tasks (Admin, Director), spec 025 US1 and US2: the Today, Upcoming, Overdue,
@@ -76,13 +90,17 @@ export function TasksPage() {
       ? (wanted as TaskView)
       : "today";
   });
-  const [assignee, setAssignee] = useState(() => params.get("assigneeUserId") ?? "");
+  const [assignee, setAssignee] = useState(
+    () => params.get("assigneeUserId") ?? "",
+  );
   const [type, setType] = useState("");
   const [rows, setRows] = useState<Rows>({ kind: "loading" });
   const [summary, setSummary] = useState<TaskSummary | null>(null);
   const [types, setTypes] = useState<TypeOption[]>([]);
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [creating, setCreating] = useState(false);
+  const [logging, setLogging] = useState(false);
+  const [sameDayOnly, setSameDayOnly] = useState(false);
 
   const load = useCallback(async () => {
     setRows({ kind: "loading" });
@@ -91,6 +109,7 @@ export function TasksPage() {
         view,
         assigneeUserId: assignee || undefined,
         type: type || undefined,
+        sameDay: sameDayOnly,
       }),
       getSummary(authFetch, assignee || undefined),
     ]);
@@ -100,7 +119,7 @@ export function TasksPage() {
         : { kind: "error", reason: list.reason },
     );
     if (counts.ok) setSummary(counts.data);
-  }, [authFetch, view, assignee, type]);
+  }, [authFetch, view, assignee, type, sameDayOnly]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial and filter-driven fetch
@@ -132,10 +151,28 @@ export function TasksPage() {
         <Typography variant="h5" component="h1">
           {management ? "Manager Tasks" : "My Tasks"}
         </Typography>
-        <Button variant="contained" onClick={() => setCreating(true)}>
-          New task
-        </Button>
+        <Stack direction="row" spacing={1}>
+          {!management && (
+            <Button variant="outlined" onClick={() => setLogging(true)}>
+              Log for today
+            </Button>
+          )}
+          <Button variant="contained" onClick={() => setCreating(true)}>
+            New task
+          </Button>
+        </Stack>
       </Stack>
+
+      <FormControlLabel
+        sx={{ mb: 1 }}
+        control={
+          <Checkbox
+            checked={sameDayOnly}
+            onChange={(e) => setSameDayOnly(e.target.checked)}
+          />
+        }
+        label="Same-day only"
+      />
 
       {summary && summary.escalated > 0 && management && (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -253,6 +290,14 @@ export function TasksPage() {
                         sx={{ ml: 1 }}
                       />
                     )}
+                    {row.sameDay && (
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label="Same-day"
+                        sx={{ ml: 1 }}
+                      />
+                    )}
                     {row.escalated && (
                       <Chip
                         size="small"
@@ -270,6 +315,16 @@ export function TasksPage() {
         </TableContainer>
       )}
 
+      {logging && (
+        <LogSameDayDialog
+          types={types}
+          onClose={() => setLogging(false)}
+          onLogged={() => {
+            setLogging(false);
+            void load();
+          }}
+        />
+      )}
       {creating && (
         <NewTaskDialog
           types={types}

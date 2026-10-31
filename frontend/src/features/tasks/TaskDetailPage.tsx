@@ -59,6 +59,14 @@ type Ask =
       button: string;
     }
   | {
+      action: "done-on-the-spot";
+      title: string;
+      field: "note";
+      label: string;
+      min: number;
+      button: string;
+    }
+  | {
       action: "cancel";
       title: string;
       field: "reason";
@@ -91,6 +99,14 @@ const ASKS: Record<Ask["action"], Ask> = {
     label: "What needs to change",
     min: 3,
     button: "Send back",
+  },
+  "done-on-the-spot": {
+    action: "done-on-the-spot",
+    title: "Mark done on the spot",
+    field: "note",
+    label: "What was done (completion note)",
+    min: 10,
+    button: "Mark done",
   },
   cancel: {
     action: "cancel",
@@ -171,8 +187,12 @@ export function TaskDetailPage() {
           {task.title}
         </Typography>
         <Chip label={STATUS_LABELS[task.status]} />
+        {task.sameDay && <Chip variant="outlined" label="Same-day" />}
         {task.overdue && (
-          <StatusChip kind="rejected" label={`${task.daysOverdue} days overdue`} />
+          <StatusChip
+            kind="rejected"
+            label={`${task.daysOverdue} days overdue`}
+          />
         )}
         {task.escalated && <StatusChip kind="pending" label="Escalated" />}
       </Stack>
@@ -271,6 +291,16 @@ export function TaskDetailPage() {
             Complete
           </Button>
         )}
+        {(actions.acknowledge || actions.start || actions.complete) &&
+          task.dueOn === todayIso() && (
+            <Button
+              variant="outlined"
+              disabled={busy}
+              onClick={() => setAsk(ASKS["done-on-the-spot"])}
+            >
+              Done on the spot
+            </Button>
+          )}
         {actions.verify && (
           <Button
             variant="contained"

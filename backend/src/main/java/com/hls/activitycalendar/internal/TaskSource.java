@@ -45,7 +45,8 @@ public class TaskSource implements ActivitySource {
                         e.linkedType(),
                         e.linkedId(),
                         e.status(),
-                        e.completedOn()))
+                        e.completedOn(),
+                        e.sameDay()))
                 .toList();
     }
 }

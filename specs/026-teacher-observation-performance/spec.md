@@ -265,3 +265,5 @@ Items marked "to confirm in /speckit-clarify" are decisions taken without being 
 - **Notifications** are in-app (spec 010): observation planned, and referral recorded for the Directors. Overdue observation and escalation reuse the task module's events. Push, SMS and email are out of scope.
 - **Out of scope**: transfer and replacement (027), substitute arrangements (017a), Manager performance analytics beyond the read-only summary (028), GPS or photo verification of the visit (the Manager's own check-in and visits are in 032 and 033), School or Principal portals, Teacher self-service, scoring tied to pay or incentives, and mobile screens (a later mobile spec).
 - Business time zone follows the existing setting (Asia/Kolkata); "today" uses it.
+
+> **Amended by spec 040 (2026-10-28):** A same-day OBSERVATION task logged for a Teacher satisfies that Teacher's open observation due (no ratings form).

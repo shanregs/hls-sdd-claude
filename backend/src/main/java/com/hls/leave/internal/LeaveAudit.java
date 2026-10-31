@@ -29,6 +29,16 @@ public class LeaveAudit {
                         + " (" + request.getWorkingDays().toPlainString() + " working days)");
     }
 
+    /** Spec 040 FR-014: who recorded the same-day leave, for whom, and that it was accepted without an approver. */
+    public void sameDay(UUID actor, LeaveRequest request) {
+        recorder.recordLifecycle(
+                actor,
+                REQUEST,
+                request.getId(),
+                "same-day",
+                com.hls.audit.api.SameDayDetail.of(actor, request.getTeacherId()));
+    }
+
     public void status(UUID actor, LeaveRequest request, LeaveStatus before, String detail) {
         recorder.record(
                 actor,
