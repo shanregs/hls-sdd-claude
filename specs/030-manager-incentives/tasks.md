@@ -29,7 +29,7 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 ## Phase 4: User Story 2 - Approval (P1)
 
-- [x] T016 [US2] `DecisionService`: approve and reject (row lock plus version, 409 naming the first decider), Director or Zone Manager of the School's Zone (`ManagerQueries.managerOfSchool`), self-approval allowed and flagged `approved_by_earner`, reject reason required (at most 500), Admin/Teacher/System refused, no Zone Manager means Director only; events and Change History naming earner and approver; publish `IncentiveDecided`
+- [x] T016 [US2] `DecisionService`: approve and reject (row lock plus version, 409 naming the first decider), Director or Zone Manager of the School's current Zone (`scope.zoneIds()` against the live Zone; a School-only assignment does not count), self-approval allowed and flagged `approved_by_earner`, reject reason required (at most 500), Admin/Teacher/System refused, no Zone Manager means Director only; events and Change History naming earner and approver; publish `IncentiveDecided`
 - [x] T017 [US2] `IncentiveController` endpoints approve, reject per [contracts/incentive-api.md](contracts/incentive-api.md), with scope checks and 404 outside scope
 - [x] T018 [P] [US2] Tests per role and scope (SC-002, SC-004): Director, Zone Manager in and out of Zone, earner-as-Zone-Manager approves own (flag and audit), Admin refused, concurrent decisions record one, missing reason refused, Zone Manager changed while pending
 

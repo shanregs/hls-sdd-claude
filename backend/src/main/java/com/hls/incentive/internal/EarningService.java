@@ -16,7 +16,10 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,15 +150,10 @@ public class EarningService {
                 "EARNED",
                 "Earned by " + manager.get().displayName() + " for " + school.name() + ", Rs " + incentive.getAmount());
         noEarners.findBySchoolId(schoolId).ifPresent(row -> row.resolve(now));
-        UUID zoneManager = managers.managerOfSchool(schoolId)
-                .filter(ManagerRef::active)
-                .map(ManagerRef::userId)
-                .orElseGet(() -> managers.managersOfZone(school.zoneId()).stream()
-                        .map(ManagerRef::userId)
-                        .filter(java.util.Objects::nonNull)
-                        .findFirst()
-                        .orElse(null));
-        publisher.publishEvent(new IncentiveEarned(incentive.getId(), schoolId, owner.get(), zoneManager));
+        // Everyone who may decide under the current rule: every Zone Manager of the School's Zone.
+        Set<UUID> deciders = new LinkedHashSet<>();
+        managers.managersOfZone(school.zoneId()).stream().map(ManagerRef::userId).filter(Objects::nonNull).forEach(deciders::add);
+        publisher.publishEvent(new IncentiveEarned(incentive.getId(), schoolId, owner.get(), Set.copyOf(deciders)));
         return Outcome.EARNED;
     }
 

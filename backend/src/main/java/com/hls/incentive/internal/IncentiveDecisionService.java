@@ -88,8 +88,8 @@ public class IncentiveDecisionService {
     }
 
     /**
-     * A rejected incentive goes back to pending for a corrected decision (decision of the owner: the Director or the
-     * School's Zone Manager), with a reason, so the rule "one incentive per School" still allows a second look.
+     * A rejected incentive goes back to pending for a corrected decision (Director only, so a decider cannot undo a
+     * rejection of their own incentive), with a reason, so the rule "one incentive per School" still allows a second look.
      */
     @Transactional
     public void reopen(Caller caller, UUID id, Long version, String reason) {
@@ -98,8 +98,8 @@ public class IncentiveDecisionService {
         if (!access.canSee(caller, incentive)) {
             throw new NotFoundException("Incentive not found.");
         }
-        if (!access.canDecide(caller, incentive)) {
-            throw new ForbiddenFieldException("Only the Director or the Zone Manager of this School can reopen an incentive.");
+        if (!access.director(caller)) {
+            throw new ForbiddenFieldException("Only the Director can reopen an incentive.");
         }
         if (incentive.getStatus() != IncentiveStatus.REJECTED) {
             throw new ConflictException("Only a rejected incentive can be reopened.");

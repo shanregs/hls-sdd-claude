@@ -50,7 +50,7 @@ business decision); the Director may reopen it with a reason (tasks T038) so the
 **D-6 Amount.** `SettingKey.INCENTIVE_AMOUNT` default 5000.00 read at creation and stored; later changes affect new rows only.
 
 **D-7 Approval authority.** Director: any incentive. Manager: only if they are the Zone Manager of the School's Zone
-(`ManagerQueries.managerOfSchool(schoolId)`), including when they are also the earner; the flag `approvedByEarner` is stored and
+(assigned to that Zone, read live from the School; a Manager only assigned to the School is not one and sees just their own incentives), including when they are also the earner; the flag `approvedByEarner` is stored and
 audited. Admin, Teacher, System refused (permission eligibility plus a server check). A School with no Zone Manager: Director only.
 Rejection needs a reason. The decision takes a row lock and compares `version`.
 

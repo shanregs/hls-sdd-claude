@@ -123,6 +123,35 @@ class ListScopeTest extends IncentiveTestBase {
     }
 
     @Test
+    void aSchoolThatMovesZoneWhilePendingFollowsItsNewZoneInListSummaryExportAndFilter() {
+        Own a = earned();
+        String admin = a.mou().admin();
+        String director = a.mou().director().token();
+        ManagerCtx oldZoneManager = newManager(admin, a.mou().f().zoneId());
+        Fixture newZone = fixture(admin);
+        String month = java.time.YearMonth.now(java.time.ZoneId.of("Asia/Kolkata")).toString();
+        String name = "Mover " + UUID.randomUUID().toString().substring(0, 6);
+        rename(a.schoolId(), name);
+        assertThat(ids(get(API + "?size=100", oldZoneManager.token()))).containsExactly(a.id().toString());
+        assertThat(ids(get(API + "?size=100", newZone.manager().token()))).doesNotContain(a.id().toString());
+
+        db.update("update school set place_id = (select place_id from school where id = ?) where id = ?", newZone.schoolId(), a.schoolId());
+
+        assertThat(ids(get(API + "?size=100", oldZoneManager.token()))).doesNotContain(a.id().toString());
+        assertThat(ids(get(API + "?size=100", newZone.manager().token()))).contains(a.id().toString());
+        assertThat(get(API + "/" + a.id(), oldZoneManager.token()).status()).isEqualTo(404);
+        assertThat(get(API + "/" + a.id(), newZone.manager().token()).status()).isEqualTo(200);
+        String url = API + "/summary?from=" + month + "&to=" + month;
+        assertThat(get(url, oldZoneManager.token()).body()).doesNotContain(a.mou().f().manager().managerId().toString());
+        assertThat(get(url, newZone.manager().token()).body()).contains(a.mou().f().manager().managerId().toString());
+        // the Zone filter and the Zone column read the same live Zone, in the list and in the export
+        assertThat(ids(get(API + "?zoneId=" + newZone.zoneId() + "&size=100", director))).contains(a.id().toString());
+        assertThat(ids(get(API + "?zoneId=" + a.mou().f().zoneId() + "&size=100", director))).doesNotContain(a.id().toString());
+        assertThat(get(API + "/export.csv?zoneId=" + newZone.zoneId(), director).body()).contains(name);
+        assertThat(get(API + "/export.csv?zoneId=" + a.mou().f().zoneId(), director).body()).doesNotContain(name);
+    }
+
+    @Test
     void theSummaryTotalsPerStatusManagerAndMonthFollowTheScope() {
         Own a = earned();
         Own b = earned();
