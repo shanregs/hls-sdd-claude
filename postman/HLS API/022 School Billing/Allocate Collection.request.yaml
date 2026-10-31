@@ -1,0 +1,14 @@
+$kind: http-request
+name: Allocate Collection
+description: "Allocates the unallocated part of a collection to dues; an allocation cannot exceed the available amount or a due balance (400). Needs SCHOOL_BILLING.CREATE."
+url: "{{baseUrl}}/api/v1/school-billing/collections/{{billingCollectionId}}/allocate"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "allocations": [ { "dueId": "{{dueId}}", "amount": 5000.00 } ]
+    }
+order: 12000

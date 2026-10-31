@@ -1,0 +1,6 @@
+$kind: http-request
+name: Ageing
+description: "Outstanding dues by age bucket as of a date (default today), optionally for one Zone or Manager. Needs SCHOOL_BILLING.VIEW."
+url: "{{baseUrl}}/api/v1/school-billing/ageing?asOf=2026-11-30"
+method: GET
+order: 2000

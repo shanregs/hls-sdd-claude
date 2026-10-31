@@ -1,0 +1,15 @@
+$kind: http-request
+name: Update Settings
+description: "Changes the payment due days and escalation days; out-of-range values are rejected with 400. Needs SCHOOL_BILLING.EDIT."
+url: "{{baseUrl}}/api/v1/school-billing/settings"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "paymentDueDays": 15,
+      "escalationDays": 30
+    }
+order: 16000

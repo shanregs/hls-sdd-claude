@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Settings
+description: "Payment due days and escalation days. Needs SCHOOL_BILLING.VIEW."
+url: "{{baseUrl}}/api/v1/school-billing/settings"
+method: GET
+order: 15000

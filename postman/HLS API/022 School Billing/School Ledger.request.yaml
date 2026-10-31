@@ -1,0 +1,6 @@
+$kind: http-request
+name: School Ledger
+description: "Every due, adjustment and collection of a School with the balance. 404 outside a Zone Manager scope. Needs SCHOOL_BILLING.VIEW."
+url: "{{baseUrl}}/api/v1/school-billing/schools/{{schoolId}}/ledger"
+method: GET
+order: 10000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Not Billed
+description: "Teachers and Schools left out of the month and why: MOU_PENDING, NO_POSITION or NO_ACTIVE_CONTRACT. Needs SCHOOL_BILLING.VIEW."
+url: "{{baseUrl}}/api/v1/school-billing/not-billed?month={{month}}"
+method: GET
+order: 3000
