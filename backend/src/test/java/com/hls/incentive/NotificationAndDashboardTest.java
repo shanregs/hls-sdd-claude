@@ -26,6 +26,22 @@ class NotificationAndDashboardTest extends IncentiveTestBase {
     }
 
     @Test
+    void everyZoneManagerOfTheSchoolsZoneIsToldOnce() {
+        Mou m = mou();
+        ManagerCtx second = newManager(m.admin(), m.f().zoneId());
+        Fixture other = fixture(m.admin());
+        wonProspect(m.f().zoneId(), m.f().schoolId(), other.manager().signed().userId(), m.adminUserId());
+        approveMou(m);
+        awaitIncentive(m.f().schoolId());
+        settle();
+
+        assertThat(notifications(m.f().manager().signed().userId(), "INCENTIVE_PENDING")).isEqualTo(1);
+        assertThat(notifications(second.signed().userId(), "INCENTIVE_PENDING")).isEqualTo(1);
+        assertThat(notifications(m.director().userId(), "INCENTIVE_PENDING")).isEqualTo(1);
+        assertThat(notifications(other.manager().signed().userId(), "INCENTIVE_PENDING")).isZero();
+    }
+
+    @Test
     void whenTheEarnerIsTheZoneManagerTheyAreToldOnceThatTheyMayApprove() {
         Mou m = mou();
         wonProspect(m.f().zoneId(), m.f().schoolId(), m.f().manager().signed().userId(), m.adminUserId());

@@ -48,6 +48,10 @@ class DecisionTest extends IncentiveTestBase {
     }
 
     @SuppressWarnings("unchecked")
+    private static List<String> ids(Resp list) {
+        return content(list).stream().map(r -> (String) r.get("id")).toList();
+    }
+
     private static List<String> incentiveActions(Resp detail) {
         return (List<String>) ((Map<String, Object>) detail.map().get("incentive")).get("actions");
     }
@@ -235,17 +239,21 @@ class DecisionTest extends IncentiveTestBase {
     }
 
     @Test
-    void aRejectedIncentiveIsReopenedByTheDirectorOrTheZoneManagerWithAReason() {
+    void aRejectedIncentiveIsReopenedOnlyByTheDirectorWithAReason() {
         Mou m = mou();
         Pending p = pendingOwnedByZoneManagerOf(m);
         String director = m.director().token();
         assertThat(rejectIncentive(director, p.id(), "Wrong School").status()).isEqualTo(200);
         assertThat(incentiveActions(get(API + "/" + p.id(), director))).containsExactly("reopen");
-        assertThat(incentiveActions(get(API + "/" + p.id(), m.managerToken()))).containsExactly("reopen");
+        assertThat(incentiveActions(get(API + "/" + p.id(), m.managerToken()))).isEmpty();
         long v = version(director, p.id());
 
         assertThat(post(API + "/" + p.id() + "/reopen", director, Map.of("version", v)).status()).isEqualTo(400);
-        Resp reopened = post(API + "/" + p.id() + "/reopen", m.managerToken(), Map.of("version", v, "reason", "Rejected by mistake"));
+        // The earner, who is also the School's Zone Manager, cannot undo the Director's rejection.
+        Resp refused = post(API + "/" + p.id() + "/reopen", m.managerToken(), Map.of("version", v, "reason", "Rejected by mistake"));
+        assertThat(refused.status()).as(refused.body()).isEqualTo(403);
+        assertThat(incentiveOf(p.schoolId()).get("status")).isEqualTo("REJECTED");
+        Resp reopened = post(API + "/" + p.id() + "/reopen", director, Map.of("version", v, "reason", "Rejected by mistake"));
 
         assertThat(reopened.status()).as(reopened.body()).isEqualTo(200);
         assertThat(incentiveOf(p.schoolId()).get("status")).isEqualTo("PENDING_APPROVAL");
@@ -253,6 +261,42 @@ class DecisionTest extends IncentiveTestBase {
         assertThat(eventKinds(p.id())).containsExactly("EARNED", "REJECTED", "REOPENED");
         assertThat(post(API + "/" + p.id() + "/reopen", director, Map.of("version", v + 1, "reason", "again")).status()).isEqualTo(409);
         assertThat(approveIncentive(director, p.id()).status()).isEqualTo(200);
+    }
+
+    @Test
+    void aZoneManagerWhoIsNotTheEarnerCannotReopenEither() {
+        Mou m = mou();
+        Fixture other = fixture(m.admin());
+        Pending p = pending(m, other.manager().signed().userId());
+        assertThat(rejectIncentive(m.director().token(), p.id(), "No").status()).isEqualTo(200);
+        long v = version(m.director().token(), p.id());
+
+        assertThat(incentiveActions(get(API + "/" + p.id(), m.managerToken()))).isEmpty();
+        assertThat(post(API + "/" + p.id() + "/reopen", m.managerToken(), Map.of("version", v, "reason", "x")).status()).isEqualTo(403);
+        assertThat(incentiveOf(p.schoolId()).get("status")).isEqualTo("REJECTED");
+    }
+
+    @Test
+    void aManagerOnlyAssignedToTheSchoolIsNotItsZoneManagerAndSeesOnlyTheirOwn() {
+        Mou m = mou();
+        ManagerCtx schoolOnly = newManager(m.admin());
+        assignSchoolManager(m.admin(), m.f().schoolId(), schoolOnly.managerId());
+        Pending others = pendingOwnedByZoneManagerOf(m);
+        Mou second = mou();
+        ManagerCtx earner = newManager(second.admin());
+        assignSchoolManager(second.admin(), second.f().schoolId(), earner.managerId());
+        Pending own = pending(second, earner.signed().userId());
+
+        assertThat(get(API + "/" + others.id(), schoolOnly.token()).status()).isEqualTo(404);
+        assertThat(post(API + "/" + others.id() + "/approve", schoolOnly.token(), Map.of("version", 0)).status()).isEqualTo(404);
+        assertThat(get(API, schoolOnly.token()).body()).doesNotContain(others.id().toString());
+        assertThat(get(API + "/summary", schoolOnly.token()).body()).doesNotContain(m.f().manager().managerId().toString());
+        // an earner who is only the School's Manager sees their own incentive but cannot decide it
+        Resp detail = get(API + "/" + own.id(), earner.token());
+        assertThat(detail.status()).isEqualTo(200);
+        assertThat(incentiveActions(detail)).isEmpty();
+        assertThat(post(API + "/" + own.id() + "/approve", earner.token(), Map.of("version", 0)).status()).isEqualTo(403);
+        assertThat(ids(get(API, earner.token()))).containsExactly(own.id().toString());
     }
 
     @Test

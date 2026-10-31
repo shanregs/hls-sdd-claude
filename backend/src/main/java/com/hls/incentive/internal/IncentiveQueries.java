@@ -168,7 +168,8 @@ public class IncentiveQueries {
         return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 
-    private static Specification<Incentive> narrowed(Filter filter) {
+    private Specification<Incentive> narrowed(Filter filter) {
+        Set<UUID> inZone = filter.zoneId() == null ? Set.of() : access.schoolIdsInZones(Set.of(filter.zoneId()));
         return (root, query, cb) -> {
             List<Predicate> all = new ArrayList<>();
             if (filter.status() != null) {
@@ -178,7 +179,8 @@ public class IncentiveQueries {
                 all.add(cb.equal(root.get("earnerManagerId"), filter.managerId()));
             }
             if (filter.zoneId() != null) {
-                all.add(cb.equal(root.get("zoneId"), filter.zoneId()));
+                // The Zone the School is in now, the same source as the Zone name column.
+                all.add(inZone.isEmpty() ? cb.disjunction() : root.get("schoolId").in(inZone));
             }
             if (filter.month() != null) {
                 all.add(cb.or(
@@ -325,18 +327,18 @@ public class IncentiveQueries {
                     i.getRunMonth(),
                     null,
                     i.getVersion(),
-                    actions(i.getStatus(), decider)));
+                    actions(i.getStatus(), decider, approveGrant && access.director(caller))));
         }
         return rows;
     }
 
-    private static List<String> actions(IncentiveStatus status, boolean decider) {
+    private static List<String> actions(IncentiveStatus status, boolean decider, boolean reopener) {
         if (!decider) {
             return List.of();
         }
         return switch (status) {
             case PENDING_APPROVAL -> List.of("approve", "reject");
-            case REJECTED -> List.of("reopen");
+            case REJECTED -> reopener ? List.of("reopen") : List.of();
             default -> List.of();
         };
     }

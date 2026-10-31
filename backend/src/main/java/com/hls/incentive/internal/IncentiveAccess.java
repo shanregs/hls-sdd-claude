@@ -8,6 +8,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
 /**
  * Who may see and who may decide which incentive (spec 030 FR-006, FR-007, FR-016; Constitution Principle III).
  * Admin and Director see everything. A Manager sees the incentives they earned and those of the Schools in a Zone they
- * manage (or the School they are assigned to). Only the Director and that School's Zone Manager decide; the Zone is read
+ * manage; a School's assigned Manager who is not its Zone Manager sees only their own. Only the Director and that School's Zone Manager decide (only the Director reopens); the Zone is read
  * live from the School, so a change of Zone Manager applies on the next call. Anything outside the scope is not found.
  */
 @Component
@@ -49,12 +50,15 @@ public class IncentiveAccess {
         return scopes.scopeOf(caller.userId(), caller.roles());
     }
 
-    /** True when the caller is the Zone Manager of the School's Zone (or its assigned Manager). */
+    /**
+     * True when the caller is a Zone Manager of the School's current Zone. A Manager merely assigned to the School
+     * (not to its Zone) is not: they see only what they earned themselves.
+     */
     boolean zoneManagerOf(Caller caller, ScopeView scope, UUID schoolId, UUID zoneId) {
         if (!caller.roles().contains(Role.MANAGER)) {
             return false;
         }
-        return scope.schoolIds().contains(schoolId) || (zoneId != null && scope.zoneIds().contains(zoneId));
+        return zoneId != null && scope.zoneIds().contains(zoneId);
     }
 
     boolean zoneManagerOf(Caller caller, Incentive incentive) {
@@ -90,17 +94,25 @@ public class IncentiveAccess {
             return (root, query, cb) -> cb.conjunction();
         }
         ScopeView scope = scope(caller);
+        // Zones are read live from the Schools (as canSee does), not from the Zone stored on the incentive.
+        Set<UUID> liveSchoolIds = schoolIdsInZones(scope.zoneIds());
         return (root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> any = new ArrayList<>();
             any.add(cb.equal(root.get("earnerUserId"), caller.userId()));
-            if (!scope.zoneIds().isEmpty()) {
-                any.add(root.get("zoneId").in(scope.zoneIds()));
-            }
-            if (!scope.schoolIds().isEmpty()) {
-                any.add(root.get("schoolId").in(scope.schoolIds()));
+            if (!liveSchoolIds.isEmpty()) {
+                any.add(root.get("schoolId").in(liveSchoolIds));
             }
             return cb.or(any.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
+    }
+
+    /** The Schools that are in these Zones right now. */
+    Set<UUID> schoolIdsInZones(java.util.Collection<UUID> zoneIds) {
+        Set<UUID> result = new HashSet<>();
+        for (UUID zoneId : zoneIds) {
+            schools.schoolsInZone(zoneId).forEach(s -> result.add(s.id()));
+        }
+        return result;
     }
 
     Optional<SchoolInfo> school(UUID schoolId) {

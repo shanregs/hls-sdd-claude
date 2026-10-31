@@ -29,7 +29,7 @@ Migration `V130__create_incentives.sql`. No foreign keys across modules (ids onl
 | hold_reason | varchar(100) null | |
 | run_id | uuid null | pay run that applied it |
 | run_month | date null | first day of that run's month |
-| zone_id | uuid NOT NULL | the School's Zone when earned (scope filter; refreshed on read for Zone Manager checks) |
+| zone_id | uuid NOT NULL | the School's Zone when earned (informational; scope, filters and Zone Manager checks read the School's live Zone) |
 | version | bigint NOT NULL | optimistic lock |
 | created_at / updated_at | timestamptz | |
 
