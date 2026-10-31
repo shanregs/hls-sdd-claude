@@ -155,7 +155,7 @@ describe("SchoolContractPage (spec 012 US1)", () => {
       name: "Contract in effect",
     });
     const positions = within(contract).getByRole("table", {
-      name: "Positions",
+      name: "Positions, Contract in effect",
     });
     expect(within(positions).getByText("1 (Maths PGT)")).toBeInTheDocument();
     expect(within(positions).getByText("Tara Teacher")).toBeInTheDocument();

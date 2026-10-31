@@ -1,0 +1,3 @@
+$kind: collection
+description: "Substitution (spec 017a): requirements raised for an absent Teacher's duty day, candidates, assign or reassign, release, Manager cover, School informed, the Teacher's own assignments, and the Principal confirmation on a Teacher attendance mark. Needs SUBSTITUTION (View, Edit), MY_SUBSTITUTIONS (View) and TEACHER_ATTENDANCE or ATTENDANCE Edit for the confirmation. Run Password Login first. Collection variables: substitutionId, substitutionVersion, substituteTeacherId, teacherId, date (yyyy-MM-dd). Errors use {reason}: 400 invalid, 403 permission, 404 not found or out of scope, 409 stale version, unavailable Teacher or wrong status."
+order: 17500

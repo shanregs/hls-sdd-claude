@@ -1,0 +1,19 @@
+$kind: http-request
+name: Manager Covers
+description: "Needs Edit. The Manager covers the duty."
+url: "{{baseUrl}}/api/v1/substitutions/{{substitutionId}}/cover"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Manager covers",
+      "version": {{substitutionVersion}}
+    }
+scripts:
+  - type: afterResponse
+    code: "if (pm.response.code < 300) { const j = pm.response.json(); pm.collectionVariables.set('substitutionId', j.id); pm.collectionVariables.set('substitutionVersion', j.version); }"
+    language: text/javascript
+order: 6000

@@ -63,3 +63,13 @@ export function fractionProblem(raw: string): string | null {
   }
   return null;
 }
+
+/**
+ * After a submit that showed field errors, moves the keyboard focus to the first invalid field so a keyboard or
+ * screen-reader user lands on the first problem (its error text is the field's description).
+ */
+export function focusFirstInvalid(form: HTMLElement): void {
+  setTimeout(() => {
+    form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, 0);
+}

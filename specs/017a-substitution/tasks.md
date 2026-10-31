@@ -63,7 +63,7 @@ ArchUnit rules. Run one Maven test class at a time.
 - [X] T023 Dev seed is not needed (no demo data); Postman folder "Substitution"; roadmap rows 017 and 008 (A2); constitution access matrix row
 - [X] T024 Full backend test run and frontend test, lint and build run; record in quickstart-results.md
 - [ ] T025 Manual browser walkthrough and accessibility pass (not done in this run)
-- [ ] T026 Postman folder "Substitution" (not done; endpoints are in contracts/substitution-api.md)
+- [x] T026 Postman folder "017a Substitution" (10 requests from contracts/substitution-api.md)
 
 ## Requirement coverage
 

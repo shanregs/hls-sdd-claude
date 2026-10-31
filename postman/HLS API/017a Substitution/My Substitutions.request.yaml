@@ -1,0 +1,6 @@
+$kind: http-request
+name: My Substitutions
+description: "Needs MY_SUBSTITUTIONS View. The caller's own assignments; the absent Teacher is not shown."
+url: "{{baseUrl}}/api/v1/me/substitutions?from={{date}}&to={{date}}"
+method: GET
+order: 8000

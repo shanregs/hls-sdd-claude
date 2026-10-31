@@ -175,6 +175,13 @@ describe("Salary Structures page tabs", () => {
       screen.getByRole("link", { name: "Pay policy" }),
     ).toBeInTheDocument();
   });
+
+  it("links each tab to a labelled panel", async () => {
+    renderAt("/operations/salary-structures");
+    const tab = await screen.findByRole("tab", { name: "People" });
+    const panel = screen.getByRole("tabpanel", { name: "People" });
+    expect(tab).toHaveAttribute("aria-controls", panel.id);
+  });
 });
 
 describe("Designation defaults tab (spec 013a US1, US4)", () => {

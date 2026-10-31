@@ -1,0 +1,16 @@
+$kind: http-request
+name: Set Principal Confirmation
+description: "Needs TEACHER_ATTENDANCE or ATTENDANCE Edit."
+url: "{{baseUrl}}/api/v1/attendance/teachers/{{teacherId}}/marks/{{date}}/principal-confirmation"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "confirmed": true,
+      "principalName": "Principal Name",
+      "note": "Confirmed by phone"
+    }
+order: 9000

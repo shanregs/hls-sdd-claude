@@ -452,7 +452,7 @@ function ContractCard({
           </Alert>
         ) : (
           <>
-            <Table size="small" aria-label="Positions">
+            <Table size="small" aria-label={`Positions, ${heading}`}>
               <TableHead>
                 <TableRow>
                   <TableCell>Position</TableCell>

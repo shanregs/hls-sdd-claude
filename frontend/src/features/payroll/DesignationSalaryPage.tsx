@@ -33,6 +33,7 @@ import {
   firstOfThisMonthIso,
   MAX_NOTE,
   noteProblem,
+  focusFirstInvalid,
 } from "./validation";
 
 const ROUTE = "/operations/salary-structures";
@@ -174,6 +175,7 @@ export function DesignationSalaryPage() {
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
+            focusFirstInvalid(e.currentTarget);
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>

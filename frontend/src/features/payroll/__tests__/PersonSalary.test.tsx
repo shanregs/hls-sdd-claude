@@ -212,6 +212,8 @@ describe("A Manager's own salary (spec 013a User Story 5)", () => {
     expect(screen.getByText("Enter the amount.")).toBeInTheDocument();
 
     const amount = screen.getByLabelText(/monthly salary/i);
+    // the keyboard focus lands on the first invalid field
+    await waitFor(() => expect(amount).toHaveFocus());
     await user.type(amount, "100.123");
     await user.click(screen.getByRole("button", { name: "Record salary" }));
     expect(

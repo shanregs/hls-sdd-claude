@@ -167,7 +167,7 @@ and when; find the audit entries; see the flag on a designation that people use 
 - [X] T046 [P] Update `docs/spec-roadmap.md`: the 013a row status, amendment A6 to spec 008 (`WorkingCalendar`), and the note that `TeacherDirectory.salaryOn` was added
 - [X] T047 [P] Update `.specify/memory/constitution.md`: a "Salary Structures" row in the Default role access matrix (Admin and Director View and Create; Manager, Teacher and System none), with a patch entry in the Sync Impact Report
 - [X] T048 Run `PayrollModuleRulesTest` and `ApplicationModulesTest` (Spring Modulith verification) and fix any boundary violation; confirm `attendance` and `teacher` tests still pass unchanged
-- [ ] T049 [P] Accessibility pass on the three screens: keyboard order, labels on every form field, error text announced, WCAG 2.2 AA contrast in light and dark themes, no horizontal scroll at phone width
+- [x] T049 [P] Accessibility pass on the three screens: keyboard order, labels on every form field, error text announced, WCAG 2.2 AA contrast in light and dark themes, no horizontal scroll at phone width
 - [ ] T050 Run the full quickstart.md walkthrough and record each step's outcome in `specs/013a-salary-structures/quickstart-results.md`; also time recording a salary (under 1 minute) and finding the salary in effect on a date from its history (under 30 seconds), SC-005
 - [ ] T051 Financial review of the formulas in research.md section 4 against `docs/spec-roadmap.md` decisions D2, D12 and D13 (Constitution Principle IX, Development Workflow item 5); note the outcome in `quickstart-results.md`
 

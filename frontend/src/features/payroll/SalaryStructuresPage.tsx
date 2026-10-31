@@ -46,11 +46,27 @@ export function SalaryStructuresPage() {
         variant="scrollable"
         sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
       >
-        <Tab value="people" label="People" />
-        <Tab value="defaults" label="Designation defaults" />
+        <Tab
+          value="people"
+          label="People"
+          id="salary-tab-people"
+          aria-controls="salary-panel"
+        />
+        <Tab
+          value="defaults"
+          label="Designation defaults"
+          id="salary-tab-defaults"
+          aria-controls="salary-panel"
+        />
       </Tabs>
 
-      {tab === "people" ? <PeopleTab /> : <DesignationDefaultsTab />}
+      <div
+        role="tabpanel"
+        id="salary-panel"
+        aria-labelledby={`salary-tab-${tab}`}
+      >
+        {tab === "people" ? <PeopleTab /> : <DesignationDefaultsTab />}
+      </div>
     </Box>
   );
 }

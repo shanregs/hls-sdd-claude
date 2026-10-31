@@ -33,3 +33,16 @@ backend on a throwaway database. The browser walkthrough was **not** done (see "
   component tests and axe checks only.
 - **Keyboard-only and screen-reader pass** (T043): not done; axe reports no critical violations in either theme.
 - **Full suites after the review fixes**: not re-run on request; the affected classes were (`PositionAssignmentTest`, `RemapTest`, `MappingApiTest`, `ContractApiTest`, `TeacherControllerTest`, `TeacherPlacementServiceTest`, `ApplicationModulesTest`). The full backend (641) and frontend (54 files) suites were green before the review fixes.
+
+## Accessibility pass (T043), code and test review
+
+Done by reading the screens and running the component and axe tests; **nobody used a real keyboard-only session, a screen reader or a phone-width browser**, so those stay as a short manual check inside the quickstart walkthrough (T049).
+
+Checked and fine: every field has a visible label; radio group and checkbox group have a group name; tables have names and header cells; status and approval chips carry their words; error and load messages use `role="alert"` and `role="status"`; the dialogs are labelled by their titles and MUI returns focus to the button that opened them; the row action is "Open contract of {School}".
+
+Fixed:
+- `MouFormDialog`: the "Salary of each position" and "Signatories for the School" blocks had an `aria-label` on a plain element (ignored by screen readers); they are now `role="group"`.
+- `MouFormDialog`: the title and salary pair, and the signatory name, designation and remove button, sat side by side at phone width; they now stack below the small breakpoint.
+- `SchoolContractPage`: each contract card has a table named "Positions", so a screen-reader table list had several identical names; the name now includes the card heading (for example "Positions, Contract in effect").
+
+Tests: `SchoolContractPage.test.tsx` updated for the table name; the touched Vitest files and `src/a11y/a11y.test.tsx` were run alone (see the 013a notes for the commands).
