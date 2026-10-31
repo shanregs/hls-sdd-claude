@@ -82,6 +82,30 @@ const MENU = {
       defaultMonth: "2026-09",
     },
     {
+      key: "margin",
+      title: "Margin",
+      filters: ["ZONE", "SCHOOL"],
+      hasMonthState: true,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
+      key: "collections",
+      title: "Collections",
+      filters: ["ZONE", "SCHOOL"],
+      hasMonthState: false,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
+      key: "school",
+      title: "School",
+      filters: ["ZONE", "SCHOOL"],
+      hasMonthState: true,
+      canExport: true,
+      defaultMonth: "2026-09",
+    },
+    {
       key: "recruitment",
       title: "Recruitment",
       filters: ["SEASON"],
@@ -265,6 +289,37 @@ const PEOPLE_PAGES: Record<string, ReturnType<typeof onePage>> = {
     ],
     [cell(120), notAvailable],
   ),
+  // 014b: a "not matched" cell and a negative margin, a "Not yet due" column, a "not applicable" stage.
+  margin: onePage(
+    "margin",
+    "Margin",
+    "DRAFT",
+    [
+      { key: "fee", label: "Fee", unit: "RUPEES" },
+      { key: "margin", label: "Margin", unit: "RUPEES" },
+    ],
+    [cell(15000), { state: "NOT_MATCHED", value: null }],
+  ),
+  collections: onePage(
+    "collections",
+    "Collections",
+    "NONE",
+    [
+      { key: "outstanding", label: "Outstanding", unit: "RUPEES" },
+      { key: "notYetDue", label: "Not yet due", unit: "RUPEES" },
+    ],
+    [cell(35000), cell(10000)],
+  ),
+  school: onePage(
+    "school",
+    "School",
+    "OPEN",
+    [
+      { key: "placed", label: "Teachers placed", unit: "COUNT" },
+      { key: "stage", label: "Stage", unit: "TEXT" },
+    ],
+    [cell(3), cell("Not applicable")],
+  ),
 };
 
 const saved: string[] = [];
@@ -435,6 +490,44 @@ describe("Reports (spec 014a)", () => {
         ),
       ),
     );
+  });
+
+  it.each([
+    ["margin", /15,000/, "Not matched"],
+    ["collections", /35,000/, /10,000/],
+    ["school", "3", "Not applicable"],
+  ] as const)(
+    "shows the %s report (014b) on the generic page with the Export button",
+    async (key, figure, other) => {
+      grantFor(`/reports/${key}`, ["VIEW", "EXPORT"]);
+      renderPage(key);
+
+      const table = await screen.findByRole("table", { name: "Main" });
+      expect(within(table).getByText(figure)).toBeInTheDocument();
+      expect(within(table).getByText(other)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /export/i })).toBeInTheDocument();
+    },
+  );
+
+  it("shows a negative margin as negative", async () => {
+    authFetch.mockImplementation(async (url: string) =>
+      url.startsWith("/api/v1/reports/margin")
+        ? json(
+            onePage(
+              "margin",
+              "Margin",
+              "APPROVED",
+              [{ key: "margin", label: "Margin", unit: "RUPEES" }],
+              [cell(-2500)],
+            ),
+          )
+        : respond(url),
+    );
+    grantFor("/reports/margin", ["VIEW", "EXPORT"]);
+    renderPage("margin");
+
+    const table = await screen.findByRole("table", { name: "Main" });
+    expect(within(table).getByText(/-.*2,500/)).toBeInTheDocument();
   });
 
   it("says why a recruitment figure is missing instead of showing 0", async () => {
