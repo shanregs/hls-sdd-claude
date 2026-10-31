@@ -6,6 +6,7 @@ import { axe } from "vitest-axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouteGuard } from "../../../app/RouteGuard";
 import { buildMuiTheme, type ThemeMode } from "../../../theme/tokens";
+import { currentMonth } from "../../attendance/monthUtils";
 import { ManagerAttendanceGridPage } from "../ManagerAttendanceGridPage";
 
 const authFetch = vi.fn();
@@ -40,7 +41,8 @@ function json(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body } as Response;
 }
 
-const thisMonth = new Date().toISOString().slice(0, 7);
+// The page works in Asia/Kolkata, so the month must too (a UTC date is the previous month just after midnight IST).
+const thisMonth = currentMonth();
 const DAYS = 30;
 
 const GRID = {

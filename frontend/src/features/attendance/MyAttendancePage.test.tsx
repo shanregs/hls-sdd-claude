@@ -82,7 +82,8 @@ function monthView(locked = false) {
       editableBy: !locked && date === today ? "SELF" : "NONE",
     };
   });
-  const yesterday = days.find((d) => d.date < today);
+  // The day before today, or any other day on the 1st of the month when there is no earlier day in it.
+  const yesterday = days.find((d) => d.date < today) ?? days.find((d) => d.date !== today);
   if (yesterday) {
     yesterday.state = "MARKED";
     yesterday.mark = mark(yesterday.date, "SUPERVISOR");
