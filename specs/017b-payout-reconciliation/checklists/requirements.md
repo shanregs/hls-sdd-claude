@@ -9,7 +9,7 @@
 - [x] All mandatory sections completed
 
 ## Requirement Completeness
-- [x] No [NEEDS CLARIFICATION] markers remain (eight questions settled on recommended defaults, marked pending owner confirmation)
+- [x] No [NEEDS CLARIFICATION] markers remain (Q1 to Q8 answered; N1 to N6 settled on recommended defaults, marked pending owner confirmation)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable and technology-agnostic
 - [x] All acceptance scenarios and edge cases are defined
@@ -22,4 +22,4 @@
 - [x] Success criteria are met by the requirements
 
 ## Notes
-- Assumptions Q1 to Q8 await the owner; see `clarification-questions.md`.
+- Q1 to Q8 answered by the owner (2026-11-01); N1 to N6 assumed pending owner confirmation, see `clarification-questions.md`.

@@ -1,230 +1,252 @@
-# Feature Specification: Substitute Payout Reconciliation
+# Feature Specification: Substitute Teachers: Day Attendance, Day-Rate Pay and Reconciliation
 
 **Feature Branch**: `spec/017b-payout-reconciliation`
 
-**Created**: 2026-11-01
+**Created**: 2026-11-01 (reworked 2026-11-01 after the owner's answers and scope change)
 
-**Status**: Draft. Specified on recommended defaults; open questions are in `clarification-questions.md` and every default is marked "pending owner confirmation" below.
+**Status**: Draft. Q1 to Q8 are answered by the owner (see Clarifications). Six new questions that came out of the rework (N1 to N6) are settled on recommended defaults, marked "assumed, pending owner confirmation", and written in `clarification-questions.md`.
 
-**Input**: User description: "017b-payout-reconciliation: Each live substitute credit from spec 017a becomes a Substitute credit pay adjustment in the next pay run (013b) of the substitute, once per credit, and never inside an approved run. The pay of a substitute day comes from the substitute's own salary (013a). Admin and Director see, for every credit, where it stands (not offered, waiting, held by a draft run, in a run awaiting approval, paid in a run, voided before payment, voided after payment and needing a correction), and a list of mismatches between the days credited and the days paid, per Teacher, School and month. A daily job repairs missed events. A credit voided after payment is never taken back automatically; the Admin makes a Correction. Roadmap row 017 (017b), constitution Principle VI (substitution assignment and payout reconciliation), decisions D2, D7 and D8."
+**Input**: User description: "017b-payout-reconciliation. Substitutes are a special type of Teacher. They have no monthly salary: they are paid only for the days they are engaged on substitution (and attend), otherwise nothing. They are part of the system (record, allocation, attendance, payout) but get no login and no app access at first. Their allocation (017a) and their day attendance are managed by the Zone Managers of the Zone (Admin and Director also, per existing role rules). Pay for a day is the daily rate of the substitute's designation (005a). Pay is made monthly inside the 013b payroll run: after the month has ended and the substitute's attendance for it is locked, each substitute with attended days gets one pay line for the month (days times rate, no base salary), processed by the Admin and approved by the Director like other pay. A day cancelled or corrected after the month's run was approved is never taken back automatically: it is flagged 'correction needed' and the Admin raises a Correction. Everything already on record is back-paid. A Manager who covers a class personally is unpaid. School billing and margin are unchanged. Roadmap row 017 (017b), constitution Principle VI, decisions D2, D7, D8."
 
 ## Clarifications
 
-### Session 2026-11-01 (assumptions pending owner confirmation)
+### Session 2026-11-01: owner answers to Q1 to Q8 and the scope change
 
-Nobody was available to answer, so every question below is settled on its recommended default. Each is also written in
-`clarification-questions.md` with the alternatives. If the owner picks another option, this spec, the plan and the tasks change as
-that file says.
+- Scope change (decided by the owner): a substitute is a special type of Teacher with **no monthly salary**, paid only for engaged and attended days. A substitute is in the system (record, allocation, attendance, payout) but has **no login and no app access** at first. The Zone Managers of the Zone manage their allocation and their day attendance; Admin and Director may do the same under the existing role rules. There is no Teacher-facing view for a substitute; the former "Teacher sees own pay" story is replaced by a Zone Manager and Admin view of a substitute's days and pay.
+- Q1 (decided): pay per day comes from the **designation** (005a): each designation can carry a daily rate, and a day's pay is that rate. The rate is set on a screen (Salary Structures, Designation day rates), by Admin or Director, with an effective date and a kept history, the same convention as the suggested salary of a designation (013a). There is no per-substitute rate and no flat rate.
+- Q2 (decided): paid only for days actually engaged and attended. No salary, no "extra on top" logic. A substitute with no attended days in a month gets nothing.
+- Q3 (decided): paid monthly inside the 013b run. After the month has ended and the substitute's attendance for it is locked, each substitute with attended days gets a pay line in that month's run (no base salary, days times designation rate). The Admin processes and the Director approves like other pay.
+- Q4 (decided): a day cancelled or corrected after the month's payroll was approved is never taken back automatically; the day is flagged "correction needed" and the Admin raises a Correction in 013b.
+- Q5 (decided): **back-pay everything already recorded**. There is no go-live month setting. Every engaged day on record is paid. Months whose run was already approved are handled as in User Story 6: paid through a supplementary run per original month (013b mechanism), listed by original month. Risk and options are in the Assumptions.
+- Q6 (decided): a Manager who covers a class personally is unpaid; the cover is recorded for reporting only (017a already does this).
+- Q7 (decided): School billing (022) and the margin report (014b) are unchanged.
+- Q8 (decided): one pay line per substitute per month. The payslip shows the number of days and the rate (and, if the rate changed inside the month, one row per rate).
 
-- Q1: How is the pay for one substitute day worked out? -> A (assumed, pending owner confirmation): the substitute's own daily value, the same value the pay run already uses for one day of that Teacher on that date (salary in effect that day divided by the month's working days, 013a), times the credit's day value (0.50 or 1.00), rounded as the pay run rounds. No new rate table.
-- Q2: Is it extra pay or does it replace something? -> A (assumed, pending owner confirmation): extra pay on top of the month's salary, a Substitute credit adjustment line. The substitute's own attendance and salary are untouched.
-- Q3: Which pay run pays it, and when is a credit offered? -> A (assumed, pending owner confirmation): a credit is offered once its date is in a month that has ended and whose attendance is locked; the next draft run that includes the substitute takes it (the rule 013b already has for waiting adjustments), whatever the credit's month.
-- Q4: What if a credit is changed or voided after a run took it? -> A (assumed, pending owner confirmation): before the run is approved the line is released (draft) or the change waits (awaiting approval); after approval nothing is taken back automatically, the credit shows "Voided after payment, correction needed" and the Admin records a Correction adjustment.
-- Q5: Do credits created before go-live, or in months already approved, get paid? -> A (assumed, pending owner confirmation): only credits dated in months from the go-live month (a system setting) are offered; earlier credits are listed as "before reconciliation start" and never paid by this feature.
-- Q6: Does the Manager covering a class personally earn anything? -> A (assumed, pending owner confirmation): no. Only an assigned substitute Teacher is credited (017a); a Manager's pay is not touched.
-- Q7: Is the School billed for the substitute day? -> A (assumed, pending owner confirmation): no. School billing (022) and the margin report (014b) are not changed here; whether the School pays for cover is a separate business decision.
-- Q8: One adjustment per credit or one per month? -> A (assumed, pending owner confirmation): one adjustment per credit, so each line on the payslip and in reconciliation traces to one School and one date.
+### New assumptions from the rework (pending owner confirmation; see clarification-questions.md N1 to N6)
+
+- N1: "Substitute" is a Teacher attribute (engagement type Substitute), set when the Teacher record is created or changed by Admin or Director. Designations are unchanged; a designation of kind Teacher may carry a daily rate.
+- N2: Only substitute-type Teachers can be assigned to cover a class. Regular Teachers who happen to be free are no longer offered (they are on a salary). This amends 017a.
+- N3: A substitute's day attendance is kept by this feature (a record per engaged day), not in the 008 monthly grid, and is locked per substitute and month by Admin or Director.
+- N4: Back-pay of already-approved months uses the existing 013b supplementary run, one per original month.
+- N5: Credits already on record for Teachers who are not marked as substitutes are listed for the Admin to settle before go-live; they are not paid until the Teacher is marked a substitute. Existing credits dated before go-live count as attended (source "migrated from credit") so they can be back-paid, flagged for review.
+- N6: The substitute pool is shared across Zones (any Zone Manager can assign any substitute); a Zone Manager sees days and pay only for substitute days at Schools in their own Zone.
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - A substitute day is paid in the next pay run (Priority: P1)
+### User Story 1 - A substitute is engaged, attends, and is paid for the month (Priority: P1)
 
-A Zone Manager assigns a Teacher to cover an absent colleague's class (017a). Once that month has ended and its attendance is
-locked, the credit reaches payroll by itself: the substitute's next pay run, when computed, carries a Substitute credit line for
-that day (School, date, day value, amount). Nobody types it. When the Director approves the run the credit shows "Paid in
+A Zone Manager allocates a substitute (a Teacher of type Substitute) to cover a class (017a). On the day, the Zone Manager marks the substitute
+Present. When the month has ended and the substitute's month is locked, the Admin starts the month's pay run: the substitute gets one line with
+the days attended times the rate of their designation, no base salary, no loss of pay. The Director approves, and each day shows "Paid in
 run <month>".
 
-**Why this priority**: This is the whole point of the spec. Without it a substitute works a day and is never paid, and the credit
-data of 017a is dead data.
+**Why this priority**: This is the whole point: a substitute earns only for engaged days, and is paid through the same run, approval and payslip as everyone else.
 
-**Independent Test**: Assign a substitute for a full day in a past, locked month, compute the run, see a line of one day's value on
-the substitute, approve the run, and see the credit "Paid in run" with the run's month and the amount.
+**Independent Test**: Allocate a substitute for three days (2 full, 1 half) in a past month, mark all Present, lock the month, compute the run, see
+one line of 2.5 days times the designation rate, approve, and see each day Paid in run.
 
 **Acceptance Scenarios**:
 
-1. **Given** a live credit of 1.00 day dated in a locked month, **When** the Admin computes the next run that includes the substitute, **Then** the substitute's line shows a Substitute credit adjustment equal to one day's value for that date, naming the School and date.
-2. **Given** a credit of 0.50 day, **When** the run is computed, **Then** the amount is half of one day's value, rounded as the run rounds.
-3. **Given** a credit dated in a month that has not ended or is not locked, **When** anyone looks at reconciliation, **Then** it shows "Waiting for month lock" and no adjustment exists.
-4. **Given** a credit already taken by a draft run, **When** the Admin computes the run again, **Then** the credit appears once, never twice.
-5. **Given** an approved run that carried the credit, **When** the Director looks at the credit, **Then** it shows "Paid in run <month>" with the run, amount and date approved.
-6. **Given** a Teacher assigned to cover on a day they are also marked absent, **When** credits are read, **Then** the credit follows whatever 017a says is live; this feature adds no rule of its own about who may be credited.
+1. **Given** a substitute with 2.5 attended days in a locked month and a designation rate of ₹800, **When** the Admin computes the month's run, **Then** the substitute has one line with earned pay ₹2,000, no deduction, and the line's working lists each day (School, date, day value) and the rate.
+2. **Given** a substitute with a day allocated but marked Absent (did not come), **When** the run is computed, **Then** that day is not paid and shows "Did not attend".
+3. **Given** a substitute with no attended day in the month, **When** the run is computed, **Then** they have no line (nothing is paid, not even zero).
+4. **Given** a month that is not yet locked for the substitute, **When** the run is computed, **Then** the substitute is listed as "not ready: attendance not locked" and does not block the others.
+5. **Given** a designation whose rate changed on 15/11/2026, **When** a month has days on both sides, **Then** each day uses the rate in effect on its date, and the line shows one row per rate.
+6. **Given** a substitute whose designation has no daily rate in effect on a day, **When** the run is computed, **Then** the substitute is listed "cannot pay: no day rate for designation" with the designation name and the run continues.
+7. **Given** a substitute day marked Present for a half day (day value 0.50), **When** paid, **Then** it counts 0.5 of the rate.
+8. **Given** an approved run, **When** it is looked at, **Then** the substitute's days are frozen in it and cannot change.
 
 ---
 
-### User Story 2 - Admin and Director see every credit and where it stands (Priority: P1)
+### User Story 2 - The Zone Manager records the substitute's day attendance (Priority: P1)
 
-Under PAYROLL & FINANCE → Substitute Payouts, the Admin or Director sees a list of substitute credits for a month (or range)
-with Teacher, School, date, day value, amount and a status (the full list is FR-007). Totals per Teacher, School and month show
-days credited, days paid and the difference.
+A substitute has no login and does not mark themselves. The Zone Manager opens OPERATIONS → Substitutions → a requirement (or the day list "Substitute attendance") and marks each assigned day Present or Absent (did not come). Admin and Director can do the same for any School. Marks can be corrected until the substitute's month is locked, and each change is recorded with who and when.
 
-**Why this priority**: Payroll people must be able to prove that every covered day was paid once, and find the ones that were not.
+**Why this priority**: Without attendance there is no pay; attendance is the evidence that the day was worked.
 
-**Independent Test**: With one credit in each state, open the list and filter by status, Teacher, School and month; each credit shows the
-right status and the totals add up to the rows.
+**Independent Test**: As the Zone A Manager, mark a Zone A substitute day Present; as the Zone B Manager, try the same day and get "not found"; correct it to Absent; see the history.
 
 **Acceptance Scenarios**:
 
-1. **Given** credits in several states, **When** the Admin opens the screen for a month, **Then** each credit shows its status, and filters by Teacher, School, Zone, month and status work.
-2. **Given** the month's credits, **When** the totals are shown, **Then** days credited equals days paid plus days in each unpaid state, per Teacher, School and month, and the sum of rows equals the footer.
-3. **Given** any list, **When** the user exports, **Then** a CSV with the same rows and filters downloads, with formula-safe cells, dates DD/MM/YYYY and amounts in Rupees.
-4. **Given** a Zone Manager, **When** they open the screen, **Then** they see only credits for Schools in their Zone, read-only.
-5. **Given** a user without the right, **When** they call the data, **Then** it is refused and the item is not in their menu.
+1. **Given** an assigned day in the past or today, **When** the Zone Manager of that School's Zone marks it Present, **Then** it is saved with who and when, and the day shows "Attended".
+2. **Given** a future date, **When** anyone tries to mark it, **Then** it is refused.
+3. **Given** a substitute's month that is locked, **When** anyone tries to mark or change a day, **Then** it is refused until an Admin or Director reopens that substitute-month with a reason.
+4. **Given** a Manager of another Zone, **When** they try to mark or view, **Then** the answer is "not found".
+5. **Given** a substitute, **When** they would try to sign in or mark themselves, **Then** there is no account and no way in: substitutes have no login and the mobile and web self-marking paths refuse them.
+6. **Given** a day whose allocation is cancelled (017a), **When** the Zone Manager looks, **Then** the day is no longer markable and shows "Cancelled".
 
 ---
 
-### User Story 3 - Mismatches are listed and can be acted on (Priority: P1)
+### User Story 3 - Admin, Director and Zone Manager see every day and where it stands (Priority: P1)
 
-A Mismatches tab lists every credit that cannot be paid or whose payment no longer matches, each with the reason and the next step:
-the substitute is not on the pay run (not an active payroll Teacher, no salary in effect, no divisor for that date), the credit was
-changed or voided after a run took it (draft: released; awaiting approval: waits; approved: correction needed), the amount no
-longer equals what the pay rules now give, or the run that took it was cancelled. For "correction needed" the Admin can start a
-Correction adjustment from the row, with the amount and reason prefilled and editable, and it is linked to the credit.
+Under PAYROLL & FINANCE → Substitute Payouts (and the substitute's record), Admin and Director see per substitute and month: days allocated, days attended, days paid, the rate, the amount, and a status per day; the Zone Manager sees the days at Schools of their own Zone. Day status: Allocated, Attended, Did not attend, Cancelled, Locked and waiting for the run, In draft run, In a run awaiting approval, Paid in run, Cannot pay (with reason), Back-pay waiting, Cancelled or corrected after payment (correction needed), Correction raised, Corrected. Totals per substitute, School and month show days allocated, attended and paid. CSV export.
 
-**Why this priority**: Money questions after approval are where trust is lost. A visible list with a clear next step closes the loop
-that 013b left open.
+**Why this priority**: Payroll people must prove that every engaged day was paid once, and find the ones that were not.
 
-**Independent Test**: Void a credit after its run was approved; see it under Mismatches as "Voided after payment, correction needed" with
-the amount paid; start the Correction from the row; see it as a waiting Correction adjustment in payroll, and the row marked "Correction
-raised" until the next run applies it.
+**Independent Test**: With days in each state, open the screen, filter, and see statuses and totals that add up; export the CSV and compare.
 
 **Acceptance Scenarios**:
 
-1. **Given** a substitute with no salary in effect on the credit date, **When** reconciliation runs, **Then** the credit is a mismatch "cannot be priced: no salary in effect" and no adjustment is made; once a salary exists, the next reconcile offers it.
-2. **Given** a credit voided (substitute changed, absence withdrawn) while its adjustment is waiting or held by a draft run, **When** reconciliation runs, **Then** the adjustment is withdrawn or released, and the credit shows "Voided before payment".
-3. **Given** a credit voided while its run awaits approval, **When** reconciliation runs, **Then** it shows "Voided, run awaiting approval" and, once the run is approved, becomes "Voided after payment, correction needed" (or, if the run is returned and recomputed, "Voided before payment").
-4. **Given** a credit voided after the run was approved, **When** the Admin opens the row, **Then** the amount paid, the run and a "Raise correction" action (Admin only) are shown, and nothing is changed automatically.
-5. **Given** a correction raised from a row, **When** it is applied by a later approved run, **Then** the mismatch is marked resolved with the run's month.
-6. **Given** a substitute whose line in the run is "cannot pay" (013b: for example no salary or an incomplete month), **When** the run is computed, **Then** the credit stays "Waiting for next run" with the run's reason shown as a mismatch; this feature adds no pay-hold of its own (013b records payment status after approval).
+1. **Given** days in several states, **When** the Admin opens a month, **Then** each day shows its status; filters by substitute, School, Zone, month and status work.
+2. **Given** a month, **When** totals are shown, **Then** days allocated equals attended plus did-not-attend plus cancelled plus not yet marked, and attended equals paid plus each unpaid state, per substitute, School and month; rows sum to the footer.
+3. **Given** the list, **When** exported, **Then** a CSV with the same filters downloads, formula-safe cells, dates DD/MM/YYYY, amounts in Rupees.
+4. **Given** a Zone Manager, **When** they open the screen, **Then** they see only days at Schools of their Zone, read-only except marking attendance.
+5. **Given** a substitute's record, **When** Admin or Director opens it, **Then** the days and pay history of that substitute are shown (the view that replaces the former Teacher view).
 
 ---
 
-### User Story 4 - A Teacher sees their own substitute pay (Priority: P2)
+### User Story 4 - Mismatches, cancellations after payment and Corrections (Priority: P1)
 
-A Teacher opens My Substitutions (017a) and sees, beside each day they covered, whether it has been paid: "Waiting", "In your
-next payslip" or "Paid in <month> payslip", with the amount only once the run is approved. They see nothing of other Teachers
-and not the absent Teacher's name.
+A Mismatches tab lists every day that cannot be paid or whose payment no longer matches, each with reason and next step: no rate for the designation; substitute not marked as substitute type, not Active or exited; day cancelled or corrected after the run took it (draft: the line is recomputed; awaiting approval: waits; approved: correction needed); amount differs from what the rate gives now; back-pay waiting for a supplementary run. For "correction needed" the Admin starts a Correction from the row with amount and reason prefilled and editable, linked to the day.
 
-**Why this priority**: It answers the Teacher's first question without a call to the Admin, but payroll works without it.
+**Why this priority**: Money questions after approval are where trust is lost.
 
-**Independent Test**: As the substitute, open My Substitutions before and after the run is approved and see the status change; as another Teacher,
-see none of it.
+**Independent Test**: Cancel a day after its run was approved; see "Cancelled or corrected after payment, correction needed" with the amount paid; raise the Correction; see it in 013b and the row "Correction raised", then "Corrected" when a run applies it.
 
 **Acceptance Scenarios**:
 
-1. **Given** a substitute with credits in several states, **When** they open My Substitutions, **Then** each day shows its pay status in plain words, and the amount only for an approved run.
-2. **Given** a draft or awaiting-approval run, **When** the Teacher looks, **Then** no amount is shown (the run may change).
-3. **Given** another Teacher's credit, **When** requested by id, **Then** the answer is not found.
+1. **Given** a day cancelled or changed to Absent while the run is a draft, **When** the run is recomputed, **Then** the line no longer includes it (013b recompute), and the day shows "Cancelled before payment".
+2. **Given** the same change while the run awaits approval, **When** shown, **Then** it is "Changed, run awaiting approval"; if the Director returns the run, recompute drops it; if approves, it becomes "correction needed".
+3. **Given** the change after approval, **When** the Admin opens the row, **Then** the paid amount, the run and "Raise correction" (Admin) are shown; nothing is changed automatically.
+4. **Given** a correction raised, **When** a later approved run applies it, **Then** the row becomes Corrected with that run's month.
+5. **Given** a substitute designation without a day rate, **When** a rate with an earlier effective date is added later, **Then** the next reconcile clears the mismatch and the day becomes payable (a supplementary or next run).
 
 ---
 
 ### User Story 5 - Missed events are repaired and everything is audited (Priority: P2)
 
-A daily job compares live credits with the adjustments payroll holds and fixes any gap (a credit never offered, an adjustment
-whose credit was voided, a duplicate), writing what it did. Every offer, withdrawal, repair and raised correction is audited with
-who or what did it.
+A daily job compares allocations, day attendance and paid days, repairs gaps (a new allocation without a day record, a cancelled allocation still markable, run data not yet reflected), and writes what it did. Every mark, lock, reopen, status change and correction is audited with who or what did it.
 
-**Why this priority**: Events can be lost; money must not depend on perfect delivery. It is secondary to the happy path.
-
-**Independent Test**: Remove the offer for a live credit directly in the test data and run the job; the offer comes back once, and a second run changes nothing.
+**Independent Test**: Delete a day record in test data and run the job; it is recreated once; a second run changes nothing.
 
 **Acceptance Scenarios**:
 
-1. **Given** a live credit with no adjustment in a locked month, **When** the job runs, **Then** it is offered once and the repair is recorded.
-2. **Given** an adjustment whose credit is no longer live and whose run is not approved, **When** the job runs, **Then** the adjustment is withdrawn and the credit shows "Voided before payment".
-3. **Given** the job runs twice in a row, **When** the second finishes, **Then** nothing changed and no duplicate exists.
-4. **Given** any change by this feature, **When** the Director opens the audit, **Then** it names the credit, the old and new status, the amount, and the actor or "reconcile job".
+1. **Given** a live allocation with no day record, **When** the job runs, **Then** one is created, recorded as a repair.
+2. **Given** an approved run whose event was missed, **When** the job runs, **Then** the days it carried become Paid in run.
+3. **Given** the job runs twice, **When** the second ends, **Then** nothing changed.
+4. **Given** any change, **When** the Director opens Change History, **Then** it names the day, old and new value, and the actor or "reconcile job".
+
+---
+
+### User Story 6 - Back-pay of everything already recorded (Priority: P1)
+
+At go-live, every engaged day already on record is paid. Days in a month whose run is still open (not approved) are paid in that month's run. Days in months whose run was already approved are listed "Back-pay waiting" by original month; for each such month the Admin starts a supplementary run (013b) that contains only the substitutes with unpaid attended days of that month. Existing credits (from 017a) dated before go-live are brought in as attended (source "migrated from credit") and flagged for the Admin to review; credits for Teachers not marked as substitutes are listed for settling first.
+
+**Why this priority**: The owner asked for everything on record to be paid; leaving old days unpaid breaks trust in the first run.
+
+**Independent Test**: Seed credits in an approved month and an open month; run the go-live migration; see migrated days; compute the open month's run; start the supplementary run for the approved month; all days Paid in run with their original months shown.
+
+**Acceptance Scenarios**:
+
+1. **Given** credits on record before go-live, **When** the migration runs, **Then** one day record exists per credit, attendance "Attended (migrated)", flagged for review, and none is counted twice.
+2. **Given** a credit for a Teacher who is not a substitute, **When** the migration runs, **Then** it is listed under "settle first" and not paid until the Teacher is marked a substitute and the Admin releases it.
+3. **Given** a month whose primary run is approved and which has unpaid attended substitute days, **When** the Admin looks at 013b, **Then** a supplementary run for that month is available and contains exactly those substitutes (013b rule).
+4. **Given** all back-pay supplementary runs approved, **When** reconciliation runs, **Then** every migrated day is Paid in run with its original month and the run month.
 
 ### Edge Cases
 
-- A credit is moved to another substitute after the first one was offered: the first is voided and handled as in User Story 3, the new one is a new credit and is offered on its own.
-- A half-day absence with two substitutes (0.50 each, 017a): two credits, two lines.
-- The substitute's salary changes mid-month: the day's value uses the salary in effect on the credit date, as the pay run does.
-- The substitute left the organization before the run: the credit is a mismatch "not on the pay run"; the Admin decides outside the system or adds a supplementary run (013b).
-- A run is cancelled or returned: its credits go back to "Waiting for next run" with no change of amount unless the pay rules now give another.
-- The amount the pay rules give changes between offer and run (a salary revision applied late): the offer is refreshed while it is unapplied; a difference after approval is a mismatch, not a silent change.
-- A credit of zero amount (zero salary): shown as a mismatch "nothing to pay", never offered.
-- Two credits for the same substitute on the same date in different Schools (day values add up to at most 1.00, 017a): two lines.
-- The month of a credit is already approved before go-live (Q5): "Before reconciliation start", no adjustment.
-- The reconciliation list is large: paged, with totals computed on the whole filter, not the page.
-- The user holds both Admin and Director roles: they may do everything either may; the run that applies a correction they raised still follows the 013b rule that the submitter cannot approve.
+- A substitute is allocated at two Schools on one date (day values add to at most 1.00, 017a): two days, both markable, both paid by value.
+- A half-day allocation marked Present: pays 0.5 of the rate.
+- A substitute is changed on a requirement after being marked Present: the first day becomes Cancelled (reason "substitute changed"); if the month was paid, "correction needed".
+- A substitute exits or becomes inactive: days already attended before exit are still paid; no new allocation is possible (017a availability).
+- A designation is changed for a substitute: the designation in effect on each day's date gives the rate (designation history, 005a).
+- A substitute's month is reopened for correction by Admin or Director with a reason: the run line is recomputed if the run is a draft; if approved, correction needed.
+- An Absent mark on an allocated day: the 017a requirement stays Assigned; Manager may release and re-assign (017a); this feature does not change the requirement.
+- Rate is zero or negative: refused when entered; a missing rate is a mismatch.
+- A Manager covers personally: no day record is made; nothing is paid; reporting continues from 017a.
+- Regular Teachers (salaried) who covered before this change are not paid here (N5).
+- A user holds both Admin and Director roles: may do everything either may; the 013b rule that the submitter cannot approve still applies.
+- Large lists are paged; totals are for the whole filter.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-**Offer to payroll**
+**Substitute as a Teacher type (amends 005, 017a, 008, 013a, 013b, identity)**
 
-- **FR-001**: The system MUST offer each live substitute credit (017a) to payroll exactly once as a Substitute credit adjustment for the substitute, carrying the School, the date, the day value and the amount, identified by the credit so that a repeat never creates a second.
-- **FR-002**: The system MUST offer a credit only when its date falls in a month that has ended and whose attendance is locked (013b rule) and on or after the go-live month (Q5); before that it is shown with the reason and no adjustment exists.
-- **FR-003**: The amount MUST be the substitute's value for one day on the credit date, as the pay rules already compute it (013a), times the credit's day value, rounded as the pay run rounds. The system MUST NOT keep its own rate table. If the pay rules cannot give a value, the credit is a mismatch with their reason and nothing is offered.
-- **FR-004**: The system MUST NOT create, change or remove anything in an approved run. A draft run takes waiting offers at compute and releases them on return or cancel; an approved run applies them (013b behaviour, unchanged).
-- **FR-005**: The adjustment kind Substitute credit MUST be created only by this feature; manual recording of that kind stays refused (013b rule), with the reason text saying it arrives through this feature.
-- **FR-006**: The payslip and the run line MUST show each Substitute credit with School, date and day value (the label already reserved by 013b).
+- **FR-001**: A Teacher MUST have an engagement type, Regular (default) or Substitute. Only Admin and Director set it (Teacher record rights of spec 005). A Substitute has no placement-based attendance, no monthly salary, and MUST NOT be a payroll person of the salary kind.
+- **FR-002**: A Substitute MUST NOT be given a login: no user account is created or linked, no OTP sign-in is possible, and the self-service paths (My Attendance, mobile attendance, notifications to the person) MUST refuse them. Existing Teachers who are turned into Substitutes MUST have any account link cleared or disabled.
+- **FR-003**: Only Substitute-type Teachers with status Active MUST be offered and accepted as substitutes in 017a (server re-checks). Regular Teachers are not offered.
+- **FR-004**: 017a notifications addressed to the substitute (assigned, ended) MUST go to the Zone Manager of the School instead, since the substitute has no login.
+
+**Designation daily rate**
+
+- **FR-005**: A designation of kind Teacher MAY carry a daily rate, recorded with an effective date and kept as append-only history, edited by Admin and Director on Salary Structures → Designation day rates, with audit. The rate must be above zero.
+- **FR-006**: The rate for a day MUST be the rate in effect on that day for the designation the substitute held on that day (005a history). There is no per-substitute rate and no flat rate.
+
+**Day attendance**
+
+- **FR-007**: For every live allocation (017a credit) the system MUST keep one substitute day record: substitute, School, date, day value, attendance (Not marked, Present, Absent), who marked and when.
+- **FR-008**: Admin, Director and the Zone Manager of the School's Zone MUST be able to mark or correct a day (Present or Absent) for dates up to today, until the substitute-month is locked. A substitute cannot mark themselves.
+- **FR-009**: Admin and Director MUST be able to lock a substitute's month after it has ended, only when every live day of it is marked, and to reopen it with a reason; every step is audited. A locked month refuses marks.
+- **FR-010**: When 017a ends an allocation (substitute changed, released, absence withdrawn, Manager covers), the day record MUST become Cancelled with the reason and can no longer be marked or paid.
+
+**Pay**
+
+- **FR-011**: The month's pay run (013b) MUST include, for each Substitute with at least one Present day in a locked month, exactly one line: earned pay equal to the sum over Present days of (day value times the rate in effect that day), rounded as the run rounds, no deduction, no base salary. A Substitute with no Present day has no line.
+- **FR-012**: The line's frozen working MUST list each day (School, date, day value, rate) and the payslip MUST show the number of days and the rate (one row per rate if it changed).
+- **FR-013**: A Substitute who cannot be paid (month not locked, designation without a rate, not Active type, no designation) MUST be listed with the reason and MUST NOT block the run (013b rule).
+- **FR-014**: The system MUST NOT change an approved run. A day marked Present after the primary run is approved is paid through a supplementary run (013b) for that month.
+- **FR-015**: Back-pay (User Story 6): every Present or migrated day not yet paid MUST be payable; months with an approved run use a supplementary run per original month. There is no go-live-month setting.
+- **FR-016**: A Manager covering personally MUST create no day record and no pay.
 
 **Reconciliation**
 
-- **FR-007**: The system MUST show for every credit exactly one status from: Before reconciliation start; Waiting for month lock; Cannot be priced (mismatch); Waiting for next run; In draft run; In a run awaiting approval; Paid in run; Voided before payment; Voided, run awaiting approval; Voided after payment, correction needed; Correction raised; Corrected.
-- **FR-008**: The system MUST update a credit's status and the offer when 017a changes or voids the credit (event), and again by the daily job if the event was missed.
-- **FR-009**: For a credit voided or changed while its offer is waiting or held by a draft run, the system MUST withdraw the offer (or replace it with the new amount). While the run awaits approval it MUST wait. After approval it MUST NOT touch the run and MUST mark the credit "Voided after payment, correction needed" with the amount paid.
-- **FR-010**: The system MUST total, per Teacher, School and month, the days credited, the days paid (credits whose adjustment was applied), the days still unpaid by state and the amount paid, such that credited equals paid plus unpaid for the same filter.
-- **FR-011**: The Mismatches view MUST list: credits that cannot be priced; credits whose substitute is not on the pay run (reason from payroll); credits voided or changed after payment; credits whose applied amount differs from what the pay rules give now; and credits whose offer is missing past the next run. Each row MUST show the reason and the next step.
-- **FR-012**: An Admin MUST be able to raise a Correction adjustment (013b kind Correction) from a "correction needed" row, with the amount (the paid amount negated, or the difference) and a reason prefilled, both editable; the correction is linked to the credit, uses the existing manual-correction rules (013b), and the row becomes "Correction raised", then "Corrected" when applied.
-- **FR-013**: The system MUST NOT take money back automatically in any case.
+- **FR-017**: Every day MUST show exactly one status from: Allocated (not marked), Attended, Did not attend, Cancelled, Locked and waiting for run, In draft run, In a run awaiting approval, Paid in run, Cannot pay (reason), Back-pay waiting, Changed (run awaiting approval), Cancelled or corrected after payment (correction needed), Correction raised, Corrected.
+- **FR-018**: The system MUST total per substitute, School and month: days allocated, attended, paid and each unpaid state, and the amount paid, so that attended equals paid plus unpaid for the same filter.
+- **FR-019**: The Mismatches view MUST list days that cannot be paid, days changed or cancelled after payment, days whose paid amount differs from what the rates give now, and back-pay waiting, each with reason and next step.
+- **FR-020**: An Admin MUST be able to raise a Correction (013b kind Correction) from a "correction needed" row with amount and reason prefilled and editable, linked to the day. The system MUST NOT take money back automatically.
+- **FR-021**: A daily reconcile job MUST repair missing day records, mark days paid from approved runs and be idempotent; every repair is recorded.
 
-**Screens, roles, data scope**
+**Screens, roles, scope, audit**
 
-- **FR-014**: A new PAYROLL & FINANCE item "Substitute Payouts" MUST show the list, totals, mismatches and detail of a credit (including its history of statuses), with filters by month or range, Teacher, School, Zone and status, paged and sortable.
-- **FR-015**: The list and mismatches MUST export as CSV with the filters in force; cells beginning with a formula character are neutralised; dates DD/MM/YYYY, amounts as numbers in Rupees (the screen shows Indian grouping).
-- **FR-016**: Access MUST follow the permission matrix: Admin and Director View and Export org-wide; only the Admin raises a correction (Edit); a Manager views credits of Schools in their own Zone (Zone Manager), read-only; a Teacher sees only their own pay status inside My Substitutions (017a), with no new menu; System has none. Out-of-scope items answer "not found".
-- **FR-017**: Server-side checks MUST apply on every call; the menu follows the grants and the UI shows only the actions the server allows.
-
-**Reliability and audit**
-
-- **FR-018**: A daily reconcile job MUST bring offers into line with live credits (offer missing, withdraw stale, refresh unapplied amount) and MUST be idempotent. It MUST record each repair.
-- **FR-019**: Every offer, withdrawal, refresh, status change by event, repair and raised correction MUST write an audit entry (Principle I) naming the credit, the old and new status, the amount and the actor or "reconcile job". The status history is append-only.
-- **FR-020**: Concurrent runs of the job and events on the same credit MUST NOT double-offer; the offer is idempotent per credit.
-- **FR-021**: Payroll MUST NOT depend on this feature's module, and this feature MUST read credits only through the 017a public interface and payroll only through its public interface (Principle VII).
+- **FR-022**: A PAYROLL & FINANCE item "Substitute Payouts" shows list, totals, mismatches, detail and history, with filters (month, substitute, School, Zone, status), paged and sortable; the substitute's record also shows their days and pay. CSV export with formula-safe cells, DD/MM/YYYY dates, Rupee amounts.
+- **FR-023**: Access: Admin and Director View, Edit (mark), Approve (lock and reopen) and Export org-wide; only Admin raises a Correction; a Manager (Zone Manager) Views and marks days at Schools of their own Zone only, never locks, never raises corrections; Teacher and System have none (a substitute has no access at all). Out-of-scope items answer "not found". The server re-checks every call.
+- **FR-024**: Every mark, correction of a mark, lock, reopen, status change, repair, migration and raised Correction MUST write an audit entry naming the day, old and new value, and the actor or "reconcile job"; day history is append-only.
+- **FR-025**: Payroll MUST NOT depend on the substitution module; payroll reads the days through a port that payroll owns and substitution implements (Principle VII).
 
 ### Key Entities *(include if feature involves data)*
 
-- **Credit payout record**: one per 017a credit: credit id, substitute, School, absent Teacher (internal only), date, day value, amount offered, status, run and month paid in, the adjustment reference, reason of the mismatch, timestamps. Never shown to the substitute with the absent Teacher's name.
-- **Payout event**: append-only history of status changes of a credit payout record, with actor.
-- **Correction reference**: a field on the credit payout record naming the Correction adjustment raised from it (no separate table).
-- **Substitute credit adjustment** (013b, existing): the line in the run, created through the new intake; its source reference is the credit.
+- **Teacher engagement type**: Regular or Substitute, on the Teacher record.
+- **Designation day rate**: daily amount for a Teacher designation from an effective date (append-only).
+- **Substitute day**: one per live allocation; substitute, School, date, day value, attendance, marker, status, run and amounts paid, source (allocation or migrated).
+- **Substitute month lock**: substitute, month, locked by, reopen history with reasons.
+- **Day event**: append-only history of a day's changes.
+- **Substitute pay line** (013b): the single line per substitute and month with its frozen days and rates.
 
 ## Role & Permission Impact *(mandatory — Constitution Principles II–IV)*
 
 | Role | Substitute Payouts | Notes |
 | --- | --- | --- |
-| Admin | View, Edit (raise correction), Export, org-wide | Does not approve runs by this feature |
-| Director | View, Export, org-wide | Approves runs in 013b |
-| Manager (Zone Manager) | View, own Zone Schools only | Read-only |
-| Teacher | none; own pay status inside My Substitutions | |
+| Admin | View, Edit (mark days), Approve (lock, reopen), Export, org-wide; raises Corrections in 013b | Processes the run |
+| Director | View, Edit, Approve, Export, org-wide | Approves the run |
+| Manager (Zone Manager) | View and Edit (mark days) for own Zone Schools only | No lock, no export of other Zones |
+| Teacher | none | A Substitute has no login at all |
 | System | none | |
 
-Constitution: a PATCH amendment adds a "Substitute Payouts" row to the Default role access matrix and a PAYROLL & FINANCE navigation item; no principle changes (number 2.5.17 proposed, renumber at merge). Principle VII holds: new package `substitution.payout`; `payroll.api` gains an additive `SubstituteCreditIntake` (amendment B to 013b); the event `PayrollAdjustmentApplied` already exists.
+Constitution: a PATCH amendment adds a "Substitute Payouts" row to the Default role access matrix and a PAYROLL & FINANCE navigation item, and the Teachers row gains a note that a Substitute-type Teacher has no account; no principle changes (number 2.5.17 proposed, renumber at merge). Principle VI is fulfilled. Principle VII holds: package `substitution.payout`; `payroll.api` gains a port implemented by `substitution`; `designation.api` is read for the designation on a date.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Every live credit in a locked month on or after go-live appears in exactly one pay run's adjustments, never zero and never two, in 100% of test scenarios including repeated events and repeated job runs.
-- **SC-002**: For any month, days credited equal days paid plus days unpaid by state for every Teacher, School and month, and the screen totals equal the sum of rows.
-- **SC-003**: No approved run changes because of this feature, in any scenario (voids, changes, job runs after approval).
-- **SC-004**: A credit voided after approval is visible as "correction needed" within one minute when the event is delivered, and within one day (the job) when it is not.
-- **SC-005**: A payroll user finds the status of a given Teacher's substitute days for a month in under 30 seconds and raises a correction in under 1 minute.
-- **SC-006**: A Zone Manager sees only their Schools' credits; a Teacher sees only their own; 100% of out-of-scope requests answer "not found".
-- **SC-007**: The CSV equals the screen rows for the same filters and opens in a spreadsheet without executing any cell.
-- **SC-008**: Each Substitute credit line on a payslip can be traced to one School and one date.
+- **SC-001**: Every Present day in a locked month is paid in exactly one run line, never zero and never two, in 100% of test scenarios including repeated events, recomputes and job runs.
+- **SC-002**: For any month, attended days equal paid days plus unpaid days by state per substitute, School and month, and totals equal the sum of rows.
+- **SC-003**: No approved run changes because of this feature in any scenario.
+- **SC-004**: A day changed after approval shows "correction needed" within one minute of the change.
+- **SC-005**: A Zone Manager marks a substitute's day in under 30 seconds; a payroll user finds a substitute's month in under 30 seconds and raises a Correction in under 1 minute.
+- **SC-006**: 100% of out-of-scope requests answer "not found"; a substitute can never sign in.
+- **SC-007**: The CSV equals the screen for the same filters and opens without executing any cell.
+- **SC-008**: Each substitute pay line on a payslip shows days and rate and can be traced to every School and date.
+- **SC-009**: After go-live and the back-pay runs, no engaged day on record is left unpaid except those listed with a reason.
 
 ## Assumptions
 
-All pending owner confirmation unless noted (see Clarifications and `clarification-questions.md`).
-
-- Pay of a substitute day uses the substitute's own day value (Q1) and is extra pay (Q2).
-- Credits are offered after the month is locked and paid by the next draft run (Q3); one adjustment per credit (Q8).
-- No automatic clawback; Admin Correction after approval (Q4). Go-live month is a setting `substitution.payout-start-month` (Q5).
-- Manager cover is unpaid (Q6); Schools are not billed (Q7).
-- Not in scope: payment of the money (outside the system, 013b D8), changes to 017a rules, to School billing (022), to margin (014b), mobile screens, notifications to the substitute (the payslip is the notice in this version), rates per School or per Teacher level.
-- Business dates use the application clock; amounts are Indian Rupees with two decimals.
-- Migration number: the highest on main at writing is V150; this feature will take V160. Re-check at implementation against merged branches.
+- N1 to N6 above are assumed, pending owner confirmation.
+- Payment of the money stays outside the system (013b, D8).
+- Substitutes receive no notifications, mobile screens or web access in this version; the 017a "My Substitutions" Teacher page is not built for them (amends 017a).
+- Rate by designation applies to Teacher-kind designations; the owner may later want a "Substitute" designation, which needs no code change.
+- 013b can take a pay line that has no base salary and a supplementary run per past month; if it cannot take the day-rate line without bigger changes, the amendment in contracts/amendments-to-other-specs.md grows (risk R3 and item R11 in research.md).
+- Out of scope: School billing and margin (Q7), leave and loss of pay for substitutes, a substitute app, notifications to substitutes, per-substitute rates.
+- Business dates use the application clock; amounts in Indian Rupees with two decimals.
+- Migration number: highest on main at writing is V150; this feature plans V160 and V161 (engagement and day rates); re-check at implementation.
