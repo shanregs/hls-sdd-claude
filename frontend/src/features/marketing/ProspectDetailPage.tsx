@@ -38,6 +38,7 @@ import {
   type ProspectDetail,
   type StoredStage,
 } from "./marketingApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 const ROUTE = "/marketing/prospects";
 
@@ -154,9 +155,9 @@ export function ProspectDetailPage() {
           </Typography>
           <Chip label={STAGE_LABEL[row.effectiveStage]} />
           {row.followUpOverdue && (
-            <Chip color="warning" label="Follow-up overdue" />
+            <StatusChip kind="pending" label="Follow-up overdue" />
           )}
-          {row.mouOverdue && <Chip color="error" label="MoU not recorded" />}
+          {row.mouOverdue && <StatusChip kind="rejected" label="MoU not recorded" />}
         </Stack>
         <Typography variant="body2">
           {row.zoneName} Zone. Owner: {row.owner.name}.

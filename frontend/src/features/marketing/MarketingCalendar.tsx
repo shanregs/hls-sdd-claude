@@ -18,6 +18,8 @@ import { useAuth } from "../../auth/useAuth";
 import { useGrantedActions } from "../common/useGrantedActions";
 import { formatDate } from "../teachers/formatters";
 import { ActivityDialog, type ActivityMode } from "./ActivityDialog";
+import { LogVisitTodayDialog } from "./LogVisitTodayDialog";
+import { useAccessModel } from "../../access-model/useAccessModel";
 import {
   ACTIVITY_LABEL,
   listActivities,
@@ -57,6 +59,9 @@ export function MarketingCalendar() {
   const { authFetch } = useAuth();
   const navigate = useNavigate();
   const actions = useGrantedActions(ROUTE);
+  const { accessModel } = useAccessModel();
+  const isManager = Boolean(accessModel?.roles.includes("MANAGER"));
+  const [loggingToday, setLoggingToday] = useState(false);
   const today = new Date();
   const [cursor, setCursor] = useState({
     year: today.getFullYear(),
@@ -95,12 +100,16 @@ export function MarketingCalendar() {
     const map = new Map<string, { activities: Activity[]; drives: number }>();
     data?.content
       .filter((a) => statusFilter === "" || a.effectiveStatus === statusFilter)
-      .filter((a) => attendeeFilter === "" || a.attendees.some((p) => p.userId === attendeeFilter))
+      .filter(
+        (a) =>
+          attendeeFilter === "" ||
+          a.attendees.some((p) => p.userId === attendeeFilter),
+      )
       .forEach((a) => {
-      const entry = map.get(a.date) ?? { activities: [], drives: 0 };
-      entry.activities.push(a);
-      map.set(a.date, entry);
-    });
+        const entry = map.get(a.date) ?? { activities: [], drives: 0 };
+        entry.activities.push(a);
+        map.set(a.date, entry);
+      });
     data?.drives.forEach((d) => {
       const entry = map.get(d.date) ?? { activities: [], drives: 0 };
       entry.drives += 1;
@@ -142,12 +151,22 @@ export function MarketingCalendar() {
             Marketing calendar
           </Typography>
           {actions.has("CREATE") && (
-            <Button
-              variant="contained"
-              onClick={() => setDialog({ mode: "plan" })}
-            >
-              Plan an activity
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {isManager && (
+                <Button
+                  variant="outlined"
+                  onClick={() => setLoggingToday(true)}
+                >
+                  Log a visit for today
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                onClick={() => setDialog({ mode: "plan" })}
+              >
+                Plan an activity
+              </Button>
+            </Stack>
           )}
         </Stack>
         <Stack
@@ -182,7 +201,11 @@ export function MarketingCalendar() {
           <Alert
             severity="info"
             action={
-              <Button color="inherit" size="small" onClick={() => setParams({})}>
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => setParams({})}
+              >
                 Show all
               </Button>
             }
@@ -307,7 +330,7 @@ export function MarketingCalendar() {
               >
                 <ListItemText
                   primary={`${formatDate(a.date)}: ${ACTIVITY_LABEL[a.type]} - ${a.prospect?.name ?? a.school?.name ?? ""}`}
-                  secondary={`${statusLabel(a)}${a.rescheduled ? ", rescheduled" : ""}${a.followUpOverdue ? ", follow-up overdue" : ""}`}
+                  secondary={`${statusLabel(a)}${a.sameDay ? ", same-day" : ""}${a.rescheduled ? ", rescheduled" : ""}${a.followUpOverdue ? ", follow-up overdue" : ""}`}
                 />
               </ListItem>
             ))}
@@ -322,6 +345,15 @@ export function MarketingCalendar() {
           </List>
         )}
       </Stack>
+      {loggingToday && (
+        <LogVisitTodayDialog
+          onClose={() => setLoggingToday(false)}
+          onSaved={() => {
+            setLoggingToday(false);
+            void load();
+          }}
+        />
+      )}
       {dialog && (
         <ActivityDialog
           mode={dialog.mode}

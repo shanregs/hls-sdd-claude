@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reopen
+description: "Director only: a rejected incentive back to pending, with a reason."
+url: "{{baseUrl}}/api/v1/incentives/{{incentiveId}}/reopen"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{incentiveVersion}}, "reason": "Corrected MoU" }
+order: 9000

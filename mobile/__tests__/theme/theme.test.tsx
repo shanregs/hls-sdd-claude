@@ -75,7 +75,7 @@ describe("theme (spec FR-016)", () => {
 
     await fireEvent.press(screen.getByLabelText("Dark theme"));
 
-    expect(await AsyncStorage.getItem("hls.themePreference")).toBe("dark");
+    expect(await AsyncStorage.getItem("hls.theme")).toContain('"mode":"dark"');
     expect(screen.getByLabelText("Dark theme").props.accessibilityState?.checked).toBe(true);
   });
 

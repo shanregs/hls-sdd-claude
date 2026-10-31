@@ -1,0 +1,6 @@
+$kind: http-request
+name: List
+description: "All incentives with filters status, managerId, zoneId, month (yyyy-MM), q, sort, dir, page, size. Needs MANAGER_INCENTIVES.VIEW; a Manager only sees their own."
+url: "{{baseUrl}}/api/v1/incentives?status=PENDING_APPROVAL&page=0&size=25"
+method: GET
+order: 1000

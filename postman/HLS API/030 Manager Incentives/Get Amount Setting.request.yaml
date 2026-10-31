@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Amount Setting
+description: "The SYSTEM settings group; incentive.amount-per-school (default 5000, 0 to 100000) is the rupees paid per closed School."
+url: "{{baseUrl}}/api/v1/settings/system"
+method: GET
+order: 10000

@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 /** The dashboard counts match the lists; demand is vacant positions of won Schools, supply is "not available" here. */
 class DashboardTest extends WonProspectTestBase {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.hls.recruitment.api.DemandFigures demandFigures;
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> map(Object o) {
         return (Map<String, Object>) o;
@@ -89,6 +92,11 @@ class DashboardTest extends WonProspectTestBase {
         long after = ((Number) get(M + "/dashboard", directorToken()).map().get("demand")).longValue();
 
         assertThat(after - before).isEqualTo(4 + 5 - 1);
+        // spec 014c A2: the public figure equals the dashboard value, and narrows to the Zones asked for
+        assertThat(demandFigures.vacantPositionsOfWonSchools()).isEqualTo(after);
+        assertThat(demandFigures.vacantPositionsOfWonSchools(List.of(first.zone()))).isEqualTo(4 - 1);
+        assertThat(demandFigures.vacantPositionsOfWonSchools(List.of(second.zone()))).isEqualTo(5);
+        assertThat(demandFigures.vacantPositionsOfWonSchools(List.of())).isZero();
     }
 
     @Test

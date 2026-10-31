@@ -178,4 +178,61 @@ describe("LeaveManagementPage", () => {
     await screen.findByRole("table", { name: "Leave requests" });
     expect(screen.queryByRole("button", { name: /leave of/ })).toBeNull();
   });
+
+  it("shows the Same-day chip and sends the filter when Same-day only is chosen", async () => {
+    authFetch.mockResolvedValue(
+      list(
+        [
+          leave("r3", "APPROVED", {
+            sameDay: true,
+            allowedActions: ["REVOKE"],
+          }),
+        ],
+        0,
+      ),
+    );
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
+
+    const table = await screen.findByRole("table", { name: "Leave requests" });
+    expect(within(table).getByText("Same-day")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("combobox", { name: "Recorded" }));
+    await userEvent.click(
+      screen.getByRole("option", { name: "Same-day only" }),
+    );
+
+    await vi.waitFor(() =>
+      expect(
+        authFetch.mock.calls.some((c) => String(c[0]).includes("sameDay=true")),
+      ).toBe(true),
+    );
+  });
+
+  it("offers Record same-day leave only with the right to approve", async () => {
+    authFetch.mockResolvedValue(list([PENDING]));
+    const { unmount } = render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
+    expect(
+      await screen.findByRole("button", { name: "Record same-day leave" }),
+    ).toBeInTheDocument();
+    unmount();
+
+    granted = new Set(["VIEW"]);
+    render(
+      <MemoryRouter>
+        <LeaveManagementPage />
+      </MemoryRouter>,
+    );
+    await screen.findByRole("table", { name: "Leave requests" });
+    expect(
+      screen.queryByRole("button", { name: "Record same-day leave" }),
+    ).not.toBeInTheDocument();
+  });
 });

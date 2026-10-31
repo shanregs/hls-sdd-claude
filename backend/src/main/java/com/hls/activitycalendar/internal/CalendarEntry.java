@@ -30,7 +30,28 @@ public record CalendarEntry(
         String linkedType,
         UUID linkedId,
         String nativeStatus,
-        LocalDate completedOn) {
+        LocalDate completedOn,
+        boolean sameDay) {
+
+    /** The form that does not say whether the item was logged on the spot (spec 040): it was not. */
+    public CalendarEntry(
+            String kind,
+            String subKind,
+            UUID id,
+            LocalDate date,
+            LocalDate lastDate,
+            LocalDate originalDate,
+            UUID ownerUserId,
+            Set<UUID> attendeeUserIds,
+            String place,
+            UUID zoneId,
+            UUID schoolId,
+            String linkedType,
+            UUID linkedId,
+            String nativeStatus,
+            LocalDate completedOn) {
+        this(kind, subKind, id, date, lastDate, originalDate, ownerUserId, attendeeUserIds, place, zoneId, schoolId, linkedType, linkedId, nativeStatus, completedOn, false);
+    }
 
     public CalendarEntry {
         attendeeUserIds = attendeeUserIds == null ? Set.of() : Set.copyOf(attendeeUserIds);

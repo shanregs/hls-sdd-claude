@@ -57,6 +57,7 @@ public class SubstitutionController {
             @RequestParam(required = false) UUID schoolId,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
+            @RequestParam(required = false) Boolean sameDay,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @AuthenticationPrincipal Jwt jwt) {
@@ -68,6 +69,29 @@ public class SubstitutionController {
                 schoolId,
                 parseDate(from, "from"),
                 parseDate(to, "to"),
+                sameDay,
+                page,
+                size);
+    }
+
+    /** The Manager cover entries, apart from Teacher credits (spec 040). */
+    @GetMapping("/manager-covers")
+    public com.hls.school.api.PageResponse<SubstitutionService.ManagerCoverView> managerCovers(
+            @RequestParam(required = false) UUID schoolId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(defaultValue = "false") boolean sameDay,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTION, PermissionAction.VIEW);
+        return service.managerCovers(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                schoolId,
+                parseDate(from, "from"),
+                parseDate(to, "to"),
+                sameDay,
                 page,
                 size);
     }

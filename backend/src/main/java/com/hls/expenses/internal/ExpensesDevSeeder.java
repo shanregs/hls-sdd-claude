@@ -5,6 +5,7 @@ import com.hls.expenses.internal.ClaimService.ClaimRequest;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.identity.user.Role;
+import com.hls.school.api.ConflictException;
 import com.hls.school.api.SchoolDirectory;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -132,7 +133,13 @@ class ExpensesDevSeeder implements ApplicationRunner {
         UUID requestId = UUID.nameUUIDFromBytes(("demo-expense-" + number).getBytes(StandardCharsets.UTF_8));
         ClaimRequest request = new ClaimRequest(
                 requestId, date, new BigDecimal(amount), category, zone, "Demo claim " + number, paidBy, reason, null, null, false, false, null);
-        ClaimService.Created created = claims.create(who, request);
+        ClaimService.Created created;
+        try {
+            created = claims.create(who, request);
+        } catch (ConflictException e) {
+            // seeded on an earlier day: the date moved on, the claim is still there
+            return null;
+        }
         if (!created.created()) {
             return null;
         }

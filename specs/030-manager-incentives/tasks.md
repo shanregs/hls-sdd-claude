@@ -46,8 +46,8 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 - [x] T024 [P] [US4] `GET /no-earner` (Admin, Director) and `GET /export.csv` (EXPORT, formula-safe cells)
 - [x] T025 [P] [US4] Notification types `INCENTIVE_PENDING`, `INCENTIVE_DECIDED` and `IncentiveEventListener` in `notification` (recipients per [contracts/module-interfaces.md](contracts/module-interfaces.md)); tests
 - [x] T026 [P] [US4] `incentive.api.IncentiveSummary` implementation and the 028 tile plus Director approvals-inbox entry via the `reporting` SPI; tests
-- [ ] T027 [US4] Frontend `features/incentives`: list with filters and totals, detail drawer with history and payroll status, approve and reject dialogs (reason), My Incentives, No-earner tab, CSV export, route and menu entry; loading, empty and error states; DD/MM/YYYY and Rupee format
-- [ ] T028 [P] [US4] Frontend tests (Vitest) for list, filters, approve and reject flow, role-based buttons, empty states; accessibility tests (WCAG 2.2 AA, keyboard, phone width, dark mode)
+- [X] T027 [US4] Frontend `features/incentives`: list with filters and totals, detail drawer with history and payroll status, approve and reject dialogs (reason), My Incentives, No-earner tab, CSV export, route and menu entry; loading, empty and error states; DD/MM/YYYY and Rupee format
+- [X] T028 [P] [US4] Frontend tests (Vitest) for list, filters, approve and reject flow, role-based buttons, empty states; accessibility tests (WCAG 2.2 AA, keyboard, phone width, dark mode)
 - [x] T029 [P] [US4] Scope tests for every endpoint including export and direct links (SC-004)
 
 ## Phase 7: User Story 5 - Hold when the MoU stops counting (P3)
@@ -59,9 +59,9 @@ Format: `- [ ] T### [P] [US#] description (file)`. [P] = can run in parallel (di
 
 ## Phase 8: Polish and documentation
 
-- [ ] T034 [P] Demo data: a won prospect owned by a Manager, one School in each no-earner reason, incentives in each status (`NotificationDevSeeder`-style dev seeder)
-- [ ] T035 [P] Postman requests for the incentive API (`postman/`)
-- [ ] T036 Constitution PATCH 2.5.15: Sync Impact Report, Default role access matrix row "Incentives", OPERATIONS navigation (`.specify/memory/constitution.md`); renumber if another spec merges first
+- [X] T034 [P] Demo data: a won prospect owned by a Manager, one School in each no-earner reason, incentives in each status (`NotificationDevSeeder`-style dev seeder)
+- [X] T035 [P] Postman requests for the incentive API (`postman/`)
+- [X] T036 Constitution PATCH 2.5.16 (2.5.15 is 014b): Sync Impact Report, Default role access matrix row "Incentives", OPERATIONS navigation (`.specify/memory/constitution.md`); renumber if another spec merges first
 - [ ] T037 Update `docs/spec-roadmap.md` rows 030, 013b and 028 (status, amendment A, tile) and `docs/spec-inputs/030-manager-incentives.md` if decisions changed
 - [x] T038 Director reopen of a rejected incentive (`POST /{id}/reopen`, reason required, Director only, audited) so the rule "one incentive per School" still allows a corrected decision; tests
 - [ ] T039 Run `quickstart.md` sections 1 to 9 and record results in `quickstart-results.md`; run the full backend and frontend test suites and the module-boundary (Modulith) verification

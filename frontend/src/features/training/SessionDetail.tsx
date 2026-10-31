@@ -36,6 +36,7 @@ import {
   type RegistrationRow,
   type SessionView,
 } from "./trainingApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 interface Props {
   sessionId: string;
@@ -148,10 +149,10 @@ export function SessionDetail({ sessionId, onChanged, onClose }: Props) {
             <Chip label={STATUS_LABELS[session.status]} />
             <Chip label={TYPE_LABELS[session.type]} variant="outlined" />
             {session.my?.status === "REQUIRED" && (
-              <Chip label="Required" color="warning" />
+              <StatusChip kind="pending" label="Required" />
             )}
             {session.my?.status === "REGISTERED" && (
-              <Chip label="Registered" color="success" />
+              <StatusChip kind="approved" label="Registered" />
             )}
           </Stack>
           <Box

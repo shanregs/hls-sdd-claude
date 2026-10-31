@@ -51,7 +51,8 @@ public class TaskQueries {
             String place,
             boolean overdue,
             long daysOverdue,
-            boolean escalated) {}
+            boolean escalated,
+            boolean sameDay) {}
 
     public record Summary(long today, long upcoming, long overdue, long awaiting, long escalated, long done) {}
 
@@ -151,7 +152,8 @@ public class TaskQueries {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<Row> list(Caller caller, String view, UUID assignee, String type, String status, int page, int size) {
+    public PageResponse<Row> list(
+            Caller caller, String view, UUID assignee, String type, String status, Boolean sameDay, int page, int size) {
         LocalDate today = businessDate.today();
         String v = view == null || view.isBlank() ? "all" : view.toLowerCase();
         Specification<Task> spec = scope(caller, assignee).and(view(v, today));
@@ -162,6 +164,9 @@ public class TaskQueries {
         if (status != null && !status.isBlank()) {
             TaskStatus parsed = parse(TaskStatus.class, status, "status");
             spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), parsed));
+        }
+        if (Boolean.TRUE.equals(sameDay)) {
+            spec = spec.and((root, q, cb) -> cb.isTrue(root.get("sameDay")));
         }
         Sort sort = v.equals("done")
                 ? Sort.by(Sort.Order.desc("updatedAt"))
@@ -216,6 +221,46 @@ public class TaskQueries {
         }
         Map<UUID, Summary> result = new HashMap<>();
         counts.forEach((id, c) -> result.put(id, new Summary(0, 0, c[0], c[1], c[2], 0)));
+        return result;
+    }
+
+    /** Tasks assigned (created in the month, not cancelled) and completed (completed or verified in the month) per assignee. */
+    public record MonthCounts(long assigned, long completed) {}
+
+    /**
+     * Spec 014c A6: one bulk query for the assignees; the month is read in the business time zone. Assignees with neither
+     * are absent.
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, MonthCounts> monthCountsByAssignee(java.util.Set<UUID> assignees, java.time.YearMonth month) {
+        if (assignees.isEmpty()) {
+            return Map.of();
+        }
+        java.time.ZoneId zone = businessDate.zone();
+        Instant from = month.atDay(1).atStartOfDay(zone).toInstant();
+        Instant to = month.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        Specification<Task> spec = (root, q, cb) -> cb.and(
+                root.get("assigneeUserId").in(assignees),
+                cb.notEqual(root.get("status"), TaskStatus.CANCELLED),
+                cb.or(
+                        cb.and(cb.greaterThanOrEqualTo(root.<Instant>get("createdAt"), from), cb.lessThan(root.<Instant>get("createdAt"), to)),
+                        cb.and(
+                                cb.greaterThanOrEqualTo(root.<Instant>get("completedAt"), from),
+                                cb.lessThan(root.<Instant>get("completedAt"), to))));
+        Map<UUID, long[]> counts = new HashMap<>();
+        for (Task t : tasks.findAll(spec)) {
+            long[] c = counts.computeIfAbsent(t.getAssigneeUserId(), k -> new long[2]);
+            Instant created = t.getCreatedAt();
+            if (!created.isBefore(from) && created.isBefore(to)) {
+                c[0]++;
+            }
+            Instant completed = t.getCompletedAt();
+            if (completed != null && !completed.isBefore(from) && completed.isBefore(to)) {
+                c[1]++;
+            }
+        }
+        Map<UUID, MonthCounts> result = new HashMap<>();
+        counts.forEach((id, c) -> result.put(id, new MonthCounts(c[0], c[1])));
         return result;
     }
 
@@ -341,7 +386,8 @@ public class TaskQueries {
                             t.getPlace(),
                             overdue,
                             overdue ? ChronoUnit.DAYS.between(t.getDueOn(), today) : 0,
-                            t.getEscalatedAt() != null);
+                            t.getEscalatedAt() != null,
+                            t.isSameDay());
                 })
                 .toList();
     }

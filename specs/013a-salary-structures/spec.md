@@ -363,3 +363,5 @@ this spec merges.
   person's pay shown to anyone but Admin and Director, a recruitment offer for Managers and staff (their salary is
   entered here), and changes to the offer form of spec 016.
 - Amounts are Indian Rupees and dates are shown as DD/MM/YYYY (Constitution, Additional Constraints).
+
+> **Amended by spec 040 (2026-10-28):** Every Teacher leave day (any type, full or half) is an unpaid day at the payroll run; the Loss-of-Pay type no longer decides it (`UnpaidDayClassifier`). Manager attendance keeps its own rule.

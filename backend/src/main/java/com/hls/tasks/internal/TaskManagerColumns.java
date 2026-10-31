@@ -9,7 +9,10 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
-/** Overdue, awaiting verification and escalated task counts per Manager for the comparison table. */
+/**
+ * Overdue, awaiting verification and escalated task counts per Manager for the comparison table, and (spec 014c A6) the tasks
+ * assigned and completed in the context month.
+ */
 @Component
 class TaskManagerColumns implements ManagerColumns {
 
@@ -24,18 +27,25 @@ class TaskManagerColumns implements ManagerColumns {
         return List.of(
                 new Column("tasks.overdue", "Overdue", "/operations/tasks?view=overdue&assigneeUserId={managerId}"),
                 new Column("tasks.awaiting", "Awaiting verification", "/operations/tasks?view=awaiting&assigneeUserId={managerId}"),
-                new Column("tasks.escalated", "Escalated", "/operations/tasks?view=escalated&assigneeUserId={managerId}"));
+                new Column("tasks.escalated", "Escalated", "/operations/tasks?view=escalated&assigneeUserId={managerId}"),
+                new Column("tasks.assigned", "Tasks assigned", "/operations/tasks?assigneeUserId={managerId}"),
+                new Column("tasks.completed", "Tasks completed", "/operations/tasks?view=done&assigneeUserId={managerId}"));
     }
 
     @Override
     public Map<UUID, Map<String, Long>> figures(TileContext ctx, Set<UUID> managerUserIds) {
         Map<UUID, Map<String, Long>> result = new HashMap<>();
         Map<UUID, TaskQueries.Summary> counted = queries.summariesByAssignee(managerUserIds);
+        Map<UUID, TaskQueries.MonthCounts> inMonth = queries.monthCountsByAssignee(managerUserIds, ctx.month());
         for (UUID id : managerUserIds) {
             TaskQueries.Summary s = counted.get(id);
-            result.put(id, s == null
-                    ? Map.of("tasks.overdue", 0L, "tasks.awaiting", 0L, "tasks.escalated", 0L)
-                    : Map.of("tasks.overdue", s.overdue(), "tasks.awaiting", s.awaiting(), "tasks.escalated", s.escalated()));
+            TaskQueries.MonthCounts m = inMonth.get(id);
+            result.put(id, Map.of(
+                    "tasks.overdue", s == null ? 0L : s.overdue(),
+                    "tasks.awaiting", s == null ? 0L : s.awaiting(),
+                    "tasks.escalated", s == null ? 0L : s.escalated(),
+                    "tasks.assigned", m == null ? 0L : m.assigned(),
+                    "tasks.completed", m == null ? 0L : m.completed()));
         }
         return result;
     }

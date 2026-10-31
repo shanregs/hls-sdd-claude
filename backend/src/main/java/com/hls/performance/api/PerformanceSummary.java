@@ -22,6 +22,18 @@ public interface PerformanceSummary {
     /** Keyed by the Manager's user id. */
     Map<UUID, Counts> byManager(LocalDate from, LocalDate to);
 
+    /**
+     * Keyed by Teacher id, with the same counts and rules as {@link #byManager} (spec 014c A4): a record counts for the
+     * Teacher it is about, so the Teachers of a Manager add up to that Manager's row. Teachers with nothing are absent.
+     */
+    Map<UUID, Counts> byTeacher(LocalDate from, LocalDate to);
+
+    /**
+     * Keyed by School id, with the same counts and rules as {@link #byManager} (spec 014b A4): a record counts for the School
+     * it was made at, so the Schools of a Manager add up to that Manager's row. Schools with nothing are absent.
+     */
+    Map<UUID, Counts> bySchool(LocalDate from, LocalDate to);
+
     /** Keyed by Zone id. */
     Map<UUID, Counts> byZone(LocalDate from, LocalDate to);
 }

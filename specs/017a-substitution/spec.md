@@ -263,3 +263,5 @@ merges. New notification types: `SUBSTITUTE_NEEDED`, `SUBSTITUTE_ASSIGNED`, `SUB
 - Amounts are not involved here; dates are shown DD/MM/YYYY (Constitution, Additional Constraints).
 - Out of scope: tasks, escalation of unresolved requirements (arrives with 025), recurring substitution, substitute
   attendance marks, SMS/email to the School, mobile screens.
+
+> **Amended by spec 040 (2026-10-28):** A Manager cover recorded on the duty day is flagged same-day; the Manager cover entries are listed apart from Teacher credits (`GET /api/v1/substitutions/manager-covers`).

@@ -41,6 +41,19 @@ class SchoolContractsImpl implements SchoolContracts {
     }
 
     @Override
+    public Map<UUID, ContractView> contractsOfAll(java.util.Collection<UUID> schoolIds, LocalDate date) {
+        if (schoolIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, ContractView> out = new HashMap<>();
+        // oldest first, so a later contract in effect on the same day wins, as the single-School lookup takes the live one
+        for (ContractView v : views(contracts.liveOverlapping(schoolIds, date, date))) {
+            out.put(v.schoolId(), v);
+        }
+        return out;
+    }
+
+    @Override
     public Optional<TeacherPosition> positionOf(UUID teacherId, LocalDate date) {
         for (ContractAssignment a : assignments.inEffectOn(List.of(teacherId), date)) {
             if (a.getPositionId() == null) {

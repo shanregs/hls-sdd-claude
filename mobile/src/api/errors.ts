@@ -5,6 +5,8 @@ export class ApiError extends Error {
     readonly status?: number,
     /** The claims a duplicate warning (409) lists; empty for every other answer. */
     readonly matches: string[] = [],
+    /** The answer body, for callers that need more than the message (spec 039: the suggested colour). */
+    readonly body?: unknown,
   ) {
     super(message);
     this.name = new.target.name;

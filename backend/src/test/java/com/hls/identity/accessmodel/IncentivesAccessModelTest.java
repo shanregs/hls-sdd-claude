@@ -34,7 +34,7 @@ class IncentivesAccessModelTest extends IntegrationTestBase {
 
     private static AccessModelDtos.NavItemView item(AccessModelDtos.AccessModelResponse response) {
         return response.navigation().stream()
-                .filter(s -> s.section().equals("OPERATIONS"))
+                .filter(s -> s.section().equals("PAYROLL & FINANCE"))
                 .flatMap(s -> s.items().stream())
                 .filter(i -> i.label().equals("Incentives"))
                 .findFirst()

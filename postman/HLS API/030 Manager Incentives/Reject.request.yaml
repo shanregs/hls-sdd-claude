@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reject
+description: "Pending to rejected; a reason is required."
+url: "{{baseUrl}}/api/v1/incentives/{{incentiveId}}/reject"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{incentiveVersion}}, "reason": "MoU figures do not match" }
+order: 8000

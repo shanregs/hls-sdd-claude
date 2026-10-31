@@ -74,6 +74,24 @@ class TeacherMovementSourceImpl implements TeacherMovementSource {
         return ids;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, Movements> movementsBetween(LocalDate from, LocalDate to) {
+        Map<UUID, int[]> counts = new HashMap<>();
+        for (MovementRequest r : requests.findByStatusAndEffectiveOnBetween("APPROVED", from, to)) {
+            if (!inForce(r)) {
+                continue;
+            }
+            int slot = "TRANSFER".equals(r.getKind()) ? 0 : "REPLACEMENT".equals(r.getKind()) ? 1 : -1;
+            if (slot >= 0) {
+                counts.computeIfAbsent(r.getTeacherId(), k -> new int[2])[slot]++;
+            }
+        }
+        Map<UUID, Movements> result = new HashMap<>();
+        counts.forEach((teacher, c) -> result.put(teacher, new Movements(c[0], c[1])));
+        return result;
+    }
+
     private boolean inForce(MovementRequest r) {
         String shown = queries.shown(r).status();
         return "APPROVED".equals(shown) || "APPLIED".equals(shown);

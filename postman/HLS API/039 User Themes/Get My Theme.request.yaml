@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get My Theme
+description: "Returns the saved preference (or the Classic default with isDefault true) and the preset catalogue with the status-chip colours."
+url: "{{baseUrl}}/api/v1/me/theme"
+method: GET
+order: 1000

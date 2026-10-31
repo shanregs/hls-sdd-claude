@@ -30,6 +30,7 @@ import {
   type ManagerLocation,
   type TodayStatus,
 } from "./managerAttendanceApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 const MAX_PURPOSE = 500;
 const ROUTE = "/manager-attendance/me";
@@ -266,7 +267,7 @@ export function ManagerCheckInPage() {
               <Typography>Checked out at {timeOf(day.checkOutAt)}</Typography>
             )}
             <Stack direction="row" spacing={1}>
-              {day.late && <Chip size="small" color="warning" label="Late" />}
+              {day.late && <StatusChip kind="pending" size="small" label="Late" />}
               {day.hasPhoto && <Chip size="small" label="Photo added" />}
               {day.flags.includes("UNLINKED") && (
                 <Chip size="small" label="Not linked to a planned activity" />
