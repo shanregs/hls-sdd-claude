@@ -1,5 +1,6 @@
 package com.hls.schoolreports.internal;
 
+import com.hls.designation.api.BusinessDate;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.reporting.api.Cell;
@@ -20,7 +21,6 @@ import com.hls.schoolbilling.api.SchoolReceivables.SchoolMonth;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -40,7 +40,6 @@ import org.springframework.stereotype.Component;
 class CollectionsReportSource implements ReportSource {
 
     static final String KEY = "collections";
-    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
     private static final String NOT_PLACED = "Not placed";
 
     private static final List<Column> MONTH_COLUMNS = List.of(
@@ -61,8 +60,10 @@ class CollectionsReportSource implements ReportSource {
 
     private final SchoolReceivables receivables;
     private final SchoolScope scope;
+    private final BusinessDate businessDate;
 
-    CollectionsReportSource(SchoolReceivables receivables, SchoolScope scope) {
+    CollectionsReportSource(SchoolReceivables receivables, SchoolScope scope, BusinessDate businessDate) {
+        this.businessDate = businessDate;
         this.receivables = receivables;
         this.scope = scope;
     }
@@ -101,7 +102,7 @@ class CollectionsReportSource implements ReportSource {
 
     private Section ageing(ReportContext ctx) {
         List<SchoolInfo> schools = scope.inScope(ctx);
-        LocalDate today = LocalDate.now(IST);
+        LocalDate today = businessDate.today();
         Map<UUID, SchoolAgeing> ageing =
                 schools.isEmpty() ? Map.of() : scope.isolated(() -> receivables.ageing(ids(schools), today));
         Map<UUID, BigDecimal[]> figures = new LinkedHashMap<>();
@@ -190,11 +191,11 @@ class CollectionsReportSource implements ReportSource {
 
     @Override
     public List<String> notes(ReportContext ctx, MonthState state) {
-        return List.of("Ageing as of " + LocalDate.now(IST) + ".");
+        return List.of("Ageing as of " + businessDate.today() + ".");
     }
 
     @Override
     public Optional<YearMonth> lastFinalMonth(UUID userId, Set<Role> roles, ReportScope scope) {
-        return Optional.of(YearMonth.now(IST));
+        return Optional.of(YearMonth.from(businessDate.today()));
     }
 }

@@ -1,5 +1,6 @@
 package com.hls.schoolreports.internal;
 
+import com.hls.designation.api.BusinessDate;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.payroll.api.PayRules.Kind;
@@ -24,7 +25,6 @@ import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
 import java.math.BigDecimal;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,13 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The Margin report (spec 014b US1): the School fee (the 022 due line) less the Teacher pay (the 013b payslip net), per Teacher
@@ -54,7 +52,6 @@ class MarginReportSource implements ReportSource {
     static final String KEY = "margin";
     static final String DRAFT_NOTE = "Payroll not approved, figures may change.";
     private static final Logger LOG = LoggerFactory.getLogger(MarginReportSource.class);
-    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
     private static final String NOT_PLACED = "Not placed";
 
     private static final List<Column> TOTAL_COLUMNS = List.of(
@@ -76,6 +73,7 @@ class MarginReportSource implements ReportSource {
     /** One Teacher at one School (or, for a payslip with no fee, at the School the payslip says). */
     record Line(
             String id,
+            UUID teacherId,
             String teacher,
             SchoolInfo school,
             BigDecimal days,
@@ -92,8 +90,15 @@ class MarginReportSource implements ReportSource {
     private final PayrollFigures payroll;
     private final TeacherDirectory teachers;
     private final SchoolScope scope;
+    private final BusinessDate businessDate;
 
-    MarginReportSource(SchoolReceivables receivables, PayrollFigures payroll, TeacherDirectory teachers, SchoolScope scope) {
+    MarginReportSource(
+            SchoolReceivables receivables,
+            PayrollFigures payroll,
+            TeacherDirectory teachers,
+            SchoolScope scope,
+            BusinessDate businessDate) {
+        this.businessDate = businessDate;
         this.receivables = receivables;
         this.payroll = payroll;
         this.teachers = teachers;
@@ -146,27 +151,32 @@ class MarginReportSource implements ReportSource {
 
     private Section totals(ReportContext ctx, String key, String title, boolean byZone) {
         Model model = model(ctx);
-        Map<String, List<Line>> groups = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        // grouped by id, not name: two Schools or Zones with the same name stay two rows
+        Map<String, List<Line>> groups = new LinkedHashMap<>();
+        Map<String, String> names = new HashMap<>();
         Map<String, String> zoneOf = new HashMap<>();
-        Map<String, String> ids = new HashMap<>();
         for (Line l : model.lines()) {
             if (l.school() == null) {
                 continue;
             }
             String zone = zoneName(l.school(), model);
-            String name = byZone ? zone : l.school().name();
-            groups.computeIfAbsent(name, n -> new ArrayList<>()).add(l);
-            zoneOf.put(name, zone);
-            ids.put(name, byZone ? String.valueOf(l.school().zoneId()) : l.school().id().toString());
+            String id = byZone ? String.valueOf(l.school().zoneId()) : l.school().id().toString();
+            groups.computeIfAbsent(id, n -> new ArrayList<>()).add(l);
+            names.put(id, byZone ? zone : l.school().name());
+            zoneOf.put(id, zone);
         }
+        List<String> order = new ArrayList<>(groups.keySet());
+        order.sort(Comparator.comparing((String id) -> names.get(id), String.CASE_INSENSITIVE_ORDER).thenComparing(Comparator.naturalOrder()));
         List<Row> rows = new ArrayList<>();
-        groups.forEach((name, lines) -> rows.add(totalRow(ids.get(name), name, zoneOf.get(name), lines, model)));
+        for (String id : order) {
+            rows.add(totalRow(id, names.get(id), zoneOf.get(id), groups.get(id), model));
+        }
         Row all = totalRow("total", "All", "", model.lines().stream().filter(l -> l.school() != null).toList(), model);
         return Section.of(key, title, TOTAL_COLUMNS, rows, all);
     }
 
     private Row totalRow(String id, String label, String zone, List<Line> lines, Model model) {
-        long matched = lines.stream().filter(Line::matched).count();
+        long matched = lines.stream().filter(Line::matched).map(Line::teacherId).distinct().count();
         BigDecimal fee = BigDecimal.ZERO;
         BigDecimal pay = BigDecimal.ZERO;
         for (Line l : lines) {
@@ -257,7 +267,8 @@ class MarginReportSource implements ReportSource {
             LOG.warn("Margin report: payroll could not be read", e);
             payrollDown = true;
         }
-        boolean runExists = run.isPresent();
+        // a failed payslip read leaves the run known but unusable; fee must still show (FR-013)
+        boolean runExists = run.isPresent() && !payrollDown;
 
         Set<UUID> teacherIds = new HashSet<>(feeBy.keySet());
         teacherIds.addAll(slips.keySet());
@@ -311,9 +322,10 @@ class MarginReportSource implements ReportSource {
             }
             SchoolInfo school = schoolById.get(e.getKey());
             boolean matched = split != null;
-            String status = !runExists ? "no pay run yet" : payrollDown ? "pay not available" : matched ? "matched" : problem;
+            String status = payrollDown ? "pay not available" : !runExists ? "no pay run yet" : matched ? "matched" : problem;
             lines.add(new Line(
                     teacherId + ":" + e.getKey(),
+                    teacherId,
                     name,
                     school,
                     e.getValue().days(),
@@ -343,6 +355,7 @@ class MarginReportSource implements ReportSource {
         }
         lines.add(new Line(
                 slip.personId() + ":none",
+                slip.personId(),
                 name,
                 school,
                 null,
@@ -385,8 +398,13 @@ class MarginReportSource implements ReportSource {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<YearMonth> lastFinalMonth(UUID userId, Set<Role> roles, ReportScope scope) {
-        return Optional.of(payroll.lastApprovedMonth().orElseGet(() -> YearMonth.now(IST)));
+    public Optional<YearMonth> lastFinalMonth(UUID userId, Set<Role> roles, ReportScope reportScope) {
+        YearMonth current = YearMonth.from(businessDate.today());
+        try {
+            return Optional.of(scope.isolated(() -> payroll.lastApprovedMonth()).orElse(current));
+        } catch (RuntimeException e) {
+            LOG.warn("Margin report: last approved month could not be read", e);
+            return Optional.of(current);
+        }
     }
 }

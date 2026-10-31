@@ -3,6 +3,7 @@ package com.hls.schoolreports.internal;
 import com.hls.attendance.api.AttendanceReadApi;
 import com.hls.attendance.api.SchoolAttendance;
 import com.hls.attendance.api.SchoolAttendance.SchoolRollup;
+import com.hls.designation.api.BusinessDate;
 import com.hls.identity.permissions.PermissionModule;
 import com.hls.identity.user.Role;
 import com.hls.performance.api.PerformanceSummary;
@@ -30,7 +31,6 @@ import com.hls.teacher.api.TeacherDirectory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,6 @@ class SchoolReportSource implements ReportSource {
 
     static final String KEY = "school";
     private static final Logger LOG = LoggerFactory.getLogger(SchoolReportSource.class);
-    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final String NOT_APPLICABLE = "Not applicable";
 
@@ -80,6 +79,7 @@ class SchoolReportSource implements ReportSource {
     private final SchoolStages stages;
     private final AttendanceReadApi attendanceRead;
     private final SchoolScope scope;
+    private final BusinessDate businessDate;
 
     SchoolReportSource(
             TeacherDirectory teachers,
@@ -90,7 +90,8 @@ class SchoolReportSource implements ReportSource {
             SchoolReceivables receivables,
             SchoolStages stages,
             AttendanceReadApi attendanceRead,
-            SchoolScope scope) {
+            SchoolScope scope,
+            BusinessDate businessDate) {
         this.teachers = teachers;
         this.contracts = contracts;
         this.attendance = attendance;
@@ -100,6 +101,7 @@ class SchoolReportSource implements ReportSource {
         this.stages = stages;
         this.attendanceRead = attendanceRead;
         this.scope = scope;
+        this.businessDate = businessDate;
     }
 
     @Override
@@ -217,12 +219,8 @@ class SchoolReportSource implements ReportSource {
     @Override
     public MonthState monthState(ReportContext ctx) {
         try {
-            YearMonth month = ctx.month();
-            Set<UUID> placed = teachers.teachersPlacedDuring(month.atDay(1), month.atEndOfMonth());
-            if (placed.isEmpty()) {
-                return MonthState.NONE;
-            }
-            return attendanceRead.lockedTeachers(placed, month).containsAll(placed) ? MonthState.LOCKED : MonthState.OPEN;
+            return scope.isolated(
+                    () -> PlacedTeachers.stateOf(teachers, attendanceRead, scope.visibleSchoolIds(ctx.scope()), ctx.month()));
         } catch (RuntimeException e) {
             LOG.warn("School report: month state could not be read", e);
             return MonthState.NONE;
@@ -238,13 +236,14 @@ class SchoolReportSource implements ReportSource {
 
     @Override
     public Optional<YearMonth> lastFinalMonth(UUID userId, Set<Role> roles, ReportScope reportScope) {
-        YearMonth month = YearMonth.now(IST);
-        for (int i = 0; i < 12; i++, month = month.minusMonths(1)) {
-            Set<UUID> placed = teachers.teachersPlacedDuring(month.atDay(1), month.atEndOfMonth());
-            if (!placed.isEmpty() && attendanceRead.lockedTeachers(placed, month).containsAll(placed)) {
-                return Optional.of(month);
-            }
+        YearMonth current = YearMonth.from(businessDate.today());
+        try {
+            return Optional.of(scope.isolated(() -> PlacedTeachers.lastLocked(
+                            teachers, attendanceRead, scope.visibleSchoolIds(reportScope), current))
+                    .orElse(current));
+        } catch (RuntimeException e) {
+            LOG.warn("School report: last final month could not be read", e);
+            return Optional.of(current);
         }
-        return Optional.of(YearMonth.now(IST));
     }
 }
