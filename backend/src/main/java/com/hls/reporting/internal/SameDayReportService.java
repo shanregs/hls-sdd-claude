@@ -6,6 +6,8 @@ import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.identity.user.Role;
 import com.hls.organization.api.ManagerQueries;
+import com.hls.organization.api.ScopeQueries;
+import com.hls.reporting.api.ReportOutOfScopeException;
 import com.hls.reporting.api.SameDayCountSource;
 import com.hls.school.api.SchoolDirectory;
 import java.math.BigDecimal;
@@ -38,28 +40,59 @@ public class SameDayReportService {
     private final SchoolDirectory schools;
     private final ManagerQueries managers;
     private final AppUserRepository users;
+    private final ScopeQueries scopeQueries;
 
     public SameDayReportService(
             List<SameDayCountSource> sources,
             PermissionGuard guard,
             SchoolDirectory schools,
             ManagerQueries managers,
-            AppUserRepository users) {
+            AppUserRepository users,
+            ScopeQueries scopeQueries) {
         this.sources = sources;
         this.guard = guard;
         this.schools = schools;
         this.managers = managers;
         this.users = users;
+        this.scopeQueries = scopeQueries;
     }
 
     @Transactional(readOnly = true)
     public Map<String, Section> report(UUID userId, Set<Role> roles, YearMonth month) {
+        return report(userId, roles, month, null);
+    }
+
+    /**
+     * As above, narrowed to one Zone when {@code zoneId} is given: only that Zone's Schools and Managers are counted. A Zone
+     * that does not exist or is outside the caller's scope is refused (403), so no figures leak.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Section> report(UUID userId, Set<Role> roles, YearMonth month, UUID zoneId) {
+        Set<UUID> zoneSchools = null;
+        Set<UUID> zoneManagerUsers = null;
+        if (zoneId != null) {
+            var scope = scopeQueries.scopeOf(userId, roles);
+            boolean allowed = scope.orgWide() || scope.zoneIds().contains(zoneId);
+            if (!allowed || schools.zone(zoneId).isEmpty()) {
+                throw new ReportOutOfScopeException("That Zone is outside your area.");
+            }
+            Set<UUID> inZone = new java.util.HashSet<>();
+            schools.schoolsInZone(zoneId).forEach(s -> inZone.add(s.id()));
+            zoneSchools = inZone;
+            Set<UUID> managerUsers = new java.util.HashSet<>();
+            for (var m : managers.managersOfZone(zoneId)) {
+                managerUsers.add(m.userId());
+            }
+            zoneManagerUsers = managerUsers;
+        }
         Map<String, Section> sections = new LinkedHashMap<>();
         for (SameDayCountSource source : sources) {
             if (!guard.isGranted(roles, source.permission(), PermissionAction.VIEW)) {
                 continue;
             }
-            sections.put(source.key(), section(source.counts(month, userId, roles)));
+            SameDayCountSource.Counts counts = source.counts(month, userId, roles);
+            boolean derive = counts.byManagerUser().isEmpty();
+            sections.put(source.key(), section(narrow(counts, zoneSchools, zoneManagerUsers), derive));
         }
         if (sections.isEmpty()) {
             throw new DashboardForbiddenException("You cannot see this report.");
@@ -67,10 +100,23 @@ public class SameDayReportService {
         return sections;
     }
 
-    private Section section(SameDayCountSource.Counts counts) {
+    /** Keeps only the Zone's Schools and Managers; a School-only count still turns into its Manager's count afterwards. */
+    private static SameDayCountSource.Counts narrow(
+            SameDayCountSource.Counts counts, Set<UUID> zoneSchools, Set<UUID> zoneManagerUsers) {
+        if (zoneSchools == null) {
+            return counts;
+        }
+        Map<UUID, BigDecimal> bySchool = new HashMap<>(counts.bySchool());
+        bySchool.keySet().retainAll(zoneSchools);
+        Map<UUID, BigDecimal> byManager = new HashMap<>(counts.byManagerUser());
+        byManager.keySet().retainAll(zoneManagerUsers);
+        return new SameDayCountSource.Counts(bySchool, byManager);
+    }
+
+    private Section section(SameDayCountSource.Counts counts, boolean derive) {
         Map<UUID, BigDecimal> byManager = new HashMap<>(counts.byManagerUser());
         // a School-based count with no Manager grouping is the School's Manager's count
-        if (byManager.isEmpty()) {
+        if (derive) {
             counts.bySchool().forEach((schoolId, n) -> managers.managerOfSchool(schoolId)
                     .ifPresent(m -> byManager.merge(m.userId(), n, BigDecimal::add)));
         }

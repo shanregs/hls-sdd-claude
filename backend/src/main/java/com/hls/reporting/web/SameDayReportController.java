@@ -26,13 +26,23 @@ public class SameDayReportController {
 
     @GetMapping
     public Map<String, SameDayReportService.Section> report(
-            @RequestParam(required = false) String month, @AuthenticationPrincipal Jwt jwt) {
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String zoneId,
+            @AuthenticationPrincipal Jwt jwt) {
         YearMonth wanted;
         try {
             wanted = month == null || month.isBlank() ? YearMonth.now() : YearMonth.parse(month);
         } catch (DateTimeParseException e) {
             throw new DashboardInvalidInputException("The month must look like 2026-10.");
         }
-        return service.report(CallerContext.userId(jwt), CallerContext.roles(jwt), wanted);
+        java.util.UUID zone = null;
+        if (zoneId != null && !zoneId.isBlank()) {
+            try {
+                zone = java.util.UUID.fromString(zoneId.trim());
+            } catch (IllegalArgumentException e) {
+                throw new DashboardInvalidInputException("The zone filter is not valid.");
+            }
+        }
+        return service.report(CallerContext.userId(jwt), CallerContext.roles(jwt), wanted, zone);
     }
 }

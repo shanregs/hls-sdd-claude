@@ -1,5 +1,6 @@
 import * as FileSystem from "expo-file-system/legacy";
 import type { Area, ClaimRow, LinkOption } from "../api/expensesApi";
+import type { Prospect } from "../api/marketingApi";
 import { decryptText, encryptText } from "./cipher";
 import { ownerDir } from "./outboxStore";
 
@@ -15,9 +16,18 @@ export interface ListCache {
   areas: Area[];
   /** Last link options per category key. */
   linkOptions: Record<string, LinkOption[]>;
+  /** The Schools and prospects last loaded for logging a visit, so a visit can be started with no connection (spec 040). */
+  prospects: Prospect[];
 }
 
-const EMPTY: ListCache = { loadedAt: null, owed: "0.00", rows: [], areas: [], linkOptions: {} };
+const EMPTY: ListCache = {
+  loadedAt: null,
+  owed: "0.00",
+  rows: [],
+  areas: [],
+  linkOptions: {},
+  prospects: [],
+};
 const fileOf = (owner: string) => `${ownerDir(owner)}list-cache.enc`;
 
 /** The cache, or null when there is none or it cannot be opened (a cache is never worth an error). */
@@ -25,7 +35,11 @@ export async function readListCache(owner: string): Promise<ListCache | null> {
   try {
     const info = await FileSystem.getInfoAsync(fileOf(owner));
     if (!info.exists) return null;
-    const text = await decryptText(await FileSystem.readAsStringAsync(fileOf(owner), { encoding: FileSystem.EncodingType.Base64 }));
+    const text = await decryptText(
+      await FileSystem.readAsStringAsync(fileOf(owner), {
+        encoding: FileSystem.EncodingType.Base64,
+      }),
+    );
     return { ...EMPTY, ...(JSON.parse(text) as Partial<ListCache>) };
   } catch {
     return null;
@@ -36,7 +50,9 @@ export async function readListCache(owner: string): Promise<ListCache | null> {
 export async function updateListCache(owner: string, change: Partial<ListCache>): Promise<void> {
   try {
     const current = (await readListCache(owner)) ?? EMPTY;
-    await FileSystem.makeDirectoryAsync(ownerDir(owner), { intermediates: true });
+    await FileSystem.makeDirectoryAsync(ownerDir(owner), {
+      intermediates: true,
+    });
     await FileSystem.writeAsStringAsync(fileOf(owner), await encryptText(JSON.stringify({ ...current, ...change })), {
       encoding: FileSystem.EncodingType.Base64,
     });
@@ -47,5 +63,18 @@ export async function updateListCache(owner: string, change: Partial<ListCache>)
 
 export async function cacheLinkOptions(owner: string, category: string, options: LinkOption[]): Promise<void> {
   const current = (await readListCache(owner)) ?? EMPTY;
-  await updateListCache(owner, { linkOptions: { ...current.linkOptions, [category]: options } });
+  await updateListCache(owner, {
+    linkOptions: { ...current.linkOptions, [category]: options },
+  });
+}
+
+const MAX_CACHED_PROSPECTS = 200;
+
+/** Adds freshly loaded Schools and prospects to the cache, newest first, without repeats, up to a fixed number. */
+export async function cacheProspects(owner: string, loaded: Prospect[]): Promise<void> {
+  if (loaded.length === 0) return;
+  const current = (await readListCache(owner))?.prospects ?? [];
+  const seen = new Set(loaded.map((p) => p.id));
+  const merged = [...loaded, ...current.filter((p) => !seen.has(p.id))].slice(0, MAX_CACHED_PROSPECTS);
+  await updateListCache(owner, { prospects: merged });
 }
