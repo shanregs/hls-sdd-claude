@@ -240,9 +240,13 @@ export function MouFormDialog({
               sx={{ maxWidth: 320 }}
             />
           ) : (
-            <Stack spacing={1} aria-label="Salary of each position">
+            <Stack spacing={1} role="group" aria-label="Salary of each position">
               {salaries.map((salary, i) => (
-                <Stack key={i} direction="row" spacing={1}>
+                <Stack
+                  key={i}
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                >
                   <TextField
                     label={`Position ${i + 1} title (optional)`}
                     value={titles[i] ?? ""}
@@ -304,14 +308,14 @@ export function MouFormDialog({
             sx={{ maxWidth: 220 }}
           />
 
-          <Stack spacing={1} aria-label="Signatories for the School">
+          <Stack spacing={1} role="group" aria-label="Signatories for the School">
             <Typography variant="body2">Signed for the School</Typography>
             {schoolSigners.map((s, i) => (
               <Stack
                 key={i}
-                direction="row"
+                direction={{ xs: "column", sm: "row" }}
                 spacing={1}
-                sx={{ alignItems: "center" }}
+                sx={{ alignItems: { sm: "center" } }}
               >
                 <TextField
                   label={`School signatory ${i + 1} name`}
@@ -340,6 +344,7 @@ export function MouFormDialog({
                 {schoolSigners.length > 1 && (
                   <IconButton
                     aria-label={`Remove School signatory ${i + 1}`}
+                    sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}
                     onClick={() =>
                       setSchoolSigners((old) => old.filter((_, j) => j !== i))
                     }
