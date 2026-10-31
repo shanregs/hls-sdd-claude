@@ -3,6 +3,8 @@ package com.hls.leave.internal;
 import com.hls.attendance.api.LeaveAttendance;
 import com.hls.attendance.api.LeaveAttendance.LeaveDay;
 import com.hls.leave.api.LeaveCancelled;
+import com.hls.leave.api.LeaveDecided;
+import com.hls.leave.api.LeaveTypes;
 import com.hls.leave.api.LeaveRequested;
 import com.hls.leave.internal.LeaveViewFactory.LeaveView;
 import com.hls.leave.internal.LeaveViewFactory.Perspective;
@@ -44,7 +46,8 @@ public class LeaveRequestService {
 
     public record PreviewDay(LocalDate date, BigDecimal value) {}
 
-    public record Preview(BigDecimal workingDays, List<PreviewDay> days, List<String> problems) {}
+    public record Preview(
+            BigDecimal workingDays, List<PreviewDay> days, List<String> problems, boolean takesEffectAtOnce) {}
 
     private final LeaveRequestRepository requests;
     private final LeaveTypeCatalog types;
@@ -54,6 +57,7 @@ public class LeaveRequestService {
     private final LeaveAudit audit;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+    private final LeaveTypes leaveTypes;
 
     public LeaveRequestService(
             LeaveRequestRepository requests,
@@ -63,7 +67,8 @@ public class LeaveRequestService {
             LeaveViewFactory views,
             LeaveAudit audit,
             Clock clock,
-            ApplicationEventPublisher events) {
+            ApplicationEventPublisher events,
+            LeaveTypes leaveTypes) {
         this.requests = requests;
         this.types = types;
         this.attendance = attendance;
@@ -72,6 +77,7 @@ public class LeaveRequestService {
         this.audit = audit;
         this.clock = clock;
         this.events = events;
+        this.leaveTypes = leaveTypes;
     }
 
     @Transactional(readOnly = true)
@@ -93,13 +99,86 @@ public class LeaveRequestService {
         return new Preview(
                 evaluation.workingDays(),
                 evaluation.days().stream().map(d -> new PreviewDay(d.date(), d.value())).toList(),
-                evaluation.problems().stream().map(Problem::text).toList());
+                evaluation.problems().stream().map(Problem::text).toList(),
+                // spec 040: a request that starts on a working day today is approved the moment it is saved
+                evaluation.problems().isEmpty()
+                        && !evaluation.days().isEmpty()
+                        && evaluation.days().get(0).date().equals(attendance.businessToday()));
     }
 
     @Transactional
     public LeaveView submit(UUID userId, Draft draft) {
-        UUID teacherId = ownTeacherId(userId);
+        return submitFor(ownTeacherId(userId), userId, draft, Perspective.OWN);
+    }
+
+    /**
+     * Saves a request for the Teacher, made by {@code recorderUserId} (the Teacher, or a supervisor recording for them).
+     * A request that starts today and has today as a working day is same-day (spec 040): today's part is Approved at once,
+     * and any later days become a second, Pending request linked to it.
+     */
+    @Transactional
+    public LeaveView submitFor(UUID teacherId, UUID recorderUserId, Draft draft, Perspective perspective) {
         Evaluation evaluation = evaluate(teacherId, draft);
+        requireNoProblems(evaluation);
+        LocalDate today = attendance.businessToday();
+        boolean sameDay = draft.firstDate().equals(today) && evaluation.days().get(0).date().equals(today);
+        if (!sameDay) {
+            LeaveRequest saved = insert(newRequest(teacherId, draft, evaluation, recorderUserId));
+            audit.created(recorderUserId, saved);
+            publishRequested(saved, teacherId);
+            return views.of(saved, perspective);
+        }
+        return submitSameDay(teacherId, recorderUserId, draft, evaluation, today, perspective);
+    }
+
+    private LeaveView submitSameDay(
+            UUID teacherId, UUID recorder, Draft draft, Evaluation whole, LocalDate today, Perspective perspective) {
+        boolean runsPastToday = draft.lastDate().isAfter(today);
+        Draft todayDraft = runsPastToday
+                ? new Draft(draft.leaveTypeId(), today, today, draft.halfDayStart(), false, draft.reason())
+                : draft;
+        Evaluation todayPart = runsPastToday ? evaluate(teacherId, todayDraft) : whole;
+        requireNoProblems(todayPart);
+
+        LeaveRequest sameDayRequest = LeaveRequest.approvedSameDay(
+                teacherId,
+                todayPart.days().get(0).schoolId(),
+                todayDraft.leaveTypeId(),
+                today,
+                todayDraft.lastDate(),
+                todayDraft.halfDayStart(),
+                todayDraft.halfDayEnd(),
+                todayPart.workingDays(),
+                draft.reason().trim(),
+                recorder,
+                clock.instant());
+        LeaveRequest saved = insert(sameDayRequest);
+        // replaceAbsent: a day a supervisor marked Absent earlier today becomes this leave (spec 040 FR-003)
+        attendance.apply(saved.getId(), recorder, teacherId, todayPart.days(), leaveTypes.isLossOfPay(saved.getId()), true);
+        audit.created(recorder, saved);
+        audit.sameDay(recorder, saved);
+        publishRequested(saved, teacherId);
+        events.publishEvent(new LeaveDecided(
+                saved.getId(), teacherId, LeaveDecided.Decision.APPROVED, saved.getFirstDate(), saved.getLastDate(), null));
+
+        if (runsPastToday) {
+            Draft laterDraft = new Draft(
+                    draft.leaveTypeId(), today.plusDays(1), draft.lastDate(), false, draft.halfDayEnd(), draft.reason());
+            Evaluation later = evaluate(teacherId, laterDraft);
+            // later days with no working day (a weekend, say) leave nothing to approve
+            if (!later.days().isEmpty()) {
+                requireNoProblems(later);
+                LeaveRequest laterRequest = newRequest(teacherId, laterDraft, later, recorder);
+                laterRequest.linkTo(saved.getId());
+                LeaveRequest savedLater = insert(laterRequest);
+                audit.created(recorder, savedLater);
+                publishRequested(savedLater, teacherId);
+            }
+        }
+        return views.of(saved, perspective);
+    }
+
+    private static void requireNoProblems(Evaluation evaluation) {
         if (!evaluation.problems().isEmpty()) {
             Problem first = evaluation.problems().get(0);
             if (first.invalid()) {
@@ -107,7 +186,10 @@ public class LeaveRequestService {
             }
             throw new ConflictException(first.text());
         }
-        LeaveRequest request = new LeaveRequest(
+    }
+
+    private LeaveRequest newRequest(UUID teacherId, Draft draft, Evaluation evaluation, UUID createdBy) {
+        return new LeaveRequest(
                 teacherId,
                 evaluation.days().get(0).schoolId(),
                 draft.leaveTypeId(),
@@ -117,17 +199,21 @@ public class LeaveRequestService {
                 draft.halfDayEnd(),
                 evaluation.workingDays(),
                 draft.reason().trim(),
-                userId,
+                createdBy,
                 clock.instant());
-        LeaveRequest saved;
+    }
+
+    private LeaveRequest insert(LeaveRequest request) {
         try {
-            saved = requests.saveAndFlush(request);
+            return requests.saveAndFlush(request);
         } catch (DataIntegrityViolationException | PessimisticLockingFailureException e) {
             // Two simultaneous overlapping submissions can also deadlock on the exclusion constraint
             // (Postgres 40P01); the survivor is saved and the loser is refused like any other overlap.
             throw new ConflictException("These dates overlap another leave request of yours.");
         }
-        audit.created(userId, saved);
+    }
+
+    private void publishRequested(LeaveRequest saved, UUID teacherId) {
         events.publishEvent(new LeaveRequested(
                 saved.getId(),
                 teacherId,
@@ -135,7 +221,6 @@ public class LeaveRequestService {
                 saved.getFirstDate(),
                 saved.getLastDate(),
                 teacherName(teacherId)));
-        return views.of(saved, Perspective.OWN);
     }
 
     @Transactional(readOnly = true)
@@ -156,7 +241,8 @@ public class LeaveRequestService {
                 .orElseThrow(() -> new NotFoundException("Leave request not found."));
         LeaveStatus before = request.getStatus();
         if (before == LeaveStatus.APPROVED) {
-            if (!request.getFirstDate().isAfter(attendance.businessToday())) {
+            boolean sameDayToday = request.isSameDay() && request.getFirstDate().equals(attendance.businessToday());
+            if (!sameDayToday && !request.getFirstDate().isAfter(attendance.businessToday())) {
                 throw new ConflictException("This leave has already started. Ask your Manager to revoke it.");
             }
             attendance.remove(request.getId(), userId);

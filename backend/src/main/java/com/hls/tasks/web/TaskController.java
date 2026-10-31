@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,6 +67,19 @@ public class TaskController {
 
     public record NoteBody(String note) {}
 
+    /** Spec 040: a Manager's own work logged for today; no assignee and no date (the server decides both). */
+    public record SameDayBody(
+            TaskType type,
+            String title,
+            String description,
+            String linkedType,
+            UUID linkedId,
+            String linkedLabel,
+            String place,
+            String status,
+            String completionNote,
+            java.time.LocalDate capturedOn) {}
+
     public record ReasonBody(String reason) {}
 
     public record OverdueBody(String reason, LocalDate followUpOn) {}
@@ -84,11 +98,12 @@ public class TaskController {
             @RequestParam(required = false) UUID assigneeUserId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean sameDay,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             @AuthenticationPrincipal Jwt jwt) {
         require(jwt, PermissionAction.VIEW);
-        return queries.list(caller(jwt), view, assigneeUserId, type, status, page, size);
+        return queries.list(caller(jwt), view, assigneeUserId, type, status, sameDay, page, size);
     }
 
     @GetMapping("/summary")
@@ -127,6 +142,40 @@ public class TaskController {
                         body.linkedLabel(),
                         body.place()));
         return ResponseEntity.status(201).body(queries.detail(caller, id));
+    }
+
+    /** Spec 040: log own work for today, saved as In progress or final in one step. */
+    @PostMapping("/same-day")
+    public ResponseEntity<TaskService.SameDayResult> logSameDay(
+            @RequestBody SameDayBody body,
+            @RequestHeader(value = "Idempotency-Key", required = false) UUID key,
+            @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.CREATE);
+        TaskService.SameDayResult result = service.logSameDay(
+                caller(jwt),
+                new TaskService.SameDayRequest(
+                        body.type(),
+                        body.title(),
+                        body.description(),
+                        body.linkedType(),
+                        body.linkedId(),
+                        body.linkedLabel(),
+                        body.place(),
+                        body.status(),
+                        body.completionNote(),
+                        key,
+                        body.capturedOn()));
+        return ResponseEntity.status(201).body(result);
+    }
+
+    /** Spec 040: a task planned for today is marked done on the spot; final at once. */
+    @PostMapping("/{id}/done-on-the-spot")
+    public TaskQueries.Detail doneOnTheSpot(
+            @PathVariable UUID id, @RequestBody NoteBody body, @AuthenticationPrincipal Jwt jwt) {
+        require(jwt, PermissionAction.EDIT);
+        Caller caller = caller(jwt);
+        service.markDoneOnTheSpot(caller, id, body == null ? null : body.note());
+        return queries.detail(caller, id);
     }
 
     @GetMapping("/{id}")

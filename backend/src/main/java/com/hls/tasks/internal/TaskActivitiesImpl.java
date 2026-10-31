@@ -77,7 +77,8 @@ class TaskActivitiesImpl implements TaskActivities {
                             t.getLinkedType(),
                             t.getLinkedId(),
                             t.getStatus().name(),
-                            completedOn);
+                            completedOn,
+                            t.isSameDay());
                 })
                 .toList();
     }

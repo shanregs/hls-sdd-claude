@@ -51,7 +51,8 @@ public class TaskQueries {
             String place,
             boolean overdue,
             long daysOverdue,
-            boolean escalated) {}
+            boolean escalated,
+            boolean sameDay) {}
 
     public record Summary(long today, long upcoming, long overdue, long awaiting, long escalated, long done) {}
 
@@ -151,7 +152,8 @@ public class TaskQueries {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<Row> list(Caller caller, String view, UUID assignee, String type, String status, int page, int size) {
+    public PageResponse<Row> list(
+            Caller caller, String view, UUID assignee, String type, String status, Boolean sameDay, int page, int size) {
         LocalDate today = businessDate.today();
         String v = view == null || view.isBlank() ? "all" : view.toLowerCase();
         Specification<Task> spec = scope(caller, assignee).and(view(v, today));
@@ -162,6 +164,9 @@ public class TaskQueries {
         if (status != null && !status.isBlank()) {
             TaskStatus parsed = parse(TaskStatus.class, status, "status");
             spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), parsed));
+        }
+        if (Boolean.TRUE.equals(sameDay)) {
+            spec = spec.and((root, q, cb) -> cb.isTrue(root.get("sameDay")));
         }
         Sort sort = v.equals("done")
                 ? Sort.by(Sort.Order.desc("updatedAt"))
@@ -381,7 +386,8 @@ public class TaskQueries {
                             t.getPlace(),
                             overdue,
                             overdue ? ChronoUnit.DAYS.between(t.getDueOn(), today) : 0,
-                            t.getEscalatedAt() != null);
+                            t.getEscalatedAt() != null,
+                            t.isSameDay());
                 })
                 .toList();
     }

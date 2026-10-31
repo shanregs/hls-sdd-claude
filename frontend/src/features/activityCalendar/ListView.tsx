@@ -61,7 +61,7 @@ export function ListView({
             <TableCell>
               <Chip
                 size="small"
-                label={`${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}`}
+                label={`${STATUS_LABELS[item.status]}${item.doneLate ? " (late)" : ""}${item.sameDay ? " · same-day" : ""}`}
               />
             </TableCell>
           </TableRow>

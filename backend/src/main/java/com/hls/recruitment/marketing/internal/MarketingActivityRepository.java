@@ -8,6 +8,9 @@ interface MarketingActivityRepository extends JpaRepository<MarketingActivity, U
 
     List<MarketingActivity> findByProspectIdOrderByActivityDateDesc(UUID prospectId);
 
+    /** The activity an offline replay already created for this phone key (spec 040). */
+    java.util.Optional<MarketingActivity> findByClientKey(UUID clientKey);
+
     List<MarketingActivity> findBySchoolIdOrderByActivityDateDesc(UUID schoolId);
 
     List<MarketingActivity> findByActivityDateBetweenOrderByActivityDate(java.time.LocalDate from, java.time.LocalDate to);

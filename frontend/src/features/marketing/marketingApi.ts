@@ -171,6 +171,8 @@ export interface AttachmentRef {
 
 export interface Activity {
   id: string;
+  /** Spec 040: logged for today without a plan. */
+  sameDay?: boolean;
   type: ActivityType;
   status: "PLANNED" | "COMPLETED" | "CANCELLED";
   effectiveStatus: "PLANNED" | "COMPLETED" | "CANCELLED" | "MISSED";
@@ -361,6 +363,18 @@ export const planActivity = (
   input: PlanInput,
 ): Promise<ApiResult<Activity>> =>
   sendJson(f, "POST", `${M}/activities`, input);
+/** Spec 040: a visit the Manager logs for today with no plan; saved already Completed. */
+export const logVisitToday = (
+  f: AuthFetch,
+  input: {
+    prospectId: string;
+    type: ActivityType;
+    outcome: string;
+    notes?: string;
+    followUpOn?: string;
+  },
+): Promise<ApiResult<Activity>> =>
+  sendJson(f, "POST", `${M}/activities/same-day`, input);
 export const completeActivity = (
   f: AuthFetch,
   id: string,

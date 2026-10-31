@@ -5,7 +5,6 @@ import com.hls.attendance.api.ManagerAttendanceReadApi;
 import com.hls.attendance.api.ManagerMonth;
 import com.hls.attendance.api.MarkView;
 import com.hls.attendance.api.WorkingCalendar;
-import com.hls.leave.api.LeaveTypes;
 import com.hls.payroll.api.EarnedPay;
 import com.hls.payroll.api.LossOfPayValue;
 import com.hls.payroll.api.PayPolicyView;
@@ -75,7 +74,6 @@ class PayRulesImpl implements PayRules {
     private final AttendanceReadApi attendance;
     private final ManagerAttendanceReadApi managerAttendance;
     private final WorkingCalendar calendar;
-    private final LeaveTypes leaveTypes;
 
     PayRulesImpl(
             PersonSalaries personSalaries,
@@ -84,8 +82,7 @@ class PayRulesImpl implements PayRules {
             PersonDirectory people,
             AttendanceReadApi attendance,
             ManagerAttendanceReadApi managerAttendance,
-            WorkingCalendar calendar,
-            LeaveTypes leaveTypes) {
+            WorkingCalendar calendar) {
         this.personSalaries = personSalaries;
         this.staffDates = staffDates;
         this.policies = policies;
@@ -93,7 +90,6 @@ class PayRulesImpl implements PayRules {
         this.attendance = attendance;
         this.managerAttendance = managerAttendance;
         this.calendar = calendar;
-        this.leaveTypes = leaveTypes;
     }
 
     // --------------------------------------------------------------- salary
@@ -327,18 +323,13 @@ class PayRulesImpl implements PayRules {
             return new UnpaidDays.Unavailable(UNKNOWN_TEACHER);
         }
         List<MarkView> marks = attendance.marksOf(person.id(), month);
-        Set<UUID> requestIds = marks.stream()
-                .map(MarkView::leaveRequestId)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toSet());
-        Set<UUID> lossOfPay = requestIds.isEmpty() ? Set.of() : leaveTypes.lossOfPayRequests(requestIds);
         List<UnpaidDayClassifier.Mark> facts = marks.stream()
                 .map(m -> new UnpaidDayClassifier.Mark(m.date(), m.category(), m.dayValue(), m.leaveRequestId()))
                 .toList();
         List<UnpaidDay> days = UnpaidDayClassifier.classify(
                 facts,
                 new HashSet<>(computed.days().dates()),
-                lossOfPay,
+                Set.of(),
                 policyOfMonth(month).halfDayFraction());
         return new UnpaidDays.Found(days);
     }

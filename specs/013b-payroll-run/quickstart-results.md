@@ -59,9 +59,19 @@ The owner confirmed all seven points on 2026-10-24 (given in a working session, 
 | 6 | Supplementary run uses the month's policy and divisor as stored at its own computation | `SupplementaryRunTest` | Confirmed 2026-10-24 |
 | 7 | School working days (spec 037): payroll uses the calendar-derived days, not the stored School figure | none (a decision, not a behaviour) | Confirmed 2026-10-24; decision: payroll keeps the calendar-derived days; the stored School figure is not adopted |
 
+## Browser walkthrough (2026-10-29)
+
+`e2e/test_payroll_run.py`, run against the local stack with headless Chrome: 3 passed in 30 s.
+
+- The current month is not offered; starting a second run for a month that has one is refused and the list stays (scenarios 2, 3).
+- Admin starts a run for July 2026: it finishes computing, the six totals show, a line's working opens, Export CSV is offered on a draft (1, 6, 19).
+- After Submit the Admin has no Approve or Cancel button (7). The Director returns it with a reason, the Admin sees the reason, submits again, and the Director is offered Approve (8).
+- A Manager sees no pay runs table, no start form and no rupee figures (16).
+- By default the run is returned and cancelled at the end so nothing final is left in the database. `APPROVE=1` also approves it and checks that payslips are offered and Compute again and Cancel run are gone; that cannot be undone, so it was not run.
+
 ## Not done
 
-- No manual browser walkthrough of the Payroll screens.
+- Browser walkthrough: done on 2026-10-29 as a Selenium e2e test (see "Browser walkthrough"). It covers scenarios 1, 2, 3, 6, 7, 8, 16 and the export button of 19. Not covered in the browser: 4, 5, 9 to 15, 17, 18 and the rest of 19 (the automated API and component tests above carry them), and approval itself unless run with `APPROVE=1`.
 - No screen-reader check (axe checks in both themes are automated only).
 - No human timing of SC-005 (a reviewer reproducing a net from the working screen).
 - The Postman collection (`postman/HLS API/013b Payroll Run/`) was not run.

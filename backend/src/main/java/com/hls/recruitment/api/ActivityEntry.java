@@ -28,4 +28,24 @@ public record ActivityEntry(
         String linkedType,
         UUID linkedId,
         String status,
-        LocalDate completedOn) {}
+        LocalDate completedOn,
+        boolean sameDay) {
+
+    /** The form that does not say whether the item was logged on the spot (spec 040): it was not. */
+    public ActivityEntry(
+            String kind,
+            UUID id,
+            UUID ownerUserId,
+            Set<UUID> attendeeUserIds,
+            LocalDate date,
+            LocalDate originalDate,
+            String place,
+            UUID schoolId,
+            UUID zoneId,
+            String linkedType,
+            UUID linkedId,
+            String status,
+            LocalDate completedOn) {
+        this(kind, id, ownerUserId, attendeeUserIds, date, originalDate, place, schoolId, zoneId, linkedType, linkedId, status, completedOn, false);
+    }
+}
