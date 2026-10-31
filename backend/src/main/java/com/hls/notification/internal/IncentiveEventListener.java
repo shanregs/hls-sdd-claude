@@ -15,8 +15,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Turns the incentive events of spec 030 into notifications: a new incentive tells the active Directors and the School's Zone
- * Manager once (the earner included when they are that Zone Manager, since they may approve); a decision tells the earner
+ * Turns the incentive events of spec 030 into notifications: a new incentive tells the active Directors and every Zone Manager of the School's Zone
+ * once (the earner included when they are that Zone Manager, since they may approve); a decision tells the earner
  * unless they made it; a MoU that changes while the pay run awaits approval tells the Directors. Runs inside the publisher's
  * transaction.
  */
@@ -39,8 +39,8 @@ public class IncentiveEventListener {
     @EventListener
     void onEarned(IncentiveEarned event) {
         Set<UUID> to = new LinkedHashSet<>(recipients.activeDirectors());
-        if (event.zoneManagerUserId() != null) {
-            to.add(event.zoneManagerUserId());
+        if (event.zoneManagerUserIds() != null) {
+            to.addAll(event.zoneManagerUserIds());
         }
         MessageFactory.Text text = IncentiveMessages.pending(schoolName(event.schoolId()), personName(event.earnerUserId()), event.incentiveId());
         to.forEach(user -> notifications.create(user, NotificationType.INCENTIVE_PENDING, text));

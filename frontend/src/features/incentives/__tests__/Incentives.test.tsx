@@ -255,6 +255,13 @@ describe("Incentive decisions", () => {
     expect(screen.getByText("In a pay run awaiting approval")).toBeInTheDocument();
   });
 
+  it("shows no Reopen button on a rejected incentive unless the server's actions include it", async () => {
+    mockApi([row({ status: "REJECTED", actions: [] })], row({ status: "REJECTED", actions: [], rejectReason: "Not closed" }));
+    renderAt("/operations/incentives/i-1");
+    expect(await screen.findByText("Not closed")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reopen" })).not.toBeInTheDocument();
+  });
+
   it("reopens a rejected incentive with a reason", async () => {
     mockApi([row({ status: "REJECTED", actions: ["reopen"] })], row({ status: "REJECTED", actions: ["reopen"], rejectReason: "Not closed" }));
     const user = userEvent.setup();
