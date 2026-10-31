@@ -1,0 +1,6 @@
+$kind: http-request
+name: No Earner
+description: "Schools that earned nobody anything and why. Admin and Director only."
+url: "{{baseUrl}}/api/v1/incentives/no-earner"
+method: GET
+order: 4000

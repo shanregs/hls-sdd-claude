@@ -273,3 +273,13 @@ the create responses so later requests work in sequence.
   does this automatically).
 - Port 8080 or 5173 in use: stop the other process, or set `SERVER_PORT` for the backend (and
   update the proxy in `frontend/vite.config.ts`).
+
+## Themes (spec 039)
+
+Each user picks a preset, light/dark/same-as-device, an own accent colour and a dark sidebar under
+**Settings -> Theme** on the web and **Profile -> Appearance** on the phone. The choice is saved
+per user through `/api/v1/me/theme` (Postman folder **039 User Themes**) and follows the user to
+other devices; the web also keeps a copy in `localStorage` (`hls-theme-preference`) so the page
+does not flash the old look. An accent that is hard to read is refused, and the server suggests a
+readable one. Preset colours live in `backend/src/main/resources/themes/theme-presets.json`; web and
+phone tests check the contrast rules against `specs/039-user-themes/contracts/contrast-vectors.json`.

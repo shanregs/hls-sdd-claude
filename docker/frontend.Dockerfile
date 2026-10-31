@@ -4,6 +4,9 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
+# Theme tests (type-checked by tsc -b) import these shared files from outside frontend/.
+COPY backend/src/main/resources/themes/theme-presets.json /backend/src/main/resources/themes/theme-presets.json
+COPY specs/039-user-themes/contracts/contrast-vectors.json /specs/039-user-themes/contracts/contrast-vectors.json
 COPY frontend/ .
 RUN npm run build
 

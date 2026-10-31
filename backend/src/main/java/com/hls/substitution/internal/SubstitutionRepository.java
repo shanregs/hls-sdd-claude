@@ -53,6 +53,49 @@ public interface SubstitutionRepository extends JpaRepository<SubstitutionRequir
             @Param("to") LocalDate to,
             Pageable pageable);
 
+    /** As {@link #search} but only requirements whose current Manager cover was recorded on the day (spec 040). */
+    @Query("""
+            select r from SubstitutionRequirement r
+            where (:allSchools = true or r.schoolId in :scopeSchoolIds)
+              and (:filterSchool = false or r.schoolId = :schoolId)
+              and r.status in :statuses
+              and r.sameDay = true
+              and r.dutyDate between :from and :to
+            order by r.dutyDate desc, r.raisedAt desc, r.id
+            """)
+    Page<SubstitutionRequirement> searchSameDay(
+            @Param("allSchools") boolean allSchools,
+            @Param("scopeSchoolIds") Collection<UUID> scopeSchoolIds,
+            @Param("filterSchool") boolean filterSchool,
+            @Param("schoolId") UUID schoolId,
+            @Param("statuses") Collection<RequirementStatus> statuses,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            Pageable pageable);
+
+    /** Every requirement a Manager covered, now or earlier (spec 040): the Manager cover entries. */
+    @Query("""
+            select r from SubstitutionRequirement r
+            where (:allSchools = true or r.schoolId in :scopeSchoolIds)
+              and (:filterSchool = false or r.schoolId = :schoolId)
+              and (:sameDayOnly = false or r.sameDay = true)
+              and r.dutyDate between :from and :to
+              and (r.status = com.hls.substitution.internal.RequirementStatus.MANAGER_COVER
+                   or exists (select 1 from SubstitutionHistoryEntry h
+                              where h.requirementId = r.id
+                                and h.action = com.hls.substitution.internal.HistoryAction.COVERED))
+            order by r.dutyDate desc, r.id
+            """)
+    Page<SubstitutionRequirement> managerCovers(
+            @Param("allSchools") boolean allSchools,
+            @Param("scopeSchoolIds") Collection<UUID> scopeSchoolIds,
+            @Param("filterSchool") boolean filterSchool,
+            @Param("schoolId") UUID schoolId,
+            @Param("sameDayOnly") boolean sameDayOnly,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            Pageable pageable);
+
     /** Live credits: assigned requirements of the given substitutes in the range. */
     @Query("""
             select r from SubstitutionRequirement r
@@ -81,4 +124,15 @@ public interface SubstitutionRepository extends JpaRepository<SubstitutionRequir
             """)
     BigDecimal coveredOn(
             @Param("teacherId") UUID teacherId, @Param("date") LocalDate date, @Param("excludeId") UUID excludeId);
+
+    /** Day values of the live requirements of the Schools in the range, by School and status (spec 014b A3). */
+    @Query("""
+            select r.schoolId, r.status, sum(r.dayValue) from SubstitutionRequirement r
+            where r.schoolId in :schoolIds
+              and r.status <> com.hls.substitution.internal.RequirementStatus.CANCELLED
+              and r.dutyDate between :from and :to
+            group by r.schoolId, r.status
+            """)
+    List<Object[]> daysBySchoolAndStatus(
+            @Param("schoolIds") Collection<UUID> schoolIds, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }

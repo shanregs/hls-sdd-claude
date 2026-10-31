@@ -48,6 +48,8 @@ export interface TaskRow {
   overdue: boolean;
   daysOverdue: number;
   escalated: boolean;
+  /** Spec 040: logged for today without a plan, or marked done on the spot. */
+  sameDay?: boolean;
 }
 
 export interface TaskSummary {
@@ -136,10 +138,15 @@ export function listTasks(
     view: TaskView;
     assigneeUserId?: string;
     type?: string;
+    sameDay?: boolean;
     page?: number;
   },
 ): Promise<ApiResult<PageOf<TaskRow>>> {
-  const query = queryString({ size: 50, ...filters });
+  const query = queryString({
+    size: 50,
+    ...filters,
+    sameDay: filters.sameDay || undefined,
+  });
   return getJson(authFetch, `${BASE}?${query}`, "Could not load the tasks.");
 }
 
@@ -185,6 +192,23 @@ export function createTask(
   return sendJson(authFetch, "POST", BASE, body);
 }
 
+export interface SameDayTask {
+  type: string;
+  title: string;
+  description: string | null;
+  status: "IN_PROGRESS" | "COMPLETED";
+  completionNote: string | null;
+  place: string | null;
+}
+
+/** Spec 040: a Manager logs their own work for today; no assignee and no date are sent. */
+export function logSameDayTask(
+  authFetch: AuthFetch,
+  body: SameDayTask,
+): Promise<ApiResult<{ id: string; status: TaskStatus; sameDay: boolean }>> {
+  return sendJson(authFetch, "POST", `${BASE}/same-day`, body);
+}
+
 export function updateTask(
   authFetch: AuthFetch,
   id: string,
@@ -205,7 +229,8 @@ export type TaskAction =
   | "overdue-reason"
   | "verify"
   | "send-back"
-  | "cancel";
+  | "cancel"
+  | "done-on-the-spot";
 
 export function actOnTask(
   authFetch: AuthFetch,

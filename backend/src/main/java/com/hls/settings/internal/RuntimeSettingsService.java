@@ -6,6 +6,7 @@ import com.hls.cache.SnapshotCaches;
 import com.hls.identity.policy.RuntimeSettings;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
+import com.hls.incentive.api.IncentiveSettings;
 import com.hls.settings.internal.SettingKey.Group;
 import com.hls.training.api.TrainingSettings;
 import java.time.Clock;
@@ -29,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the next call. Overrides are held in a {@link SnapshotCache} that a save drops in its own transaction.
  */
 @Service
-public class RuntimeSettingsService implements RuntimeSettings, TrainingSettings {
+public class RuntimeSettingsService implements RuntimeSettings, TrainingSettings, IncentiveSettings {
 
     public static final String SYSTEM_ENTITY = "SYSTEM_SETTING";
     public static final String SECURITY_ENTITY = "SECURITY_SETTING";
@@ -204,6 +205,11 @@ public class RuntimeSettingsService implements RuntimeSettings, TrainingSettings
     @Override
     public int generationHorizonMonths() {
         return number(SettingKey.TRAINING_GENERATION_HORIZON_MONTHS);
+    }
+
+    @Override
+    public int amountPerSchool() {
+        return number(SettingKey.INCENTIVE_AMOUNT);
     }
 
     // ------------------------------------------------------------------ screens

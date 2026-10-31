@@ -13,6 +13,8 @@ interface ProspectRepository extends JpaRepository<Prospect, UUID> {
 
     Optional<Prospect> findFirstBySchoolId(UUID schoolId);
 
+    List<Prospect> findBySchoolIdIn(java.util.Collection<UUID> schoolIds);
+
     List<Prospect> findByWonAtIsNotNull();
 
     List<Prospect> findByWonAtGreaterThanEqualAndWonAtLessThan(java.time.Instant from, java.time.Instant before);

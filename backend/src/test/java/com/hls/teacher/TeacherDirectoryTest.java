@@ -18,6 +18,9 @@ class TeacherDirectoryTest extends MasterDataTestBase {
     @Autowired
     private TeacherDirectory directory;
 
+    @Autowired
+    private jakarta.persistence.EntityManagerFactory entityManagerFactory;
+
     private final LocalDate today = LocalDate.now();
 
     @Test
@@ -39,6 +42,26 @@ class TeacherDirectoryTest extends MasterDataTestBase {
         assertThat(spans.get(1).endsOn()).isNull();
         assertThat(spans.get(0).covers(today.minusDays(11))).isTrue();
         assertThat(spans.get(0).covers(today.minusDays(10))).isFalse();
+    }
+
+    /** Spec 014b A7: the count per School equals the Teachers placed there on the date; a mover counts only where they are. */
+    @Test
+    void placedCountBySchoolCountsTheTeachersWhosePlacementCoversTheDate() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID stays = teacher(admin);
+        UUID mover = teacher(admin);
+        UUID first = schoolInNewZone(admin)[2];
+        UUID second = schoolInNewZone(admin)[2];
+        UUID empty = schoolInNewZone(admin)[2];
+        placeTeacherRaw(admin, stays, first, today.minusDays(20));
+        placeTeacherRaw(admin, mover, first, today.minusDays(20));
+        placeTeacherRaw(admin, mover, second, today.minusDays(10));
+
+        assertThat(directory.placedCountBySchool(Set.of(first, second, empty), today.minusDays(15)))
+                .containsEntry(first, 2).doesNotContainKey(second).doesNotContainKey(empty);
+        assertThat(directory.placedCountBySchool(Set.of(first, second, empty), today))
+                .containsEntry(first, 1).containsEntry(second, 1).doesNotContainKey(empty);
+        assertThat(directory.placedCountBySchool(Set.of(), today)).isEmpty();
     }
 
     @Test
@@ -89,5 +112,40 @@ class TeacherDirectoryTest extends MasterDataTestBase {
         assertThat(directory.teacherInfo(Set.of(teacher))).containsKey(teacher);
         assertThat(directory.teacherOfUser(UUID.randomUUID())).isEmpty();
         assertThat(directory.teacherInfo(Set.of())).isEmpty();
+    }
+
+    /** Spec 014c A3: status, effective date and joining date (earliest placement start, 005 has no joining field). */
+    @Test
+    void lifecycleGivesStatusEffectiveDateAndJoiningDateInAFixedNumberOfQueries() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID joined = teacher(admin);
+        UUID exited = teacher(admin);
+        UUID neverPlaced = teacher(admin);
+        UUID school = schoolInNewZone(admin)[2];
+        UUID other = schoolInNewZone(admin)[2];
+        placeTeacherRaw(admin, joined, school, today.minusDays(40));
+        placeTeacherRaw(admin, joined, other, today.minusDays(10));
+        placeTeacherRaw(admin, exited, school, today.minusDays(30));
+        Resp resp = post(
+                "/api/v1/teachers/" + exited + "/status", admin,
+                java.util.Map.of("status", "EXITED", "effectiveOn", today.minusDays(5).toString()));
+        assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+        org.hibernate.stat.Statistics stats =
+                entityManagerFactory.unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        stats.setStatisticsEnabled(true);
+        stats.clear();
+
+        java.util.Map<UUID, TeacherDirectory.Lifecycle> result =
+                directory.lifecycle(Set.of(joined, exited, neverPlaced, UUID.randomUUID()));
+
+        assertThat(stats.getPrepareStatementCount()).as("fixed, not per Teacher").isLessThanOrEqualTo(6);
+        assertThat(result).containsOnlyKeys(joined, exited, neverPlaced);
+        assertThat(result.get(joined).status()).isEqualTo("ACTIVE");
+        assertThat(result.get(joined).joinedOn()).isEqualTo(today.minusDays(40));
+        assertThat(result.get(exited).status()).isEqualTo("EXITED");
+        assertThat(result.get(exited).statusEffectiveOn()).isEqualTo(today.minusDays(5));
+        assertThat(result.get(exited).joinedOn()).isEqualTo(today.minusDays(30));
+        assertThat(result.get(neverPlaced).joinedOn()).isNull();
+        assertThat(directory.lifecycle(Set.of())).isEmpty();
     }
 }

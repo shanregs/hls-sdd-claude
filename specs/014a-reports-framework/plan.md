@@ -116,3 +116,12 @@ Open points: for 014b, 022 and 027 amendments are listed in `docs/spec-inputs/01
 ## Complexity Tracking
 
 None.
+
+## Implementation notes (2026-10-27)
+
+- Report sources live in the owning modules (`attendance/internal/AttendanceReportSource`, `payroll/run/internal/PayrollReportSource` and `MyReportSource`) and publish `ReportSource` beans, like the 028 tile sources. `reporting` therefore depends on no source module and `ReportingModuleRulesTest` is unchanged; the plan's `reporting/internal/report/*Source` placement would have made `reporting` and the source modules depend on each other.
+- Fail-soft is per section (Teachers, Schools, Zones, Managers; kinds, Zones, Schools, cycle), each read in its own read-only transaction within `hls.reports.section-limit-ms`, not per column.
+- Endpoints are under `/api/v1/reports` like the rest of the API. Navigation: Attendance Report and Payroll Report under REPORTS, My Report under MY ATTENDANCE (as the spec table says).
+- Export audit entity types are `REPORT_EXPORT_ATTENDANCE` and `REPORT_EXPORT_PAYROLL`, visible in Change History to those holding the report View grant.
+- "Leave" in My Report is the approved leave days of the attendance roll-up; spec 009 has no read interface and none was added.
+- The Payroll cycle table shows the twelve months ending with the chosen month (no academic-year concept exists to anchor it).

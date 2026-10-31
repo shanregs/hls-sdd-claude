@@ -192,3 +192,5 @@ The constitution's default access matrix gains a Manager Tasks row (PATCH 2.5.3)
 ## Amended by 035
 
 Spec 035 (Manager Activity Calendar) added `activitiesBetween` on the task feed additively (no schema change). `plannedBetween` and its `PlannedActivity` values are unchanged; the regression test is `TaskPlannedBetweenUnchangedTest`.
+
+> **Amended by spec 040 (2026-10-28):** A Manager can log own work for today (`POST /api/v1/tasks/same-day`) or mark a task due today done on the spot; both end `VERIFIED` in one step and never wait for verification.

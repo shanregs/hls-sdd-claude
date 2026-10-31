@@ -1,0 +1,6 @@
+$kind: http-request
+name: Summary
+description: "Totals by status and by Manager and month."
+url: "{{baseUrl}}/api/v1/incentives/summary"
+method: GET
+order: 3000

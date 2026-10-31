@@ -57,6 +57,7 @@ public class VisitSource implements ActivitySource {
                 e.linkedType(),
                 e.linkedId(),
                 e.status(),
-                e.completedOn());
+                e.completedOn(),
+                e.sameDay());
     }
 }

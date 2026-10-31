@@ -12,6 +12,7 @@ import { AppShell } from "./app/AppShell";
 import { RouteGuard } from "./app/RouteGuard";
 import { NotAuthorizedPage } from "./app/NotAuthorizedPage";
 import { DashboardRouter } from "./dashboards/DashboardRouter";
+import { SameDayReport } from "./features/dashboard/SameDayReport";
 import { RolePermissionsGrid } from "./features/permissions/RolePermissionsGrid";
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { DesignationsPage } from "./features/designations/DesignationsPage";
@@ -24,6 +25,7 @@ import { SalaryStructuresPage } from "./features/payroll/SalaryStructuresPage";
 import { AdjustmentsPage } from "./features/payroll/run/AdjustmentsPage";
 import { PayrollRunPage } from "./features/payroll/run/PayrollRunPage";
 import { PayrollRunsPage } from "./features/payroll/run/PayrollRunsPage";
+import { ReportPage } from "./features/reports/ReportPage";
 import { PersonPayrollHistory } from "./features/payroll/run/PersonPayrollHistory";
 import { SecuritySettingsPage } from "./features/settings/SecuritySettingsPage";
 import { SystemSettingsPage } from "./features/settings/SystemSettingsPage";
@@ -46,6 +48,7 @@ import { TaskDetailPage } from "./features/tasks/TaskDetailPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { ContentDetailPage } from "./features/content/ContentDetailPage";
 import { ContentPage } from "./features/content/ContentPage";
+import { IncentivesPage } from "./features/incentives/IncentivesPage";
 import { ActivityCalendarPage } from "./features/activityCalendar/ActivityCalendarPage";
 import { ExceptionsPage } from "./features/training/ExceptionsPage";
 import { HistoryPage } from "./features/training/HistoryPage";
@@ -121,6 +124,14 @@ export function App() {
           element={
             <RouteGuard>
               <DashboardRouter />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/dashboard/same-day"
+          element={
+            <RouteGuard>
+              <SameDayReport />
             </RouteGuard>
           }
         />
@@ -605,6 +616,22 @@ export function App() {
           }
         />
         <Route
+          path="/operations/incentives"
+          element={
+            <RouteGuard>
+              <IncentivesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/operations/incentives/:id"
+          element={
+            <RouteGuard>
+              <IncentivesPage />
+            </RouteGuard>
+          }
+        />
+        <Route
           path="/operations/tasks"
           element={
             <RouteGuard>
@@ -665,6 +692,14 @@ export function App() {
           element={
             <RouteGuard>
               <DesignationSalaryPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/reports/:key"
+          element={
+            <RouteGuard>
+              <ReportPage />
             </RouteGuard>
           }
         />

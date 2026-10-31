@@ -30,3 +30,9 @@ Out of scope: School, Collections, Margin (014b); Attendance and Payroll (014a);
   public interface; the plan lists them.
 - Decisions carried from 014a Clarifications (2026-10-27): default month is the last locked month with a warning label for
   open months; a Zone Manager has no access to Payroll or Expenses.
+
+## Refresh 2026-10-27 (specify)
+
+Specified in `specs/014c-recruitment-teacher-manager-expenses`. Source check and the list of small additive amendments per
+spec (005, 015, 016, 023, 025, 026, 027, 035) are in its `source-check.md`; five open questions in
+`clarification-questions.md`. Plan and tasks follow the answers. No migration needed (V130 and V140 are taken).

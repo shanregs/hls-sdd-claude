@@ -2,7 +2,7 @@
 Sync Impact Report
 ==================
 Version change: 1.7.0 → 3.0.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.14,
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.14 and 2.5.16,
 then MAJOR 3.0.0 for spec 029: a sixth fixed role)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
@@ -62,6 +62,13 @@ Modified principles:
     `transfer` module, which changes placements only through `schoolbilling.api.PlacementMoves` and reads the other modules through
     their api packages; only `notification` reads `transfer.api`. Number kept after 2.5.7; the next patch after whichever of the
     parallel specs merges first.
+  - 2.5.16 (PATCH, spec 030): the Default role access matrix gains an Incentives row (Manager incentives, ₹5,000 per
+    closed School by default). Admin holds View and Export; the Director holds View, Approve and Export; a Manager holds View
+    for own incentives and Approve for the Schools in their own Zone (Zone Manager); Teacher and System hold nothing. The
+    amount is the system setting `incentive.amount-per-school`, edited by Admin under System Settings. The navigation model
+    gains the PAYROLL & FINANCE item Incentives (Admin, Director, Manager). Principle VII holds: `incentive` reads other
+    modules only through their api packages, and approved incentives reach payroll only through `payroll.api.IncentiveIntake`.
+    Number follows 2.5.14; 2.5.15 is taken by spec 014b; renumber at merge if another PATCH lands first.
   - 2.5.14 (PATCH, spec 022): the Default role access matrix gains a School Billing row (the internal receivables ledger:
     monthly dues derived from active assignments, adjustments, collections, ageing). Admin and Director hold View, Create, Edit,
     Approve and Export org-wide; a Zone Manager holds View, Create (record collections) and Export for their own Schools only and
@@ -459,6 +466,7 @@ kept intentionally lightweight for v1.
   | Salary Processing               | ✓     | ✓        | —        | —       | —      |
   | Content (authored content, versions, review, approval) | View, Create, Edit (Approve can be granted) | View, Create, Edit, Approve | Own (authored or submitted; View, Create, Edit; never Approve) | — | — |
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
+  | Incentives (Manager incentive per closed School; Approve) | View, Export | View, Approve, Export | Own (View); Approve for own Zone's Schools | — | — |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
   | User Management                 | ✓     | —        | —        | —       | ✓      |
   | Role & Permissions              | ✓     | ✓        | —        | —       | ✓      |

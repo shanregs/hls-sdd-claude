@@ -200,7 +200,7 @@ function toError(response: ParsedResponse): ApiError {
         status === 409 && data && typeof data === "object" && "matches" in data && Array.isArray(data.matches)
           ? (data.matches as string[])
           : [];
-      return new ApiError(messageOf(data, `Request failed (${status}).`), status, matches);
+      return new ApiError(messageOf(data, `Request failed (${status}).`), status, matches, data);
     }
   }
 }

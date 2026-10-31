@@ -1,0 +1,6 @@
+$kind: http-request
+name: Reset My Theme
+description: "Back to the default (Classic, same as device, no own accent). Returns 204."
+url: "{{baseUrl}}/api/v1/me/theme"
+method: DELETE
+order: 3000

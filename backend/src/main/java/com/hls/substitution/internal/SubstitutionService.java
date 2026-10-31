@@ -76,7 +76,24 @@ public class SubstitutionService {
             InformedView informed,
             String principalContact,
             String note,
-            Long version) {}
+            Long version,
+            boolean sameDay) {}
+
+    /** One Manager cover entry (spec 040): the requirement a Manager covered, now or earlier. */
+    public record ManagerCoverView(
+            UUID requirementId,
+            LocalDate date,
+            UUID schoolId,
+            String schoolName,
+            UUID replacedTeacherId,
+            String replacedTeacherName,
+            String managerName,
+            String recordedByName,
+            BigDecimal dayValue,
+            boolean sameDay,
+            String state,
+            String endedBy,
+            String label) {}
 
     public record DetailView(RequirementView requirement, List<HistoryView> history) {}
 
@@ -142,6 +159,7 @@ public class SubstitutionService {
             UUID schoolId,
             LocalDate from,
             LocalDate to,
+            Boolean sameDay,
             int page,
             int size) {
         SubstitutionScope.Scope s = scope.of(userId, roles);
@@ -149,16 +167,108 @@ public class SubstitutionService {
                 ? EnumSet.of(RequirementStatus.OPEN, RequirementStatus.ASSIGNED)
                 : statuses;
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE));
-        var result = requirements.search(
+        var result = Boolean.TRUE.equals(sameDay)
+                ? requirements.searchSameDay(
+                        s.all(),
+                        s.schoolIds(),
+                        schoolId != null,
+                        schoolId == null ? new UUID(0L, 0L) : schoolId,
+                        wanted,
+                        from == null ? FAR_PAST : from,
+                        to == null ? FAR_FUTURE : to,
+                        pageable)
+                : requirements.search(
+                        s.all(),
+                        s.schoolIds(),
+                        schoolId != null,
+                        schoolId == null ? new UUID(0L, 0L) : schoolId,
+                        wanted,
+                        from == null ? FAR_PAST : from,
+                        to == null ? FAR_FUTURE : to,
+                        pageable);
+        List<RequirementView> content = views(result.getContent(), false);
+        return new PageResponse<>(content, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
+
+    /** The Manager cover entries in scope, apart from Teacher credits (spec 040 FR-008). */
+    @Transactional(readOnly = true)
+    public PageResponse<ManagerCoverView> managerCovers(
+            UUID userId,
+            Set<Role> roles,
+            UUID schoolId,
+            LocalDate from,
+            LocalDate to,
+            boolean sameDayOnly,
+            int page,
+            int size) {
+        SubstitutionScope.Scope s = scope.of(userId, roles);
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE));
+        var result = requirements.managerCovers(
                 s.all(),
                 s.schoolIds(),
                 schoolId != null,
                 schoolId == null ? new UUID(0L, 0L) : schoolId,
-                wanted,
+                sameDayOnly,
                 from == null ? FAR_PAST : from,
                 to == null ? FAR_FUTURE : to,
                 pageable);
-        List<RequirementView> content = views(result.getContent(), false);
+        List<SubstitutionRequirement> rows = result.getContent();
+        Map<UUID, List<SubstitutionHistoryEntry>> historyById = rows.isEmpty()
+                ? Map.of()
+                : history.findByRequirementIdInOrderByAtAscIdAsc(
+                                rows.stream().map(SubstitutionRequirement::getId).toList())
+                        .stream()
+                        .collect(java.util.stream.Collectors.groupingBy(SubstitutionHistoryEntry::getRequirementId));
+        Set<UUID> people = new HashSet<>();
+        rows.forEach(r -> {
+            if (r.getCoverUserId() != null) {
+                people.add(r.getCoverUserId());
+            }
+            historyById.getOrDefault(r.getId(), List.of()).stream()
+                    .filter(h -> h.getAction() == HistoryAction.COVERED)
+                    .forEach(h -> people.add(h.getActorUserId()));
+        });
+        Map<UUID, String> userNames = userNames(people);
+        Map<UUID, String> teacherNames = teacherNames(rows.stream().map(SubstitutionRequirement::getTeacherId).toList());
+        Map<UUID, String> schoolNames = schoolNames(rows.stream().map(SubstitutionRequirement::getSchoolId).toList());
+        List<ManagerCoverView> content = rows.stream()
+                .map(r -> {
+                    List<SubstitutionHistoryEntry> h = historyById.getOrDefault(r.getId(), List.of());
+                    int lastCover = -1;
+                    for (int i = 0; i < h.size(); i++) {
+                        if (h.get(i).getAction() == HistoryAction.COVERED) {
+                            lastCover = i;
+                        }
+                    }
+                    boolean active = r.getStatus() == RequirementStatus.MANAGER_COVER;
+                    String endedBy = null;
+                    if (!active && lastCover >= 0) {
+                        for (int i = lastCover + 1; i < h.size() && endedBy == null; i++) {
+                            endedBy = switch (h.get(i).getAction()) {
+                                case ASSIGNED, REASSIGNED -> "TEACHER_ASSIGNED";
+                                case RELEASED -> "RELEASED";
+                                case CANCELLED -> "ABSENCE_WITHDRAWN";
+                                default -> null;
+                            };
+                        }
+                    }
+                    String recordedBy = lastCover < 0 ? null : userNames.get(h.get(lastCover).getActorUserId());
+                    return new ManagerCoverView(
+                            r.getId(),
+                            r.getDutyDate(),
+                            r.getSchoolId(),
+                            schoolNames.getOrDefault(r.getSchoolId(), "-"),
+                            r.getTeacherId(),
+                            teacherNames.getOrDefault(r.getTeacherId(), "Unknown Teacher"),
+                            r.getCoverUserId() == null ? null : userNames.get(r.getCoverUserId()),
+                            recordedBy,
+                            r.getDayValue(),
+                            r.isSameDay(),
+                            active ? "ACTIVE" : "ENDED",
+                            endedBy,
+                            "Manager cover");
+                })
+                .toList();
         return new PageResponse<>(content, result.getNumber(), result.getSize(), result.getTotalElements());
     }
 
@@ -292,9 +402,20 @@ public class SubstitutionService {
         UUID previous = r.getSubstituteTeacherId();
         String informedBefore = informedText(r);
         r.cover(coverUser, cleanNote, now);
+        // spec 040: a cover recorded on the duty day (including after the class) is flagged same-day
+        boolean sameDay = r.getDutyDate().equals(calendar.businessToday());
+        r.setSameDay(sameDay);
         requirements.saveAndFlush(r);
         history.save(new SubstitutionHistoryEntry(id, HistoryAction.COVERED, before, RequirementStatus.MANAGER_COVER, null, actor, cleanNote, now));
-        audit.status(actor, id, before, RequirementStatus.MANAGER_COVER, cleanNote);
+        audit.status(
+                actor,
+                id,
+                before,
+                RequirementStatus.MANAGER_COVER,
+                sameDay
+                        ? (cleanNote == null ? "" : cleanNote + " ")
+                                + "[" + com.hls.audit.api.SameDayDetail.of(actor, coverUser) + "]"
+                        : cleanNote);
         audit.substitute(actor, id, previous, null);
         audit.informed(actor, id, informedBefore, null);
         if (previous != null) {
@@ -481,7 +602,8 @@ public class SubstitutionService {
                             informed,
                             principal,
                             r.getNote(),
-                            r.getVersion());
+                            r.getVersion(),
+                            r.isSameDay());
                 })
                 .toList();
     }

@@ -35,6 +35,7 @@ import {
   type ContentDetail,
   type TypeLimit,
 } from "./contentApi";
+import { StatusChip } from "../../theme/StatusChip";
 
 type State =
   | { kind: "loading" }
@@ -124,7 +125,7 @@ export function ContentDetailPage() {
           {detail.title}
         </Typography>
         <Chip label={detail.statusLabel} />
-        {detail.overdue && <Chip color="warning" label="Overdue" />}
+        {detail.overdue && <StatusChip kind="pending" label="Overdue" />}
       </Stack>
       {error && (
         <Alert severity="error" role="alert" sx={{ mb: 2 }}>
@@ -202,8 +203,8 @@ export function ContentDetailPage() {
               <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                 <Typography sx={{ fontWeight: 600 }}>Version {v.number}</Typography>
                 {v.number === detail.currentVersion && <Chip size="small" label="Current" />}
-                {v.lastApproved && <Chip size="small" color="success" label="Approved" />}
-                {v.removed && <Chip size="small" color="error" label="File removed" />}
+                {v.lastApproved && <StatusChip kind="approved" size="small" label="Approved" />}
+                {v.removed && <StatusChip kind="rejected" size="small" label="File removed" />}
               </Stack>
               <Typography variant="body2">
                 {v.fileName} ({fileSize(v.sizeBytes)}) - {when(v.submittedAt)}

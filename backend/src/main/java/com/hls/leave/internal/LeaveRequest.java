@@ -19,6 +19,8 @@ import java.util.UUID;
 @Table(name = "leave_request")
 public class LeaveRequest {
 
+    public static final String SAME_DAY_NOTE = "same-day, auto-accepted";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -72,6 +74,12 @@ public class LeaveRequest {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "same_day", nullable = false)
+    private boolean sameDay;
+
+    @Column(name = "linked_request_id")
+    private UUID linkedRequestId;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -104,6 +112,35 @@ public class LeaveRequest {
         this.createdByUserId = createdByUserId;
         this.createdAt = createdAt;
         this.status = LeaveStatus.PENDING;
+    }
+
+    /** Spec 040: a request recorded for today, Approved at once by the person who recorded it. */
+    public static LeaveRequest approvedSameDay(
+            UUID teacherId,
+            UUID schoolId,
+            UUID leaveTypeId,
+            LocalDate firstDate,
+            LocalDate lastDate,
+            boolean halfDayStart,
+            boolean halfDayEnd,
+            BigDecimal workingDays,
+            String reason,
+            UUID recordedByUserId,
+            Instant now) {
+        LeaveRequest request = new LeaveRequest(
+                teacherId, schoolId, leaveTypeId, firstDate, lastDate, halfDayStart, halfDayEnd, workingDays, reason,
+                recordedByUserId, now);
+        request.status = LeaveStatus.APPROVED;
+        request.decidedByUserId = recordedByUserId;
+        request.decidedAt = now;
+        request.decisionNote = SAME_DAY_NOTE;
+        request.sameDay = true;
+        return request;
+    }
+
+    /** Marks this (the later, Pending) part of a split request as belonging to the same-day part. */
+    public void linkTo(UUID sameDayPartId) {
+        this.linkedRequestId = sameDayPartId;
     }
 
     public void approve(UUID by, String note, BigDecimal workingDaysAtApproval, Instant now) {
@@ -198,6 +235,14 @@ public class LeaveRequest {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isSameDay() {
+        return sameDay;
+    }
+
+    public UUID getLinkedRequestId() {
+        return linkedRequestId;
     }
 
     public Long getVersion() {

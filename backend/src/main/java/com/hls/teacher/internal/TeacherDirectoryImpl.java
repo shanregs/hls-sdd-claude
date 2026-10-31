@@ -112,6 +112,26 @@ class TeacherDirectoryImpl implements TeacherDirectory {
     }
 
     @Override
+    public Map<UUID, Integer> placedCountBySchool(Collection<UUID> schoolIds, LocalDate date) {
+        if (schoolIds.isEmpty()) {
+            return Map.of();
+        }
+        Set<UUID> wanted = new HashSet<>(schoolIds);
+        Set<UUID> candidates = teachersPlacedDuring(date, date);
+        Map<UUID, Integer> counts = new HashMap<>();
+        if (candidates.isEmpty()) {
+            return counts;
+        }
+        Set<UUID> counted = new HashSet<>();
+        for (PlacementSpan span : placements.spansOverlapping(candidates, date, date)) {
+            if (wanted.contains(span.schoolId()) && counted.add(span.teacherId())) {
+                counts.merge(span.schoolId(), 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
+
+    @Override
     public Optional<UUID> currentDesignation(UUID teacherId) {
         return teachers.findById(teacherId).map(Teacher::getDesignationId);
     }
@@ -148,6 +168,22 @@ class TeacherDirectoryImpl implements TeacherDirectory {
             if (designationIds == null || designationIds.isEmpty() || designationIds.contains(id)) {
                 result.put(id, (Long) row[1]);
             }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<UUID, Lifecycle> lifecycle(Collection<UUID> teacherIds) {
+        if (teacherIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, LocalDate> firstPlaced = new HashMap<>();
+        for (PlacementSpan span : placements.spansOverlapping(teacherIds, LocalDate.of(1900, 1, 1), LocalDate.of(9999, 12, 31))) {
+            firstPlaced.merge(span.teacherId(), span.startsOn(), (a, b) -> a.isBefore(b) ? a : b);
+        }
+        Map<UUID, Lifecycle> result = new HashMap<>();
+        for (Teacher t : teachers.findAllById(teacherIds)) {
+            result.put(t.getId(), new Lifecycle(t.getStatus().name(), t.getStatusEffectiveOn(), firstPlaced.get(t.getId())));
         }
         return result;
     }

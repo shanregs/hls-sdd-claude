@@ -113,7 +113,8 @@ class MarketingActivitiesImpl implements MarketingActivities {
                     null,
                     null,
                     a.getStatus().name(),
-                    a.getCompletedOn()));
+                    a.getCompletedOn(),
+                    a.isSameDay()));
         }
         out.sort(Comparator.comparing(ActivityEntry::date));
         return out;

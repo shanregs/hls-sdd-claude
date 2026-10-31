@@ -4,8 +4,6 @@ import com.hls.identity.user.Role;
 import com.hls.organization.api.ScopeView;
 import com.hls.recruitment.api.SupplySource;
 import com.hls.school.api.SchoolDirectory;
-import com.hls.schoolbilling.api.Occupancy;
-import com.hls.schoolbilling.api.SchoolContracts;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -54,7 +52,7 @@ public class DashboardService {
     private final ProspectService prospectService;
     private final SchoolDirectory schools;
     private final MarketingScope scope;
-    private final ObjectProvider<SchoolContracts> contracts;
+    private final DemandFiguresImpl demandFigures;
     private final ObjectProvider<SupplySource> supply;
     private final Clock clock;
 
@@ -65,7 +63,7 @@ public class DashboardService {
             ProspectService prospectService,
             SchoolDirectory schools,
             MarketingScope scope,
-            ObjectProvider<SchoolContracts> contracts,
+            DemandFiguresImpl demandFigures,
             ObjectProvider<SupplySource> supply,
             Clock clock) {
         this.prospects = prospects;
@@ -74,7 +72,7 @@ public class DashboardService {
         this.prospectService = prospectService;
         this.schools = schools;
         this.scope = scope;
-        this.contracts = contracts;
+        this.demandFigures = demandFigures;
         this.supply = supply;
         this.clock = clock;
     }
@@ -133,14 +131,7 @@ public class DashboardService {
                 .collect(Collectors.groupingBy(p -> ownerNames.getOrDefault(p.getOwnerUserId(), "Unknown user"), Collectors.counting()))
                 .entrySet().stream().map(e -> new WonBy(e.getKey(), e.getValue())).sorted(java.util.Comparator.comparing(WonBy::name)).toList();
 
-        long demand = 0;
-        SchoolContracts source = contracts.getIfAvailable();
-        Set<UUID> wonSchools = wonList.stream().map(Prospect::getSchoolId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
-        if (source != null && !wonSchools.isEmpty()) {
-            for (Occupancy o : source.occupancyOfAll(wonSchools, today).values()) {
-                demand += o.vacant();
-            }
-        }
+        long demand = demandFigures.demandOf(wonList);
         SupplySource supplySource = supply.getIfAvailable();
         Integer supplied = supplySource == null ? null : supplySource.readyToDeployCount().isPresent() ? supplySource.readyToDeployCount().getAsInt() : null;
         Integer shortfall = supplied == null ? null : (int) Math.max(0, demand - supplied);

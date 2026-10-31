@@ -1,5 +1,6 @@
 package com.hls.recruitment.marketing.internal;
 
+import com.hls.audit.api.SameDayDetail;
 import com.hls.designation.api.BusinessDate;
 import com.hls.files.api.FileStore;
 import com.hls.identity.user.AppUser;
@@ -75,7 +76,8 @@ public class ActivityService {
             List<ProspectService.PersonRef> attendees,
             List<AttachmentRef> attachments,
             List<DateChange> dateHistory,
-            Long version) {}
+            Long version,
+            boolean sameDay) {}
 
     public record ListDto(List<ActivityDto> content, List<PlannedActivity> drives) {}
 
@@ -126,7 +128,8 @@ public class ActivityService {
     }
 
     @Transactional(readOnly = true)
-    public ListDto list(UUID userId, Set<Role> roles, LocalDate from, LocalDate to, boolean mine, UUID prospectId) {
+    public ListDto list(
+            UUID userId, Set<Role> roles, LocalDate from, LocalDate to, boolean mine, UUID prospectId, Boolean sameDay) {
         ScopeView view = scope.of(userId, roles);
         List<MarketingActivity> found = (prospectId != null
                         ? activities.findByProspectIdOrderByActivityDateDesc(prospectId)
@@ -134,6 +137,7 @@ public class ActivityService {
                                 from == null ? LocalDate.of(2000, 1, 1) : from, to == null ? LocalDate.of(2100, 1, 1) : to))
                 .stream()
                 .filter(a -> mine ? a.getAttendees().contains(userId) || a.getCreatedBy().equals(userId) : true)
+                .filter(a -> !Boolean.TRUE.equals(sameDay) || a.isSameDay())
                 .toList();
         Map<UUID, Prospect> byId = prospectsOf(found);
         List<MarketingActivity> visible = found.stream().filter(a -> allowed(view, a, byId)).toList();
@@ -181,6 +185,77 @@ public class ActivityService {
                 actor,
                 clock.instant()));
         changes.recordLifecycle(actor, "MARKETING_ACTIVITY", activity.getId(), "planned", type + " " + request.date());
+        return get(actor, roles, activity.getId());
+    }
+
+    /** Spec 040: a visit the Manager logs for today with no plan; it is saved already Completed. */
+    public record SameDayRequest(
+            UUID prospectId,
+            UUID schoolId,
+            String type,
+            String outcome,
+            String notes,
+            LocalDate followUpOn,
+            UUID clientKey,
+            LocalDate capturedOn) {}
+
+    /** The longest an offline same-day log may wait on the phone before it is sent (spec 040 FR-017). */
+    public static final int OFFLINE_WINDOW_DAYS = 7;
+
+    @Transactional
+    public ActivityDto logSameDay(UUID actor, Set<Role> roles, SameDayRequest request) {
+        if (!roles.contains(Role.MANAGER)) {
+            throw new com.hls.school.api.ForbiddenFieldException("Only a Manager can log a visit for today.");
+        }
+        if (request.clientKey() != null) {
+            MarketingActivity existing = activities.findByClientKey(request.clientKey()).orElse(null);
+            if (existing != null) {
+                return get(actor, roles, existing.getId());
+            }
+        }
+        if ((request.prospectId() == null) == (request.schoolId() == null)) {
+            throw new InvalidInputException("A visit is for a prospect or for a School, not both and not neither.");
+        }
+        ActivityType type = parseType(request.type());
+        ScopeView view = scope.of(actor, roles);
+        if (request.prospectId() != null) {
+            prospectService.visible(actor, roles, request.prospectId());
+        } else {
+            SchoolDirectory.SchoolInfo school = schools.school(request.schoolId())
+                    .orElseThrow(() -> new InvalidInputException("School not found."));
+            if (!view.allowsSchool(school.id())) {
+                throw new NotFoundException("School not found.");
+            }
+        }
+        String outcome = Texts.clean(request.outcome(), 1000, "Outcome");
+        if (outcome == null) {
+            throw new InvalidInputException("An outcome is required: who was met, what was discussed and the next action.");
+        }
+        LocalDate today = businessDate.today();
+        LocalDate day = today;
+        if (request.clientKey() != null && request.capturedOn() != null) {
+            if (request.capturedOn().isAfter(today) || request.capturedOn().isBefore(today.minusDays(OFFLINE_WINDOW_DAYS))) {
+                throw new com.hls.school.api.ConflictException(
+                        "DATE_NOT_ALLOWED: this was logged more than " + OFFLINE_WINDOW_DAYS + " days ago or on a future date.");
+            }
+            day = request.capturedOn();
+        }
+        LocalDate followUp = request.followUpOn();
+        if (followUp != null && followUp.isBefore(day)) {
+            throw new InvalidInputException("The follow-up date cannot be before the visit.");
+        }
+        String notes = Texts.clean(request.notes(), 1000, "Notes");
+        MarketingActivity activity = new MarketingActivity(
+                request.prospectId(), request.schoolId(), type, day, notes, attendeesOf(null, actor), actor, clock.instant());
+        activity.complete(outcome, notes, followUp, day);
+        activity.setSameDay(true);
+        activity.setClientKey(request.clientKey());
+        activities.saveAndFlush(activity);
+        changes.recordLifecycle(
+                actor, "MARKETING_ACTIVITY", activity.getId(), "same-day", type + " " + day + " " + SameDayDetail.of(actor, null));
+        if (followUp != null) {
+            publishFollowUp(activity, followUp);
+        }
         return get(actor, roles, activity.getId());
     }
 
@@ -368,7 +443,8 @@ public class ActivityService {
                                     .toList(),
                             files.get(a.getId()),
                             history.get(a.getId()).stream().map(h -> new DateChange(h.getOldDate(), h.getNewDate())).toList(),
-                            a.getVersion());
+                            a.getVersion(),
+                            a.isSameDay());
                 })
                 .sorted(Comparator.comparing(ActivityDto::date))
                 .toList();

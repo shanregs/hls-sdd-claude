@@ -34,7 +34,7 @@ class PerformanceAccessModelTest extends IntegrationTestBase {
 
     private static AccessModelDtos.NavItemView item(AccessModelDtos.AccessModelResponse response) {
         return response.navigation().stream()
-                .filter(s -> s.section().equals("OPERATIONS"))
+                .filter(s -> s.section().equals("PLANNING & TRAINING"))
                 .flatMap(s -> s.items().stream())
                 .filter(i -> i.label().equals("Teacher Performance"))
                 .findFirst()

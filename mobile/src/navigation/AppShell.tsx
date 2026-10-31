@@ -232,10 +232,10 @@ function ShellContent({ user }: { user: SignedInUser }) {
   return (
     <InnerBackContext.Provider value={innerBackApi}>
     <View style={styles.fill}>
-      <Appbar.Header>
-        <Appbar.Action icon="menu" onPress={() => setDrawerOpen(true)} accessibilityLabel="Open menu" />
-        <Appbar.Content title={title} />
-        <NotificationBell onOpen={() => openRoute(NOTIFICATIONS_ROUTE)} />
+      <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
+        <Appbar.Action icon="menu" color={theme.colors.onPrimary} onPress={() => setDrawerOpen(true)} accessibilityLabel="Open menu" />
+        <Appbar.Content title={title} color={theme.colors.onPrimary} />
+        <NotificationBell color={theme.colors.onPrimary} onOpen={() => openRoute(NOTIFICATIONS_ROUTE)} />
       </Appbar.Header>
       {body}
       {signOutDialog}

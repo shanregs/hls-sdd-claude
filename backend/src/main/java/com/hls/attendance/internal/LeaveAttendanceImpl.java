@@ -78,7 +78,7 @@ class LeaveAttendanceImpl implements LeaveAttendance {
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> problems(UUID teacherId, List<LeaveDay> days) {
+    public List<String> problems(UUID teacherId, List<LeaveDay> days, boolean replaceAbsent) {
         List<String> problems = new ArrayList<>();
         Set<YearMonth> months = new TreeSet<>(days.stream().map(d -> YearMonth.from(d.date())).collect(Collectors.toSet()));
         for (YearMonth month : months) {
@@ -93,9 +93,11 @@ class LeaveAttendanceImpl implements LeaveAttendance {
         LocalDate to = days.stream().map(LeaveDay::date).max(Comparator.naturalOrder()).orElseThrow();
         Set<LocalDate> covered = days.stream().map(LeaveDay::date).collect(Collectors.toSet());
         UUID leaveCode = codes.requireByShortCode("L").getId();
+        UUID absentCode = replaceAbsent ? codes.requireByShortCode("A").getId() : null;
         List<String> supervisorSet = marks.findByTeacherIdAndMarkDateBetween(teacherId, from, to).stream()
                 .filter(m -> covered.contains(m.getMarkDate()))
                 .filter(m -> m.getSetByKind() == SetByKind.SUPERVISOR && !m.getStatusCodeId().equals(leaveCode))
+                .filter(m -> !m.getStatusCodeId().equals(absentCode))
                 .map(m -> m.getMarkDate().toString())
                 .sorted()
                 .toList();
@@ -107,9 +109,15 @@ class LeaveAttendanceImpl implements LeaveAttendance {
 
     @Override
     @Transactional
-    public void apply(UUID requestId, UUID approverUserId, UUID teacherId, List<LeaveDay> days, boolean lossOfPay) {
+    public void apply(
+            UUID requestId,
+            UUID approverUserId,
+            UUID teacherId,
+            List<LeaveDay> days,
+            boolean lossOfPay,
+            boolean replaceAbsent) {
         acquireLocks(teacherId, days.stream().map(d -> YearMonth.from(d.date())).collect(Collectors.toSet()));
-        List<String> problems = problems(teacherId, days);
+        List<String> problems = problems(teacherId, days, replaceAbsent);
         if (!problems.isEmpty()) {
             throw new ConflictException("Leave cannot be applied: " + String.join("; ", problems) + ".");
         }

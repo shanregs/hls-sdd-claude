@@ -1,0 +1,12 @@
+$kind: http-request
+name: Approve
+description: "Pending to approved, and offered to payroll once. Director or Zone Manager of the School (APPROVE). A second decision gets 409."
+url: "{{baseUrl}}/api/v1/incentives/{{incentiveId}}/approve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "version": {{incentiveVersion}} }
+order: 7000

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  Checkbox,
+  FormControlLabel,
   Alert,
   Box,
   Button,
@@ -99,6 +101,7 @@ export function ActivityCalendarPage() {
   const [zoneId, setZoneId] = useState(saved.zoneId ?? "");
   const [kind, setKind] = useState(saved.kind ?? "");
   const [status, setStatus] = useState(saved.status ?? "");
+  const [sameDayOnly, setSameDayOnly] = useState(false);
   const [view, setView] = useState<"grid" | "list">(saved.view ?? "grid");
   const [tab, setTab] = useState<"calendar" | "attention">("calendar");
   const [choices, setChoices] = useState<FiltersResponse | null>(null);
@@ -127,20 +130,23 @@ export function ActivityCalendarPage() {
       zoneId: zoneId || undefined,
       kind: kind || undefined,
       status: status || undefined,
+      sameDay: sameDayOnly,
     });
     setState(
       result.ok
         ? { kind: "ready", data: result.data }
         : { kind: "error", reason: result.reason },
     );
-  }, [authFetch, month, managerId, zoneId, kind, status]);
+  }, [authFetch, month, managerId, zoneId, kind, status, sameDayOnly]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- month and filter driven fetch
     void load();
   }, [load]);
 
-  const filtered = Boolean(managerId || zoneId || kind || status);
+  const filtered = Boolean(
+    managerId || zoneId || kind || status || sameDayOnly,
+  );
   const trainingAvailable =
     choices?.kinds?.find((k) => k.kind === "TRAINING")?.available ?? false;
 
@@ -155,7 +161,9 @@ export function ActivityCalendarPage() {
         sx={{ alignItems: "center", mb: 2, flexWrap: "wrap" }}
         useFlexGap
       >
-        <Button onClick={() => setMonth(shift(month, -1))}>Previous month</Button>
+        <Button onClick={() => setMonth(shift(month, -1))}>
+          Previous month
+        </Button>
         <Typography component="h2" variant="h6" aria-live="polite">
           {monthTitle(month)}
         </Typography>
@@ -179,7 +187,10 @@ export function ActivityCalendarPage() {
             value={managerId}
             onChange={(e) => setManagerId(e.target.value)}
             sx={{ minWidth: 160 }}
-            slotProps={{ select: { native: true } }}
+            slotProps={{
+              select: { native: true },
+              inputLabel: { shrink: true },
+            }}
           >
             <option value="">All Managers</option>
             {(choices?.managers ?? []).map((m) => (
@@ -196,7 +207,10 @@ export function ActivityCalendarPage() {
           value={zoneId}
           onChange={(e) => setZoneId(e.target.value)}
           sx={{ minWidth: 140 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All Zones</option>
           {(choices?.zones ?? []).map((z) => (
@@ -212,11 +226,18 @@ export function ActivityCalendarPage() {
           value={kind}
           onChange={(e) => setKind(e.target.value)}
           sx={{ minWidth: 160 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All kinds</option>
           {(Object.keys(KIND_LABELS) as CalendarKind[]).map((k) => (
-            <option key={k} value={k} disabled={k === "TRAINING" && !trainingAvailable}>
+            <option
+              key={k}
+              value={k}
+              disabled={k === "TRAINING" && !trainingAvailable}
+            >
               {k === "TRAINING" && !trainingAvailable
                 ? "Training: not available yet"
                 : KIND_LABELS[k]}
@@ -230,7 +251,10 @@ export function ActivityCalendarPage() {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           sx={{ minWidth: 140 }}
-          slotProps={{ select: { native: true } }}
+          slotProps={{
+            select: { native: true },
+            inputLabel: { shrink: true },
+          }}
         >
           <option value="">All statuses</option>
           {(Object.keys(STATUS_LABELS) as CalendarStatus[]).map((st) => (
@@ -239,9 +263,19 @@ export function ActivityCalendarPage() {
             </option>
           ))}
         </TextField>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={sameDayOnly}
+              onChange={(e) => setSameDayOnly(e.target.checked)}
+            />
+          }
+          label="Same-day only"
+        />
         {filtered && (
           <Button
             onClick={() => {
+              setSameDayOnly(false);
               setManagerId("");
               setZoneId("");
               setKind("");
@@ -290,7 +324,10 @@ export function ActivityCalendarPage() {
                 {s.note}
               </Alert>
             ))}
-          <SummaryBar summary={state.data.summary} partial={state.data.partial} />
+          <SummaryBar
+            summary={state.data.summary}
+            partial={state.data.partial}
+          />
           <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
             <Button
               variant={view === "grid" ? "contained" : "outlined"}

@@ -122,6 +122,23 @@ public class AccessModelService {
         addAttendanceScope(dataScope, callerRoles, PermissionModule.CONTENT, DataScope.OWN, Role.MANAGER, Role.CONTENT_CONTRIBUTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_BILLING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_BILLING, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MANAGER_INCENTIVES, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MANAGER_INCENTIVES, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_ATTENDANCE, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_ATTENDANCE, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_PAYROLL, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_EXPENSES, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        for (PermissionModule report : List.of(
+                PermissionModule.REPORT_RECRUITMENT,
+                PermissionModule.REPORT_TEACHER,
+                PermissionModule.REPORT_MANAGER,
+                PermissionModule.REPORT_MARGIN,
+                PermissionModule.REPORT_COLLECTIONS,
+                PermissionModule.REPORT_SCHOOL)) {
+            addAttendanceScope(dataScope, callerRoles, report, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+            addAttendanceScope(dataScope, callerRoles, report, DataScope.ASSIGNED, Role.MANAGER);
+        }
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.MY_REPORT, DataScope.OWN, Role.TEACHER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.TRAINING_ATTENDANCE, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);

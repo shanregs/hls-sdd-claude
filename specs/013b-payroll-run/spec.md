@@ -469,3 +469,5 @@ right are shown the menu item; every endpoint checks it on the server.
 > `payroll.api.ReimbursementIntake` (offer, withdraw, status) with `source_ref` set to the claim id, never by hand. Approving a
 > run publishes `payroll.api.PayrollAdjustmentApplied` once per applied adjustment that has a `source_ref`, in the approval
 > transaction, so the claim becomes Paid with payroll together with the run. Nothing here changes an approved run.
+
+> **Amended by spec 040 (2026-10-28):** The unpaid days it reads from 013a now include every Teacher leave day, whatever the leave type.

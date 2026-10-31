@@ -8,12 +8,10 @@ import {
 
 /** Substitution API (spec 017a, contracts/substitution-api.md). Dates are "YYYY-MM-DD". */
 export type RequirementStatus =
-  | "OPEN"
-  | "ASSIGNED"
-  | "MANAGER_COVER"
-  | "CANCELLED";
+  "OPEN" | "ASSIGNED" | "MANAGER_COVER" | "CANCELLED";
 
-export type InformMethod = "PHONE" | "IN_PERSON" | "EMAIL" | "MESSAGE" | "OTHER";
+export type InformMethod =
+  "PHONE" | "IN_PERSON" | "EMAIL" | "MESSAGE" | "OTHER";
 
 export const STATUS_LABELS: Record<RequirementStatus, string> = {
   OPEN: "Open",
@@ -57,6 +55,25 @@ export interface Requirement {
   principalContact: string | null;
   note: string | null;
   version: number;
+  /** Spec 040: the Manager cover was recorded on the duty day. */
+  sameDay?: boolean;
+}
+
+/** Spec 040: one Manager cover entry, now or earlier; kept apart from Teacher credits. */
+export interface ManagerCover {
+  requirementId: string;
+  date: string;
+  schoolId: string;
+  schoolName: string;
+  replacedTeacherId: string;
+  replacedTeacherName: string;
+  managerName: string | null;
+  recordedByName: string | null;
+  dayValue: number;
+  sameDay: boolean;
+  state: "ACTIVE" | "ENDED";
+  endedBy: "TEACHER_ASSIGNED" | "RELEASED" | "ABSENCE_WITHDRAWN" | null;
+  label: string;
 }
 
 export interface HistoryEntry {
@@ -93,10 +110,18 @@ export interface MyAssignment {
 
 export function listRequirements(
   authFetch: AuthFetch,
-  params: { status: string; page: number; size: number; from?: string; to?: string },
+  params: {
+    status: string;
+    page: number;
+    size: number;
+    from?: string;
+    to?: string;
+    sameDay?: boolean;
+  },
 ): Promise<ApiResult<PageOf<Requirement>>> {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
+  if (params.sameDay) query.set("sameDay", "true");
   if (params.from) query.set("from", params.from);
   if (params.to) query.set("to", params.to);
   query.set("page", String(params.page));
@@ -108,18 +133,41 @@ export function listRequirements(
   );
 }
 
+export function listManagerCovers(
+  authFetch: AuthFetch,
+  params: { sameDay?: boolean; page: number; size: number },
+): Promise<ApiResult<PageOf<ManagerCover>>> {
+  const query = new URLSearchParams();
+  if (params.sameDay) query.set("sameDay", "true");
+  query.set("page", String(params.page));
+  query.set("size", String(params.size));
+  return getJson(
+    authFetch,
+    `/api/v1/substitutions/manager-covers?${query.toString()}`,
+    "Could not load the Manager covers.",
+  );
+}
+
 export function getRequirement(
   authFetch: AuthFetch,
   id: string,
 ): Promise<ApiResult<Detail>> {
-  return getJson(authFetch, `/api/v1/substitutions/${id}`, "Could not load this requirement.");
+  return getJson(
+    authFetch,
+    `/api/v1/substitutions/${id}`,
+    "Could not load this requirement.",
+  );
 }
 
 export function getCandidates(
   authFetch: AuthFetch,
   id: string,
 ): Promise<ApiResult<Candidate[]>> {
-  return getJson(authFetch, `/api/v1/substitutions/${id}/candidates`, "Could not load the Teachers.");
+  return getJson(
+    authFetch,
+    `/api/v1/substitutions/${id}/candidates`,
+    "Could not load the Teachers.",
+  );
 }
 
 export function assignSubstitute(
@@ -140,7 +188,10 @@ export function releaseRequirement(
   reason: string,
   version: number,
 ): Promise<ApiResult<Requirement>> {
-  return sendJson(authFetch, "POST", `/api/v1/substitutions/${id}/release`, { reason, version });
+  return sendJson(authFetch, "POST", `/api/v1/substitutions/${id}/release`, {
+    reason,
+    version,
+  });
 }
 
 export function coverRequirement(
@@ -149,19 +200,36 @@ export function coverRequirement(
   note: string,
   version: number,
 ): Promise<ApiResult<Requirement>> {
-  return sendJson(authFetch, "POST", `/api/v1/substitutions/${id}/cover`, { note, version });
+  return sendJson(authFetch, "POST", `/api/v1/substitutions/${id}/cover`, {
+    note,
+    version,
+  });
 }
 
 export function informSchool(
   authFetch: AuthFetch,
   id: string,
-  body: { contact: string; method: InformMethod; note: string; version: number },
+  body: {
+    contact: string;
+    method: InformMethod;
+    note: string;
+    version: number;
+  },
 ): Promise<ApiResult<Requirement>> {
-  return sendJson(authFetch, "POST", `/api/v1/substitutions/${id}/inform`, body);
+  return sendJson(
+    authFetch,
+    "POST",
+    `/api/v1/substitutions/${id}/inform`,
+    body,
+  );
 }
 
 export function getMyAssignments(
   authFetch: AuthFetch,
 ): Promise<ApiResult<MyAssignment[]>> {
-  return getJson(authFetch, "/api/v1/me/substitutions", "Could not load your substitutions.");
+  return getJson(
+    authFetch,
+    "/api/v1/me/substitutions",
+    "Could not load your substitutions.",
+  );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Link, Stack, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAuth } from "../../auth/useAuth";
 import {
@@ -69,6 +70,9 @@ export function ManagementDashboard({ title }: { title: string }) {
         </Typography>
         {state.kind === "ready" && state.manifest.areas.length > 0 && (
           <>
+            <Link component={RouterLink} to="/dashboard/same-day">
+              Same-day report
+            </Link>
             <DashboardFilters
               filters={state.manifest.filters}
               value={filter}
@@ -102,16 +106,27 @@ export function ManagementDashboard({ title }: { title: string }) {
         </Typography>
       )}
       {state.kind === "ready" && state.manifest.inbox && <InboxPanel />}
-      {state.kind === "ready" &&
-        state.manifest.areas.map((area) => (
-          <AreaSection
-            key={area.area}
-            area={area}
-            filter={filter}
-            refreshToken={refreshToken}
-            onTaken={onTaken}
-          />
-        ))}
+      {state.kind === "ready" && (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(460px, 100%), 1fr))",
+            gap: 2,
+            alignItems: "start",
+          }}
+        >
+          {state.manifest.areas.map((area) => (
+            <AreaSection
+              key={area.area}
+              area={area}
+              filter={filter}
+              refreshToken={refreshToken}
+              onTaken={onTaken}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }
