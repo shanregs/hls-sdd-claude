@@ -2,7 +2,7 @@
 Sync Impact Report
 ==================
 Version change: 1.7.0 → 3.0.0 (MAJOR fresh start to 2.0.0, then three MINOR clarifications:
-2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.14 and 2.5.16,
+2.1.0, 2.2.0, and 2.3.0, then one PATCH: 2.3.1, then two MINOR: 2.4.0 and 2.5.0, then PATCHes 2.5.1 to 2.5.16,
 then MAJOR 3.0.0 for spec 029: a sixth fixed role)
 
 Context: All prior specs (001–011) and their implementation code were removed. Spec numbering
@@ -69,6 +69,12 @@ Modified principles:
     gains the PAYROLL & FINANCE item Incentives (Admin, Director, Manager). Principle VII holds: `incentive` reads other
     modules only through their api packages, and approved incentives reach payroll only through `payroll.api.IncentiveIntake`.
     Number follows 2.5.14; 2.5.15 is taken by spec 014b; renumber at merge if another PATCH lands first.
+  - 2.5.15 (PATCH, spec 014b): the Default role access matrix gains three rows. Margin report (School fee less Teacher pay),
+    Collections report (billed, collected, outstanding, ageing) and School report (one row per School): Admin and Director
+    hold View and Export; a Manager holds View and Export for own Schools only (Assigned); Teacher and System hold none. The
+    Zone Manager sees the Margin per School and per Teacher but still has no payroll report. Principle VII holds: the three
+    reports only read, through the owning modules' api packages. Number follows 2.5.14 of spec 022; renumber at merge if
+    another PATCH lands first.
   - 2.5.14 (PATCH, spec 022): the Default role access matrix gains a School Billing row (the internal receivables ledger:
     monthly dues derived from active assignments, adjustments, collections, ageing). Admin and Director hold View, Create, Edit,
     Approve and Export org-wide; a Zone Manager holds View, Create (record collections) and Export for their own Schools only and
@@ -468,6 +474,9 @@ kept intentionally lightweight for v1.
   | Notifications                   | ✓     | ✓        | ✓        | Own     | —      |
   | Incentives (Manager incentive per closed School; Approve) | View, Export | View, Approve, Export | Own (View); Approve for own Zone's Schools | — | — |
   | Reports                         | ✓     | ✓        | Assigned | Own     | —      |
+  | Margin report (School fee less Teacher pay; View, Export) | View, Export | View, Export | Assigned (own Schools; View, Export) | — | — |
+  | Collections report (billed, collected, ageing; View, Export) | View, Export | View, Export | Assigned (own Schools; View, Export) | — | — |
+  | School report (one row per School; View, Export) | View, Export | View, Export | Assigned (own Schools; View, Export) | — | — |
   | User Management                 | ✓     | —        | —        | —       | ✓      |
   | Role & Permissions              | ✓     | ✓        | —        | —       | ✓      |
   | System & Security Settings      | ✓     | —        | —        | —       | ✓      |
