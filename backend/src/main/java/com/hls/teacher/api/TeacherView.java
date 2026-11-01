@@ -25,7 +25,8 @@ public record TeacherView(
         ManagerRef manager,
         PendingPlacement pendingPlacement,
         List<PlacementRow> placements,
-        Employment employment) {
+        Employment employment,
+        String engagement) {
 
     /** The designation a Teacher holds. */
     public record DesignationRef(UUID id, String name, boolean retired) {}

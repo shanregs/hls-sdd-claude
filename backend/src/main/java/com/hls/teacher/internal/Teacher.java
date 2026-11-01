@@ -50,6 +50,10 @@ public class Teacher {
     @Column(name = "user_id", unique = true)
     private UUID userId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "engagement", nullable = false)
+    private TeacherEngagement engagement = TeacherEngagement.REGULAR;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -112,6 +116,14 @@ public class Teacher {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public TeacherEngagement getEngagement() {
+        return engagement;
+    }
+
+    public void setEngagement(TeacherEngagement engagement) {
+        this.engagement = engagement;
     }
 
     public Long getVersion() {

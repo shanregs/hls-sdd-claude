@@ -34,6 +34,12 @@ public interface TeacherDirectory {
 
     Optional<TeacherInfo> teacherOfUser(UUID userId);
 
+    /** Ids of every Substitute-type Teacher (spec 017b), whatever their status. */
+    Set<UUID> substituteTeacherIds();
+
+    /** Ids of the Substitute-type Teachers whose status is ACTIVE. */
+    Set<UUID> activeSubstituteTeacherIds();
+
     /** ACTIVE placements of the given Teachers overlapping {@code from..to} inclusive. */
     List<PlacementSpan> placementsOverlapping(Collection<UUID> teacherIds, LocalDate from, LocalDate to);
 

@@ -31,6 +31,13 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID> {
     @Query("select t.id from Teacher t where t.status = :status")
     List<UUID> findIdsByStatus(@Param("status") TeacherStatus status);
 
+    @Query("select t.id from Teacher t where t.engagement = com.hls.teacher.internal.TeacherEngagement.SUBSTITUTE")
+    List<UUID> findSubstituteIds();
+
+    @Query("select t.id from Teacher t where t.engagement = com.hls.teacher.internal.TeacherEngagement.SUBSTITUTE"
+            + " and t.status = :status")
+    List<UUID> findSubstituteIdsByStatus(@Param("status") TeacherStatus status);
+
     /**
      * Text/status search restricted to an optional id set (scope). {@code filterIds = false} means
      * unrestricted (the {@code ids} placeholder is then unused).

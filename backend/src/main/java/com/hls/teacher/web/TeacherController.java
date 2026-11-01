@@ -8,6 +8,7 @@ import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.PageResponse;
 import com.hls.teacher.api.TeacherView;
 import com.hls.teacher.internal.TeacherEmploymentService;
+import com.hls.teacher.internal.TeacherEngagement;
 import com.hls.teacher.internal.TeacherService;
 import com.hls.teacher.internal.TeacherStatus;
 import java.time.LocalDate;
@@ -49,7 +50,9 @@ public class TeacherController {
     }
 
     public record CreateTeacherRequest(
-            String name, String phone, String email, String address, String status, UUID userId) {}
+            String name, String phone, String email, String address, String status, UUID userId, String engagement) {}
+
+    public record EngagementRequest(String engagement, Long version) {}
 
     public record UpdateTeacherRequest(String name, String phone, String email, String address, Long version) {}
 
@@ -101,16 +104,37 @@ public class TeacherController {
             @RequestBody CreateTeacherRequest request, @AuthenticationPrincipal Jwt jwt) {
         permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.CREATE);
         requireOrgWide(jwt);
-        return ResponseEntity.status(201)
-                .body(teacherService.create(
-                        CallerContext.userId(jwt),
-                        new TeacherService.NewTeacher(
-                                request.name(),
-                                request.phone(),
-                                request.email(),
-                                request.address(),
-                                parseStatus(request.status()),
-                                request.userId())));
+        TeacherEngagement engagement = parseEngagement(request.engagement());
+        if (engagement == TeacherEngagement.SUBSTITUTE && request.userId() != null) {
+            throw new InvalidInputException("A Substitute Teacher has no account.");
+        }
+        TeacherView created = teacherService.create(
+                CallerContext.userId(jwt),
+                new TeacherService.NewTeacher(
+                        request.name(),
+                        request.phone(),
+                        request.email(),
+                        request.address(),
+                        parseStatus(request.status()),
+                        request.userId()));
+        if (engagement == TeacherEngagement.SUBSTITUTE) {
+            created = teacherService.changeEngagement(
+                    CallerContext.userId(jwt), created.id(), engagement, created.version());
+        }
+        return ResponseEntity.status(201).body(created);
+    }
+
+    /** Engagement type (spec 017b FR-001): Admin and Director only. */
+    @PutMapping("/{id}/engagement")
+    public TeacherView changeEngagement(
+            @PathVariable UUID id, @RequestBody EngagementRequest request, @AuthenticationPrincipal Jwt jwt) {
+        permissionGuard.require(CallerContext.roles(jwt), PermissionModule.TEACHERS, PermissionAction.EDIT);
+        requireOrgWide(jwt);
+        TeacherEngagement engagement = parseEngagement(request.engagement());
+        if (engagement == null) {
+            throw new InvalidInputException("An engagement type is required.");
+        }
+        return teacherService.changeEngagement(CallerContext.userId(jwt), id, engagement, request.version());
     }
 
     @PutMapping("/{id}")
@@ -179,6 +203,17 @@ public class TeacherController {
     private static void requireOrgWide(Jwt jwt) {
         if (!CallerContext.isOrgWide(CallerContext.roles(jwt))) {
             throw new AccessDeniedException("Only Admin or Director may do this.");
+        }
+    }
+
+    private static TeacherEngagement parseEngagement(String engagement) {
+        if (engagement == null || engagement.isBlank()) {
+            return null;
+        }
+        try {
+            return TeacherEngagement.valueOf(engagement.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidInputException("Engagement must be REGULAR or SUBSTITUTE.");
         }
     }
 

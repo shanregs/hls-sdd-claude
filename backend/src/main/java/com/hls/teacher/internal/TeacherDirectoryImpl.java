@@ -93,6 +93,16 @@ class TeacherDirectoryImpl implements TeacherDirectory {
     }
 
     @Override
+    public Set<UUID> substituteTeacherIds() {
+        return Set.copyOf(teachers.findSubstituteIds());
+    }
+
+    @Override
+    public Set<UUID> activeSubstituteTeacherIds() {
+        return Set.copyOf(teachers.findSubstituteIdsByStatus(TeacherStatus.ACTIVE));
+    }
+
+    @Override
     public Optional<TeacherInfo> teacherOfUser(UUID userId) {
         return teachers.findByUserId(userId).map(TeacherDirectoryImpl::toInfo);
     }
