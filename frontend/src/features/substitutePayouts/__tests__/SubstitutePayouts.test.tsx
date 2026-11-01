@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "@mui/material/styles";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -10,6 +10,7 @@ import { SubstitutePayoutsPage } from "../SubstitutePayoutsPage";
 
 const authFetch = vi.fn();
 let actions: string[] = ["VIEW", "EDIT", "APPROVE", "EXPORT"];
+let roles: string[] = ["ADMIN"];
 
 vi.mock("../../../auth/useAuth", () => ({ useAuth: () => ({ authFetch }) }));
 
@@ -22,7 +23,7 @@ vi.mock("../../../access-model/useAccessModel", async () => {
     useAccessModel: () => ({
       loading: false,
       accessModel: {
-        roles: ["ADMIN"],
+        roles,
         dataScope: {},
         navigation: [
           {
@@ -80,6 +81,27 @@ function mockApi(rows: unknown[] = [day()]) {
       return json({ locked: 2, alreadyLocked: 0, blocked: [{ substituteTeacherId: "t-9", reason: "Attendance is not marked for: 2026-10-14." }] });
     }
     if (init?.method === "POST" && path.endsWith("/reopen")) return { ok: true, status: 200 } as Response;
+    if (init?.method === "POST" && path.endsWith("/correction")) {
+      return json(day({ status: "CORRECTION_RAISED", statusText: "Correction raised" }));
+    }
+    if (init?.method === "POST" && path.endsWith("/migration/run")) {
+      return json({
+        migrated: 3,
+        futureAllocations: 1,
+        alreadyRecorded: 0,
+        settleFirst: [{ teacherId: "t-7", name: "Regular Rita", credits: 2 }],
+      });
+    }
+    if (path.includes("/mismatches")) {
+      return json([
+        {
+          day: day({ status: "CORRECTION_NEEDED", statusText: "Correction needed", attendance: "PRESENT", locked: true, actions: [] }),
+          reason: "Added after the month was paid.",
+          nextStep: "Ask an Admin to raise a Correction.",
+          suggestedCorrection: 800,
+        },
+      ]);
+    }
     return json({ content: rows, page: 0, size: 100, totalElements: rows.length, totals: TOTALS });
   });
 }
@@ -106,6 +128,7 @@ function renderPage(mode: "light" | "dark" = "light") {
 beforeEach(() => {
   authFetch.mockReset();
   actions = ["VIEW", "EDIT", "APPROVE", "EXPORT"];
+  roles = ["ADMIN"];
   mockApi();
 });
 
@@ -194,6 +217,94 @@ describe("Substitute Payouts", () => {
       await screen.findByText("Sita Substitute");
 
       expect((await axe(container, options)).violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    },
+    30_000,
+  );
+});
+
+describe("Substitute Payouts: needs attention, correction, export, go-live", () => {
+  it("lists the days that need attention with why and the next step", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: "Needs attention" }));
+
+    expect(await screen.findByText("Added after the month was paid.")).toBeInTheDocument();
+    expect(screen.getByText("Ask an Admin to raise a Correction.")).toBeInTheDocument();
+    expect(screen.getByText("Correction needed")).toBeInTheDocument();
+  });
+
+  it("lets an Admin raise a correction prefilled with the suggested amount, and needs a reason", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: "Needs attention" }));
+    await userEvent.click(await screen.findByRole("button", { name: /Raise correction for Sita Substitute on 12\/10\/2026/ }));
+    const dialog = await screen.findByRole("dialog");
+
+    expect(within(dialog).getByLabelText(/Amount/)).toHaveValue(800);
+    const submit = within(dialog).getByRole("button", { name: "Raise correction" });
+    expect(submit).toBeDisabled();
+    await userEvent.type(within(dialog).getByLabelText(/Reason/), "Marked Present late");
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+
+    await waitFor(() =>
+      expect(authFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/days/d-1/correction"),
+        expect.objectContaining({ body: JSON.stringify({ amount: 800, reason: "Marked Present late" }) }),
+      ),
+    );
+  });
+
+  it("offers no correction to someone who is not the Admin", async () => {
+    roles = ["DIRECTOR"];
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: "Needs attention" }));
+
+    await screen.findByText("Added after the month was paid.");
+    expect(screen.queryByRole("button", { name: /Raise correction/ })).not.toBeInTheDocument();
+  });
+
+  it("downloads the CSV only with the Export right", async () => {
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Export CSV" })).toBeInTheDocument();
+  });
+
+  it("hides the export button without the Export right", async () => {
+    actions = ["VIEW", "EDIT"];
+    renderPage();
+
+    await screen.findByText("Sita Substitute");
+    expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument();
+  });
+
+  it("runs the go-live move for an Admin and lists who to settle first", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Move existing substitute credits/ }));
+
+    expect(await screen.findByText(/3 credits moved and marked Present for review/)).toBeInTheDocument();
+    expect(screen.getByText(/Regular Rita \(2\)/)).toBeInTheDocument();
+  });
+
+  it("does not show the go-live move to a Director", async () => {
+    roles = ["DIRECTOR"];
+    renderPage();
+
+    await screen.findByText("Sita Substitute");
+    expect(screen.queryByRole("button", { name: /Move existing substitute credits/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("Substitute Payouts accessibility: attention tab and dialogs", () => {
+  it.each(["light", "dark"] as const)(
+    "has no WCAG 2.2 AA violations with the correction dialog open in %s mode",
+    async (mode) => {
+      const options = { runOnly: { type: "tag" as const, values: ["wcag2a", "wcag2aa", "wcag22aa"] } };
+      renderPage(mode);
+      await userEvent.click(await screen.findByRole("tab", { name: "Needs attention" }));
+      await screen.findByText("Added after the month was paid.");
+      expect((await axe(document.body, options)).violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+
+      await userEvent.click(await screen.findByRole("button", { name: /Raise correction for/ }));
+      await screen.findByRole("dialog");
+      expect((await axe(document.body, options)).violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
     },
     30_000,
   );

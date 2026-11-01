@@ -72,7 +72,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [ ] T039 [P] [US4] Integration tests: cancel/absent while draft (recompute drops), while awaiting approval (waits; returned vs approved), after approval (CORRECTION_NEEDED, run unchanged)
 - [x] T040 [US4] Mismatch rules and `GET /mismatches` (cannot pay, changed, correction needed, differing amount, back-pay waiting) with `reason` and `nextStep`
 - [x] T041 [US4] `POST /days/{id}/correction` (Admin): validate state, `amount`, `reason` (max 500), `409` if already raised, call `CorrectionRaising` with `SUBSTITUTE-CORRECTION:<dayId>`; CORRECTION_RAISED then CORRECTED on the applied event; audit; test
-- [ ] T042 [P] [US4] Web: Mismatches tab and "Raise correction" dialog (prefilled, editable, Admin only) with Vitest
+- [x] T042 [P] [US4] Web: Mismatches tab and "Raise correction" dialog (prefilled, editable, Admin only) with Vitest
 
 ## Phase 7: User Story 6 - Back-pay of everything on record (P1)
 

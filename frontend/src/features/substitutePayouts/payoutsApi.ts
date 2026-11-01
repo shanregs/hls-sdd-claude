@@ -1,4 +1,5 @@
 import {
+  GENERIC_FAILURE,
   getJson,
   queryString,
   sendJson,
@@ -156,3 +157,65 @@ export const reopenMonth = (
     { reason },
     false,
   );
+
+export interface Mismatch {
+  day: DayRow;
+  reason: string;
+  nextStep: string;
+  /** What a Correction would be: positive pays more, negative recovers; null when none is suggested. */
+  suggestedCorrection: number | null;
+}
+
+export const listMismatches = (
+  f: AuthFetch,
+  month: string,
+): Promise<ApiResult<Mismatch[]>> =>
+  getJson(
+    f,
+    `${BASE}/mismatches?${queryString({ month })}`,
+    "Could not load the days that need attention.",
+  );
+
+/** Admin only (payroll's own PROCESS right): one Correction per day, linked to it. */
+export const raiseCorrection = (
+  f: AuthFetch,
+  dayId: string,
+  amount: number,
+  reason: string,
+): Promise<ApiResult<DayRow>> =>
+  sendJson(f, "POST", `${BASE}/days/${dayId}/correction`, { amount, reason });
+
+export interface MigrationResult {
+  migrated: number;
+  futureAllocations: number;
+  alreadyRecorded: number;
+  settleFirst: { teacherId: string; name: string; credits: number }[];
+}
+
+/** The one-off go-live move of the spec 017a credits into day records (Admin; safe to run again). */
+export const runMigration = (f: AuthFetch): Promise<ApiResult<MigrationResult>> =>
+  sendJson(f, "POST", `${BASE}/migration/run`, {});
+
+export async function downloadCsv(
+  f: AuthFetch,
+  filters: { month?: string; status?: string },
+): Promise<ApiResult<void>> {
+  try {
+    const response = await f(`${BASE}/export?${queryString({ ...filters })}`);
+    if (!response.ok) {
+      return { ok: false, reason: "Could not download the file.", status: response.status };
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "substitute-payouts.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    return { ok: true, data: undefined };
+  } catch {
+    return { ok: false, reason: GENERIC_FAILURE };
+  }
+}

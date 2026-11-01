@@ -11,6 +11,8 @@ import {
   DialogTitle,
   MenuItem,
   Stack,
+  Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
@@ -27,13 +29,19 @@ import {
   ATTENDANCE_LABELS,
   PAYOUTS_ROUTE,
   STATUS_LABELS,
+  downloadCsv,
   listDays,
+  listMismatches,
   lockAllMonths,
   markDay,
+  raiseCorrection,
   reopenMonth,
+  runMigration,
   type DayPage,
   type DayRow,
   type DayStatus,
+  type Mismatch,
+  type MigrationResult,
 } from "./payoutsApi";
 
 type Load =
@@ -81,6 +89,17 @@ export function SubstitutePayoutsPage() {
     .flatMap((s) => s.items)
     .find((i) => i.route === PAYOUTS_ROUTE);
   const canApprove = Boolean(item?.actions.includes("APPROVE"));
+  const canExport = Boolean(item?.actions.includes("EXPORT"));
+  const isAdmin = (accessModel?.roles ?? []).includes("ADMIN");
+  const [tab, setTab] = useState<"days" | "attention">("days");
+  const [attention, setAttention] = useState<
+    { kind: "loading" } | { kind: "error"; reason: string } | { kind: "ready"; rows: Mismatch[] }
+  >({ kind: "loading" });
+  const [correcting, setCorrecting] = useState<Mismatch | null>(null);
+  const [correctionAmount, setCorrectionAmount] = useState("");
+  const [correctionReason, setCorrectionReason] = useState("");
+  const [correctionError, setCorrectionError] = useState<string | null>(null);
+  const [migration, setMigration] = useState<MigrationResult | null>(null);
 
   const [month, setMonth] = useState(currentMonth());
   const [status, setStatus] = useState<DayStatus | "">("");
@@ -107,6 +126,53 @@ export function SubstitutePayoutsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial and filter-driven fetch
     void reload();
   }, [reload]);
+
+  const loadAttention = useCallback(async () => {
+    setAttention({ kind: "loading" });
+    const result = await listMismatches(authFetch, month);
+    setAttention(
+      result.ok
+        ? { kind: "ready", rows: result.data }
+        : { kind: "error", reason: result.reason },
+    );
+  }, [authFetch, month]);
+
+  useEffect(() => {
+    if (tab !== "attention") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch when the tab opens or the month changes
+    void loadAttention();
+  }, [tab, loadAttention]);
+
+  async function exportCsv() {
+    setMessage(null);
+    const result = await downloadCsv(authFetch, { month: month || undefined, status: status || undefined });
+    if (!result.ok) setMessage({ severity: "error", text: result.reason });
+  }
+
+  async function migrate() {
+    setMessage(null);
+    const result = await runMigration(authFetch);
+    if (!result.ok) {
+      setMessage({ severity: "error", text: result.reason });
+      return;
+    }
+    setMigration(result.data);
+    await reload();
+  }
+
+  async function saveCorrection() {
+    if (!correcting) return;
+    setCorrectionError(null);
+    const result = await raiseCorrection(authFetch, correcting.day.id, Number(correctionAmount), correctionReason);
+    if (!result.ok) {
+      setCorrectionError(result.reason);
+      return;
+    }
+    setCorrecting(null);
+    setCorrectionAmount("");
+    setCorrectionReason("");
+    await loadAttention();
+  }
 
   async function mark(row: DayRow, attendance: "PRESENT" | "ABSENT") {
     setMessage(null);
@@ -163,12 +229,29 @@ export function SubstitutePayoutsPage() {
         <Typography variant="h5" component="h1">
           Substitute Payouts
         </Typography>
-        {canApprove && month && (
-          <Button variant="outlined" onClick={() => void lockAll()}>
-            Lock all complete substitutes for {month}
-          </Button>
-        )}
+        <Stack direction="row" spacing={1}>
+          {canExport && (
+            <Button variant="outlined" onClick={() => void exportCsv()}>
+              Export CSV
+            </Button>
+          )}
+          {canApprove && month && (
+            <Button variant="outlined" onClick={() => void lockAll()}>
+              Lock all complete substitutes for {month}
+            </Button>
+          )}
+        </Stack>
       </Stack>
+
+      <Tabs
+        value={tab}
+        onChange={(_e, value: "days" | "attention") => setTab(value)}
+        aria-label="Substitute payout views"
+        sx={{ mb: 2 }}
+      >
+        <Tab value="days" label="All days" />
+        <Tab value="attention" label="Needs attention" />
+      </Tabs>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
         <TextField
@@ -202,13 +285,93 @@ export function SubstitutePayoutsPage() {
         </Alert>
       )}
 
-      {load.kind === "loading" && <CircularProgress aria-label="Loading substitute days" />}
-      {load.kind === "error" && (
+      {tab === "days" && isAdmin && (
+        <Box sx={{ mb: 2 }}>
+          <Button size="small" variant="text" onClick={() => void migrate()}>
+            Move existing substitute credits into day records (go-live)
+          </Button>
+          {migration && (
+            <Alert severity={migration.settleFirst.length > 0 ? "warning" : "success"} sx={{ mt: 1 }}>
+              {migration.migrated} credits moved and marked Present for review, {migration.futureAllocations} future
+              allocations, {migration.alreadyRecorded} already recorded.
+              {migration.settleFirst.length > 0 && (
+                <>
+                  {" "}
+                  Settle first (not Substitute Teachers):{" "}
+                  {migration.settleFirst.map((p) => `${p.name} (${p.credits})`).join(", ")}.
+                </>
+              )}
+            </Alert>
+          )}
+        </Box>
+      )}
+
+      {tab === "attention" && (
+        <>
+          {attention.kind === "loading" && <CircularProgress aria-label="Loading days that need attention" />}
+          {attention.kind === "error" && (
+            <Alert severity="error" role="alert">
+              {attention.reason}
+            </Alert>
+          )}
+          {attention.kind === "ready" && attention.rows.length === 0 && (
+            <Typography color="text.secondary">Nothing needs attention for {month}.</Typography>
+          )}
+          {attention.kind === "ready" && attention.rows.length > 0 && (
+            <TableContainer>
+              <Table size="small" aria-label="Days that need attention">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Substitute</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Why</TableCell>
+                    <TableCell>Next step</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {attention.rows.map((m) => (
+                    <TableRow key={m.day.id}>
+                      <TableCell>{formatDate(m.day.date)}</TableCell>
+                      <TableCell>{m.day.substituteName}</TableCell>
+                      <TableCell>
+                        <Chip size="small" color={chipColor(m.day.status)} label={m.day.statusText} />
+                      </TableCell>
+                      <TableCell>{m.reason}</TableCell>
+                      <TableCell>{m.nextStep}</TableCell>
+                      <TableCell>
+                        {isAdmin && m.day.status === "CORRECTION_NEEDED" && (
+                          <Button
+                            size="small"
+                            aria-label={`Raise correction for ${m.day.substituteName} on ${formatDate(m.day.date)}`}
+                            onClick={() => {
+                              setCorrecting(m);
+                              setCorrectionAmount(m.suggestedCorrection === null ? "" : String(m.suggestedCorrection));
+                              setCorrectionReason("");
+                              setCorrectionError(null);
+                            }}
+                          >
+                            Raise correction
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </>
+      )}
+
+      {tab === "days" && load.kind === "loading" && <CircularProgress aria-label="Loading substitute days" />}
+      {tab === "days" && load.kind === "error" && (
         <Alert severity="error" role="alert">
           {load.reason}
         </Alert>
       )}
-      {load.kind === "ready" && (
+      {tab === "days" && load.kind === "ready" && (
         <>
           <Typography sx={{ mb: 2 }} aria-live="polite">
             Allocated <strong>{load.page.totals.allocated}</strong> · Attended{" "}
@@ -297,6 +460,51 @@ export function SubstitutePayoutsPage() {
           )}
         </>
       )}
+
+      <Dialog open={correcting !== null} onClose={() => setCorrecting(null)} fullWidth maxWidth="xs">
+        <DialogTitle>
+          Raise a correction for {correcting?.day.substituteName}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {correctionError && (
+              <Alert severity="error" role="alert">
+                {correctionError}
+              </Alert>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {correcting?.reason} A positive amount pays more; a negative amount recovers. It is paid with the next
+              pay run.
+            </Typography>
+            <TextField
+              label="Amount (₹)"
+              type="number"
+              required
+              value={correctionAmount}
+              onChange={(e) => setCorrectionAmount(e.target.value)}
+            />
+            <TextField
+              label="Reason"
+              required
+              multiline
+              minRows={2}
+              value={correctionReason}
+              onChange={(e) => setCorrectionReason(e.target.value)}
+              slotProps={{ htmlInput: { maxLength: 500 } }}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCorrecting(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={Number(correctionAmount) === 0 || correctionReason.trim().length === 0}
+            onClick={() => void saveCorrection()}
+          >
+            Raise correction
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={reopening !== null} onClose={() => setReopening(null)} fullWidth maxWidth="xs">
         <DialogTitle>Reopen {reopening?.workMonth.slice(0, 7)} for {reopening?.substituteName}</DialogTitle>
