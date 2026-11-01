@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Turns the substitution events of spec 017a into notifications: the School's Manager (else Admin and Director) hears
- * that a substitute is needed and that the School was informed; the substitute hears about an assignment and its end.
+ * that a substitute is needed and that the School was informed; the same people hear about an assignment and its end (a Substitute has no account, spec 017b).
  * Runs inside the publisher's transaction. Tasks (spec 025) are deliberately not used.
  */
 @Component
@@ -39,17 +39,18 @@ public class SubstitutionEventListener {
     @EventListener
     void onAssigned(SubstitutionAssigned event) {
         MessageFactory.Text text = MessageFactory.substituteAssigned(event.schoolName(), event.date());
-        recipients
-                .teacherUser(event.substituteTeacherId())
-                .ifPresent(user -> notifications.create(user, NotificationType.SUBSTITUTE_ASSIGNED, text));
+        // a Substitute has no account (spec 017b FR-004): the School's supervisors hear instead
+        for (UUID user : recipients.leaveSupervisors(event.schoolId())) {
+            notifications.create(user, NotificationType.SUBSTITUTE_ASSIGNED, text);
+        }
     }
 
     @EventListener
     void onEnded(SubstitutionEnded event) {
         MessageFactory.Text text = MessageFactory.substituteEnded(event.schoolName(), event.date(), event.reason());
-        recipients
-                .teacherUser(event.substituteTeacherId())
-                .ifPresent(user -> notifications.create(user, NotificationType.SUBSTITUTE_ENDED, text));
+        for (UUID user : recipients.leaveSupervisors(event.schoolId())) {
+            notifications.create(user, NotificationType.SUBSTITUTE_ENDED, text);
+        }
     }
 
     @EventListener

@@ -73,7 +73,8 @@ public final class PermissionEligibility {
             PermissionModule.REPORT_COLLECTIONS,
             PermissionModule.REPORT_SCHOOL,
             PermissionModule.MY_REPORT,
-            PermissionModule.MANAGER_INCENTIVES);
+            PermissionModule.MANAGER_INCENTIVES,
+            PermissionModule.SUBSTITUTE_PAYOUTS);
 
 
     /** What the Content Contributor may hold (spec 029): own content, own notifications, dashboard, profile and own sessions. */
@@ -265,6 +266,15 @@ public final class PermissionEligibility {
                 case ADMIN -> EnumSet.of(PermissionAction.VIEW, PermissionAction.EXPORT);
                 case DIRECTOR -> module.actions();
                 case MANAGER -> EnumSet.of(PermissionAction.VIEW, PermissionAction.APPROVE);
+                default -> EnumSet.noneOf(PermissionAction.class);
+            };
+        }
+        // Substitute payouts (spec 017b): Admin and Director hold all four; a Manager views and marks days in their Zone;
+        // Teacher and System hold nothing (a Substitute has no account).
+        if (module == PermissionModule.SUBSTITUTE_PAYOUTS) {
+            return switch (role) {
+                case ADMIN, DIRECTOR -> module.actions();
+                case MANAGER -> EnumSet.of(PermissionAction.VIEW, PermissionAction.EDIT);
                 default -> EnumSet.noneOf(PermissionAction.class);
             };
         }

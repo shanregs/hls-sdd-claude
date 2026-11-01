@@ -124,6 +124,8 @@ public class AccessModelService {
         addAttendanceScope(dataScope, callerRoles, PermissionModule.SCHOOL_BILLING, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.MANAGER_INCENTIVES, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.MANAGER_INCENTIVES, DataScope.ASSIGNED, Role.MANAGER);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.SUBSTITUTE_PAYOUTS, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
+        addAttendanceScope(dataScope, callerRoles, PermissionModule.SUBSTITUTE_PAYOUTS, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_ATTENDANCE, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_ATTENDANCE, DataScope.ASSIGNED, Role.MANAGER);
         addAttendanceScope(dataScope, callerRoles, PermissionModule.REPORT_PAYROLL, DataScope.ORG_WIDE, Role.ADMIN, Role.DIRECTOR);
