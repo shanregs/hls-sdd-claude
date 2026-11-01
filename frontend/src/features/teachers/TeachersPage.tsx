@@ -117,17 +117,22 @@ export function TeachersPage() {
       flex: 0.9,
       sortable: false,
       renderCell: (params) => (
-        <Chip
-          size="small"
-          label={STATUS_LABELS[params.row.status]}
-          color={
-            params.row.status === "ACTIVE"
-              ? "success"
-              : params.row.status === "EXITED"
-                ? "default"
-                : "info"
-          }
-        />
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+          <Chip
+            size="small"
+            label={STATUS_LABELS[params.row.status]}
+            color={
+              params.row.status === "ACTIVE"
+                ? "success"
+                : params.row.status === "EXITED"
+                  ? "default"
+                  : "info"
+            }
+          />
+          {params.row.engagement === "SUBSTITUTE" && (
+            <Chip size="small" variant="outlined" label="Substitute" />
+          )}
+        </Stack>
       ),
     },
     {
@@ -137,7 +142,12 @@ export function TeachersPage() {
       sortable: false,
       renderCell: (params) => (
         <Stack>
-          <span>{params.row.school?.name ?? "Not placed"}</span>
+          <span>
+            {params.row.school?.name ??
+              (params.row.engagement === "SUBSTITUTE"
+                ? "Substitute (not placed)"
+                : "Not placed")}
+          </span>
           {params.row.pendingPlacement && (
             <Typography variant="caption" color="text.secondary">
               Scheduled: {params.row.pendingPlacement.schoolName} from{" "}
@@ -218,17 +228,23 @@ export function TeachersPage() {
               Status
             </Button>
           )}
-          {canEdit && !limitedEdit && params.row.status !== "EXITED" && (
+          {canEdit &&
+            !limitedEdit &&
+            params.row.status !== "EXITED" &&
+            params.row.engagement !== "SUBSTITUTE" && (
             <Button size="small" onClick={() => setAccountFor(params.row)}>
               {params.row.userId ? "Account" : "Link account"}
             </Button>
           )}
-          {canEdit && canSeeSalary && (
+          {canEdit && canSeeSalary && params.row.engagement !== "SUBSTITUTE" && (
             <Button size="small" onClick={() => setSalaryFor(params.row)}>
               Salary
             </Button>
           )}
-          {canEdit && !limitedEdit && params.row.status !== "EXITED" && (
+          {canEdit &&
+            !limitedEdit &&
+            params.row.status !== "EXITED" &&
+            params.row.engagement !== "SUBSTITUTE" && (
             <Button size="small" onClick={() => setPlacementFor(params.row)}>
               Placement
             </Button>
