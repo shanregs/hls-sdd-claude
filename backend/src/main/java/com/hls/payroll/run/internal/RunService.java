@@ -4,6 +4,7 @@ import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.AppUser;
 import com.hls.identity.user.AppUserRepository;
 import com.hls.payroll.api.PayRules.Kind;
+import com.hls.payroll.api.PayrollRunChanged;
 import com.hls.payroll.api.PayrollRunReturned;
 import com.hls.payroll.api.PayrollRunSubmitted;
 import com.hls.payroll.run.internal.RunViews.AdjustmentLine;
@@ -192,6 +193,7 @@ public class RunService {
         events.save(new RunEvent(run.getId(), now, actor, "CANCELLED", why, null));
         changes.record(actor, ENTITY, run.getId(), "status", PayRun.Status.DRAFT, PayRun.Status.CANCELLED);
         changes.recordLifecycle(actor, ENTITY, run.getId(), "cancelled", why);
+        publisher.publishEvent(new PayrollRunChanged(runId, run.getMonth(), "CANCELLED"));
         return view(run, names(run), null);
     }
 

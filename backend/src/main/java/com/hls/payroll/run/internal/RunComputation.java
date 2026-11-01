@@ -11,6 +11,7 @@ import com.hls.payroll.api.PayRules;
 import com.hls.payroll.api.PayRules.Kind;
 import com.hls.payroll.api.PayRules.PersonRef;
 import com.hls.payroll.api.PayableDays;
+import com.hls.payroll.api.PayrollRunChanged;
 import com.hls.payroll.api.TotalLossOfPay;
 import com.hls.payroll.internal.PersonDirectory;
 import com.hls.payroll.run.internal.LineCalculator.AdjustmentInput;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -71,6 +73,7 @@ public class RunComputation {
     private final int parallelism;
     private final DayRates dayRates;
     private final ObjectProvider<DayRateWork> dayRateWork;
+    private final ApplicationEventPublisher publisher;
 
     RunComputation(
             PayRules payRules,
@@ -87,6 +90,7 @@ public class RunComputation {
             Clock clock,
             DayRates dayRates,
             ObjectProvider<DayRateWork> dayRateWork,
+            ApplicationEventPublisher publisher,
             @Value("${hls.payroll.run.parallelism:6}") int parallelism) {
         this.payRules = payRules;
         this.people = people;
@@ -103,6 +107,7 @@ public class RunComputation {
         this.parallelism = Math.max(1, parallelism);
         this.dayRates = dayRates;
         this.dayRateWork = dayRateWork;
+        this.publisher = publisher;
     }
 
     /** Starts the computation on a virtual thread of its own; the caller returns at once (the request answers 202). */
@@ -552,6 +557,8 @@ public class RunComputation {
             }
             run.setProgress(all.size(), all.size(), now);
             run.setComputeState(PayRun.ComputeState.DONE, now);
+            // spec 017b: the days a Substitute worked now sit in a draft run
+            publisher.publishEvent(new PayrollRunChanged(runId, run.getMonth(), "COMPUTED"));
         });
     }
 

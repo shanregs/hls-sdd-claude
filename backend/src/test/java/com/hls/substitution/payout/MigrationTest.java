@@ -79,4 +79,28 @@ class MigrationTest extends SubstitutionTestBase {
         assertThat(post(MIGRATE, w.teacherA().token(), Map.of()).status()).as("Teacher").isEqualTo(403);
         assertThat(post(MIGRATE, signInAs(Role.SYSTEM).token(), Map.of()).status()).as("System").isEqualTo(403);
     }
+
+    @Test
+    void theMigratedMonthsCanBeLockedInOneGoWhenComplete() {
+        World w = newWorld();
+        TeacherCtx substitute = benchTeacher(w);
+        creditWithoutDayRecord(w, substitute);
+        LocalDate day = monday();
+        org.junit.jupiter.api.Assumptions.assumeTrue(
+                java.time.YearMonth.from(day).isBefore(java.time.YearMonth.from(today())),
+                "the test Monday is in the current month, so it cannot be locked yet");
+        assertThat(post(MIGRATE, w.admin(), Map.of()).status()).isEqualTo(200);
+
+        Resp locked = post("/api/v1/substitute-payouts/months/lock?month=" + java.time.YearMonth.from(day), w.admin(), Map.of());
+
+        assertThat(locked.status()).as(locked.body()).isEqualTo(200);
+        assertThat(jdbc.queryForObject(
+                        "select locked from substitute_month_lock where substitute_teacher_id = ?", Boolean.class,
+                        substitute.teacherId()))
+                .isTrue();
+        assertThat(jdbc.queryForObject(
+                        "select status from substitute_day where substitute_teacher_id = ?", String.class, substitute.teacherId()))
+                .as("the lock moved the migrated day on from Attended")
+                .isIn("LOCKED_WAITING_RUN", "CANNOT_PAY");
+    }
 }

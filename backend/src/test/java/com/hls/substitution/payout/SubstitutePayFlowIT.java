@@ -262,4 +262,57 @@ class SubstitutePayFlowIT extends PayrollRunTestBase {
                 .as("the original month is kept")
                 .isEqualTo(month.atDay(1));
     }
+
+    private Resp markDay(String token, UUID day, String attendance) {
+        long version = jdbc.queryForObject("select version from substitute_day where id = ?", Long.class, day);
+        return put(PAYOUTS + "/days/" + day + "/attendance", token, Map.of("attendance", attendance, "version", version));
+    }
+
+    @Test
+    void aDayChangedWhileTheRunIsADraftOrAwaitsApprovalIsDroppedByTheNextCompute() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID designation = designation(admin, "TEACHER");
+        dayRate(admin, designation, "800", month.atDay(1).minusMonths(2));
+        UUID substitute = substitute(admin, designation);
+        UUID a = day(substitute, month.atDay(3), "1.00", "PRESENT");
+        UUID b = day(substitute, month.atDay(4), "1.00", "PRESENT");
+        UUID c = day(substitute, month.atDay(5), "1.00", "PRESENT");
+        assertThat(lock(admin, substitute).status()).isEqualTo(200);
+        UUID run = startAndCompute(admin);
+        assertThat(new BigDecimal(lineOf(admin, run, substitute).get("earned").toString())).isEqualByComparingTo("2400.00");
+        assertThat(statusOf(a)).isEqualTo("IN_DRAFT_RUN");
+
+        // while a draft: the month is reopened and one day becomes Absent; the next compute drops it
+        String reopen = PAYOUTS + "/months/" + substitute + "/" + month + "/reopen";
+        assertThat(post(reopen, admin, Map.of("reason", "b was absent")).status()).isEqualTo(200);
+        assertThat(markDay(admin, b, "ABSENT").status()).isEqualTo(200);
+        assertThat(statusOf(b)).isEqualTo("DID_NOT_ATTEND");
+        assertThat(lock(admin, substitute).status()).isEqualTo(200);
+        assertThat(post(RUNS + "/" + run + "/recompute", admin, Map.of()).status()).isEqualTo(202);
+        awaitComputed(admin, run);
+        assertThat(new BigDecimal(lineOf(admin, run, substitute).get("earned").toString())).isEqualByComparingTo("1600.00");
+
+        // while awaiting approval: a change is flagged, and returning the run lets it be computed again
+        assertThat(submitRun(admin, run).status()).isEqualTo(200);
+        assertThat(statusOf(c)).isEqualTo("IN_RUN_AWAITING_APPROVAL");
+        assertThat(post(reopen, admin, Map.of("reason", "c was absent")).status()).isEqualTo(200);
+        assertThat(markDay(admin, c, "ABSENT").status()).isEqualTo(200);
+        assertThat(statusOf(c)).isEqualTo("CHANGED_RUN_AWAITING");
+        assertThat(get(PAYOUTS + "/mismatches?month=" + month, admin).body()).contains(c.toString());
+        String director = signInAs(Role.DIRECTOR).token();
+        assertThat(returnRun(director, run, "A day changed").status()).isEqualTo(200);
+        assertThat(lock(admin, substitute).status()).isEqualTo(200);
+        assertThat(post(RUNS + "/" + run + "/recompute", admin, Map.of()).status()).isEqualTo(202);
+        awaitComputed(admin, run);
+        assertThat(new BigDecimal(lineOf(admin, run, substitute).get("earned").toString())).isEqualByComparingTo("800.00");
+
+        // approved: only the days still Present are paid, and they are PAID; the dropped ones stay as recorded
+        submitAndApprove(admin, run);
+        assertThat(statusOf(a)).isEqualTo("PAID");
+        assertThat(statusOf(b)).isEqualTo("DID_NOT_ATTEND");
+        assertThat(statusOf(c)).isEqualTo("DID_NOT_ATTEND");
+        assertThat(jdbc.queryForObject("select sum(paid_amount) from substitute_day where substitute_teacher_id = ?",
+                        BigDecimal.class, substitute))
+                .isEqualByComparingTo("800.00");
+    }
 }
