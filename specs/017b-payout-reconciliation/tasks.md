@@ -78,9 +78,9 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 **Goal**: all recorded engaged days paid; closed months by supplementary run. **Independent test**: quickstart step 7.
 
-- [ ] T043 [US6] Amendment 013b: a supplementary run for a month includes Substitutes returned by `DayRateWork.unpaidPresentDays` even if absent from the primary run; test on a month with an approved primary run
-- [ ] T044 [P] [US6] Integration test: day marked Present after the primary run is BACKPAY_WAITING then paid by the supplementary run; original month kept
-- [ ] T045 [US6] `MigrationService` and `POST /migration/run` (Admin, idempotent): one day record per existing live credit, attendance PRESENT, `source = MIGRATED`, `needs_review = true`; credits of non-Substitute Teachers listed "settle first" and not created payable; returns counts
+- [x] T043 [US6] Amendment 013b: a supplementary run for a month includes Substitutes returned by `DayRateWork.unpaidPresentDays` even if absent from the primary run; test on a month with an approved primary run
+- [x] T044 [P] [US6] Integration test: day marked Present after the primary run is BACKPAY_WAITING then paid by the supplementary run; original month kept
+- [x] T045 [US6] `MigrationService` and `POST /migration/run` (Admin, idempotent): one day record per existing live credit, attendance PRESENT, `source = MIGRATED`, `needs_review = true`; credits of non-Substitute Teachers listed "settle first" and not created payable; returns counts
 - [ ] T046 [P] [US6] Tests: migration idempotent, no double count, settle-first list, bulk lock of migrated months; web screen for the settle-first list and review flag in `features/substitute-payouts/`
 
 ## Phase 8: User Story 5 - Repair job and audit (P2)

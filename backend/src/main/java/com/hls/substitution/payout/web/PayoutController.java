@@ -14,6 +14,7 @@ import com.hls.substitution.payout.DayQueryService.Filter;
 import com.hls.substitution.payout.DayService;
 import com.hls.substitution.payout.DayService.BulkLockResult;
 import com.hls.substitution.payout.DayStatus;
+import com.hls.substitution.payout.MigrationService;
 import com.hls.substitution.payout.SubstituteDay;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -53,9 +54,15 @@ public class PayoutController {
     private final DayQueryService queries;
     private final DayEventRepository events;
     private final PermissionGuard guard;
+    private final MigrationService migration;
 
     public PayoutController(
-            DayService service, DayQueryService queries, DayEventRepository events, PermissionGuard guard) {
+            DayService service,
+            DayQueryService queries,
+            DayEventRepository events,
+            PermissionGuard guard,
+            MigrationService migration) {
+        this.migration = migration;
         this.service = service;
         this.queries = queries;
         this.events = events;
@@ -106,6 +113,14 @@ public class PayoutController {
                 e.getActorUserId(),
                 e.getCause().name(),
                 e.getNote());
+    }
+
+    /** The one-off go-live move of the spec 017a credits into day records (Admin; safe to run again). */
+    @PostMapping("/migration/run")
+    public MigrationService.Result migrate(@AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.APPROVE);
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.PROCESS);
+        return migration.run(CallerContext.userId(jwt));
     }
 
     @GetMapping("/mismatches")

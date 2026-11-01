@@ -227,4 +227,39 @@ class SubstitutePayFlowIT extends PayrollRunTestBase {
         assertThat(statusOf(late)).isEqualTo("CORRECTED");
         assertThat(statusOf(paid)).isEqualTo("PAID");
     }
+
+    @Test
+    void aSubstituteMissingFromTheApprovedPrimaryRunIsPaidByASupplementaryRunForTheSameMonth() {
+        String admin = signInAs(Role.ADMIN).token();
+        UUID designation = designation(admin, "TEACHER");
+        dayRate(admin, designation, "800", month.atDay(1).minusMonths(2));
+        UUID substitute = substitute(admin, designation);
+        UUID primary = computedRunFor(admin, month);
+        submitAndApprove(admin, primary);
+
+        // the days are marked and locked only after the month's run was approved
+        UUID a = day(substitute, month.atDay(3), "1.00", "PRESENT");
+        UUID b = day(substitute, month.atDay(4), "1.00", "PRESENT");
+        assertThat(lock(admin, substitute).status()).isEqualTo(200);
+        assertThat(statusOf(a)).isEqualTo("BACKPAY_WAITING");
+        Resp owed = get(RUNS + "/" + primary + "/owed", admin);
+        assertThat(owed.status()).as(owed.body()).isEqualTo(200);
+        assertThat(owed.body()).contains(substitute.toString());
+
+        Resp started = post(RUNS, admin, Map.of("month", month.toString(), "supplementary", true));
+        assertThat(started.status()).as(started.body()).isEqualTo(202);
+        awaitComputed(admin, started.id());
+        Map<String, Object> line = lineOf(admin, started.id(), substitute);
+        assertThat(line).isNotNull();
+        assertThat(new BigDecimal(line.get("earned").toString())).isEqualByComparingTo("1600.00");
+        submitAndApprove(admin, started.id());
+
+        assertThat(statusOf(a)).isEqualTo("PAID");
+        assertThat(statusOf(b)).isEqualTo("PAID");
+        assertThat(jdbc.queryForObject(
+                        "select distinct run_month from substitute_day where id = ?", java.sql.Date.class, a)
+                .toLocalDate())
+                .as("the original month is kept")
+                .isEqualTo(month.atDay(1));
+    }
 }

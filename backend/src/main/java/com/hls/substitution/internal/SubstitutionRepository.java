@@ -107,6 +107,15 @@ public interface SubstitutionRepository extends JpaRepository<SubstitutionRequir
     List<SubstitutionRequirement> credits(
             @Param("teacherIds") Collection<UUID> teacherIds, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    /** Every live credit, for the go-live migration of spec 017b. */
+    @Query("""
+            select r from SubstitutionRequirement r
+            where r.substituteTeacherId is not null
+              and r.status = com.hls.substitution.internal.RequirementStatus.ASSIGNED
+            order by r.dutyDate, r.id
+            """)
+    List<SubstitutionRequirement> allCredits();
+
     /** All assigned requirements on a date for the given substitutes (to add up how much of the day is covered). */
     @Query("""
             select r from SubstitutionRequirement r
