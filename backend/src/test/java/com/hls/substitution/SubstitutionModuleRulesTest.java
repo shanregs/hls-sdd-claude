@@ -64,4 +64,17 @@ class SubstitutionModuleRulesTest {
                 .allowEmptyShould(true)
                 .check(MAIN);
     }
+
+    @Test
+    void payrollNeverDependsOnSubstitution() {
+        // spec 017b: payroll owns the DayRateWork port and substitution implements it, so the arrow points one way
+        noClasses()
+                .that()
+                .resideInAPackage("com.hls.payroll..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("com.hls.substitution..")
+                .allowEmptyShould(true)
+                .check(MAIN);
+    }
 }

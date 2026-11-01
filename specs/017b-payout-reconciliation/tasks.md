@@ -10,7 +10,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 - [x] T001 Re-check the highest Flyway migration on `origin/main` and open branches; take the next free decade slots (V160, V161 if V150 is still highest) and update plan.md and data-model.md
 - [ ] T002 [P] Verify in code the items of research.md R11 (013b line working and supplementary eligibility; designation on a date in bulk; Active Substitute filter in `teacher.api`; count of existing credits held by Teachers) and record the findings in research.md
-- [ ] T003 [P] Create package skeleton `substitution/payout/{domain,service,listener,job,web}` and add it to the module boundary test (`ModulithBoundaryTest` or equivalent), asserting `payroll` has no dependency on `substitution`
+- [x] T003 [P] Create package skeleton `substitution/payout/{domain,service,listener,job,web}` and add it to the module boundary test (`ModulithBoundaryTest` or equivalent), asserting `payroll` has no dependency on `substitution`
 
 ## Phase 2: Foundational (blocks all stories)
 
@@ -23,7 +23,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [ ] T010 [P] Teacher form and list in `frontend/src/features/teachers/`: engagement field (Admin, Director), badge, no account fields for a Substitute; Vitest
 - [ ] T011 Amendment 013a: `payroll.api.DayRates` and impl, `designation_day_rate` repository, endpoints `GET/POST /api/salary-structures/designation-day-rates` (Admin, Director; amount > 0; effective date), audit entity `DESIGNATION_DAY_RATE`, history; tests per role
 - [ ] T012 [P] Web: Salary Structures → Designation day rates screen in `frontend/src/features/salary-structures/` (list, add, history, DD/MM/YYYY, Rupee grouping); Vitest
-- [ ] T013 Amendment 008: exclude Substitute-type Teachers from the grid, rollups, self-marking, lock blockers and missed-mark lists via `teacher.api`; tests that lock is unaffected by substitutes
+- [x] T013 Amendment 008: exclude Substitute-type Teachers from the grid, rollups, self-marking, lock blockers and missed-mark lists via `teacher.api`; tests that lock is unaffected by substitutes
 - [x] T014 Amendment 017a: availability offers and accepts only Active Substitute-type Teachers (server re-check); tests in `substitution/internal/AvailabilityServiceTest`
 - [x] T015 Amendment 010/017a: send "substitute assigned/ended" to the School's Zone Manager (else Admin and Director) instead of the substitute; remove the Teacher "My Substitutions" page and menu item (or never show them for a Substitute); tests
 - [x] T016 Permission module `SUBSTITUTE_PAYOUTS(VIEW, EDIT, APPROVE, EXPORT)`: Admin and Director all four; Manager VIEW and EDIT; `PermissionEligibility` excludes Teacher and System; navigation item PAYROLL & FINANCE "Substitute Payouts" (VIEW); access-model tests
@@ -57,10 +57,10 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 **Goal**: list, totals, substitute month view, CSV. **Independent test**: quickstart step 8.
 
-- [ ] T032 [P] [US3] API tests per role and scope for days, summary, substitute view, export (`PayoutApiTest`)
-- [ ] T033 [US3] `PayoutQueryService` in `substitution/payout/service/`: filters (month or range, substitute, School, Zone, status), paging, sorting, totals over the whole filter, batch lookups
-- [ ] T034 [US3] `PayoutController`: `GET /days`, `/substitutes/{id}`, `/summary`, `/days/{id}` with `actions[]`
-- [ ] T035 [US3] `GET /export` CSV with formula neutralising, DD/MM/YYYY dates, numeric Rupee amounts; test rows equal the list (SC-007)
+- [x] T032 [P] [US3] API tests per role and scope for days, summary, substitute view, export (`PayoutApiTest`)
+- [x] T033 [US3] `PayoutQueryService` in `substitution/payout/service/`: filters (month or range, substitute, School, Zone, status), paging, sorting, totals over the whole filter, batch lookups
+- [x] T034 [US3] `PayoutController`: `GET /days`, `/substitutes/{id}`, `/summary`, `/days/{id}` with `actions[]`
+- [x] T035 [US3] `GET /export` CSV with formula neutralising, DD/MM/YYYY dates, numeric Rupee amounts; test rows equal the list (SC-007)
 - [ ] T036 [P] [US3] Web: `frontend/src/features/substitute-payouts/` list, filters, status chips, totals footer, substitute month view, detail with history; Indian grouping; route guard
 - [ ] T037 [US3] Web tests (Vitest): list, filters, empty/error states, keyboard use
 

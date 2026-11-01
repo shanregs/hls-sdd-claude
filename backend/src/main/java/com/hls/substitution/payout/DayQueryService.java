@@ -60,6 +60,30 @@ public class DayQueryService {
             Long version,
             List<String> actions) {}
 
+    /** One row of the summary: how many days were allocated, attended and paid, and what is still owed. */
+    public record SummaryGroup(
+            String key,
+            String label,
+            long allocated,
+            long attended,
+            long paid,
+            long unpaid,
+            BigDecimal amountPaid,
+            BigDecimal amountOwed) {}
+
+    /** How many days were paid at one rate, for the substitute's month. */
+    public record RateGroup(BigDecimal rate, BigDecimal days) {}
+
+    /** One substitute's month: the days, the totals and the rates that priced them (spec 017b FR-022). */
+    public record SubstituteMonth(
+            UUID teacherId,
+            String name,
+            String month,
+            boolean locked,
+            List<DayView> days,
+            Totals totals,
+            List<RateGroup> rates) {}
+
     /** A day that needs attention, with why and what to do next (spec 017b FR-019). */
     public record MismatchView(DayView day, String reason, String nextStep, BigDecimal suggestedCorrection) {}
 
@@ -111,6 +135,92 @@ public class DayQueryService {
         List<SubstituteDay> all = days.findAll(specification(actor, roles, filter), org.springframework.data.domain.Sort.by(
                 org.springframework.data.domain.Sort.Order.asc("dayDate"), org.springframework.data.domain.Sort.Order.asc("id")));
         return views(all, false);
+    }
+
+    /** Allocated, attended, paid and owed per substitute, School or month, over the whole filter. */
+    public List<SummaryGroup> summary(UUID actor, Set<Role> roles, Filter filter, String groupBy) {
+        List<SubstituteDay> all = days.findAll(specification(actor, roles, filter));
+        Map<UUID, String> teacherNames = new HashMap<>();
+        Map<UUID, String> schoolNames = new HashMap<>();
+        if ("substitute".equals(groupBy)) {
+            teachers.teacherInfo(all.stream().map(SubstituteDay::getSubstituteTeacherId).collect(Collectors.toSet()))
+                    .forEach((id, t) -> teacherNames.put(id, t.name()));
+        } else if ("school".equals(groupBy)) {
+            schools.schools(all.stream().map(SubstituteDay::getSchoolId).collect(Collectors.toSet()))
+                    .forEach(s -> schoolNames.put(s.id(), s.name()));
+        }
+        Map<String, List<SubstituteDay>> grouped = new java.util.TreeMap<>();
+        Map<String, String> labels = new HashMap<>();
+        for (SubstituteDay d : all) {
+            String key;
+            String label;
+            switch (groupBy == null ? "month" : groupBy) {
+                case "substitute" -> {
+                    key = d.getSubstituteTeacherId().toString();
+                    label = teacherNames.getOrDefault(d.getSubstituteTeacherId(), "?");
+                }
+                case "school" -> {
+                    key = d.getSchoolId().toString();
+                    label = schoolNames.getOrDefault(d.getSchoolId(), "?");
+                }
+                default -> {
+                    key = d.month().toString();
+                    label = key;
+                }
+            }
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(d);
+            labels.putIfAbsent(key, label);
+        }
+        List<SummaryGroup> result = new ArrayList<>();
+        grouped.forEach((key, list) -> {
+            long allocated = list.stream().filter(SubstituteDay::isLive).count();
+            List<SubstituteDay> attended = list.stream()
+                    .filter(d -> d.isLive() && d.getAttendance() == DayAttendance.PRESENT)
+                    .toList();
+            long paid = list.stream().filter(d -> d.getStatus() == DayStatus.PAID || d.getStatus() == DayStatus.CORRECTED).count();
+            List<SubstituteDay> owed = attended.stream()
+                    .filter(d -> d.getStatus() != DayStatus.PAID && d.getStatus() != DayStatus.CORRECTED)
+                    .toList();
+            BigDecimal amountPaid = list.stream()
+                    .map(SubstituteDay::getPaidAmount)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal amountOwed = owed.stream()
+                    .map(SubstituteDay::getAmount)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            result.add(new SummaryGroup(key, labels.get(key), allocated, attended.size(), paid, owed.size(), amountPaid, amountOwed));
+        });
+        return result;
+    }
+
+    /** One substitute's month; 404 for a substitute who does not exist or has no day in the caller's scope. */
+    public SubstituteMonth substituteMonth(
+            UUID actor, Set<Role> roles, UUID teacherId, java.time.YearMonth month, boolean canEdit) {
+        if (!teachers.substituteTeacherIds().contains(teacherId)) {
+            throw new NotFoundException("Substitute not found.");
+        }
+        Filter filter = new Filter(month.atDay(1), month.atEndOfMonth(), teacherId, null, null, Set.of());
+        List<SubstituteDay> all = days.findAll(specification(actor, roles, filter), org.springframework.data.domain.Sort.by(
+                org.springframework.data.domain.Sort.Order.asc("dayDate"), org.springframework.data.domain.Sort.Order.asc("id")));
+        if (all.isEmpty() && !scope.of(actor, roles).all()) {
+            throw new NotFoundException("Substitute not found.");
+        }
+        Map<BigDecimal, BigDecimal> byRate = new java.util.TreeMap<>();
+        for (SubstituteDay d : all) {
+            if (d.isLive() && d.getAttendance() == DayAttendance.PRESENT && d.getRate() != null) {
+                byRate.merge(d.getRate(), d.getDayValue(), BigDecimal::add);
+            }
+        }
+        String name = teachers.teacherInfo(List.of(teacherId)).containsKey(teacherId)
+                ? teachers.teacherInfo(List.of(teacherId)).get(teacherId).name()
+                : "?";
+        boolean locked = locks.findBySubstituteTeacherIdAndMonth(teacherId, month.atDay(1))
+                .map(MonthLock::isLocked)
+                .orElse(false);
+        List<RateGroup> rates = new ArrayList<>();
+        byRate.forEach((rate, count) -> rates.add(new RateGroup(rate, count)));
+        return new SubstituteMonth(teacherId, name, month.toString(), locked, views(all, canEdit), totals(all), rates);
     }
 
     private static final Set<DayStatus> MISMATCH_STATUSES = java.util.EnumSet.of(

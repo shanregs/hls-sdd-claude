@@ -15,6 +15,7 @@ import com.hls.substitution.payout.DayService;
 import com.hls.substitution.payout.DayService.BulkLockResult;
 import com.hls.substitution.payout.DayStatus;
 import com.hls.substitution.payout.MigrationService;
+import com.hls.substitution.payout.PayoutCsv;
 import com.hls.substitution.payout.PayoutReconcileJob;
 import com.hls.substitution.payout.SubstituteDay;
 import java.time.LocalDate;
@@ -57,6 +58,7 @@ public class PayoutController {
     private final PermissionGuard guard;
     private final MigrationService migration;
     private final PayoutReconcileJob reconcile;
+    private final PayoutCsv csv;
 
     public PayoutController(
             DayService service,
@@ -64,7 +66,9 @@ public class PayoutController {
             DayEventRepository events,
             PermissionGuard guard,
             MigrationService migration,
-            PayoutReconcileJob reconcile) {
+            PayoutReconcileJob reconcile,
+            PayoutCsv csv) {
+        this.csv = csv;
         this.reconcile = reconcile;
         this.migration = migration;
         this.service = service;
@@ -135,6 +139,54 @@ public class PayoutController {
             throw new org.springframework.security.access.AccessDeniedException("Only the Admin and the Director repair a month.");
         }
         return reconcile.runForMonth(parseMonth(month));
+    }
+
+    @GetMapping("/summary")
+    public List<DayQueryService.SummaryGroup> summary(
+            @RequestParam(required = false) String month,
+            @RequestParam(defaultValue = "month") String groupBy,
+            @RequestParam(required = false) UUID zoneId,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.VIEW);
+        if (!List.of("substitute", "school", "month").contains(groupBy)) {
+            throw new InvalidInputException("Group by substitute, school or month.");
+        }
+        return queries.summary(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                filter(month, null, null, null, null, zoneId, null),
+                groupBy);
+    }
+
+    @GetMapping("/substitutes/{teacherId}")
+    public DayQueryService.SubstituteMonth substitute(
+            @PathVariable UUID teacherId, @RequestParam String month, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.VIEW);
+        return queries.substituteMonth(
+                CallerContext.userId(jwt), CallerContext.roles(jwt), teacherId, parseMonth(month), canEdit(jwt));
+    }
+
+    @GetMapping("/export")
+    public org.springframework.http.ResponseEntity<byte[]> export(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) UUID substituteId,
+            @RequestParam(required = false) UUID schoolId,
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.EXPORT);
+        PayoutCsv.CsvFile file = csv.export(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                filter(month, null, null, substituteId, schoolId, zoneId, status));
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=utf-8"))
+                .header(
+                        org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment().filename(file.fileName()).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(file.bytes());
     }
 
     @GetMapping("/mismatches")
