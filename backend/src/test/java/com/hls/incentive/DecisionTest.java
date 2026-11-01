@@ -276,15 +276,22 @@ class DecisionTest extends IncentiveTestBase {
         assertThat(incentiveOf(p.schoolId()).get("status")).isEqualTo("REJECTED");
     }
 
+    /** The API refuses a Manager who does not cover the School's Zone; this test needs exactly that state. */
+    private void assignSchoolManagerBySql(UUID schoolId, UUID managerId) {
+        db.update("update school_manager_assignment set ends_on = current_date where school_id = ? and ends_on is null", schoolId);
+        db.update("insert into school_manager_assignment (id, school_id, manager_id, starts_on) values (?, ?, ?, current_date)",
+                UUID.randomUUID(), schoolId, managerId);
+    }
+
     @Test
     void aManagerOnlyAssignedToTheSchoolIsNotItsZoneManagerAndSeesOnlyTheirOwn() {
         Mou m = mou();
         ManagerCtx schoolOnly = newManager(m.admin());
-        assignSchoolManager(m.admin(), m.f().schoolId(), schoolOnly.managerId());
+        assignSchoolManagerBySql(m.f().schoolId(), schoolOnly.managerId());
         Pending others = pendingOwnedByZoneManagerOf(m);
         Mou second = mou();
         ManagerCtx earner = newManager(second.admin());
-        assignSchoolManager(second.admin(), second.f().schoolId(), earner.managerId());
+        assignSchoolManagerBySql(second.f().schoolId(), earner.managerId());
         Pending own = pending(second, earner.signed().userId());
 
         assertThat(get(API + "/" + others.id(), schoolOnly.token()).status()).isEqualTo(404);
