@@ -150,6 +150,62 @@ public class DayService {
                 });
     }
 
+    // ----------------------------------------------------------------- repair
+
+    /**
+     * Creates the day record of a live credit that has none (a missed event). Idempotent: false when it already exists or
+     * the credit is not a live one of a Substitute.
+     */
+    @Transactional
+    public boolean createIfMissing(SubstitutionRequirement credit) {
+        UUID substitute = credit.getSubstituteTeacherId();
+        if (substitute == null
+                || days.findByRequirementIdAndSubstituteTeacherId(credit.getId(), substitute).isPresent()
+                || !teachers.substituteTeacherIds().contains(substitute)) {
+            return false;
+        }
+        UUID zone = schools.school(credit.getSchoolId())
+                .map(SchoolDirectory.SchoolInfo::zoneId)
+                .orElseThrow(() -> new NotFoundException("School not found."));
+        Instant now = clock.instant();
+        SubstituteDay day = days.saveAndFlush(new SubstituteDay(
+                credit.getId(),
+                substitute,
+                credit.getSchoolId(),
+                zone,
+                credit.getTeacherId(),
+                credit.getDutyDate(),
+                credit.getDayValue(),
+                "ALLOCATION",
+                now));
+        event(day, Field.LIVE, null, "true", null, Cause.JOB, "recreated by the repair job");
+        refresh(day, now, Cause.JOB);
+        days.save(day);
+        return true;
+    }
+
+    /** Cancels a live day whose allocation no longer stands (a missed end event). False when it is still a live credit. */
+    @Transactional
+    public boolean cancelIfStale(SubstituteDay day) {
+        if (!day.isLive()) {
+            return false;
+        }
+        boolean stands = requirements
+                .findById(day.getRequirementId())
+                .filter(r -> r.getStatus() == com.hls.substitution.internal.RequirementStatus.ASSIGNED)
+                .filter(r -> day.getSubstituteTeacherId().equals(r.getSubstituteTeacherId()))
+                .isPresent();
+        if (stands) {
+            return false;
+        }
+        Instant now = clock.instant();
+        day.cancel("allocation ended (repaired)", now);
+        event(day, Field.LIVE, "true", "false", null, Cause.JOB, "the allocation no longer stands");
+        refresh(day, now, Cause.JOB);
+        days.save(day);
+        return true;
+    }
+
     // --------------------------------------------------------------- marking
 
     /** Marks a day Present, Absent or Not marked. Needs Edit and the School in scope (404 otherwise). */

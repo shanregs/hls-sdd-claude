@@ -15,6 +15,7 @@ import com.hls.substitution.payout.DayService;
 import com.hls.substitution.payout.DayService.BulkLockResult;
 import com.hls.substitution.payout.DayStatus;
 import com.hls.substitution.payout.MigrationService;
+import com.hls.substitution.payout.PayoutReconcileJob;
 import com.hls.substitution.payout.SubstituteDay;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -55,13 +56,16 @@ public class PayoutController {
     private final DayEventRepository events;
     private final PermissionGuard guard;
     private final MigrationService migration;
+    private final PayoutReconcileJob reconcile;
 
     public PayoutController(
             DayService service,
             DayQueryService queries,
             DayEventRepository events,
             PermissionGuard guard,
-            MigrationService migration) {
+            MigrationService migration,
+            PayoutReconcileJob reconcile) {
+        this.reconcile = reconcile;
         this.migration = migration;
         this.service = service;
         this.queries = queries;
@@ -121,6 +125,16 @@ public class PayoutController {
         guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.APPROVE);
         guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.PROCESS);
         return migration.run(CallerContext.userId(jwt));
+    }
+
+    /** Runs the repair for a month now (Admin and Director); idempotent, returns what it changed. */
+    @PostMapping("/reconcile")
+    public PayoutReconcileJob.Result reconcile(@RequestParam String month, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.EDIT);
+        if (!CallerContext.isOrgWide(CallerContext.roles(jwt))) {
+            throw new org.springframework.security.access.AccessDeniedException("Only the Admin and the Director repair a month.");
+        }
+        return reconcile.runForMonth(parseMonth(month));
     }
 
     @GetMapping("/mismatches")
