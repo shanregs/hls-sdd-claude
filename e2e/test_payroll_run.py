@@ -9,6 +9,7 @@ Uses one ended month with no live run (PAYROLL_MONTH, default July 2026). By def
 cancelled at the end, so nothing final is left behind. An approved run can never be removed, so approving it is opt-in:
     APPROVE=1 pytest test_payroll_run.py -v
 """
+import datetime
 import json
 import os
 import urllib.error
@@ -159,7 +160,8 @@ def test_current_month_is_not_offered_and_a_second_run_is_refused(admin):
     open_runs(admin)
     offered = pick_month_listing(admin, EXISTING_MONTH)
     assert offered, "no month offered"
-    assert "October 2026" not in offered, "the current month must not be offered"
+    current = datetime.date.today().strftime("%B %Y")
+    assert current not in offered, "the current month must not be offered"
     button(admin, "Start run").click()
     alert = wait(admin).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "[role=alert]")))
     assert alert.text.strip(), "a refusal message should be shown"
