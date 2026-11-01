@@ -1,5 +1,6 @@
 package com.hls.substitution.payout;
 
+import com.hls.payroll.api.PayrollAdjustmentApplied;
 import com.hls.payroll.api.PayrollRunApproved;
 import com.hls.payroll.api.PayrollRunReturned;
 import com.hls.payroll.api.PayrollRunSubmitted;
@@ -29,6 +30,13 @@ class RunListener {
     @EventListener
     void onApproved(PayrollRunApproved event) {
         service.refreshMonth(event.month(), Cause.RUN_APPROVED);
+    }
+
+    @EventListener
+    void onCorrectionApplied(PayrollAdjustmentApplied event) {
+        if ("CORRECTION".equals(event.kind())) {
+            service.onCorrectionApplied(event.sourceRef());
+        }
     }
 
     @EventListener

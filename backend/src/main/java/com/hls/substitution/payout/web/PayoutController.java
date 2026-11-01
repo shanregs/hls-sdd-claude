@@ -47,6 +47,8 @@ public class PayoutController {
 
     public record ReopenRequest(String reason) {}
 
+    public record CorrectionRequest(java.math.BigDecimal amount, String reason) {}
+
     private final DayService service;
     private final DayQueryService queries;
     private final DayEventRepository events;
@@ -104,6 +106,32 @@ public class PayoutController {
                 e.getActorUserId(),
                 e.getCause().name(),
                 e.getNote());
+    }
+
+    @GetMapping("/mismatches")
+    public List<DayQueryService.MismatchView> mismatches(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) UUID substituteId,
+            @RequestParam(required = false) UUID schoolId,
+            @RequestParam(required = false) UUID zoneId,
+            @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.VIEW);
+        return queries.mismatches(
+                CallerContext.userId(jwt),
+                CallerContext.roles(jwt),
+                filter(month, null, null, substituteId, schoolId, zoneId, null),
+                canEdit(jwt));
+    }
+
+    /** An Admin raises a Correction for a day that changed after payment (payroll's own PROCESS right, FR-020). */
+    @PostMapping("/days/{id}/correction")
+    public DayView correction(
+            @PathVariable UUID id, @RequestBody CorrectionRequest request, @AuthenticationPrincipal Jwt jwt) {
+        guard.require(CallerContext.roles(jwt), PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.VIEW);
+        guard.require(CallerContext.roles(jwt), PermissionModule.PAYROLL, PermissionAction.PROCESS);
+        queries.get(CallerContext.userId(jwt), CallerContext.roles(jwt), id, false);
+        SubstituteDay day = service.raiseCorrection(CallerContext.userId(jwt), id, request.amount(), request.reason());
+        return queries.views(List.of(day), canEdit(jwt)).get(0);
     }
 
     @PutMapping("/days/{id}/attendance")

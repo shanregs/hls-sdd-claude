@@ -171,4 +171,60 @@ class SubstitutePayFlowIT extends PayrollRunTestBase {
 
         assertThat(lineOf(admin, run, substitute)).isNull();
     }
+
+    private UUID computedRunFor(String admin, java.time.YearMonth runMonth) {
+        Resp started = post(RUNS, admin, Map.of("month", runMonth.toString()));
+        assertThat(started.status()).as(started.body()).isEqualTo(202);
+        Map<String, Object> done = awaitComputed(admin, started.id());
+        assertThat(done.get("computeState")).as(done.toString()).isEqualTo("DONE");
+        return started.id();
+    }
+
+    @Test
+    void aDayAddedAfterTheMonthWasPaidIsACorrectionThatTheNextRunPays() {
+        String admin = signInAs(Role.ADMIN).token();
+        String director = signInAs(Role.DIRECTOR).token();
+        UUID designation = designation(admin, "TEACHER");
+        dayRate(admin, designation, "800", month.atDay(1).minusMonths(3));
+        UUID substitute = substitute(admin, designation);
+        java.time.YearMonth first = month.minusMonths(1);
+        UUID paid = day(substitute, first.atDay(3), "1.00", "PRESENT");
+        assertThat(post(PAYOUTS + "/months/" + substitute + "/" + first + "/lock", admin, Map.of()).status()).isEqualTo(200);
+        UUID run1 = computedRunFor(admin, first);
+        submitAndApprove(admin, run1);
+        assertThat(statusOf(paid)).isEqualTo("PAID");
+
+        // a second day is recorded after the payment; a person is paid once a month, so it is a Correction
+        UUID late = day(substitute, first.atDay(4), "1.00", "PRESENT");
+        assertThat(post(PAYOUTS + "/months/" + substitute + "/" + first + "/reopen", admin, Map.of("reason", "Late day")).status())
+                .isEqualTo(200);
+        assertThat(post(PAYOUTS + "/months/" + substitute + "/" + first + "/lock", admin, Map.of()).status()).isEqualTo(200);
+        assertThat(statusOf(paid)).isEqualTo("PAID");
+        assertThat(statusOf(late)).isEqualTo("CORRECTION_NEEDED");
+        Resp mismatches = get(PAYOUTS + "/mismatches?month=" + first, admin);
+        assertThat(mismatches.status()).as(mismatches.body()).isEqualTo(200);
+        assertThat(mismatches.body()).contains(late.toString()).contains("Ask an Admin").contains("800");
+
+        String correction = PAYOUTS + "/days/" + late + "/correction";
+        Map<String, Object> body = Map.of("amount", 800, "reason", "Added after the month was paid");
+        assertThat(post(correction, director, body).status()).as("Director has no payroll PROCESS right").isEqualTo(403);
+        assertThat(post(correction, admin, Map.of("amount", 0, "reason", "x")).status()).isEqualTo(400);
+        Resp raised = post(correction, admin, body);
+        assertThat(raised.status()).as(raised.body()).isEqualTo(200);
+        assertThat(statusOf(late)).isEqualTo("CORRECTION_RAISED");
+        assertThat(post(correction, admin, body).status()).as("raised once").isEqualTo(409);
+        assertThat(statusOf(paid)).as("only the late day is flagged").isEqualTo("PAID");
+
+        // the next month's run carries the Correction on a line with no days
+        UUID run2 = computedRunFor(admin, month);
+        Map<String, Object> line = lineOf(admin, run2, substitute);
+        assertThat(line).isNotNull();
+        assertThat(new BigDecimal(line.get("earned").toString())).isEqualByComparingTo("0");
+        assertThat(new BigDecimal(line.get("adjustments").toString())).isEqualByComparingTo("800.00");
+        assertThat(new BigDecimal(line.get("net").toString())).isEqualByComparingTo("800.00");
+        submitAndApprove(admin, run2);
+
+        assertThat(statusOf(late)).isEqualTo("CORRECTED");
+        assertThat(statusOf(paid)).isEqualTo("PAID");
+    }
 }

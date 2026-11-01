@@ -28,6 +28,8 @@ public final class DayStatusDeriver {
      * @param priceable a rate is known for the designation on that date and the substitute is an Active Substitute
      * @param run what the run holds for this day
      * @param monthRunApproved the month's primary run is approved (so a late day needs a supplementary run)
+     * @param personPaidForMonth the substitute already has a payment for the month; a person is paid once a month, so a
+     *     day that arrives later is a Correction, not a supplementary line
      * @param correction the Correction state
      */
     public record Facts(
@@ -37,6 +39,7 @@ public final class DayStatusDeriver {
             boolean priceable,
             RunHolding run,
             boolean monthRunApproved,
+            boolean personPaidForMonth,
             CorrectionState correction) {}
 
     private DayStatusDeriver() {}
@@ -68,6 +71,10 @@ public final class DayStatusDeriver {
     }
 
     private static DayStatus present(Facts f) {
+        if (f.run() == RunHolding.APPROVED) {
+            // paid stays paid, even when the month is reopened afterwards to look at it
+            return DayStatus.PAID;
+        }
         if (!f.monthLocked()) {
             return DayStatus.ATTENDED;
         }
@@ -78,6 +85,9 @@ public final class DayStatusDeriver {
             case NONE -> {
                 if (!f.priceable()) {
                     yield DayStatus.CANNOT_PAY;
+                }
+                if (f.personPaidForMonth()) {
+                    yield DayStatus.CORRECTION_NEEDED;
                 }
                 yield f.monthRunApproved() ? DayStatus.BACKPAY_WAITING : DayStatus.LOCKED_WAITING_RUN;
             }

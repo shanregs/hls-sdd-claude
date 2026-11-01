@@ -96,7 +96,7 @@ final class SubstituteLineCalculator {
                 (int) days.stream().map(DayLine::date).distinct().count(),
                 daysWorked,
                 BigDecimal.ZERO.setScale(MONEY),
-                days.get(days.size() - 1).rate().setScale(MONEY),
+                days.isEmpty() ? BigDecimal.ZERO.setScale(MONEY) : days.get(days.size() - 1).rate().setScale(MONEY),
                 earned,
                 deduction,
                 adjustmentTotal,

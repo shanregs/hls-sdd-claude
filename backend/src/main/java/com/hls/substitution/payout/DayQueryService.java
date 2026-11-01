@@ -60,6 +60,9 @@ public class DayQueryService {
             Long version,
             List<String> actions) {}
 
+    /** A day that needs attention, with why and what to do next (spec 017b FR-019). */
+    public record MismatchView(DayView day, String reason, String nextStep, BigDecimal suggestedCorrection) {}
+
     /** Totals over the whole filter, not only the page (SC-002). */
     public record Totals(
             long allocated, long attended, long paid, Map<String, Long> unpaidByStatus, BigDecimal amountPaid) {}
@@ -108,6 +111,73 @@ public class DayQueryService {
         List<SubstituteDay> all = days.findAll(specification(actor, roles, filter), org.springframework.data.domain.Sort.by(
                 org.springframework.data.domain.Sort.Order.asc("dayDate"), org.springframework.data.domain.Sort.Order.asc("id")));
         return views(all, false);
+    }
+
+    private static final Set<DayStatus> MISMATCH_STATUSES = java.util.EnumSet.of(
+            DayStatus.CANNOT_PAY,
+            DayStatus.CHANGED_RUN_AWAITING,
+            DayStatus.CORRECTION_NEEDED,
+            DayStatus.CORRECTION_RAISED,
+            DayStatus.BACKPAY_WAITING);
+
+    /** Days that cannot be paid as they stand: the five problem statuses and a paid day now worth something else. */
+    public List<MismatchView> mismatches(UUID actor, Set<Role> roles, Filter filter, boolean canEdit) {
+        List<SubstituteDay> all = days.findAll(
+                specification(actor, roles, new Filter(filter.from(), filter.to(), filter.substituteTeacherId(), filter.schoolId(), filter.zoneId(), Set.of())),
+                org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Order.asc("dayDate"), org.springframework.data.domain.Sort.Order.asc("id")));
+        List<SubstituteDay> flagged = all.stream()
+                .filter(d -> MISMATCH_STATUSES.contains(d.getStatus()) || differsFromPayment(d))
+                .toList();
+        List<DayView> views = views(flagged, canEdit);
+        List<MismatchView> result = new ArrayList<>();
+        for (int i = 0; i < flagged.size(); i++) {
+            SubstituteDay d = flagged.get(i);
+            result.add(new MismatchView(views.get(i), reasonOf(d), nextStepOf(d), suggested(d)));
+        }
+        return result;
+    }
+
+    private static boolean differsFromPayment(SubstituteDay d) {
+        return d.getStatus() == DayStatus.PAID
+                && d.getPaidAmount() != null
+                && d.getAmount() != null
+                && d.getPaidAmount().compareTo(d.getAmount()) != 0;
+    }
+
+    private static String reasonOf(SubstituteDay d) {
+        if (d.getMismatchReason() != null) {
+            return d.getMismatchReason();
+        }
+        if (differsFromPayment(d)) {
+            return "Paid " + d.getPaidAmount().toPlainString() + ", now worth " + d.getAmount().toPlainString() + ".";
+        }
+        return d.getStatus().text();
+    }
+
+    private static String nextStepOf(SubstituteDay d) {
+        if (differsFromPayment(d)) {
+            return "The rate changed after payment. Raise a Correction if the difference should be paid.";
+        }
+        return switch (d.getStatus()) {
+            case CANNOT_PAY -> "Add the missing designation or day rate; the next run picks the day up.";
+            case CHANGED_RUN_AWAITING -> "Return the run, then compute it again.";
+            case CORRECTION_NEEDED -> "Ask an Admin to raise a Correction.";
+            case CORRECTION_RAISED -> "The Correction is waiting for the next pay run.";
+            case BACKPAY_WAITING -> "Start a supplementary run for the month.";
+            default -> "";
+        };
+    }
+
+    /** What the Correction would be: the day's worth if it was added late, minus what was paid if it was withdrawn. */
+    private static BigDecimal suggested(SubstituteDay d) {
+        if (d.getStatus() != DayStatus.CORRECTION_NEEDED) {
+            return null;
+        }
+        if (d.isLive() && d.getAttendance() == DayAttendance.PRESENT && d.getPaidAmount() == null) {
+            return d.getAmount();
+        }
+        return d.getPaidAmount() == null ? null : d.getPaidAmount().negate();
     }
 
     public DayView get(UUID actor, Set<Role> roles, UUID dayId, boolean canEdit) {

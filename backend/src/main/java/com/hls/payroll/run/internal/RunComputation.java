@@ -154,7 +154,8 @@ public class RunComputation {
             java.util.Set<PersonRef> alreadyPaid = paid;
             candidates = candidates.stream().filter(c -> !alreadyPaid.contains(c.ref())).toList();
         }
-        SubstituteWork substitutes = substituteWork(run.getKind(), month, paid);
+        Map<PersonRef, List<AdjustmentInput>> waiting = waitingAdjustments(runId);
+        SubstituteWork substitutes = substituteWork(run.getKind(), month, paid, waiting);
         Map<PersonRef, PayableDays> payable = payRules.payableDays(
                 candidates.stream().map(Candidate::ref).toList(), month);
         // a person with no payable date and no defect is not in the run (research 4)
@@ -166,7 +167,6 @@ public class RunComputation {
                 inRun.stream().filter(c -> c.ref().kind() == Kind.MANAGER).map(c -> c.ref().id()).toList(), month);
 
         Map<RecomputeDiff.Key, RecomputeDiff.Before> before = snapshot(runId);
-        Map<PersonRef, List<AdjustmentInput>> waiting = waitingAdjustments(runId);
         tx.executeWithoutResult(s -> runs.lockById(runId).ifPresent(r -> r.setProgress(0, inRun.size(), clock.instant())));
 
         Map<RecomputeDiff.Key, PersonResult> fresh = new LinkedHashMap<>();
@@ -334,7 +334,11 @@ public class RunComputation {
     }
 
     /** Present days of locked months (primary) or the ones no run holds yet (supplementary), minus anyone already paid. */
-    private SubstituteWork substituteWork(PayRun.Kind kind, YearMonth month, java.util.Set<PersonRef> paid) {
+    private SubstituteWork substituteWork(
+            PayRun.Kind kind,
+            YearMonth month,
+            java.util.Set<PersonRef> paid,
+            Map<PersonRef, List<AdjustmentInput>> waiting) {
         DayRateWork port = dayRateWork.getIfAvailable();
         if (port == null) {
             return SubstituteWork.NONE;
@@ -352,6 +356,15 @@ public class RunComputation {
                 }
             }
         }
+        // a Substitute with a waiting Correction but no day this month still needs a line to carry it
+        java.util.Set<UUID> withAdjustment = waiting.keySet().stream()
+                .filter(p -> p.kind() == Kind.TEACHER && !paid.contains(p))
+                .map(PersonRef::id)
+                .filter(id -> !worked.containsKey(id) && !notReady.containsKey(id))
+                .collect(Collectors.toSet());
+        for (UUID id : people.substituteTeachers(withAdjustment)) {
+            worked.put(id, List.of());
+        }
         Map<UUID, UUID> designations = worked.isEmpty() ? Map.of() : people.teacherDesignations(worked.keySet());
         return new SubstituteWork(worked, notReady, designations);
     }
@@ -365,6 +378,11 @@ public class RunComputation {
             return blockedSubstitute(c, policy, "Not ready for " + RunInput.monthName(month) + ": " + notReady);
         }
         UUID designation = work.designations().get(id);
+        if (work.worked().get(id).isEmpty()) {
+            // nothing worked this month: the line carries only the waiting Corrections
+            return SubstituteLineCalculator.calculate(
+                    new SubstituteLineCalculator.Inputs(c.ref(), c.name(), c.label(), List.of(), policy, waiting, null));
+        }
         if (designation == null) {
             return blockedSubstitute(c, policy, "The substitute has no designation, so no day rate applies.");
         }

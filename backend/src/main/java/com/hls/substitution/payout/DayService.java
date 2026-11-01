@@ -2,6 +2,7 @@ package com.hls.substitution.payout;
 
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.Role;
+import com.hls.payroll.api.CorrectionRaising;
 import com.hls.payroll.api.DayRatePay;
 import com.hls.payroll.api.DayRates;
 import com.hls.school.api.CallerContext;
@@ -62,6 +63,7 @@ public class DayService {
     private final TeacherDirectory teachers;
     private final DayRates dayRates;
     private final DayRatePay pay;
+    private final CorrectionRaising corrections;
     private final WorkingCalendar calendar;
     private final ChangeRecorder changes;
     private final Clock clock;
@@ -76,6 +78,7 @@ public class DayService {
             TeacherDirectory teachers,
             DayRates dayRates,
             DayRatePay pay,
+            CorrectionRaising corrections,
             WorkingCalendar calendar,
             ChangeRecorder changes,
             Clock clock) {
@@ -88,6 +91,7 @@ public class DayService {
         this.teachers = teachers;
         this.dayRates = dayRates;
         this.pay = pay;
+        this.corrections = corrections;
         this.calendar = calendar;
         this.changes = changes;
         this.clock = clock;
@@ -283,6 +287,70 @@ public class DayService {
         }
     }
 
+    // ------------------------------------------------------------ corrections
+
+    static final String CORRECTION_PREFIX = "SUBSTITUTE-CORRECTION:";
+
+    /**
+     * An Admin raises a Correction for a day that changed after the month was paid (spec 017b FR-020). The amount is
+     * the Admin's, bounded by payroll's own rule; it is linked to the day by the source reference so the day becomes
+     * Corrected when a run applies it. Raised once per day.
+     */
+    @Transactional
+    public SubstituteDay raiseCorrection(UUID actor, UUID dayId, BigDecimal amount, String reason) {
+        SubstituteDay day = days.lockById(dayId).orElseThrow(() -> new NotFoundException("Substitute day not found."));
+        if (day.getCorrectionRef() != null) {
+            throw new ConflictException("A Correction was already raised for this day.");
+        }
+        if (day.getStatus() != DayStatus.CORRECTION_NEEDED) {
+            throw new ConflictException("A Correction is raised only for a day marked \"Correction needed\".");
+        }
+        if (amount == null || amount.signum() == 0) {
+            throw new InvalidInputException("The Correction amount is required and cannot be zero.");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidInputException("A reason is required for a Correction.");
+        }
+        if (reason.trim().length() > MAX_REASON) {
+            throw new InvalidInputException("The reason can be at most " + MAX_REASON + " characters.");
+        }
+        String ref = CORRECTION_PREFIX + dayId;
+        CorrectionRaising.Result result =
+                corrections.raiseForTeacher(actor, day.getSubstituteTeacherId(), amount, reason.trim(), ref);
+        if (!result.accepted()) {
+            throw new ConflictException(result.refusal());
+        }
+        Instant now = clock.instant();
+        day.setCorrectionRef(ref);
+        DayStatus before = day.getStatus();
+        day.setStatus(DayStatus.CORRECTION_RAISED, null, now);
+        event(day, Field.CORRECTION, before.name(), amount.toPlainString(), actor, Cause.CORRECTION, reason.trim());
+        changes.record(actor, ENTITY, dayId, "correction", null, amount.toPlainString() + ": " + reason.trim());
+        return days.saveAndFlush(day);
+    }
+
+    /** Payroll applied a Correction: the day it was raised for is Corrected. */
+    @Transactional
+    public void onCorrectionApplied(String sourceRef) {
+        if (sourceRef == null || !sourceRef.startsWith(CORRECTION_PREFIX)) {
+            return;
+        }
+        UUID dayId;
+        try {
+            dayId = UUID.fromString(sourceRef.substring(CORRECTION_PREFIX.length()));
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        days.findById(dayId).ifPresent(day -> {
+            Instant now = clock.instant();
+            DayStatus before = day.getStatus();
+            day.setStatus(DayStatus.CORRECTED, null, now);
+            events.save(new DayEvent(
+                    dayId, now, Field.CORRECTION, before.name(), DayStatus.CORRECTED.name(), null, Cause.RUN_APPROVED, "applied"));
+            days.save(day);
+        });
+    }
+
     // ---------------------------------------------------------------- status
 
     /**
@@ -335,9 +403,16 @@ public class DayService {
                 pricing.priceable(),
                 holding,
                 pay.primaryRunApproved(day.month()),
+                holding == RunHolding.NONE && pay.paidForMonth(day.getSubstituteTeacherId(), day.month()),
                 correction));
         DayStatus before = day.getStatus();
-        String reason = next == DayStatus.CANNOT_PAY ? pricing.reason() : null;
+        String reason = switch (next) {
+            case CANNOT_PAY -> pricing.reason();
+            case CORRECTION_NEEDED -> day.isLive() && day.getAttendance() == DayAttendance.PRESENT && holding == RunHolding.NONE
+                    ? "Added after the month was paid."
+                    : "Changed after it was paid.";
+            default -> null;
+        };
         day.setStatus(next, reason, now);
         if (before != next && day.getId() != null) {
             events.save(new DayEvent(day.getId(), now, Field.STATUS, before.name(), next.name(), null, cause, reason));

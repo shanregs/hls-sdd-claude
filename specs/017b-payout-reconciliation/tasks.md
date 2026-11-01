@@ -68,10 +68,10 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 **Goal**: flagged days and the Admin Correction. **Independent test**: quickstart step 6.
 
-- [ ] T038 [US4] `DayStatusDeriver` implementing the table in data-model.md, with `DayStatusDeriverTest` covering every row
+- [x] T038 [US4] `DayStatusDeriver` implementing the table in data-model.md, with `DayStatusDeriverTest` covering every row
 - [ ] T039 [P] [US4] Integration tests: cancel/absent while draft (recompute drops), while awaiting approval (waits; returned vs approved), after approval (CORRECTION_NEEDED, run unchanged)
-- [ ] T040 [US4] Mismatch rules and `GET /mismatches` (cannot pay, changed, correction needed, differing amount, back-pay waiting) with `reason` and `nextStep`
-- [ ] T041 [US4] `POST /days/{id}/correction` (Admin): validate state, `amount`, `reason` (max 500), `409` if already raised, call `CorrectionRaising` with `SUBSTITUTE-CORRECTION:<dayId>`; CORRECTION_RAISED then CORRECTED on the applied event; audit; test
+- [x] T040 [US4] Mismatch rules and `GET /mismatches` (cannot pay, changed, correction needed, differing amount, back-pay waiting) with `reason` and `nextStep`
+- [x] T041 [US4] `POST /days/{id}/correction` (Admin): validate state, `amount`, `reason` (max 500), `409` if already raised, call `CorrectionRaising` with `SUBSTITUTE-CORRECTION:<dayId>`; CORRECTION_RAISED then CORRECTED on the applied event; audit; test
 - [ ] T042 [P] [US4] Web: Mismatches tab and "Raise correction" dialog (prefilled, editable, Admin only) with Vitest
 
 ## Phase 7: User Story 6 - Back-pay of everything on record (P1)
