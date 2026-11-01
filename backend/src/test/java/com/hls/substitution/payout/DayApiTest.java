@@ -228,4 +228,43 @@ class DayApiTest extends SubstitutionTestBase {
                 .isEqualTo(1);
         assertThat(jdbc.queryForObject("select live from substitute_day where id = ?", Boolean.class, day)).isTrue();
     }
+
+    @Test
+    void aSubstituteCannotBeCreatedWithAnAccountAndOnlyAdminAndDirectorSetTheEngagement() {
+        World w = newWorld();
+        TeacherCtx someone = newTeacher(w.admin(), null, 0);
+
+        Resp withAccount = post("/api/v1/teachers", w.admin(),
+                Map.of("name", "Sub With Login", "phone", "9876543210", "engagement", "SUBSTITUTE",
+                        "userId", someone.signed().userId()));
+        assertThat(withAccount.status()).as(withAccount.body()).isEqualTo(400);
+
+        Resp ok = post("/api/v1/teachers", w.admin(),
+                Map.of("name", "Sub Without Login", "phone", "9876543211", "engagement", "SUBSTITUTE"));
+        assertThat(ok.status()).as(ok.body()).isEqualTo(201);
+        assertThat(ok.body()).contains("\"engagement\":\"SUBSTITUTE\"").contains("\"userId\":null");
+
+        long version = jdbc.queryForObject("select version from teacher where id = ?", Long.class, someone.teacherId());
+        Map<String, Object> body = Map.of("engagement", "SUBSTITUTE", "version", version);
+        String uri = "/api/v1/teachers/" + someone.teacherId() + "/engagement";
+        assertThat(put(uri, w.managerA().token(), body).status()).as("Zone Manager").isEqualTo(403);
+        assertThat(put(uri, w.teacherA().token(), body).status()).as("Teacher").isEqualTo(403);
+        assertThat(put(uri, w.admin(), Map.of("engagement", "CASUAL", "version", version)).status()).isEqualTo(400);
+        assertThat(put(uri, w.director(), body).status()).as("Director").isEqualTo(200);
+        assertThat(jdbc.queryForObject("select user_id from teacher where id = ?", UUID.class, someone.teacherId()))
+                .as("becoming a Substitute clears the account link")
+                .isNull();
+    }
+
+    @Test
+    void aPlacedTeacherCannotBecomeASubstituteUntilThePlacementEnds() {
+        World w = newWorld();
+
+        Resp resp = put("/api/v1/teachers/" + w.teacherA().teacherId() + "/engagement", w.admin(),
+                Map.of("engagement", "SUBSTITUTE",
+                        "version", jdbc.queryForObject("select version from teacher where id = ?", Long.class, w.teacherA().teacherId())));
+
+        assertThat(resp.status()).isEqualTo(409);
+        assertThat(resp.body()).contains("placed");
+    }
 }

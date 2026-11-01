@@ -9,7 +9,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 ## Phase 1: Setup
 
 - [x] T001 Re-check the highest Flyway migration on `origin/main` and open branches; take the next free decade slots (V160, V161 if V150 is still highest) and update plan.md and data-model.md
-- [ ] T002 [P] Verify in code the items of research.md R11 (013b line working and supplementary eligibility; designation on a date in bulk; Active Substitute filter in `teacher.api`; count of existing credits held by Teachers) and record the findings in research.md
+- [x] T002 [P] Verify in code the items of research.md R11 (013b line working and supplementary eligibility; designation on a date in bulk; Active Substitute filter in `teacher.api`; count of existing credits held by Teachers) and record the findings in research.md
 - [x] T003 [P] Create package skeleton `substitution/payout/{domain,service,listener,job,web}` and add it to the module boundary test (`ModulithBoundaryTest` or equivalent), asserting `payroll` has no dependency on `substitution`
 
 ## Phase 2: Foundational (blocks all stories)
@@ -18,11 +18,11 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T005 [P] Migration test `substitution/payout/PayoutMigrationTest.java` (unique key, check constraint, trigger refuses update and delete of events)
 - [x] T006 Migration `V161__substitute_engagement_and_day_rates.sql`: `teacher.engagement varchar(10) NOT NULL DEFAULT 'REGULAR'` check in ('REGULAR','SUBSTITUTE') and `designation_day_rate` (`amount numeric(10,2) CHECK > 0`, `seq` identity, append-only trigger)
 - [x] T007 [P] Migration test for V161 (default REGULAR, rate check, trigger) in `payroll/DesignationDayRateMigrationTest.java`
-- [ ] T008 Amendment 005: `engagement` on the Teacher entity, DTOs, create/update/read in `teacher/`; setting SUBSTITUTE clears `user_id`; audit the change; Admin and Director only
-- [ ] T009 [P] Amendment identity: refuse OTP/sign-in and account creation for a Substitute-type Teacher; no Teacher role grant; tests in `identity/`
-- [ ] T010 [P] Teacher form and list in `frontend/src/features/teachers/`: engagement field (Admin, Director), badge, no account fields for a Substitute; Vitest
-- [ ] T011 Amendment 013a: `payroll.api.DayRates` and impl, `designation_day_rate` repository, endpoints `GET/POST /api/salary-structures/designation-day-rates` (Admin, Director; amount > 0; effective date), audit entity `DESIGNATION_DAY_RATE`, history; tests per role
-- [ ] T012 [P] Web: Salary Structures → Designation day rates screen in `frontend/src/features/salary-structures/` (list, add, history, DD/MM/YYYY, Rupee grouping); Vitest
+- [x] T008 Amendment 005: `engagement` on the Teacher entity, DTOs, create/update/read in `teacher/`; setting SUBSTITUTE clears `user_id`; audit the change; Admin and Director only
+- [x] T009 [P] Amendment identity: refuse OTP/sign-in and account creation for a Substitute-type Teacher; no Teacher role grant; tests in `identity/`
+- [x] T010 [P] Teacher form and list in `frontend/src/features/teachers/`: engagement field (Admin, Director), badge, no account fields for a Substitute; Vitest
+- [x] T011 Amendment 013a: `payroll.api.DayRates` and impl, `designation_day_rate` repository, endpoints `GET/POST /api/salary-structures/designation-day-rates` (Admin, Director; amount > 0; effective date), audit entity `DESIGNATION_DAY_RATE`, history; tests per role
+- [x] T012 [P] Web: Salary Structures → Designation day rates screen in `frontend/src/features/salary-structures/` (list, add, history, DD/MM/YYYY, Rupee grouping); Vitest
 - [x] T013 Amendment 008: exclude Substitute-type Teachers from the grid, rollups, self-marking, lock blockers and missed-mark lists via `teacher.api`; tests that lock is unaffected by substitutes
 - [x] T014 Amendment 017a: availability offers and accepts only Active Substitute-type Teachers (server re-check); tests in `substitution/internal/AvailabilityServiceTest`
 - [x] T015 Amendment 010/017a: send "substitute assigned/ended" to the School's Zone Manager (else Admin and Director) instead of the substitute; remove the Teacher "My Substitutions" page and menu item (or never show them for a Substitute); tests
@@ -69,7 +69,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 **Goal**: flagged days and the Admin Correction. **Independent test**: quickstart step 6.
 
 - [x] T038 [US4] `DayStatusDeriver` implementing the table in data-model.md, with `DayStatusDeriverTest` covering every row
-- [ ] T039 [P] [US4] Integration tests: cancel/absent while draft (recompute drops), while awaiting approval (waits; returned vs approved), after approval (CORRECTION_NEEDED, run unchanged)
+- [x] T039 [P] [US4] Integration tests: cancel/absent while draft (recompute drops), while awaiting approval (waits; returned vs approved), after approval (CORRECTION_NEEDED, run unchanged)
 - [x] T040 [US4] Mismatch rules and `GET /mismatches` (cannot pay, changed, correction needed, differing amount, back-pay waiting) with `reason` and `nextStep`
 - [x] T041 [US4] `POST /days/{id}/correction` (Admin): validate state, `amount`, `reason` (max 500), `409` if already raised, call `CorrectionRaising` with `SUBSTITUTE-CORRECTION:<dayId>`; CORRECTION_RAISED then CORRECTED on the applied event; audit; test
 - [x] T042 [P] [US4] Web: Mismatches tab and "Raise correction" dialog (prefilled, editable, Admin only) with Vitest
@@ -81,7 +81,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T043 [US6] Amendment 013b: a supplementary run for a month includes Substitutes returned by `DayRateWork.unpaidPresentDays` even if absent from the primary run; test on a month with an approved primary run
 - [x] T044 [P] [US6] Integration test: day marked Present after the primary run is BACKPAY_WAITING then paid by the supplementary run; original month kept
 - [x] T045 [US6] `MigrationService` and `POST /migration/run` (Admin, idempotent): one day record per existing live credit, attendance PRESENT, `source = MIGRATED`, `needs_review = true`; credits of non-Substitute Teachers listed "settle first" and not created payable; returns counts
-- [ ] T046 [P] [US6] Tests: migration idempotent, no double count, settle-first list, bulk lock of migrated months; web screen for the settle-first list and review flag in `features/substitute-payouts/`
+- [x] T046 [P] [US6] Tests: migration idempotent, no double count, settle-first list, bulk lock of migrated months; web screen for the settle-first list and review flag in `features/substitute-payouts/`
 
 ## Phase 8: User Story 5 - Repair job and audit (P2)
 
@@ -93,8 +93,8 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 ## Phase 9: Polish and cross-cutting
 
-- [ ] T050 Constitution PATCH 2.5.17 (renumber at merge): Substitute Payouts row, navigation item, Teachers note, Sync Impact entry in `.specify/memory/constitution.md`
-- [ ] T051 Update `docs/spec-roadmap.md` rows 013a, 013b, 017 and 005 with the amendments; mark 017b implemented
+- [x] T050 Constitution PATCH 2.5.17 (renumber at merge): Substitute Payouts row, navigation item, Teachers note, Sync Impact entry in `.specify/memory/constitution.md`
+- [x] T051 Update `docs/spec-roadmap.md` rows 013a, 013b, 017 and 005 with the amendments; mark 017b implemented
 - [x] T052 [P] Postman requests for payouts, day rates and the engagement field in the repo's Postman collection
 - [x] T053 [P] Dev seed: a Substitute designation with a rate, two Substitutes, days in each status
 - [x] T054 Selenium end-to-end walkthrough of quickstart steps 1 to 9 as an e2e test; results in `specs/017b-payout-reconciliation/quickstart-results.md`
