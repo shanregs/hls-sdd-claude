@@ -1,0 +1,12 @@
+$kind: http-request
+name: Lock Month
+description: "Locks one substitute month: only after it has ended and with no live day left unmarked (409 lists them). Needs Approve (Admin, Director)."
+url: "{{baseUrl}}/api/v1/substitute-payouts/months/{{teacherId}}/{{month}}/lock"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 8000

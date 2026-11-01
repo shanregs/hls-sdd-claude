@@ -1,0 +1,6 @@
+$kind: http-request
+name: Mismatches
+description: "Days that cannot be paid as they stand: cannot pay, changed while a run awaits approval, correction needed or raised, back-pay waiting, and a paid day now worth something else. Each has a reason, the next step and a suggested Correction."
+url: "{{baseUrl}}/api/v1/substitute-payouts/mismatches?month={{month}}"
+method: GET
+order: 12000

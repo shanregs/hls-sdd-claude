@@ -42,3 +42,5 @@ The 032 requests use the collection variables `month` (`YYYY-MM`), `date` (`YYYY
 Teacher phone. Dev and Prod stay blank on purpose. See `docs/running-locally.md`.
 
 The 022 requests (School Billing) use the collection variables `month` (`YYYY-MM`), `schoolId`, `dueId`, `billingAdjustmentId` and `billingCollectionId`; List Dues, Add Adjustment and Record Collection save the ones the next request needs. Sign in as an Admin or Director (SCHOOL_BILLING grants); a Zone Manager sees only their Zone.
+
+The 017b requests (Substitute Payouts) use the collection variables `teacherId`, `teacherVersion`, `designationId`, `dayId`, `dayVersion`, `month` (`YYYY-MM`), `schoolId` and `zoneId`. Set a Teacher to Substitute with Set Teacher Engagement, give their designation a daily rate with Record Designation Day Rate, then List Days, Mark Day (as a Zone Manager) and Lock Month; the month's pay run then pays one line of days times the rate. Raise Correction and Run Go-Live Migration need the Admin's payroll Process right.

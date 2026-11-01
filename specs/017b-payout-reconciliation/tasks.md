@@ -95,7 +95,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 - [ ] T050 Constitution PATCH 2.5.17 (renumber at merge): Substitute Payouts row, navigation item, Teachers note, Sync Impact entry in `.specify/memory/constitution.md`
 - [ ] T051 Update `docs/spec-roadmap.md` rows 013a, 013b, 017 and 005 with the amendments; mark 017b implemented
-- [ ] T052 [P] Postman requests for payouts, day rates and the engagement field in the repo's Postman collection
+- [x] T052 [P] Postman requests for payouts, day rates and the engagement field in the repo's Postman collection
 - [x] T053 [P] Dev seed: a Substitute designation with a rate, two Substitutes, days in each status
 - [ ] T054 Selenium end-to-end walkthrough of quickstart steps 1 to 9 as an e2e test; results in `specs/017b-payout-reconciliation/quickstart-results.md`
 - [ ] T055 Accessibility, dark mode and phone-width pass of the new screens (quickstart step 11)

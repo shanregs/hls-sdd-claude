@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Designation Day Rates
+description: "Every Teacher designation with the daily rate in effect today (null when none). Salary Structures View."
+url: "{{baseUrl}}/api/v1/salary-structures/designation-day-rates?includeRetired=false"
+method: GET
+order: 2000

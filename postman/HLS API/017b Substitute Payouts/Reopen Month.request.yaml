@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reopen Month
+description: "Reopens a locked month. A reason is required (at most 500 characters). Needs Approve."
+url: "{{baseUrl}}/api/v1/substitute-payouts/months/{{teacherId}}/{{month}}/reopen"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "reason": "Wrong day marked" }
+order: 9000

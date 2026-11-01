@@ -1,0 +1,3 @@
+$kind: collection
+description: "Substitute Teachers paid by the day (spec 017b). A Teacher can be a Regular Teacher or a Substitute: a Substitute has no salary, placement or account, and is paid the day value times the designation's daily rate for the days a Zone Manager marked Present, through the 013b pay run. Needs SUBSTITUTE_PAYOUTS (View, Edit, Approve, Export) and, for a Correction and the go-live move, the Admin's PAYROLL Process right. Run Password Login first. Collection variables: teacherId, teacherVersion, designationId, dayId, dayVersion, month (yyyy-MM), schoolId, zoneId. Errors use {reason}: 400 invalid, 403 permission, 404 not found or out of scope, 409 stale version, locked month, cancelled day or wrong status."
+order: 17600

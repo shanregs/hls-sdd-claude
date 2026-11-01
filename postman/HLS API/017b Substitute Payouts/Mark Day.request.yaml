@@ -1,0 +1,12 @@
+$kind: http-request
+name: Mark Day
+description: "Present, Absent or Not marked. Needs Edit and the School in scope (404 otherwise). Refused for a future day, a cancelled allocation and a locked month (409); a stale version gets 409."
+url: "{{baseUrl}}/api/v1/substitute-payouts/days/{{dayId}}/attendance"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "attendance": "PRESENT", "version": {{dayVersion}} }
+order: 7000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: Summary
+description: "Allocated, attended, paid and unpaid days and the amounts paid and owed, grouped by substitute, school or month."
+url: "{{baseUrl}}/api/v1/substitute-payouts/summary?month={{month}}&groupBy=substitute"
+method: GET
+order: 10000

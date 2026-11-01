@@ -1,0 +1,12 @@
+$kind: http-request
+name: Record Designation Day Rate
+description: "Appends a rupees-per-full-day rate from an effective date (any date, so past work can be priced). Admin and Director (Salary Structures Create). 400 for zero, negative, more than two decimals; 404 for an unknown designation."
+url: "{{baseUrl}}/api/v1/salary-structures/designation-day-rates/{{designationId}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "amount": 800.00, "effectiveOn": "2026-10-01", "note": "Cover Teacher rate" }
+order: 4000

@@ -1,0 +1,6 @@
+$kind: http-request
+name: List Days
+description: "The substitute days in the caller scope, newest first, with totals over the whole filter. A Zone Manager sees only the Schools of their Zone. Filters: month (yyyy-MM) or from and to, substituteId, schoolId, zoneId, status (comma list). Teacher and System get 403."
+url: "{{baseUrl}}/api/v1/substitute-payouts/days?month={{month}}&size=100"
+method: GET
+order: 5000

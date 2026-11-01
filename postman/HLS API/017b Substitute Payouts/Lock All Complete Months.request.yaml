@@ -1,0 +1,12 @@
+$kind: http-request
+name: Lock All Complete Months
+description: "Locks every complete substitute month in the month and returns how many were locked, already locked, and which are blocked and why."
+url: "{{baseUrl}}/api/v1/substitute-payouts/months/lock?month={{month}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 8500
