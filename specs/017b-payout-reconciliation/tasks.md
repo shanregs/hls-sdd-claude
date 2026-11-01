@@ -2,21 +2,21 @@
 
 **Input**: `specs/017b-payout-reconciliation/` (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md)
 
-**Status**: Not started. Q1 to Q8 answered by the owner; N1 to N6 assumed on option A (clarification-questions.md). If an N answer differs, revisit: N1 T008 to T010; N2 T014; N3 T017 to T020; N4 T043 to T044; N5 T045 to T046.
+**Status**: In progress (2026-11-01, branch impl/017b-payout-reconciliation): Phases 1-3 backend done and tested (DayApiTest 9/9, 017a regression 20/20). Option A confirmed by the owner. Q1 to Q8 answered by the owner; N1 to N6 assumed on option A (clarification-questions.md). If an N answer differs, revisit: N1 T008 to T010; N2 T014; N3 T017 to T020; N4 T043 to T044; N5 T045 to T046.
 
 Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (different files). Backend root `backend/src/main/java/com/hls`, tests `backend/src/test/java/com/hls`, web `frontend/src`. This list includes amendment tasks for 005, 008, 010, 013a, 013b, 017a and identity; none is done yet.
 
 ## Phase 1: Setup
 
-- [ ] T001 Re-check the highest Flyway migration on `origin/main` and open branches; take the next free decade slots (V160, V161 if V150 is still highest) and update plan.md and data-model.md
+- [x] T001 Re-check the highest Flyway migration on `origin/main` and open branches; take the next free decade slots (V160, V161 if V150 is still highest) and update plan.md and data-model.md
 - [ ] T002 [P] Verify in code the items of research.md R11 (013b line working and supplementary eligibility; designation on a date in bulk; Active Substitute filter in `teacher.api`; count of existing credits held by Teachers) and record the findings in research.md
 - [ ] T003 [P] Create package skeleton `substitution/payout/{domain,service,listener,job,web}` and add it to the module boundary test (`ModulithBoundaryTest` or equivalent), asserting `payroll` has no dependency on `substitution`
 
 ## Phase 2: Foundational (blocks all stories)
 
-- [ ] T004 Migration `V160__create_substitute_days.sql`: `substitute_day`, `substitute_month_lock`, `substitute_day_event` exactly as data-model.md (unique `(requirement_id, substitute_teacher_id)`, `day_value numeric(3,2)`, `attendance varchar(12)` in NOT_MARKED/PRESENT/ABSENT, `reopen_reason varchar(500)`, check that a mark has `marked_by` and `marked_at`, append-only trigger on events)
+- [x] T004 Migration `V160__create_substitute_days.sql`: `substitute_day`, `substitute_month_lock`, `substitute_day_event` exactly as data-model.md (unique `(requirement_id, substitute_teacher_id)`, `day_value numeric(3,2)`, `attendance varchar(12)` in NOT_MARKED/PRESENT/ABSENT, `reopen_reason varchar(500)`, check that a mark has `marked_by` and `marked_at`, append-only trigger on events)
 - [ ] T005 [P] Migration test `substitution/payout/PayoutMigrationTest.java` (unique key, check constraint, trigger refuses update and delete of events)
-- [ ] T006 Migration `V161__substitute_engagement_and_day_rates.sql`: `teacher.engagement varchar(10) NOT NULL DEFAULT 'REGULAR'` check in ('REGULAR','SUBSTITUTE') and `designation_day_rate` (`amount numeric(10,2) CHECK > 0`, `seq` identity, append-only trigger)
+- [x] T006 Migration `V161__substitute_engagement_and_day_rates.sql`: `teacher.engagement varchar(10) NOT NULL DEFAULT 'REGULAR'` check in ('REGULAR','SUBSTITUTE') and `designation_day_rate` (`amount numeric(10,2) CHECK > 0`, `seq` identity, append-only trigger)
 - [ ] T007 [P] Migration test for V161 (default REGULAR, rate check, trigger) in `payroll/DesignationDayRateMigrationTest.java`
 - [ ] T008 Amendment 005: `engagement` on the Teacher entity, DTOs, create/update/read in `teacher/`; setting SUBSTITUTE clears `user_id`; audit the change; Admin and Director only
 - [ ] T009 [P] Amendment identity: refuse OTP/sign-in and account creation for a Substitute-type Teacher; no Teacher role grant; tests in `identity/`
@@ -24,20 +24,20 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [ ] T011 Amendment 013a: `payroll.api.DayRates` and impl, `designation_day_rate` repository, endpoints `GET/POST /api/salary-structures/designation-day-rates` (Admin, Director; amount > 0; effective date), audit entity `DESIGNATION_DAY_RATE`, history; tests per role
 - [ ] T012 [P] Web: Salary Structures → Designation day rates screen in `frontend/src/features/salary-structures/` (list, add, history, DD/MM/YYYY, Rupee grouping); Vitest
 - [ ] T013 Amendment 008: exclude Substitute-type Teachers from the grid, rollups, self-marking, lock blockers and missed-mark lists via `teacher.api`; tests that lock is unaffected by substitutes
-- [ ] T014 Amendment 017a: availability offers and accepts only Active Substitute-type Teachers (server re-check); tests in `substitution/internal/AvailabilityServiceTest`
-- [ ] T015 Amendment 010/017a: send "substitute assigned/ended" to the School's Zone Manager (else Admin and Director) instead of the substitute; remove the Teacher "My Substitutions" page and menu item (or never show them for a Substitute); tests
+- [x] T014 Amendment 017a: availability offers and accepts only Active Substitute-type Teachers (server re-check); tests in `substitution/internal/AvailabilityServiceTest`
+- [x] T015 Amendment 010/017a: send "substitute assigned/ended" to the School's Zone Manager (else Admin and Director) instead of the substitute; remove the Teacher "My Substitutions" page and menu item (or never show them for a Substitute); tests
 - [ ] T016 Permission module `SUBSTITUTE_PAYOUTS(VIEW, EDIT, APPROVE, EXPORT)`: Admin and Director all four; Manager VIEW and EDIT; `PermissionEligibility` excludes Teacher and System; navigation item PAYROLL & FINANCE "Substitute Payouts" (VIEW); access-model tests
 
 ## Phase 3: User Story 2 - Zone Manager records day attendance (P1)
 
 **Goal**: a day record per allocation, marked Present/Absent by the Zone Manager, locked per substitute and month. **Independent test**: quickstart steps 3 and 4.
 
-- [ ] T017 [P] [US2] Domain `SubstituteDay`, `DayStatus` (14 values of data-model.md), `DayEvent`, `MonthLock` and repositories in `substitution/payout/domain/`
-- [ ] T018 [US2] `DayService` in `substitution/payout/service/`: create the day on `SubstitutionAssigned` (read the live credit through `SubstituteCredits` for day value and absent Teacher), cancel on `SubstitutionEnded`, upsert idempotently, write events and `ChangeRecorder` audit
-- [ ] T019 [US2] Listeners `AssignedListener` and `EndedListener` in `substitution/payout/listener/`
-- [ ] T020 [US2] Marking: `PUT /days/{id}/attendance` (Edit; refuse future date, locked month, cancelled day, stale `version`), Zone scope through `ScopeQueries`, 404 out of scope; no substitute self-marking path exists
-- [ ] T021 [US2] Lock and reopen: `POST /months/{teacherId}/{yyyy-MM}/lock`, `/reopen` (Approve; month ended; no live NOT_MARKED day, `409` lists them; reopen reason max 500), bulk `POST /months/lock?month=`; audit
-- [ ] T022 [P] [US2] API and service tests: marking by Admin, Director, Zone A, Zone B (404), Teacher and System; future date; lock refusals; reopen; history (`DayApiTest`)
+- [x] T017 [P] [US2] Domain `SubstituteDay`, `DayStatus` (14 values of data-model.md), `DayEvent`, `MonthLock` and repositories in `substitution/payout/domain/`
+- [x] T018 [US2] `DayService` in `substitution/payout/service/`: create the day on `SubstitutionAssigned` (read the live credit through `SubstituteCredits` for day value and absent Teacher), cancel on `SubstitutionEnded`, upsert idempotently, write events and `ChangeRecorder` audit
+- [x] T019 [US2] Listeners `AssignedListener` and `EndedListener` in `substitution/payout/listener/`
+- [x] T020 [US2] Marking: `PUT /days/{id}/attendance` (Edit; refuse future date, locked month, cancelled day, stale `version`), Zone scope through `ScopeQueries`, 404 out of scope; no substitute self-marking path exists
+- [x] T021 [US2] Lock and reopen: `POST /months/{teacherId}/{yyyy-MM}/lock`, `/reopen` (Approve; month ended; no live NOT_MARKED day, `409` lists them; reopen reason max 500), bulk `POST /months/lock?month=`; audit
+- [x] T022 [P] [US2] API and service tests: marking by Admin, Director, Zone A, Zone B (404), Teacher and System; future date; lock refusals; reopen; history (`DayApiTest`)
 - [ ] T023 [US2] Web: mark Present/Absent in the 017a Substitutions requirement screen and a day list "Substitute attendance" (`frontend/src/features/substitutions/`), lock and reopen actions for Admin and Director; Vitest and keyboard check
 
 ## Phase 4: User Story 1 - Paid for the month through the run (P1) MVP

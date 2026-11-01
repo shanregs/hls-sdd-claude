@@ -80,22 +80,19 @@ class SubstitutionAuthorizationTest extends SubstitutionTestBase {
     }
 
     @Test
-    void aTeacherSeesOnlyTheirOwnAssignmentAndNeverTheAbsentTeachersName() {
+    void aSubstituteHasNoAccountSoNoTeacherSeesAnyoneElsesAssignment() {
+        // spec 017b FR-002/FR-004: a Substitute-type Teacher has no login, so there is no "my substitutions" view of cover
         World w = newWorld();
         TeacherCtx bench = benchTeacher(w);
-        TeacherCtx other = benchTeacher(w);
         LocalDate day = monday();
         absent(w.managerA().token(), w.teacherA().teacherId(), day);
         UUID id = requirementId(w.teacherA().teacherId(), day);
         assign(w.managerA().token(), id, bench.teacherId());
-        String absentName = jdbc.queryForObject("select name from teacher where id = ?", String.class, w.teacherA().teacherId());
 
-        Resp mine = get("/api/v1/me/substitutions?from=" + day, bench.token());
-
-        assertThat(mine.status()).as(mine.body()).isEqualTo(200);
-        assertThat(mine.body()).contains(id.toString()).contains(w.schoolA().toString());
-        assertThat(mine.body()).doesNotContain(absentName).doesNotContain(w.teacherA().teacherId().toString());
-        assertThat(get("/api/v1/me/substitutions?from=" + day, other.token()).body()).isEqualTo("[]");
+        assertThat(jdbc.queryForObject("select user_id from teacher where id = ?", UUID.class, bench.teacherId())).isNull();
+        Resp regular = get("/api/v1/me/substitutions?from=" + day, w.teacherB().token());
+        assertThat(regular.status()).as(regular.body()).isEqualTo(200);
+        assertThat(regular.body()).isEqualTo("[]");
     }
 
     @Test
@@ -106,7 +103,7 @@ class SubstitutionAuthorizationTest extends SubstitutionTestBase {
                 .contains("\"SUBSTITUTION\":\"ASSIGNED\"");
         assertThat(get("/api/v1/me/access-model", w.admin()).body()).contains("\"SUBSTITUTION\":\"ORG_WIDE\"");
         String teacher = get("/api/v1/me/access-model", w.teacherA().token()).body();
-        assertThat(teacher).contains("/my-substitutions").doesNotContain("/operations/substitutions");
+        assertThat(teacher).doesNotContain("/my-substitutions").doesNotContain("/operations/substitutions");
         assertThat(get("/api/v1/me/access-model", signInAs(Role.SYSTEM).token()).body()).doesNotContain("substitutions");
     }
 }

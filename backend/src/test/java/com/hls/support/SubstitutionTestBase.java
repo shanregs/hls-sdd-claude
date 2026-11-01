@@ -85,8 +85,18 @@ public abstract class SubstitutionTestBase extends LeaveTestBase {
         return newTeacher(w.admin(), w.schoolA(), 60);
     }
 
-    /** An active Teacher with no placement: free to cover. */
+    /** An active Substitute-type Teacher with no placement and no account: free to cover (spec 017b). */
     protected TeacherCtx benchTeacher(World w) {
-        return newTeacher(w.admin(), null, 0);
+        TeacherCtx teacher = newTeacher(w.admin(), null, 0);
+        makeSubstitute(w.admin(), teacher.teacherId());
+        return teacher;
+    }
+
+    /** Sets the Teacher's engagement to SUBSTITUTE through the API (clears the account link). */
+    protected void makeSubstitute(String adminToken, UUID teacherId) {
+        long version = jdbc.queryForObject("select version from teacher where id = ?", Long.class, teacherId);
+        Resp resp = put("/api/v1/teachers/" + teacherId + "/engagement", adminToken,
+                Map.of("engagement", "SUBSTITUTE", "version", version));
+        org.assertj.core.api.Assertions.assertThat(resp.status()).as(resp.body()).isEqualTo(200);
     }
 }
