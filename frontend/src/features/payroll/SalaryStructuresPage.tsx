@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Box, Button, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { DayRatesTab } from "./DayRatesTab";
 import { DesignationDefaultsTab } from "./DesignationDefaultsTab";
 import { PeopleTab } from "./PeopleTab";
 
 export const SALARY_STRUCTURES_ROUTE = "/operations/salary-structures";
 
-type TabKey = "people" | "defaults";
+type TabKey = "people" | "defaults" | "dayRates";
 
 /**
  * OPERATIONS -> Salary Structures (spec 013a). HLS has no fixed pay scale, so the screen is about each person's own
@@ -58,6 +59,12 @@ export function SalaryStructuresPage() {
           id="salary-tab-defaults"
           aria-controls="salary-panel"
         />
+        <Tab
+          value="dayRates"
+          label="Substitute day rates"
+          id="salary-tab-dayRates"
+          aria-controls="salary-panel"
+        />
       </Tabs>
 
       <div
@@ -65,7 +72,9 @@ export function SalaryStructuresPage() {
         id="salary-panel"
         aria-labelledby={`salary-tab-${tab}`}
       >
-        {tab === "people" ? <PeopleTab /> : <DesignationDefaultsTab />}
+        {tab === "people" && <PeopleTab />}
+        {tab === "defaults" && <DesignationDefaultsTab />}
+        {tab === "dayRates" && <DayRatesTab />}
       </div>
     </Box>
   );
