@@ -1,0 +1,12 @@
+$kind: http-request
+name: Raise Correction
+description: "Admin only (payroll Process right). For a day marked Correction needed: a positive amount pays more, a negative one recovers. Raised once per day; paid with the next pay run, after which the day is Corrected. 409 if already raised or not needed."
+url: "{{baseUrl}}/api/v1/substitute-payouts/days/{{dayId}}/correction"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "amount": 800.00, "reason": "Added after the month was paid" }
+order: 13000

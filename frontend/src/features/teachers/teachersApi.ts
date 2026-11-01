@@ -9,6 +9,14 @@ import {
 
 export type TeacherStatus = "IN_TRAINING" | "ACTIVE" | "ON_LEAVE" | "EXITED";
 
+/** Spec 017b: a Substitute is paid by the day, has no salary, placement or account. */
+export type TeacherEngagement = "REGULAR" | "SUBSTITUTE";
+
+export const ENGAGEMENT_LABELS: Record<TeacherEngagement, string> = {
+  REGULAR: "Regular",
+  SUBSTITUTE: "Substitute",
+};
+
 export const STATUS_LABELS: Record<TeacherStatus, string> = {
   IN_TRAINING: "In training",
   ACTIVE: "Active",
@@ -54,6 +62,8 @@ export interface TeacherSummary {
   } | null;
   placements: PlacementRow[] | null;
   employment?: TeacherEmployment | null;
+  /** Absent on old responses; treat as REGULAR. */
+  engagement?: TeacherEngagement;
 }
 
 export interface TeacherContact {
@@ -106,10 +116,24 @@ export function createTeacher(
   authFetch: AuthFetch,
   contact: TeacherContact,
   status: TeacherStatus,
+  engagement: TeacherEngagement = "REGULAR",
 ): Promise<ApiResult<TeacherSummary>> {
   return sendJson(authFetch, "POST", "/api/v1/teachers", {
     ...contact,
     status,
+    engagement,
+  });
+}
+
+/** Admin and Director only. Becoming a Substitute needs no placement and clears any linked account. */
+export function changeTeacherEngagement(
+  authFetch: AuthFetch,
+  teacher: Pick<TeacherSummary, "id" | "version">,
+  engagement: TeacherEngagement,
+): Promise<ApiResult<TeacherSummary>> {
+  return sendJson(authFetch, "PUT", `/api/v1/teachers/${teacher.id}/engagement`, {
+    engagement,
+    version: teacher.version,
   });
 }
 

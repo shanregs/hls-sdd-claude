@@ -57,7 +57,14 @@ public interface PersonDirectory {
     /** The Teachers that exist. */
     Set<UUID> existingTeachers(Collection<UUID> teacherIds);
 
+    /** Every Regular Teacher. Substitute-type Teachers (spec 017b) have no salary and are paid by the day, so they are not here. */
     List<TeacherSummary> allTeachers();
+
+    /** The ids among the given ones that are Substitute-type Teachers (spec 017b). */
+    Set<UUID> substituteTeachers(Collection<UUID> teacherIds);
+
+    /** The names of the Teachers (Regular or Substitute); an unknown id is absent. */
+    Map<UUID, String> teacherNames(Collection<UUID> teacherIds);
 
     /** The current designation of each Teacher; a Teacher with none is absent. */
     Map<UUID, UUID> teacherDesignations(Collection<UUID> teacherIds);

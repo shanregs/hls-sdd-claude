@@ -101,6 +101,27 @@ public class TeacherDevSeeder implements ApplicationRunner {
             placementSource.assign(admin.getId(), created.id(), schools.get(schoolIndex).id(), null, placedFrom);
         }
         seedEmployment(admin);
+        seedSubstitutes(admin);
+    }
+
+    /** Spec 017b: two Substitute Teachers (no salary, no placement, no account) holding the Cover Teacher designation. */
+    private void seedSubstitutes(AppUser admin) {
+        String[][] substitutes = {{"Sunita Substitute", "9800000021", "HLS-S-001"}, {"Suresh Substitute", "9800000022", "HLS-S-002"}};
+        var cover = designations.findByName(Kind.TEACHER, "Cover Teacher");
+        for (String[] person : substitutes) {
+            if (teacherRepository.findFirstByPhone(person[1]).isPresent()) {
+                continue;
+            }
+            var created = teacherService.create(
+                    admin.getId(),
+                    new TeacherService.NewTeacher(person[0], person[1], null, null, TeacherStatus.ACTIVE, null));
+            var substitute = teacherService.changeEngagement(
+                    admin.getId(), created.id(), TeacherEngagement.SUBSTITUTE, created.version());
+            if (cover.isPresent()) {
+                employment.update(
+                        admin.getId(), Set.of(Role.ADMIN), substitute.id(), cover.get().id(), person[2], substitute.version());
+            }
+        }
     }
 
     /**

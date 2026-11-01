@@ -29,10 +29,22 @@ public interface TeacherDirectory {
     /** Every Teacher, whatever their status, ordered by name (spec 013a lists them with their salary). */
     List<TeacherInfo> allTeachers();
 
-    /** Every Teacher whose status is ACTIVE (trained, not exited), placed or not; used to find substitutes (spec 017a). */
+    /**
+     * Every Regular Teacher whose status is ACTIVE (trained, not exited), placed or not. Substitute-type Teachers
+     * (spec 017b) are not included: they are never placed, marked on the grid or paid a salary; see {@link #activeSubstitutes}.
+     */
     List<TeacherInfo> activeTeachers();
 
+    /** Every Substitute-type Teacher whose status is ACTIVE; the pool a requirement can be assigned from (spec 017a/017b). */
+    List<TeacherInfo> activeSubstitutes();
+
     Optional<TeacherInfo> teacherOfUser(UUID userId);
+
+    /** Ids of every Substitute-type Teacher (spec 017b), whatever their status. */
+    Set<UUID> substituteTeacherIds();
+
+    /** Ids of the Substitute-type Teachers whose status is ACTIVE. */
+    Set<UUID> activeSubstituteTeacherIds();
 
     /** ACTIVE placements of the given Teachers overlapping {@code from..to} inclusive. */
     List<PlacementSpan> placementsOverlapping(Collection<UUID> teacherIds, LocalDate from, LocalDate to);

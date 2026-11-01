@@ -1,0 +1,6 @@
+$kind: http-request
+name: Export CSV
+description: "The same rows as List Days for the same filter as CSV (UTF-8 with BOM, DD/MM/YYYY, plain numbers, formula-safe). Needs Export. Every export is audited."
+url: "{{baseUrl}}/api/v1/substitute-payouts/export?month={{month}}"
+method: GET
+order: 14000

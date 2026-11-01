@@ -176,6 +176,9 @@ public class TeacherService {
     @Transactional
     public TeacherView assign(
             UUID userId, Set<Role> roles, UUID teacherId, UUID schoolId, UUID positionId, LocalDate effectiveOn) {
+        if (teacherRepository.findById(teacherId).filter(t -> t.getEngagement() == TeacherEngagement.SUBSTITUTE).isPresent()) {
+            throw new ConflictException("A Substitute Teacher is not placed in a School; they are allocated to cover absences.");
+        }
         if (!CallerContext.isOrgWide(roles)) {
             if (schoolId == null || !scopeQueries.scopeOf(userId, roles).allowsSchool(schoolId)) {
                 throw new NotFoundException("School not found.");
@@ -243,7 +246,8 @@ public class TeacherService {
                 null,
                 null,
                 null,
-                null);
+                null,
+                full.engagement());
     }
 
     /** An active user holding the Teacher role who is not linked to any Teacher record yet. */
@@ -343,11 +347,48 @@ public class TeacherService {
         return viewsOf(List.of(teacher), null).get(0);
     }
 
+    /**
+     * Sets how the Teacher is engaged (spec 017b FR-001). Becoming a SUBSTITUTE needs no placement now or scheduled, and
+     * clears any linked account. Going back to REGULAR is allowed. Audited.
+     */
+    @Transactional
+    public TeacherView changeEngagement(UUID actor, UUID id, TeacherEngagement next, Long version) {
+        Teacher teacher = teacherRepository.findById(id).orElseThrow(() -> new NotFoundException("Teacher not found."));
+        if (next == null) {
+            throw new InvalidInputException("An engagement type is required.");
+        }
+        StaleVersion.check(Teacher.class, id, teacher.getVersion(), version);
+        TeacherEngagement before = teacher.getEngagement();
+        if (before == next) {
+            return viewsOf(List.of(teacher), null).get(0);
+        }
+        if (next == TeacherEngagement.SUBSTITUTE) {
+            LocalDate today = LocalDate.now(clock);
+            boolean placed = !placementSource.currentOf(List.of(id), today).isEmpty()
+                    || !placementSource.pendingOf(List.of(id), today).isEmpty();
+            if (placed) {
+                throw new ConflictException("A Teacher placed in a School cannot become a Substitute. End the placement first.");
+            }
+            if (teacher.getUserId() != null) {
+                changes.record(actor, "TEACHER", id, "userId", teacher.getUserId(), null);
+                teacher.setUserId(null);
+            }
+        }
+        teacher.setEngagement(next);
+        teacher.touch(clock.instant());
+        teacherRepository.saveAndFlush(teacher);
+        changes.record(actor, "TEACHER", id, "engagement", before, next);
+        return viewsOf(List.of(teacher), null).get(0);
+    }
+
     @Transactional
     public TeacherView linkUser(UUID actor, UUID id, UUID userId) {
         Teacher teacher = teacherRepository.findById(id).orElseThrow(() -> new NotFoundException("Teacher not found."));
         if (teacher.getStatus() == TeacherStatus.EXITED) {
             throw new ConflictException("An exited Teacher cannot be linked to an account.");
+        }
+        if (userId != null && teacher.getEngagement() == TeacherEngagement.SUBSTITUTE) {
+            throw new ConflictException("A Substitute Teacher has no account and cannot be linked to one.");
         }
         UUID before = teacher.getUserId();
         if (userId != null) {
@@ -451,7 +492,8 @@ public class TeacherService {
                                             schoolNames.getOrDefault(pen.schoolId(), "?"),
                                             pen.startsOn()),
                             rows,
-                            employmentOf(t, designationInfos));
+                            employmentOf(t, designationInfos),
+                            t.getEngagement().name());
                 })
                 .toList();
     }

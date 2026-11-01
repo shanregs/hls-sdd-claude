@@ -1,0 +1,6 @@
+$kind: http-request
+name: Substitute Month
+description: "One substitute's month: the days, the totals, whether it is locked and the rates that priced it. 404 for a substitute with no day in the caller scope."
+url: "{{baseUrl}}/api/v1/substitute-payouts/substitutes/{{teacherId}}?month={{month}}"
+method: GET
+order: 11000

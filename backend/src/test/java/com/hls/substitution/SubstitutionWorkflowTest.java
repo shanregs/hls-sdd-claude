@@ -38,9 +38,8 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
         String body = resp.body();
         int benchAt = body.indexOf(bench.teacherId().toString());
         assertThat(body.substring(benchAt, body.indexOf('}', benchAt))).contains("\"available\":true");
-        int placedAt = body.indexOf(w.teacherB().teacherId().toString());
-        String placed = body.substring(placedAt, body.indexOf('}', placedAt));
-        assertThat(placed).contains("\"available\":false").contains("Teaching at");
+        // spec 017b FR-003: only Substitute-type Teachers are offered; a placed Regular Teacher is not a candidate
+        assertThat(body).doesNotContain(w.teacherB().teacherId().toString());
     }
 
     @Test
@@ -59,7 +58,8 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
         assertThat(mine.get(0).absentTeacherId()).isEqualTo(w.teacherA().teacherId());
         assertThat(mine.get(0).schoolId()).isEqualTo(w.schoolA());
         assertThat(credits.creditsOf(w.teacherA().teacherId(), YearMonth.from(day))).isEmpty();
-        assertThat(notifications(bench.signed().userId(), "SUBSTITUTE_ASSIGNED")).isEqualTo(1);
+        // a Substitute has no account: the School's Manager hears (spec 017b FR-004)
+        assertThat(notifications(w.managerA().signed().userId(), "SUBSTITUTE_ASSIGNED")).isEqualTo(1);
         Map<UUID, List<SubstituteCredit>> bulk =
                 credits.creditsOf(List.of(bench.teacherId(), w.teacherA().teacherId()), day, day);
         assertThat(bulk).containsOnlyKeys(bench.teacherId());
@@ -71,10 +71,18 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
         LocalDate day = monday();
         UUID id = raise(w, day);
 
-        Resp busy = assign(w.managerA().token(), id, w.teacherB().teacherId());
+        TeacherCtx busySubstitute = benchTeacher(w);
+        absent(w.managerB().token(), w.teacherB().teacherId(), day);
+        // the other Zone's absence is raised by its own Manager, then covered by the same substitute all day
+        UUID other = requirementId(w.teacherB().teacherId(), day);
+        assertThat(assign(w.managerB().token(), other, busySubstitute.teacherId()).status()).isEqualTo(200);
+        Resp busy = assign(w.managerA().token(), id, busySubstitute.teacherId());
         assertThat(busy.status()).isEqualTo(409);
         assertThat(busy.body()).contains("not available");
 
+        // a Regular Teacher is not in the pool at all (spec 017b N2)
+        Resp regular = assign(w.managerA().token(), id, w.teacherB().teacherId());
+        assertThat(regular.status()).isEqualTo(404);
         Resp self = assign(w.managerA().token(), id, w.teacherA().teacherId());
         assertThat(self.status()).isEqualTo(409);
         assertThat(assign(w.managerA().token(), id, UUID.randomUUID()).status()).isEqualTo(404);
@@ -136,8 +144,8 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
 
         assertThat(credits.creditsOf(first.teacherId(), YearMonth.from(day))).isEmpty();
         assertThat(credits.creditsOf(second.teacherId(), YearMonth.from(day))).hasSize(1);
-        assertThat(notifications(first.signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
-        assertThat(notifications(second.signed().userId(), "SUBSTITUTE_ASSIGNED")).isEqualTo(1);
+        assertThat(notifications(w.managerA().signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
+        assertThat(notifications(w.managerA().signed().userId(), "SUBSTITUTE_ASSIGNED")).isEqualTo(2);
         assertThat(jdbc.queryForObject("select informed_at is null from substitution_requirement where id = ?", Boolean.class, id))
                 .as("a new outcome needs the School told again")
                 .isTrue();
@@ -160,7 +168,7 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
         assertThat(released.status()).as(released.body()).isEqualTo(200);
         assertThat(status(id)).isEqualTo("OPEN");
         assertThat(credits.creditsOf(bench.teacherId(), YearMonth.from(day))).isEmpty();
-        assertThat(notifications(bench.signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
+        assertThat(notifications(w.managerA().signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
     }
 
     @Test
@@ -246,7 +254,7 @@ class SubstitutionWorkflowTest extends SubstitutionTestBase {
 
         assertThat(status(id)).isEqualTo("CANCELLED");
         assertThat(credits.creditsOf(bench.teacherId(), YearMonth.from(day))).isEmpty();
-        assertThat(notifications(bench.signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
+        assertThat(notifications(w.managerA().signed().userId(), "SUBSTITUTE_ENDED")).isEqualTo(1);
         assertThat(assign(w.managerA().token(), id, bench.teacherId()).status()).isEqualTo(409);
         assertThat(cover(w.managerA().token(), id).status()).isEqualTo(409);
         assertThat(get(SUBS + "/" + id + "/candidates", w.managerA().token()).body()).isEqualTo("[]");

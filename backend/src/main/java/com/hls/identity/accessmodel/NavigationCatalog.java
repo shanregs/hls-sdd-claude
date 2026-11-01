@@ -222,14 +222,6 @@ public final class NavigationCatalog {
                     205,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
-                    "My Substitutions",
-                    "/my-substitutions",
-                    PermissionModule.MY_SUBSTITUTIONS,
-                    PermissionAction.VIEW,
-                    "MY ATTENDANCE",
-                    152,
-                    EnumSet.of(Role.TEACHER)),
-            new NavItem(
                     "School Contracts",
                     "/operations/school-contracts",
                     PermissionModule.SCHOOL_CONTRACTS,
@@ -348,6 +340,14 @@ public final class NavigationCatalog {
                     PermissionAction.VIEW,
                     "PAYROLL & FINANCE",
                     307,
+                    EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
+            new NavItem(
+                    "Substitute Payouts",
+                    "/operations/substitute-payouts",
+                    PermissionModule.SUBSTITUTE_PAYOUTS,
+                    PermissionAction.VIEW,
+                    "PAYROLL & FINANCE",
+                    308,
                     EnumSet.of(Role.ADMIN, Role.DIRECTOR, Role.MANAGER)),
             new NavItem(
                     "Manager Tasks",

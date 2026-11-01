@@ -1,0 +1,6 @@
+$kind: http-request
+name: Day Rate History
+description: "Every rate recorded for the designation, newest first. Rows are never changed."
+url: "{{baseUrl}}/api/v1/salary-structures/designation-day-rates/{{designationId}}"
+method: GET
+order: 3000

@@ -53,13 +53,27 @@ class SubstitutionModuleRulesTest {
     }
 
     @Test
-    void noTaskOrPayrollDependency() {
+    void noTaskOrPayrollInternalsDependency() {
+        // spec 017b: substitution reads the day rates through payroll's public API only; payroll never depends on substitution
         noClasses()
                 .that()
                 .resideInAPackage("com.hls.substitution..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage("com.hls.payroll..", "com.hls.task..")
+                .resideInAnyPackage("com.hls.payroll.internal..", "com.hls.payroll.run..", "com.hls.payroll.web..", "com.hls.task..")
+                .allowEmptyShould(true)
+                .check(MAIN);
+    }
+
+    @Test
+    void payrollNeverDependsOnSubstitution() {
+        // spec 017b: payroll owns the DayRateWork port and substitution implements it, so the arrow points one way
+        noClasses()
+                .that()
+                .resideInAPackage("com.hls.payroll..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("com.hls.substitution..")
                 .allowEmptyShould(true)
                 .check(MAIN);
     }

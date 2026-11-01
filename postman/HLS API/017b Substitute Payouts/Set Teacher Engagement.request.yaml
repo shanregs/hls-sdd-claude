@@ -1,0 +1,12 @@
+$kind: http-request
+name: Set Teacher Engagement
+description: "Makes a Teacher a Substitute (or Regular again). Admin and Director (Teachers Edit). A Teacher placed in a School cannot become a Substitute (409); becoming one clears any linked account. A Substitute cannot be placed or linked to an account. Needs the Teacher version."
+url: "{{baseUrl}}/api/v1/teachers/{{teacherId}}/engagement"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    { "engagement": "SUBSTITUTE", "version": {{teacherVersion}} }
+order: 1000

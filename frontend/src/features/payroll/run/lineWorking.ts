@@ -32,6 +32,16 @@ export interface LineWorking {
   deduction?: WorkingAmounts;
   adjustments?: { id: string; kind: string; amount: string; reason: string }[];
   manager?: { workingDaysAtLock: string; unpaidAtLock: string } | null;
+  /** Spec 017b: present only on a Substitute Teacher's line, paid by the day instead of by salary. */
+  substituteDays?: {
+    dayId: string;
+    school: string;
+    date: string;
+    dayValue: string;
+    rate: string;
+    amount: string;
+  }[];
+  rateRows?: { days: string; rate: string }[];
 }
 
 export const ADJUSTMENT_KIND_LABELS: Record<string, string> = {

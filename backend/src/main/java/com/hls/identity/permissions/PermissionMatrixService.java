@@ -110,6 +110,7 @@ public class PermissionMatrixService {
         seedSchoolBilling();
         seedTraining();
         seedManagerIncentives();
+        seedSubstitutePayouts();
         seedReports();
         // Viewing and ending every user's sessions is a System capability (spec 001 FR-015a).
         seed(Role.SYSTEM, PermissionModule.SESSION_MANAGEMENT, PermissionAction.VIEW, true);
@@ -318,6 +319,17 @@ public class PermissionMatrixService {
         for (PermissionAction action : List.of(PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EXPORT)) {
             seed(Role.MANAGER, PermissionModule.SCHOOL_BILLING, action, true);
         }
+        grants.invalidateAround();
+    }
+
+    /** Substitute payout defaults (spec 017b): Admin and Director hold all four, a Manager views and marks days. */
+    private void seedSubstitutePayouts() {
+        for (PermissionAction action : PermissionModule.SUBSTITUTE_PAYOUTS.actions()) {
+            seed(Role.ADMIN, PermissionModule.SUBSTITUTE_PAYOUTS, action, true);
+            seed(Role.DIRECTOR, PermissionModule.SUBSTITUTE_PAYOUTS, action, true);
+        }
+        seed(Role.MANAGER, PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.VIEW, true);
+        seed(Role.MANAGER, PermissionModule.SUBSTITUTE_PAYOUTS, PermissionAction.EDIT, true);
         grants.invalidateAround();
     }
 

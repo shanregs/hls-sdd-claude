@@ -1,0 +1,6 @@
+$kind: http-request
+name: Get Day
+description: "One day with its event history (who changed what, when, and why)."
+url: "{{baseUrl}}/api/v1/substitute-payouts/days/{{dayId}}"
+method: GET
+order: 6000

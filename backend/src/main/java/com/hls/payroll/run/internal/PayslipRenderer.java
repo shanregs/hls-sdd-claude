@@ -86,20 +86,37 @@ final class PayslipRenderer {
         page.pair("Approved on", RunInput.date(d.approvedOn()), false);
         page.rule();
 
-        page.heading("Salary");
-        for (Map<String, Object> row : (List<Map<String, Object>>) working.get("salaryRows")) {
-            String from = RunInput.date(LocalDate.parse((String) row.get("from")));
-            String to = RunInput.date(LocalDate.parse((String) row.get("to")));
-            page.pair(
-                    from.equals(to) ? from : from + " to " + to,
-                    RunInput.rupees(new BigDecimal((String) row.get("monthly"))) + " a month",
-                    false);
+        boolean substitute = working.containsKey("substituteDays");
+        if (substitute) {
+            // a Substitute Teacher is paid by the day: "N days x rate", one row per rate (spec 017b FR-012)
+            page.heading("Days worked");
+            for (Map<String, Object> row : (List<Map<String, Object>>) working.get("rateRows")) {
+                BigDecimal rate = new BigDecimal((String) row.get("rate"));
+                BigDecimal count = new BigDecimal((String) row.get("days"));
+                page.pair(
+                        plain(count) + (count.compareTo(BigDecimal.ONE) == 0 ? " day" : " days") + " x " + RunInput.rupees(rate),
+                        RunInput.rupees(count.multiply(rate)),
+                        false);
+            }
+            page.gap(4);
+            page.pair("Days worked", plain(d.workingDays()), false);
+            page.rule();
+        } else {
+            page.heading("Salary");
+            for (Map<String, Object> row : (List<Map<String, Object>>) working.get("salaryRows")) {
+                String from = RunInput.date(LocalDate.parse((String) row.get("from")));
+                String to = RunInput.date(LocalDate.parse((String) row.get("to")));
+                page.pair(
+                        from.equals(to) ? from : from + " to " + to,
+                        RunInput.rupees(new BigDecimal((String) row.get("monthly"))) + " a month",
+                        false);
+            }
+            page.gap(4);
+            page.pair("Days paid", String.valueOf(d.payableDays()), false);
+            page.pair("Working days in the month", plain(d.workingDays()), false);
+            page.pair("Unpaid days", plain(d.unpaidDays()), false);
+            page.rule();
         }
-        page.gap(4);
-        page.pair("Days paid", String.valueOf(d.payableDays()), false);
-        page.pair("Working days in the month", plain(d.workingDays()), false);
-        page.pair("Unpaid days", plain(d.unpaidDays()), false);
-        page.rule();
 
         Map<String, Object> earned = (Map<String, Object>) working.get("earned");
         page.heading("Earned pay");
@@ -107,25 +124,27 @@ final class PayslipRenderer {
         page.pair("Earned pay", RunInput.rupees(d.earned()), true);
         page.rule();
 
-        page.heading("Deduction for days without pay");
-        List<Map<String, Object>> unpaid = (List<Map<String, Object>>) working.get("unpaid");
-        if (unpaid.isEmpty()) {
-            page.text("No unpaid days.", FONT, false);
-        }
-        for (Map<String, Object> day : unpaid) {
-            String reason = (String) day.get("reason");
-            String left = RunInput.date(LocalDate.parse((String) day.get("date")))
-                    + "  (" + plain(new BigDecimal((String) day.get("dayValue"))) + " day"
-                    + (reason == null ? "" : ", " + reason) + ")";
-            page.pair(left, RunInput.rupees(new BigDecimal((String) day.get("amount"))), false);
-        }
-        Map<String, Object> deduction = (Map<String, Object>) working.get("deduction");
-        if (!unpaid.isEmpty()) {
-            page.pair("Before rounding", RunInput.rupees(new BigDecimal((String) deduction.get("unrounded"))), false);
-        }
-        page.pair("Deduction", RunInput.rupees(d.deduction()), true);
-        page.rule();
+        if (!substitute) {
+            page.heading("Deduction for days without pay");
+            List<Map<String, Object>> unpaid = (List<Map<String, Object>>) working.get("unpaid");
+            if (unpaid.isEmpty()) {
+                page.text("No unpaid days.", FONT, false);
+            }
+            for (Map<String, Object> day : unpaid) {
+                String reason = (String) day.get("reason");
+                String left = RunInput.date(LocalDate.parse((String) day.get("date")))
+                        + "  (" + plain(new BigDecimal((String) day.get("dayValue"))) + " day"
+                        + (reason == null ? "" : ", " + reason) + ")";
+                page.pair(left, RunInput.rupees(new BigDecimal((String) day.get("amount"))), false);
+            }
+            Map<String, Object> deduction = (Map<String, Object>) working.get("deduction");
+            if (!unpaid.isEmpty()) {
+                page.pair("Before rounding", RunInput.rupees(new BigDecimal((String) deduction.get("unrounded"))), false);
+            }
+            page.pair("Deduction", RunInput.rupees(d.deduction()), true);
+            page.rule();
 
+        }
         page.heading("Adjustments");
         List<Map<String, Object>> adjustments = (List<Map<String, Object>>) working.get("adjustments");
         if (adjustments.isEmpty()) {

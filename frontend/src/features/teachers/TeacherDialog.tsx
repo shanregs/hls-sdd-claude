@@ -12,10 +12,13 @@ import {
 } from "@mui/material";
 import { useAuth } from "../../auth/useAuth";
 import {
+  changeTeacherEngagement,
   createTeacher,
+  ENGAGEMENT_LABELS,
   STATUS_LABELS,
   updateTeacher,
   type TeacherContact,
+  type TeacherEngagement,
   type TeacherStatus,
   type TeacherSummary,
 } from "./teachersApi";
@@ -31,6 +34,7 @@ interface TeacherDialogProps {
 
 interface FormValues extends TeacherContact {
   status: TeacherStatus;
+  engagement: TeacherEngagement;
 }
 
 /** Create a Teacher, or edit contact details (FR-011). Status changes and placement have their own dialogs. */
@@ -53,6 +57,7 @@ export function TeacherDialog({
       email: teacher?.email ?? "",
       address: teacher?.address ?? "",
       status: "IN_TRAINING",
+      engagement: teacher?.engagement ?? "REGULAR",
     },
   });
 
@@ -63,9 +68,21 @@ export function TeacherDialog({
       email: values.email,
       address: values.address,
     };
-    const result = teacher
+    let result = teacher
       ? await updateTeacher(authFetch, teacher, contact)
-      : await createTeacher(authFetch, contact, values.status);
+      : await createTeacher(authFetch, contact, values.status, values.engagement);
+    if (
+      result.ok &&
+      teacher &&
+      !limited &&
+      values.engagement !== (teacher.engagement ?? "REGULAR")
+    ) {
+      result = await changeTeacherEngagement(
+        authFetch,
+        result.data,
+        values.engagement,
+      );
+    }
     if (!result.ok) {
       setError("root", { message: result.reason });
       return;
@@ -103,6 +120,20 @@ export function TeacherDialog({
               minRows={2}
               {...register("address")}
             />
+            {!limited && (
+              <TextField
+                select
+                label="Engagement"
+                defaultValue={teacher?.engagement ?? "REGULAR"}
+                helperText="A Substitute is paid by the day and has no salary, placement or login."
+                {...register("engagement")}
+              >
+                <MenuItem value="REGULAR">{ENGAGEMENT_LABELS.REGULAR}</MenuItem>
+                <MenuItem value="SUBSTITUTE">
+                  {ENGAGEMENT_LABELS.SUBSTITUTE}
+                </MenuItem>
+              </TextField>
+            )}
             {!teacher && (
               <TextField
                 select

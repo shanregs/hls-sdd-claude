@@ -1,0 +1,12 @@
+$kind: http-request
+name: Run Go-Live Migration
+description: "One-off move of the spec 017a credits into day records (Admin). Past credits become Present days flagged for review; credits held by a Teacher who is not a Substitute are listed as settle first. Safe to run again."
+url: "{{baseUrl}}/api/v1/substitute-payouts/migration/run"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 16000

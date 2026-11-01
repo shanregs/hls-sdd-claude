@@ -55,7 +55,7 @@ public class AvailabilityService {
 
     @Transactional(readOnly = true)
     public List<Candidate> candidates(SubstitutionRequirement requirement) {
-        List<TeacherInfo> active = teachers.activeTeachers().stream()
+        List<TeacherInfo> active = teachers.activeSubstitutes().stream()
                 .filter(t -> !t.id().equals(requirement.getTeacherId()))
                 .toList();
         return judge(requirement, active);

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Reconcile Month
+description: "Repairs a month now: recreates missing day records, cancels days whose allocation ended and works every status out again. Admin and Director. Safe to run twice."
+url: "{{baseUrl}}/api/v1/substitute-payouts/reconcile?month={{month}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {}
+order: 15000

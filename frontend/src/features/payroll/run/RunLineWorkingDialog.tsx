@@ -158,7 +158,44 @@ export function RunLineWorkingDialog({
           <Stack spacing={2.5}>
             {line.warning && <Alert severity="warning">{line.warning}</Alert>}
 
-            <Section id="w-salary" title="Salary">
+            {working.substituteDays ? (
+              <Section id="w-days-worked" title="Days worked">
+                <TableContainer>
+                  <Table size="small" aria-label="Days worked">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Date</TableCell>
+                        <TableCell>School</TableCell>
+                        <TableCell align="right">Day</TableCell>
+                        <TableCell align="right">Rate</TableCell>
+                        <TableCell align="right">Amount</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {working.substituteDays.map((d) => (
+                        <TableRow key={d.dayId}>
+                          <TableCell>{formatDate(d.date)}</TableCell>
+                          <TableCell>{d.school}</TableCell>
+                          <TableCell align="right">{d.dayValue}</TableCell>
+                          <TableCell align="right">{money(d.rate)}</TableCell>
+                          <TableCell align="right">{money(d.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Stack component="dl" spacing={0.5} sx={{ m: 0, mt: 1 }}>
+                  {(working.rateRows ?? []).map((r) => (
+                    <Row
+                      key={r.rate}
+                      label={`${r.days} days at ${money(r.rate)}`}
+                      value={money(String(Number(r.days) * Number(r.rate)))}
+                    />
+                  ))}
+                </Stack>
+              </Section>
+            ) : (
+              <Section id="w-salary" title="Salary">
               <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
                 {(working.salaryRows ?? []).map((r) => (
                   <Row
@@ -176,7 +213,9 @@ export function RunLineWorkingDialog({
                   value={`${line.payableDays} of ${line.workingDays} working days`}
                 />
               </Stack>
-            </Section>
+              </Section>
+
+            )}
 
             <Section id="w-earned" title="Earned pay">
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -192,6 +231,7 @@ export function RunLineWorkingDialog({
               </Stack>
             </Section>
 
+            {!working.substituteDays && (
             <Section id="w-deduction" title="Deduction for days without pay">
               {(working.unpaid ?? []).length === 0 ? (
                 <Typography>No unpaid days.</Typography>
@@ -227,6 +267,7 @@ export function RunLineWorkingDialog({
                 <Row label="Deduction" value={money(line.deduction)} strong />
               </Stack>
             </Section>
+            )}
 
             <Section id="w-adjustments" title="Adjustments">
               {(working.adjustments ?? []).length === 0 ? (

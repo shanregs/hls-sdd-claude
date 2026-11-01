@@ -3,12 +3,15 @@ package com.hls.payroll.run.internal;
 import com.hls.attendance.api.AttendanceReadApi;
 import com.hls.attendance.api.ManagerAttendanceReadApi;
 import com.hls.attendance.api.ManagerMonth;
+import com.hls.payroll.api.DayRateWork;
+import com.hls.payroll.api.DayRates;
 import com.hls.payroll.api.EarnedPay;
 import com.hls.payroll.api.PayPolicyView;
 import com.hls.payroll.api.PayRules;
 import com.hls.payroll.api.PayRules.Kind;
 import com.hls.payroll.api.PayRules.PersonRef;
 import com.hls.payroll.api.PayableDays;
+import com.hls.payroll.api.PayrollRunChanged;
 import com.hls.payroll.api.TotalLossOfPay;
 import com.hls.payroll.internal.PersonDirectory;
 import com.hls.payroll.run.internal.LineCalculator.AdjustmentInput;
@@ -35,7 +38,9 @@ import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -66,6 +71,9 @@ public class RunComputation {
     private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final Clock clock;
     private final int parallelism;
+    private final DayRates dayRates;
+    private final ObjectProvider<DayRateWork> dayRateWork;
+    private final ApplicationEventPublisher publisher;
 
     RunComputation(
             PayRules payRules,
@@ -80,6 +88,9 @@ public class RunComputation {
             org.springframework.jdbc.core.JdbcTemplate jdbc,
             PlatformTransactionManager transactions,
             Clock clock,
+            DayRates dayRates,
+            ObjectProvider<DayRateWork> dayRateWork,
+            ApplicationEventPublisher publisher,
             @Value("${hls.payroll.run.parallelism:6}") int parallelism) {
         this.payRules = payRules;
         this.people = people;
@@ -94,6 +105,9 @@ public class RunComputation {
         this.tx = new TransactionTemplate(transactions);
         this.clock = clock;
         this.parallelism = Math.max(1, parallelism);
+        this.dayRates = dayRates;
+        this.dayRateWork = dayRateWork;
+        this.publisher = publisher;
     }
 
     /** Starts the computation on a virtual thread of its own; the caller returns at once (the request answers 202). */
@@ -138,22 +152,26 @@ public class RunComputation {
         PayPolicyView policy = payRules.policyOn(month.atEndOfMonth());
 
         List<Candidate> candidates = candidates();
+        java.util.Set<PersonRef> paid = java.util.Set.of();
         if (run.getKind() == PayRun.Kind.SUPPLEMENTARY) {
             // only the people not yet paid for the month, computed by the same rules (spec 013b FR-021)
-            java.util.Set<PersonRef> paid = paidIn(month);
-            candidates = candidates.stream().filter(c -> !paid.contains(c.ref())).toList();
+            paid = paidIn(month);
+            java.util.Set<PersonRef> alreadyPaid = paid;
+            candidates = candidates.stream().filter(c -> !alreadyPaid.contains(c.ref())).toList();
         }
+        Map<PersonRef, List<AdjustmentInput>> waiting = waitingAdjustments(runId);
+        SubstituteWork substitutes = substituteWork(run.getKind(), month, paid, waiting);
         Map<PersonRef, PayableDays> payable = payRules.payableDays(
                 candidates.stream().map(Candidate::ref).toList(), month);
         // a person with no payable date and no defect is not in the run (research 4)
-        List<Candidate> inRun = candidates.stream()
+        List<Candidate> inRun = new ArrayList<>(candidates.stream()
                 .filter(c -> payable.containsKey(c.ref()) && !payable.get(c.ref()).dates().isEmpty())
-                .toList();
+                .toList());
+        inRun.addAll(substitutes.candidates(people));
         Map<UUID, ManagerMonth> managerMonths = managerAttendance.months(
                 inRun.stream().filter(c -> c.ref().kind() == Kind.MANAGER).map(c -> c.ref().id()).toList(), month);
 
         Map<RecomputeDiff.Key, RecomputeDiff.Before> before = snapshot(runId);
-        Map<PersonRef, List<AdjustmentInput>> waiting = waitingAdjustments(runId);
         tx.executeWithoutResult(s -> runs.lockById(runId).ifPresent(r -> r.setProgress(0, inRun.size(), clock.instant())));
 
         Map<RecomputeDiff.Key, PersonResult> fresh = new LinkedHashMap<>();
@@ -169,7 +187,8 @@ public class RunComputation {
                                 month,
                                 policy,
                                 managerMonths.get(candidate.ref().id()),
-                                waiting.getOrDefault(candidate.ref(), List.of()));
+                                waiting.getOrDefault(candidate.ref(), List.of()),
+                                substitutes);
                     } finally {
                         permits.release();
                     }
@@ -268,8 +287,12 @@ public class RunComputation {
             YearMonth month,
             PayPolicyView policy,
             ManagerMonth managerMonth,
-            List<AdjustmentInput> waiting) {
+            List<AdjustmentInput> waiting,
+            SubstituteWork substitutes) {
         try {
+            if (substitutes.includes(c.ref())) {
+                return substitute(c, month, policy, waiting, substitutes);
+            }
             return calculate(c, month, policy, managerMonth, waiting);
         } catch (RuntimeException e) {
             LOG.error("Pay run: {} {} could not be worked out", c.ref().kind(), c.ref().id(), e);
@@ -287,6 +310,104 @@ public class RunComputation {
                     limit("Could not be worked out: " + why),
                     null));
         }
+    }
+
+    // ------------------------------------------------------- Substitute Teachers (spec 017b)
+
+    /** The Substitutes of the run: who worked, who is not ready, and the designation each held. */
+    record SubstituteWork(
+            Map<UUID, List<DayRateWork.WorkedDay>> worked, Map<UUID, String> notReady, Map<UUID, UUID> designations) {
+
+        static final SubstituteWork NONE = new SubstituteWork(Map.of(), Map.of(), Map.of());
+
+        boolean includes(PersonRef ref) {
+            return ref.kind() == Kind.TEACHER && (worked.containsKey(ref.id()) || notReady.containsKey(ref.id()));
+        }
+
+        List<Candidate> candidates(PersonDirectory people) {
+            java.util.Set<UUID> ids = new java.util.LinkedHashSet<>(worked.keySet());
+            ids.addAll(notReady.keySet());
+            if (ids.isEmpty()) {
+                return List.of();
+            }
+            Map<UUID, String> names = people.teacherNames(ids);
+            return ids.stream()
+                    .map(id -> new Candidate(
+                            new PersonRef(Kind.TEACHER, id), names.getOrDefault(id, "Substitute"), "Substitute Teacher"))
+                    .toList();
+        }
+    }
+
+    /** Present days of locked months (primary) or the ones no run holds yet (supplementary), minus anyone already paid. */
+    private SubstituteWork substituteWork(
+            PayRun.Kind kind,
+            YearMonth month,
+            java.util.Set<PersonRef> paid,
+            Map<PersonRef, List<AdjustmentInput>> waiting) {
+        DayRateWork port = dayRateWork.getIfAvailable();
+        if (port == null) {
+            return SubstituteWork.NONE;
+        }
+        boolean supplementary = kind == PayRun.Kind.SUPPLEMENTARY;
+        Map<UUID, List<DayRateWork.WorkedDay>> worked =
+                new LinkedHashMap<>(supplementary ? port.unpaidPresentDays(month) : port.presentDays(month));
+        // a Substitute already paid for the month in an approved run cannot have a second line for it: a late day is a Correction
+        worked.keySet().removeIf(id -> paid.contains(new PersonRef(Kind.TEACHER, id)));
+        Map<UUID, String> notReady = new LinkedHashMap<>();
+        if (!supplementary) {
+            for (DayRateWork.NotReady n : port.notReady(month)) {
+                if (!worked.containsKey(n.teacherId())) {
+                    notReady.put(n.teacherId(), n.reason());
+                }
+            }
+        }
+        // a Substitute with a waiting Correction but no day this month still needs a line to carry it
+        java.util.Set<UUID> withAdjustment = waiting.keySet().stream()
+                .filter(p -> p.kind() == Kind.TEACHER && !paid.contains(p))
+                .map(PersonRef::id)
+                .filter(id -> !worked.containsKey(id) && !notReady.containsKey(id))
+                .collect(Collectors.toSet());
+        for (UUID id : people.substituteTeachers(withAdjustment)) {
+            worked.put(id, List.of());
+        }
+        Map<UUID, UUID> designations = worked.isEmpty() ? Map.of() : people.teacherDesignations(worked.keySet());
+        return new SubstituteWork(worked, notReady, designations);
+    }
+
+    /** The day-rate line: each Present day priced at the rate of the designation on its date (FR-011 to FR-013). */
+    private PersonResult substitute(
+            Candidate c, YearMonth month, PayPolicyView policy, List<AdjustmentInput> waiting, SubstituteWork work) {
+        UUID id = c.ref().id();
+        String notReady = work.notReady().get(id);
+        if (notReady != null) {
+            return blockedSubstitute(c, policy, "Not ready for " + RunInput.monthName(month) + ": " + notReady);
+        }
+        UUID designation = work.designations().get(id);
+        if (work.worked().get(id).isEmpty()) {
+            // nothing worked this month: the line carries only the waiting Corrections
+            return SubstituteLineCalculator.calculate(
+                    new SubstituteLineCalculator.Inputs(c.ref(), c.name(), c.label(), List.of(), policy, waiting, null));
+        }
+        if (designation == null) {
+            return blockedSubstitute(c, policy, "The substitute has no designation, so no day rate applies.");
+        }
+        List<SubstituteLineCalculator.DayLine> lines = new ArrayList<>();
+        for (DayRateWork.WorkedDay day : work.worked().get(id)) {
+            DayRates.RateOn rate = dayRates.rateOn(designation, day.date());
+            if (rate instanceof DayRates.None none) {
+                return blockedSubstitute(c, policy, none.reason());
+            }
+            lines.add(new SubstituteLineCalculator.DayLine(
+                    day.dayId(), day.schoolId(), day.schoolName(), day.date(), day.dayValue(),
+                    ((DayRates.Found) rate).perDay()));
+        }
+        return SubstituteLineCalculator.calculate(
+                new SubstituteLineCalculator.Inputs(c.ref(), c.name(), c.label(), lines, policy, waiting, null));
+    }
+
+    private static PersonResult blockedSubstitute(Candidate c, PayPolicyView policy, String reason) {
+        return SubstituteLineCalculator.calculate(new SubstituteLineCalculator.Inputs(
+                c.ref(), c.name(), c.label(), List.of(), policy, List.of(), limit(reason)));
     }
 
     private PersonResult calculate(
@@ -436,6 +557,8 @@ public class RunComputation {
             }
             run.setProgress(all.size(), all.size(), now);
             run.setComputeState(PayRun.ComputeState.DONE, now);
+            // spec 017b: the days a Substitute worked now sit in a draft run
+            publisher.publishEvent(new PayrollRunChanged(runId, run.getMonth(), "COMPUTED"));
         });
     }
 

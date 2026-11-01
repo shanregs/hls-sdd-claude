@@ -120,7 +120,7 @@ class PayAdjustmentTest extends PayrollRunTestBase {
         assertThat(incentive.status()).isEqualTo(400);
         assertThat(incentive.body()).contains("spec 030");
         assertThat(reimbursement.body()).contains("spec 015");
-        assertThat(substitute.body()).contains("spec 017b");
+        assertThat(substitute.body()).contains("spec 017b").contains("Substitutes are paid by day rate");
         assertThat(jdbc.queryForObject("select count(*) from payroll_adjustment", Long.class)).isZero();
     }
 

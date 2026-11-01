@@ -258,16 +258,16 @@ public final class MessageFactory {
 
     public static Text substituteAssigned(String schoolName, LocalDate day) {
         return new Text(
-                "You are covering a class",
-                "You were assigned to cover a class at " + schoolName + " on " + date(day) + ".",
-                "/my-substitutions");
+                "Substitute assigned",
+                "A substitute was assigned to cover a class at " + schoolName + " on " + date(day) + ".",
+                "/operations/substitutions");
     }
 
     public static Text substituteEnded(String schoolName, LocalDate day, String why) {
         return new Text(
-                "Your cover was cancelled",
-                "Your cover at " + schoolName + " on " + date(day) + " is no longer needed" + because(why) + ".",
-                "/my-substitutions");
+                "Substitute cover ended",
+                "The substitute cover at " + schoolName + " on " + date(day) + " is no longer needed" + because(why) + ".",
+                "/operations/substitutions");
     }
 
     public static Text schoolInformed(String schoolName, LocalDate day, UUID requirementId) {

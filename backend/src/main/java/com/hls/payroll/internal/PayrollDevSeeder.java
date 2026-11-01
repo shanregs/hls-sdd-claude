@@ -32,6 +32,7 @@ class PayrollDevSeeder implements ApplicationRunner {
 
     private final DesignationDirectory designations;
     private final DesignationSalaryRepository salaries;
+    private final DesignationDayRateRepository dayRates;
     private final PersonSalaryRepository personSalaries;
     private final StaffEmploymentRepository staffDates;
     private final PersonDirectory people;
@@ -42,6 +43,7 @@ class PayrollDevSeeder implements ApplicationRunner {
     PayrollDevSeeder(
             DesignationDirectory designations,
             DesignationSalaryRepository salaries,
+            DesignationDayRateRepository dayRates,
             PersonSalaryRepository personSalaries,
             StaffEmploymentRepository staffDates,
             PersonDirectory people,
@@ -50,6 +52,7 @@ class PayrollDevSeeder implements ApplicationRunner {
             Clock clock) {
         this.designations = designations;
         this.salaries = salaries;
+        this.dayRates = dayRates;
         this.personSalaries = personSalaries;
         this.staffDates = staffDates;
         this.people = people;
@@ -90,6 +93,13 @@ class PayrollDevSeeder implements ApplicationRunner {
             added++;
         }
         added += seedPeople(admin, from);
+        // spec 017b: a Substitute is paid by the day, so the Cover Teacher designation gets a daily rate
+        var cover = designations.findByName(Kind.TEACHER, "Cover Teacher");
+        if (cover.isPresent() && dayRates.findByDesignationIdOrderByEffectiveOnDescRecordedAtDesc(cover.get().id()).isEmpty()) {
+            dayRates.save(new DesignationDayRate(
+                    cover.get().id(), new BigDecimal("800.00"), from, "Demo data", admin.getId(), clock.instant()));
+            added++;
+        }
         if (added > 0) {
             log.info("[DEV SEED] Salary structures demo data ready: {} added.", added);
         }

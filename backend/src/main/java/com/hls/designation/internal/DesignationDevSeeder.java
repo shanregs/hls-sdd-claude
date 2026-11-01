@@ -41,6 +41,7 @@ class DesignationDevSeeder implements ApplicationRunner {
             {"Primary Teacher", "TEACHER"},
             {"Secondary Teacher", "TEACHER"},
             {"Senior Teacher", "TEACHER"},
+            {"Cover Teacher", "TEACHER"},
             {"Zone Manager", "MANAGER"},
             {"Senior Zone Manager", "MANAGER"},
         };
