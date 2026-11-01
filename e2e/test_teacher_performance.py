@@ -29,7 +29,7 @@ def pick(d, scope, label, option, contains=False):
         By.XPATH, f".//*[contains(@id,'-label')][starts-with(normalize-space(),'{label}')]/..//div[@role='combobox']"
     ).click()
     test = f"contains(normalize-space(),'{option}')" if contains else f"normalize-space()='{option}'"
-    wait(d).until(EC.element_to_be_clickable((By.XPATH, f"//li[@role='option'][{test}]"))).click()
+    js_click(d, wait(d).until(EC.presence_of_element_located((By.XPATH, f"//li[@role='option'][{test}]"))))
     wait(d).until(EC.invisibility_of_element_located((By.XPATH, "//ul[@role='listbox']")))
 
 

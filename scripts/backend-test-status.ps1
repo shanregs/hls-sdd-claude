@@ -9,14 +9,16 @@
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts/backend-test-status.ps1
   powershell -ExecutionPolicy Bypass -File scripts/backend-test-status.ps1 -Watch      # refresh every 15 seconds
+  powershell -ExecutionPolicy Bypass -File scripts/backend-test-status.ps1 -Watch -IntervalSeconds 60 -Log C:\path\to\full-backend.log
 #>
 param(
     [switch]$Watch,
-    [int]$IntervalSeconds = 15
+    [int]$IntervalSeconds = 15,
+    [string]$Log   # log file of the run; default backend\target\full-run.log
 )
 
 $backend = Join-Path $PSScriptRoot "..\backend"
-$log = Join-Path $backend "target\full-run.log"
+$log = if ($Log) { $Log } else { Join-Path $backend "target\full-run.log" }
 $startedFile = Join-Path $backend "target\full-run.started"
 
 function Show-Status {
