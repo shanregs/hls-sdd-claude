@@ -48,7 +48,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T025 [US1] `DayRateWorkImpl` in `substitution/payout/service/`: `presentDays` (Present, live, month locked, Active Substitute), `notReady`, `unpaidPresentDays`, fixed query count
 - [x] T026 [US1] Amendment 013b: Substitute payroll person source in `payroll/run/internal/`: line earned = sum of day value x rate on each date (designation on the date from `designation.api`, rate from `DayRates`), rounded by the run, deduction 0, no salary row; no line for no Present day; "cannot pay" with reason for no designation or rate; "not ready" for unlocked months
 - [x] T027 [US1] Amendment 013b: frozen working lists each day (day id, School, date, day value, rate, amount); run recompute drops cancelled days; approved run immutable (SC-003)
-- [ ] T028 [US1] Amendment 013b: payslip and CSV rows "N days x ₹R" (one row per rate) in `PayslipRenderer`; keep manual `SUBSTITUTE_CREDIT` refused with the text "substitutes are paid by day rate, spec 017b"
+- [x] T028 [US1] Amendment 013b: payslip and CSV rows "N days x ₹R" (one row per rate) in `PayslipRenderer`; keep manual `SUBSTITUTE_CREDIT` refused with the text "substitutes are paid by day rate, spec 017b"
 - [x] T029 [P] [US1] Payroll unit tests: 2.5 days x ₹800, rate change mid-month, half day, no Present day no line, no rate cannot pay, rounding
 - [x] T030 [P] [US1] Integration test `SubstitutePayFlowIT`: allocate, mark, lock, compute, submit, approve; each day PAID; recompute gives one line; regression run of 013b, 015, 030 (a run with no substitute unchanged)
 - [x] T031 [US1] `DayRatePayImpl` in payroll and `RunListener` in `substitution/payout/listener/` for `PayrollRunApproved`/`PayrollRunReturned`: set run, month, `paid_amount`, status PAID or back to LOCKED_WAITING_RUN
@@ -97,8 +97,8 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [ ] T051 Update `docs/spec-roadmap.md` rows 013a, 013b, 017 and 005 with the amendments; mark 017b implemented
 - [x] T052 [P] Postman requests for payouts, day rates and the engagement field in the repo's Postman collection
 - [x] T053 [P] Dev seed: a Substitute designation with a rate, two Substitutes, days in each status
-- [ ] T054 Selenium end-to-end walkthrough of quickstart steps 1 to 9 as an e2e test; results in `specs/017b-payout-reconciliation/quickstart-results.md`
-- [ ] T055 Accessibility, dark mode and phone-width pass of the new screens (quickstart step 11)
+- [x] T054 Selenium end-to-end walkthrough of quickstart steps 1 to 9 as an e2e test; results in `specs/017b-payout-reconciliation/quickstart-results.md`
+- [x] T055 Accessibility, dark mode and phone-width pass of the new screens (quickstart step 11)
 - [ ] T056 Full backend and web test runs; fix regressions in 005, 008, 013a, 013b, 015, 017a, 030
 
 ## Requirement coverage
