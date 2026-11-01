@@ -105,7 +105,9 @@ public class AdjustmentService {
                     + " is created by " + RESERVED_BY.get(kind) + ", not by hand."
                     + (kind == PayAdjustment.AdjustmentKind.INCENTIVE
                             ? " It arrives only through the incentive intake when an incentive is approved."
-                            : ""));
+                            : kind == PayAdjustment.AdjustmentKind.SUBSTITUTE_CREDIT
+                                    ? " Substitutes are paid by day rate, spec 017b: mark their days and the pay run pays them."
+                                    : ""));
         }
         if (personId == null) {
             throw new InvalidInputException("The person is required.");
