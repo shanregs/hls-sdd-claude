@@ -31,6 +31,8 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    # V130 (spec 030) merged after V140/V150; databases that already applied those need it applied late.
+    out-of-order: true
 
 server:
   port: ${SERVER_PORT:8080}
