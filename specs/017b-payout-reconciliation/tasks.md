@@ -15,9 +15,9 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 ## Phase 2: Foundational (blocks all stories)
 
 - [x] T004 Migration `V160__create_substitute_days.sql`: `substitute_day`, `substitute_month_lock`, `substitute_day_event` exactly as data-model.md (unique `(requirement_id, substitute_teacher_id)`, `day_value numeric(3,2)`, `attendance varchar(12)` in NOT_MARKED/PRESENT/ABSENT, `reopen_reason varchar(500)`, check that a mark has `marked_by` and `marked_at`, append-only trigger on events)
-- [ ] T005 [P] Migration test `substitution/payout/PayoutMigrationTest.java` (unique key, check constraint, trigger refuses update and delete of events)
+- [x] T005 [P] Migration test `substitution/payout/PayoutMigrationTest.java` (unique key, check constraint, trigger refuses update and delete of events)
 - [x] T006 Migration `V161__substitute_engagement_and_day_rates.sql`: `teacher.engagement varchar(10) NOT NULL DEFAULT 'REGULAR'` check in ('REGULAR','SUBSTITUTE') and `designation_day_rate` (`amount numeric(10,2) CHECK > 0`, `seq` identity, append-only trigger)
-- [ ] T007 [P] Migration test for V161 (default REGULAR, rate check, trigger) in `payroll/DesignationDayRateMigrationTest.java`
+- [x] T007 [P] Migration test for V161 (default REGULAR, rate check, trigger) in `payroll/DesignationDayRateMigrationTest.java`
 - [ ] T008 Amendment 005: `engagement` on the Teacher entity, DTOs, create/update/read in `teacher/`; setting SUBSTITUTE clears `user_id`; audit the change; Admin and Director only
 - [ ] T009 [P] Amendment identity: refuse OTP/sign-in and account creation for a Substitute-type Teacher; no Teacher role grant; tests in `identity/`
 - [ ] T010 [P] Teacher form and list in `frontend/src/features/teachers/`: engagement field (Admin, Director), badge, no account fields for a Substitute; Vitest
@@ -26,7 +26,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [ ] T013 Amendment 008: exclude Substitute-type Teachers from the grid, rollups, self-marking, lock blockers and missed-mark lists via `teacher.api`; tests that lock is unaffected by substitutes
 - [x] T014 Amendment 017a: availability offers and accepts only Active Substitute-type Teachers (server re-check); tests in `substitution/internal/AvailabilityServiceTest`
 - [x] T015 Amendment 010/017a: send "substitute assigned/ended" to the School's Zone Manager (else Admin and Director) instead of the substitute; remove the Teacher "My Substitutions" page and menu item (or never show them for a Substitute); tests
-- [ ] T016 Permission module `SUBSTITUTE_PAYOUTS(VIEW, EDIT, APPROVE, EXPORT)`: Admin and Director all four; Manager VIEW and EDIT; `PermissionEligibility` excludes Teacher and System; navigation item PAYROLL & FINANCE "Substitute Payouts" (VIEW); access-model tests
+- [x] T016 Permission module `SUBSTITUTE_PAYOUTS(VIEW, EDIT, APPROVE, EXPORT)`: Admin and Director all four; Manager VIEW and EDIT; `PermissionEligibility` excludes Teacher and System; navigation item PAYROLL & FINANCE "Substitute Payouts" (VIEW); access-model tests
 
 ## Phase 3: User Story 2 - Zone Manager records day attendance (P1)
 
@@ -49,7 +49,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T026 [US1] Amendment 013b: Substitute payroll person source in `payroll/run/internal/`: line earned = sum of day value x rate on each date (designation on the date from `designation.api`, rate from `DayRates`), rounded by the run, deduction 0, no salary row; no line for no Present day; "cannot pay" with reason for no designation or rate; "not ready" for unlocked months
 - [x] T027 [US1] Amendment 013b: frozen working lists each day (day id, School, date, day value, rate, amount); run recompute drops cancelled days; approved run immutable (SC-003)
 - [ ] T028 [US1] Amendment 013b: payslip and CSV rows "N days x ₹R" (one row per rate) in `PayslipRenderer`; keep manual `SUBSTITUTE_CREDIT` refused with the text "substitutes are paid by day rate, spec 017b"
-- [ ] T029 [P] [US1] Payroll unit tests: 2.5 days x ₹800, rate change mid-month, half day, no Present day no line, no rate cannot pay, rounding
+- [x] T029 [P] [US1] Payroll unit tests: 2.5 days x ₹800, rate change mid-month, half day, no Present day no line, no rate cannot pay, rounding
 - [x] T030 [P] [US1] Integration test `SubstitutePayFlowIT`: allocate, mark, lock, compute, submit, approve; each day PAID; recompute gives one line; regression run of 013b, 015, 030 (a run with no substitute unchanged)
 - [x] T031 [US1] `DayRatePayImpl` in payroll and `RunListener` in `substitution/payout/listener/` for `PayrollRunApproved`/`PayrollRunReturned`: set run, month, `paid_amount`, status PAID or back to LOCKED_WAITING_RUN
 
