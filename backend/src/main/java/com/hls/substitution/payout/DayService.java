@@ -2,6 +2,7 @@ package com.hls.substitution.payout;
 
 import com.hls.attendance.api.WorkingCalendar;
 import com.hls.identity.user.Role;
+import com.hls.payroll.api.DayRatePay;
 import com.hls.payroll.api.DayRates;
 import com.hls.school.api.CallerContext;
 import com.hls.school.api.ChangeRecorder;
@@ -60,6 +61,7 @@ public class DayService {
     private final SchoolDirectory schools;
     private final TeacherDirectory teachers;
     private final DayRates dayRates;
+    private final DayRatePay pay;
     private final WorkingCalendar calendar;
     private final ChangeRecorder changes;
     private final Clock clock;
@@ -73,6 +75,7 @@ public class DayService {
             SchoolDirectory schools,
             TeacherDirectory teachers,
             DayRates dayRates,
+            DayRatePay pay,
             WorkingCalendar calendar,
             ChangeRecorder changes,
             Clock clock) {
@@ -84,6 +87,7 @@ public class DayService {
         this.schools = schools;
         this.teachers = teachers;
         this.dayRates = dayRates;
+        this.pay = pay;
         this.calendar = calendar;
         this.changes = changes;
         this.clock = clock;
@@ -291,24 +295,71 @@ public class DayService {
                 ? null
                 : pricing.rate().multiply(day.getDayValue()).setScale(2, java.math.RoundingMode.HALF_UP);
         day.setPricing(pricing.rate(), amount);
-        RunHolding holding = day.getRunId() == null
-                ? RunHolding.NONE
-                : day.getPaidAmount() != null ? RunHolding.APPROVED : RunHolding.DRAFT;
-        CorrectionState correction = day.getCorrectionRef() == null ? CorrectionState.NONE : CorrectionState.RAISED;
+
+        // what the pay runs hold for this day: the strongest of the runs (approved over awaiting over draft)
+        RunHolding holding = RunHolding.NONE;
+        DayRatePay.PaidDay held = null;
+        if (day.getId() != null) {
+            for (DayRatePay.PaidDay p : pay.daysInRuns(List.of(day.getId()))) {
+                RunHolding h = switch (p.state()) {
+                    case APPROVED -> RunHolding.APPROVED;
+                    case AWAITING_APPROVAL -> RunHolding.AWAITING_APPROVAL;
+                    case DRAFT -> RunHolding.DRAFT;
+                };
+                if (h.ordinal() >= holding.ordinal()) {
+                    holding = h;
+                    held = p;
+                }
+            }
+        }
+        UUID runBefore = day.getRunId();
+        if (held == null) {
+            day.setRun(null, null, null);
+        } else {
+            day.setRun(
+                    held.runId(),
+                    held.runMonth().atDay(1),
+                    holding == RunHolding.APPROVED ? held.amount().setScale(2, java.math.RoundingMode.HALF_UP) : null);
+        }
+        if (day.getId() != null && !java.util.Objects.equals(runBefore, day.getRunId())) {
+            events.save(new DayEvent(
+                    day.getId(), now, Field.RUN, String.valueOf(runBefore), String.valueOf(day.getRunId()), null, cause, holding.name()));
+        }
+        CorrectionState correction = day.getCorrectionRef() == null
+                ? CorrectionState.NONE
+                : day.getStatus() == DayStatus.CORRECTED ? CorrectionState.APPLIED : CorrectionState.RAISED;
         DayStatus next = DayStatusDeriver.derive(new Facts(
                 day.isLive(),
                 day.getAttendance(),
                 isLocked(day.getSubstituteTeacherId(), day.month()),
                 pricing.priceable(),
                 holding,
-                false,
+                pay.primaryRunApproved(day.month()),
                 correction));
         DayStatus before = day.getStatus();
         String reason = next == DayStatus.CANNOT_PAY ? pricing.reason() : null;
         day.setStatus(next, reason, now);
-        if (before != next) {
+        if (before != next && day.getId() != null) {
             events.save(new DayEvent(day.getId(), now, Field.STATUS, before.name(), next.name(), null, cause, reason));
         }
+    }
+
+    /** Works the status of every day of the month out again, for example after a run was submitted, approved or returned. */
+    @Transactional
+    public int refreshMonth(YearMonth month, Cause cause) {
+        // the run's own change is still unflushed when its event arrives; payroll is read with SQL, so write it out first
+        days.flush();
+        Instant now = clock.instant();
+        int changed = 0;
+        for (SubstituteDay day : days.between(month.atDay(1), month.atEndOfMonth())) {
+            DayStatus before = day.getStatus();
+            refresh(day, now, cause);
+            days.save(day);
+            if (before != day.getStatus()) {
+                changed++;
+            }
+        }
+        return changed;
     }
 
     private record Pricing(boolean priceable, BigDecimal rate, String reason) {}

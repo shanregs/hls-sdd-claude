@@ -112,9 +112,20 @@ class PersonDirectoryImpl implements PersonDirectory {
 
     @Override
     public List<TeacherSummary> allTeachers() {
+        Set<UUID> substitutes = teachers.substituteTeacherIds();
         return teachers.allTeachers().stream()
+                .filter(t -> !substitutes.contains(t.id()))
                 .map(t -> new TeacherSummary(t.id(), t.name(), t.status()))
                 .toList();
+    }
+
+    @Override
+    public Map<UUID, String> teacherNames(Collection<UUID> teacherIds) {
+        Map<UUID, String> names = new HashMap<>();
+        if (!teacherIds.isEmpty()) {
+            teachers.teacherInfo(teacherIds).forEach((id, info) -> names.put(id, info.name()));
+        }
+        return names;
     }
 
     @Override

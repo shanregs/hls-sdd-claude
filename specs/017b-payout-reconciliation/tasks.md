@@ -44,14 +44,14 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 **Goal**: one line per substitute and month, days times designation rate, no salary. **Independent test**: quickstart steps 5.
 
-- [ ] T024 [US1] Payroll ports `DayRateWork`, `DayRatePay` and `CorrectionRaising` in `payroll/api/` per contracts/payroll-substitute-work-port.md (with `DayRates` from T011)
-- [ ] T025 [US1] `DayRateWorkImpl` in `substitution/payout/service/`: `presentDays` (Present, live, month locked, Active Substitute), `notReady`, `unpaidPresentDays`, fixed query count
-- [ ] T026 [US1] Amendment 013b: Substitute payroll person source in `payroll/run/internal/`: line earned = sum of day value x rate on each date (designation on the date from `designation.api`, rate from `DayRates`), rounded by the run, deduction 0, no salary row; no line for no Present day; "cannot pay" with reason for no designation or rate; "not ready" for unlocked months
-- [ ] T027 [US1] Amendment 013b: frozen working lists each day (day id, School, date, day value, rate, amount); run recompute drops cancelled days; approved run immutable (SC-003)
+- [x] T024 [US1] Payroll ports `DayRateWork`, `DayRatePay` and `CorrectionRaising` in `payroll/api/` per contracts/payroll-substitute-work-port.md (with `DayRates` from T011)
+- [x] T025 [US1] `DayRateWorkImpl` in `substitution/payout/service/`: `presentDays` (Present, live, month locked, Active Substitute), `notReady`, `unpaidPresentDays`, fixed query count
+- [x] T026 [US1] Amendment 013b: Substitute payroll person source in `payroll/run/internal/`: line earned = sum of day value x rate on each date (designation on the date from `designation.api`, rate from `DayRates`), rounded by the run, deduction 0, no salary row; no line for no Present day; "cannot pay" with reason for no designation or rate; "not ready" for unlocked months
+- [x] T027 [US1] Amendment 013b: frozen working lists each day (day id, School, date, day value, rate, amount); run recompute drops cancelled days; approved run immutable (SC-003)
 - [ ] T028 [US1] Amendment 013b: payslip and CSV rows "N days x ₹R" (one row per rate) in `PayslipRenderer`; keep manual `SUBSTITUTE_CREDIT` refused with the text "substitutes are paid by day rate, spec 017b"
 - [ ] T029 [P] [US1] Payroll unit tests: 2.5 days x ₹800, rate change mid-month, half day, no Present day no line, no rate cannot pay, rounding
-- [ ] T030 [P] [US1] Integration test `SubstitutePayFlowIT`: allocate, mark, lock, compute, submit, approve; each day PAID; recompute gives one line; regression run of 013b, 015, 030 (a run with no substitute unchanged)
-- [ ] T031 [US1] `DayRatePayImpl` in payroll and `RunListener` in `substitution/payout/listener/` for `PayrollRunApproved`/`PayrollRunReturned`: set run, month, `paid_amount`, status PAID or back to LOCKED_WAITING_RUN
+- [x] T030 [P] [US1] Integration test `SubstitutePayFlowIT`: allocate, mark, lock, compute, submit, approve; each day PAID; recompute gives one line; regression run of 013b, 015, 030 (a run with no substitute unchanged)
+- [x] T031 [US1] `DayRatePayImpl` in payroll and `RunListener` in `substitution/payout/listener/` for `PayrollRunApproved`/`PayrollRunReturned`: set run, month, `paid_amount`, status PAID or back to LOCKED_WAITING_RUN
 
 ## Phase 5: User Story 3 - Views, totals, export (P1)
 
