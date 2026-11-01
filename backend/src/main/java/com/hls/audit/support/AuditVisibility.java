@@ -76,7 +76,10 @@ public class AuditVisibility {
             Map.entry("REPORT_EXPORT_SCHOOL", PermissionModule.REPORT_SCHOOL),
             Map.entry("SCHOOL_WORKING_DAYS", PermissionModule.SCHOOL_WORKING_DAYS),
             Map.entry("LEAVE_REQUEST", PermissionModule.LEAVE_MANAGEMENT),
-            Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION));
+            Map.entry("SUBSTITUTION_REQUIREMENT", PermissionModule.SUBSTITUTION),
+            Map.entry("SUBSTITUTE_DAY", PermissionModule.SUBSTITUTE_PAYOUTS),
+            Map.entry("SUBSTITUTE_MONTH", PermissionModule.SUBSTITUTE_PAYOUTS),
+            Map.entry("DESIGNATION_DAY_RATE", PermissionModule.SALARY_STRUCTURES));
 
     private final PermissionMatrixService permissionMatrixService;
 

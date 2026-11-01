@@ -87,9 +87,9 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 
 **Independent test**: quickstart step 9.
 
-- [ ] T047 [P] [US5] Tests: missing day record recreated once; ended allocation not markable; run data missed by event repaired; second run no change; concurrent runs no duplicate
-- [ ] T048 [US5] `PayoutReconcileJob` (daily, virtual thread, advisory lock) comparing live credits, day records and `DayRatePay`, via the same services; `POST /reconcile?month=`; each repair an event with cause JOB
-- [ ] T049 [US5] Audit entity types and Change History views for days, locks, rates and engagement; test the Director sees day, old and new value, actor or "reconcile job"
+- [x] T047 [P] [US5] Tests: missing day record recreated once; ended allocation not markable; run data missed by event repaired; second run no change; concurrent runs no duplicate
+- [x] T048 [US5] `PayoutReconcileJob` (daily, virtual thread, advisory lock) comparing live credits, day records and `DayRatePay`, via the same services; `POST /reconcile?month=`; each repair an event with cause JOB
+- [x] T049 [US5] Audit entity types and Change History views for days, locks, rates and engagement; test the Director sees day, old and new value, actor or "reconcile job"
 
 ## Phase 9: Polish and cross-cutting
 
