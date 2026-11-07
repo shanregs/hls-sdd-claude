@@ -2,8 +2,6 @@ package com.hls.reporting.internal;
 
 import com.hls.identity.permissions.PermissionAction;
 import com.hls.identity.permissions.PermissionGuard;
-import com.hls.identity.user.AppUser;
-import com.hls.identity.user.AppUserRepository;
 import com.hls.identity.user.Role;
 import com.hls.organization.api.ManagerQueries;
 import com.hls.organization.api.ScopeQueries;
@@ -39,7 +37,6 @@ public class SameDayReportService {
     private final PermissionGuard guard;
     private final SchoolDirectory schools;
     private final ManagerQueries managers;
-    private final AppUserRepository users;
     private final ScopeQueries scopeQueries;
 
     public SameDayReportService(
@@ -47,13 +44,11 @@ public class SameDayReportService {
             PermissionGuard guard,
             SchoolDirectory schools,
             ManagerQueries managers,
-            AppUserRepository users,
             ScopeQueries scopeQueries) {
         this.sources = sources;
         this.guard = guard;
         this.schools = schools;
         this.managers = managers;
-        this.users = users;
         this.scopeQueries = scopeQueries;
     }
 
@@ -121,17 +116,15 @@ public class SameDayReportService {
                     .ifPresent(m -> byManager.merge(m.userId(), n, BigDecimal::add)));
         }
         Map<UUID, String> userNames = new HashMap<>();
-        users.findAllById(byManager.keySet()).forEach(u -> userNames.put(u.getId(), nameOf(u)));
+        if (!byManager.isEmpty()) {
+            managers.allManagers().forEach(m -> userNames.put(m.userId(), m.displayName()));
+        }
         Map<UUID, String> schoolNames = new HashMap<>();
         if (!counts.bySchool().isEmpty()) {
             schools.schools(counts.bySchool().keySet()).forEach(s -> schoolNames.put(s.id(), s.name()));
         }
         return new Section(
                 rows(byManager, userNames), rows(counts.bySchool(), schoolNames));
-    }
-
-    private static String nameOf(AppUser user) {
-        return user.getDisplayName();
     }
 
     private static List<Row> rows(Map<UUID, BigDecimal> counts, Map<UUID, String> names) {
