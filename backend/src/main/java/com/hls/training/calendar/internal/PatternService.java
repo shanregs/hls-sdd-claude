@@ -264,6 +264,21 @@ public class PatternService {
             if (TrainingSession.PUBLISHED.equals(s.status)) {
                 notifyCancelled(s);
             }
+            if (history.existsBySessionId(s.id)) {
+                // The session history is insert-only, so a session that has any is kept: a skipped one stays skipped,
+                // a published one becomes cancelled.
+                if (!TrainingSession.SKIPPED.equals(s.status)) {
+                    String old = s.status;
+                    s.status = TrainingSession.CANCELLED;
+                    s.cancelReason = "Pattern stopped";
+                    s.updatedAt = clock.instant();
+                    history.save(new SessionHistory(s.id, "status", old, TrainingSession.CANCELLED, "Pattern stopped", caller.userId(), clock.instant()));
+                }
+                assignments.deleteAll(assignments.findBySessionId(s.id));
+                registrations.deleteAll(registrations.findBySessionId(s.id));
+                reminders.deleteBySessionId(s.id);
+                continue;
+            }
             assignments.deleteAll(assignments.findBySessionId(s.id));
             registrations.deleteAll(registrations.findBySessionId(s.id));
             reminders.deleteBySessionId(s.id);

@@ -245,6 +245,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
   - Convergence note (2026-11-07): Selenium e2e/test_training_calendar.py covers the browser walk (15 of 16 pass); what stays manual is the screen-reader and keyboard check of the attendance grid and re-running test_2_2 after T090 is fixed.
 
 ---
+- [x] T090 Fix: PatternService.stop must not delete a session that has training_session_history rows (insert-only, FK 500). Such a session is kept: skipped stays SKIPPED, published becomes CANCELLED ("Pattern stopped"); regression test in PatternEditTest.
 
 ## Dependencies & Execution Order
 
