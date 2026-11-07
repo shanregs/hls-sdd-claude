@@ -8,3 +8,5 @@ values:
     value: Password123!
   - key: loginPhone
     value: '9800000004'
+  - key: directorPhone
+    value: '9800000002'

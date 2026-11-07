@@ -11,4 +11,16 @@ body:
     {
       "reason": "Wrong month"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      // The chain ends with an APPROVED run, so a cancel must be refused (409); on a DRAFT run it must succeed.
+      const st = pm.collectionVariables.get('runStatus');
+      if (st === 'DRAFT') {
+        pm.test('200 on a draft run, which becomes CANCELLED with the reason', () => { pm.response.to.have.status(200); const r = pm.response.json(); pm.expect(r.status).to.eql('CANCELLED'); pm.expect(r.cancelReason).to.eql('Wrong month'); });
+        pm.collectionVariables.set('runStatus', 'CANCELLED');
+      } else {
+        pm.test('409 when the run is not a draft (' + st + ')', () => pm.response.to.have.status(409));
+      }
+    language: text/javascript
 order: 5000

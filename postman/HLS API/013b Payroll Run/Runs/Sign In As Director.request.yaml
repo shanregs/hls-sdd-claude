@@ -1,0 +1,24 @@
+$kind: http-request
+name: Sign In As Director
+description: "Approve needs a different person from the one who submitted, so sign in as the Director (directorPhone in the environment, the demo Director 9800000002) before Approve Run. Run Password Login again to go back to the Admin."
+url: "{{baseUrl}}/api/v1/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "identifier": "{{directorPhone}}",
+      "password": "{{loginPassword}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 with an access token', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().accessToken).to.be.a('string'); });
+      const b = pm.response.json();
+      if (b.accessToken) { pm.collectionVariables.set('accessToken', b.accessToken); }
+    language: text/javascript
+order: 7500

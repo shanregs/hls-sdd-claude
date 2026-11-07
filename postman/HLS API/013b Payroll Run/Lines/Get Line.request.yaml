@@ -3,4 +3,14 @@ name: Get Line
 description: "One line with its frozen working, adjustment lines, warning and current payment entry. Needs PAYROLL.VIEW."
 url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines/{{lineId}}"
 method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200));
+      const l = pm.response.json();
+      pm.test('is the line in lineId with the frozen working', () => { pm.expect(l.id).to.eql(pm.collectionVariables.get('lineId')); pm.expect(l.personId).to.eql(pm.collectionVariables.get('personId')); pm.expect(l.working).to.be.an('object'); pm.expect(l.working.days).to.be.an('array'); });
+      pm.test('adjustmentLines is an array and payment is present as a field', () => { pm.expect(l.adjustmentLines).to.be.an('array'); pm.expect(l).to.have.property('payment'); });
+      pm.test('the adjustment lines add up to the line adjustments', () => { const sum = l.adjustmentLines.reduce((a, x) => a + Number(x.amount), 0); pm.expect(sum).to.be.closeTo(Number(l.adjustments), 0.01); });
+      console.log('STATE lineAdjustments=' + l.adjustments + ' adjustmentLines=' + l.adjustmentLines.length);
+    language: text/javascript
 order: 2000

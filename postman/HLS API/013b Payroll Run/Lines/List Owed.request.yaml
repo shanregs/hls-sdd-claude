@@ -3,4 +3,11 @@ name: List Owed
 description: "People not yet paid for the run's month, with the reason they were left out and whether it is resolved now. Needs PAYROLL.VIEW."
 url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/owed"
 method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200));
+      const o = pm.response.json();
+      pm.test('an array of people with a kind and a person id', () => { pm.expect(o).to.be.an('array'); o.forEach(x => { pm.expect(x.personId).to.be.a('string'); pm.expect(x.personKind).to.be.oneOf(['TEACHER', 'MANAGER', 'STAFF']); }); });
+    language: text/javascript
 order: 3000

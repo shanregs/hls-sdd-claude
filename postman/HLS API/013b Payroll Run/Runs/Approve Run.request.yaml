@@ -9,4 +9,18 @@ body:
   type: json
   content: |-
     {}
+scripts:
+  - type: afterResponse
+    code: |-
+      // Signed in as the Director (Sign In As Director), a different person from the submitter.
+      pm.test('200', () => pm.response.to.have.status(200));
+      const r = pm.response.json();
+      pm.test('run is APPROVED with approver and time, different from the submitter', () => {
+        pm.expect(r.id).to.eql(pm.collectionVariables.get('runId'));
+        pm.expect(r.status).to.eql('APPROVED');
+        pm.expect(r.approvedAt).to.be.a('string');
+        pm.expect(r.approvedBy.id).to.not.eql(r.submittedBy.id);
+      });
+      pm.collectionVariables.set('runStatus', r.status);
+    language: text/javascript
 order: 8000

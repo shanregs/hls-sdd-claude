@@ -5,6 +5,16 @@ url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines?state=PAYABLE&page=0&size=
 method: GET
 scripts:
   - type: afterResponse
-    code: "if (pm.response.code === 200) { const p = pm.response.json(); const first = (p.content || [])[0]; if (first) { pm.collectionVariables.set('lineId', first.id); } }"
+    code: |-
+      pm.test('200 with a page of lines', () => pm.response.to.have.status(200));
+      const p = pm.response.json();
+      pm.test('page shape and totalElements', () => { pm.expect(p.content).to.be.an('array'); pm.expect(p.totalElements).to.be.a('number'); });
+      pm.test('every line is PAYABLE with an amount, a kind and a person', () => p.content.forEach(l => { pm.expect(l.state).to.eql('PAYABLE'); pm.expect(l.personKind).to.be.oneOf(['TEACHER', 'MANAGER', 'STAFF']); pm.expect(l.personId).to.be.a('string'); pm.expect(l.net).to.be.a('string'); }));
+      pm.test('line net = earned - deduction + adjustments', () => p.content.forEach(l => pm.expect(Number(l.net)).to.be.closeTo(Number(l.earned) - Number(l.deduction) + Number(l.adjustments), 0.51)));
+      // chain from a Teacher line with pay and no adjustment yet, else any payable line with pay, else the first
+      const pay = p.content.filter(l => Number(l.net) > 0);
+      const pick = pay.find(l => l.personKind === 'TEACHER' && Number(l.adjustments) === 0) || pay.find(l => Number(l.adjustments) === 0) || pay[0] || p.content[0];
+      if (pick) { pm.collectionVariables.set('lineId', pick.id); pm.collectionVariables.set('personId', pick.personId); pm.collectionVariables.set('personKind', pick.personKind); pm.collectionVariables.set('lineNet', pick.net); }
+      console.log('STATE picked=' + (pick ? pick.personKind + ' ' + pick.name + ' net ' + pick.net : 'none'));
     language: text/javascript
 order: 1000

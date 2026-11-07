@@ -3,4 +3,16 @@ name: List Runs
 description: "One page of runs, newest month first; filters month (yyyy-MM) and status. Needs PAYROLL.VIEW."
 url: "{{baseUrl}}/api/v1/payroll/runs?month={{month}}&page=0&size=20"
 method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 with a page of runs', () => pm.response.to.have.status(200));
+      const p = pm.response.json();
+      pm.test('page has content, page and size', () => { pm.expect(p.content).to.be.an('array'); pm.expect(p.page).to.be.a('number'); pm.expect(p.size).to.be.a('number'); });
+      pm.test('every run is for the requested month', () => { const m = pm.variables.get('month'); p.content.forEach(r => pm.expect(r.month).to.eql(m)); });
+      pm.test('each run has id, status and totals', () => p.content.forEach(r => { pm.expect(r.id).to.be.a('string'); pm.expect(r.status).to.be.a('string'); pm.expect(r.totals).to.have.property('net'); }));
+      const live = p.content.filter(r => r.status !== 'CANCELLED');
+      pm.collectionVariables.set('liveRunsForMonth', String(live.length));
+      console.log('STATE liveRunsForMonth=' + live.length);
+    language: text/javascript
 order: 1000

@@ -14,6 +14,17 @@ body:
     }
 scripts:
   - type: afterResponse
-    code: "if (pm.response.code === 202 || pm.response.code === 200) { const r = pm.response.json(); if (r.id) { pm.collectionVariables.set('runId', r.id); } }"
+    code: |-
+      pm.test('202 accepted (a spare month with no live primary run)', () => pm.response.to.have.status(202));
+      const r = pm.response.json();
+      pm.test('run is a queued DRAFT PRIMARY run for the month', () => {
+        pm.expect(r.id).to.be.a('string');
+        pm.expect(r.month).to.eql(pm.variables.get('month'));
+        pm.expect(r.status).to.eql('DRAFT');
+        pm.expect(r.kind).to.eql('PRIMARY');
+        pm.expect(r.computeState).to.be.oneOf(['QUEUED', 'RUNNING', 'DONE']);
+      });
+      if (r.id) { pm.collectionVariables.set('runId', r.id); pm.collectionVariables.set('runStatus', r.status); pm.collectionVariables.set('awaitCompute', 'yes'); }
+      console.log('STATE runId=' + r.id);
     language: text/javascript
 order: 2000
