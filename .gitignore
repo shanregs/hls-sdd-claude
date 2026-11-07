@@ -65,3 +65,6 @@ desktop.ini
 ### Local scratch ###
 docs/sample-ids.txt
 backend/data/
+
+__pycache__/
+*.pyc
