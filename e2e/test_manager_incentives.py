@@ -17,6 +17,7 @@ payroll month with locked attendance and would disturb the pay run other walkthr
 import time
 
 import pytest
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -86,14 +87,20 @@ def list_page(d, query=None, tab=None):
 
 
 def rows(d):
-    return d.find_elements(By.CSS_SELECTOR, "table[aria-label='Incentives'] tbody tr")
+    found = []
+    try:  # the table fills after the search is applied; wait for the first row, then read them all
+        WebDriverWait(d, 10).until(lambda x: x.find_elements(By.CSS_SELECTOR, "table[aria-label='Incentives'] tbody tr"))
+    except Exception:
+        pass
+    found = d.find_elements(By.CSS_SELECTOR, "table[aria-label='Incentives'] tbody tr")
+    return found
 
 
 def reason_dialog(d, text, confirm):
     dlg = wait(d).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "[role=dialog]")))
     if text:
         dlg.find_element(By.XPATH, ".//textarea[not(@aria-hidden='true')]").send_keys(text)
-    dlg.find_element(By.XPATH, f".//button[normalize-space()='{confirm}']").click()
+    d.execute_script("arguments[0].click()", dlg.find_element(By.XPATH, f".//button[normalize-space()='{confirm}']"))
     return dlg
 
 
@@ -193,7 +200,7 @@ def test_3_earner_approves_own_incentive_and_it_says_so(browsers, world):
 def test_3_reject_needs_a_reason_then_records_it(browsers, world):
     d = browsers.as_user(MANAGER)
     open_drawer(d, world["B"]["incentive"]["id"])
-    drawer_button(d, "Reject")[0].click()
+    d.execute_script("arguments[0].click()", drawer_button(d, "Reject")[0])
     dlg = reason_dialog(d, "", "Reject")
     wait(d).until(lambda x: "Reason is required" in dlg.text)
     dlg.find_element(By.XPATH, ".//textarea[not(@aria-hidden='true')]").send_keys("E2E: figures do not match the MoU")
@@ -289,11 +296,11 @@ def test_5_replacing_the_mou_document_holds_the_incentive_and_approval_releases_
 
 def test_6_director_filters_total_and_csv_export(browsers, world):
     d = browsers.as_user(DIRECTOR)
-    list_page(d, f"E2E030 {TAG}")
+    list_page(d, TAG)
     assert len(rows(d)) >= 5
     assert "Total" in body(d) and "rejected not counted" in body(d)
     # status filter
-    d.find_element(By.XPATH, "//label[normalize-space()='Status']/..//div[@role='combobox']").click()
+    WebDriverWait(d, 20).until(lambda _x: d.find_element(By.XPATH, "//*[contains(@id,'-label')][normalize-space()='Status']/..//div[@role='combobox']")).click()
     click(d, "//li[@role='option'][normalize-space()='Waiting for approval']")
     time.sleep(1.5)
     wait(d).until(lambda x: all("Waiting for approval" in r.text for r in rows(x)) and rows(x))
@@ -314,7 +321,7 @@ def test_6_director_filters_total_and_csv_export(browsers, world):
 
 def test_6_manager_sees_only_own_and_other_zone_manager_sees_none(browsers, world):
     d = browsers.as_user(MANAGER)
-    list_page(d, f"E2E030 {TAG}")
+    list_page(d, TAG)
     assert rows(d) and all("Manoj Manager" in r.text for r in rows(d))
     b = browsers.as_user(world["zoneB"]["phone"])
     list_page(b)

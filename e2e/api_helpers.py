@@ -9,10 +9,11 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
-B = os.environ.get("BASE_URL", "http://localhost:5173")
+B = os.environ.get("API_URL", "http://localhost:8080")  # direct to the backend: setup calls skip the nginx rate limit
 PASSWORD = "Password123!"
 DEMO_ZONE = "198d37e3-39ee-4201-8ae4-3ee3d391949b"   # looked up by name below; this is only a hint
 
@@ -92,7 +93,8 @@ def manager_of(user):
     """(managerId, userId) of the Manager who signs in as this user."""
     info = login_full(user)
     adm = login("asha.admin")
-    for m in must(call(adm, "GET", "/api/v1/managers?size=100"), "managers")["content"]:
+    name = info["user"]["displayName"]  # the demo data grows with every run, so search by name instead of reading page one
+    for m in must(call(adm, "GET", "/api/v1/managers?size=100&query=" + urllib.parse.quote(name)), "managers")["content"]:
         if m["userId"] == info["user"]["id"]:
             return m["id"], m["userId"]
     raise AssertionError("no Manager record for " + user)

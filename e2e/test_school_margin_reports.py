@@ -18,6 +18,7 @@ import re
 import time
 
 import pytest
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -57,9 +58,9 @@ def set_month(d, month):
     box = d.find_element(By.XPATH, "//input[@type='month']")
     if box.get_attribute("value") == month:
         return
-    year, mm = month.split("-")
-    box.click()
-    box.send_keys(mm + year)
+    # typing into a month input is unreliable in headless Chrome; set the value the way React expects and fire the events
+    d.execute_script("var e=arguments[0],v=arguments[1];Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,v);"
+                     "e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));", box, month)
     wait(d, 30).until(lambda x: x.find_element(By.XPATH, "//input[@type='month']").get_attribute("value") == month)
     time.sleep(1)
     wait(d, 30).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[aria-label^='Loading']"))
@@ -180,7 +181,7 @@ def test_school_report_billing_figures_equal_the_collections_report(browsers):
 def test_school_filter_narrows_the_report_to_one_school(browsers):
     d = browsers.as_user(ADMIN)
     open_report(d, "school", MONTH_WITH_DATA)
-    d.find_element(By.XPATH, "//label[normalize-space()='School']/..//div[@role='combobox']").click()
+    WebDriverWait(d, 20).until(lambda _x: d.find_element(By.XPATH, "//*[contains(@id,'-label')][normalize-space()='School']/..//div[@role='combobox']")).click()
     click(d, f"//li[@role='option'][normalize-space()='{DEMO}']")
     time.sleep(1.5)
     wait(d).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[aria-label^='Loading']"))

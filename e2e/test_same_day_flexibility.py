@@ -22,6 +22,7 @@ substitute credit; 7 offline / airplane mode (phone); 9 concurrency (backend tes
 import time
 
 import pytest
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -47,13 +48,13 @@ def dialog(d):
 
 
 def pick_in(d, scope, label, option):
-    scope.find_element(By.XPATH, f".//label[starts-with(normalize-space(),'{label}')]/..//div[@role='combobox']").click()
+    WebDriverWait(scope, 20).until(lambda _x: scope.find_element(By.XPATH, f".//*[contains(@id,'-label')][starts-with(normalize-space(),'{label}')]/..//div[@role='combobox']")).click()
     click(d, f"//li[@role='option'][contains(normalize-space(),'{option}')]")
     wait(d).until(EC.invisibility_of_element_located((By.XPATH, "//ul[@role='listbox']")))
 
 
 def select_native_or_mui(d, label, option):
-    d.find_element(By.XPATH, f"//label[normalize-space()='{label}']/..//div[@role='combobox']").click()
+    WebDriverWait(d, 20).until(lambda _x: d.find_element(By.XPATH, f"//*[contains(@id,'-label')][normalize-space()='{label}']/..//div[@role='combobox']")).click()
     click(d, f"//li[@role='option'][normalize-space()='{option}']")
     time.sleep(1.2)
 
@@ -87,7 +88,7 @@ def test_record_same_day_leave_dialog_for_a_teacher_in_scope(browsers):
         STATE["leave"] = "refused"
         alert = " ".join(a.text for a in d.find_elements(By.CSS_SELECTOR, "[role=dialog] [role=alert]"))
         print("\n[040] leave outcome: refused -", alert)
-        assert "working day" in alert.lower()
+        assert "working day" in alert.lower() or "overlap your approved request" in alert.lower()  # the second run on a day meets the leave the first run recorded
         dlg.find_element(By.XPATH, ".//button[normalize-space()='Cancel']").click()
     else:
         STATE["leave"] = "recorded"
@@ -159,11 +160,12 @@ def test_done_on_the_spot_for_a_task_admin_planned_for_today(browsers):
         "type": "SCHOOL_VISIT", "title": f"E2E planned {TAG}", "description": None, "assigneeUserId": manoj_user, "dueOn": TODAY,
         "escalateAfterDays": None}), "create task")
     d = browsers.as_user(MANAGER)
-    goto(d, f"/operations/tasks/{created['id']}")
+    goto(d, f"/operations/tasks/{created['task']['id']}")
     click(d, "//button[normalize-space()='Done on the spot']")
     dlg = dialog(d)
     mark = dlg.find_element(By.XPATH, ".//button[normalize-space()='Mark done']")
-    assert not mark.is_enabled()
+    mark.click()                                                              # a note of at least 10 characters is checked on Mark done
+    wait(d).until(lambda x: "Write at least 10 characters." in body(x))
     dlg.find_element(By.XPATH, ".//textarea[not(@aria-hidden='true')]").send_keys("Visited the School and met the Principal")
     mark.click()
     wait(d, 30).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "[role=dialog]")))
@@ -177,7 +179,7 @@ def test_manager_tasks_same_day_filter_for_admin(browsers):
     d = browsers.as_user(ADMIN)
     goto(d, "/operations/tasks")
     tab(d, "All")
-    click(d, "//label[normalize-space()='Same-day only']//input")
+    click(d, "//label[normalize-space()='Same-day only']")
     time.sleep(1.5)
     wait(d).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[aria-label^='Loading']"))
     rows = d.find_elements(By.XPATH, "//table[@aria-label='Tasks']//tbody/tr")
@@ -206,7 +208,7 @@ def test_activity_calendar_flags_same_day_items_and_filters_them(browsers):
     d = browsers.as_user(ADMIN)
     goto(d, "/operations/activity-calendar")
     click(d, "//button[normalize-space()='List view']")
-    click(d, "//label[normalize-space()='Same-day only']//input")
+    click(d, "//label[normalize-space()='Same-day only']")
     time.sleep(2)
     wait(d).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[aria-label^='Loading']"))
     rows = d.find_elements(By.XPATH, "//table//tbody/tr")
@@ -220,7 +222,7 @@ def test_activity_calendar_flags_same_day_items_and_filters_them(browsers):
 def test_substitution_same_day_filter(browsers):
     d = browsers.as_user(ADMIN)
     goto(d, "/operations/substitutions")
-    select_native_or_mui(d, "Recorded", "Same-day only") if d.find_elements(By.XPATH, "//label[normalize-space()='Recorded']") else None
+    select_native_or_mui(d, "Recorded", "Same-day only")
     wait(d).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[aria-label^='Loading']"))
     rows = d.find_elements(By.XPATH, "//table//tbody/tr")
     assert all("Same-day" in r.text for r in rows)
@@ -245,12 +247,12 @@ def test_same_day_report_counts_and_zone_filter(browsers):
     visits = report_rows(d, "Visits logged for the day", "Manager")
     assert any("Manoj Manager" in r for r in visits)
     # choosing Demo Zone keeps Manoj
-    d.find_element(By.XPATH, "//label[normalize-space()='Zone']/..//div[@role='combobox']").click()
+    WebDriverWait(d, 20).until(lambda _x: d.find_element(By.XPATH, "//*[contains(@id,'-label')][normalize-space()='Zone']/..//div[@role='combobox']")).click()
     click(d, "//li[@role='option'][normalize-space()='Demo Zone']")
     time.sleep(2)
     assert any("Manoj Manager" in r for r in report_rows(d, "Tasks logged for the day", "Manager"))
     # choosing the Zone of another area narrows every section to that Zone: Manoj goes
-    d.find_element(By.XPATH, "//label[normalize-space()='Zone']/..//div[@role='combobox']").click()
+    WebDriverWait(d, 20).until(lambda _x: d.find_element(By.XPATH, "//*[contains(@id,'-label')][normalize-space()='Zone']/..//div[@role='combobox']")).click()
     other = d.find_element(By.XPATH, "//li[@role='option'][starts-with(normalize-space(),'E2E')]")
     other.click()
     time.sleep(2)

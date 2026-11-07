@@ -20,6 +20,7 @@ import time
 import zipfile
 
 import pytest
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -114,7 +115,7 @@ def test_1_admin_creates_a_user_with_only_the_content_contributor_role(browsers)
     dlg.find_element(By.XPATH, ".//label[contains(.,'Phone number')]/..//input").send_keys(PHONE)
     dlg.find_element(By.XPATH, ".//label[contains(.,'Initial password')]/..//input").send_keys(api.PASSWORD)
     dlg.find_element(By.XPATH, ".//label[normalize-space()='CONTENT_CONTRIBUTOR']//input").click()
-    dlg.find_element(By.XPATH, ".//button[normalize-space()='Create user']").click()
+    dlg.find_element(By.XPATH, ".//button[normalize-space()='Create']").click()
     wait(d, 30).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "[role=dialog]")))
     status, data = api.call(api.login(ADMIN), "GET", f"/api/v1/identity/users?query={PHONE}")
     assert status == 200 and PHONE in str(data) and "CONTENT_CONTRIBUTOR" in str(data) and "MANAGER" not in str(data) and "TEACHER" not in str(data)
@@ -128,7 +129,7 @@ def test_2_contributor_menu_dashboard_and_refused_screen(browsers):
     assert any("Content" in x for x in labels), labels
     for forbidden in ("Manager Tasks", "My Tasks", "Payroll Report", "Incentives", "School Contracts", "User Management"):
         assert forbidden not in labels, (forbidden, labels)
-    goto(d, "/dashboard")
+    load(d, "/dashboard")                                                     # a Contributor's dashboard has no h1, so goto() would wait for one
     wait(d, 30).until(lambda x: "My content" in body(x))
     for card in ("Returned to me", "Approved"):
         assert card in body(d)
@@ -227,7 +228,7 @@ def test_7_content_for_a_manager_creates_a_task_that_follows_the_content(browser
     dlg.find_element(By.XPATH, ".//label[starts-with(normalize-space(),'Title')]/..//input").send_keys(f"Manager guide {TAG}")
     dlg.find_element(By.XPATH, ".//label[starts-with(normalize-space(),'Category')]/..//input").send_keys("Guide")
     dlg.find_element(By.XPATH, ".//label[starts-with(normalize-space(),'Subject')]/..//input").send_keys("Visits")
-    dlg.find_element(By.XPATH, ".//label[starts-with(normalize-space(),'Author')]/..//div[@role='combobox']").click()
+    WebDriverWait(dlg, 20).until(lambda _x: dlg.find_element(By.XPATH, ".//*[contains(@id,'-label')][starts-with(normalize-space(),'Author')]/..//div[@role='combobox']")).click()
     click(d, "//li[@role='option'][contains(normalize-space(),'Manoj Manager')]")
     due = time.strftime("%Y-%m-%d", time.localtime(time.time() + 3 * 86400))
     day = dlg.find_element(By.XPATH, ".//label[starts-with(normalize-space(),'Due date')]/..//input")
