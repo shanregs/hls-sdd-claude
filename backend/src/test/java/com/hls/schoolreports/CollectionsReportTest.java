@@ -116,6 +116,102 @@ class CollectionsReportTest extends ReceivablesTestBase {
 
         assertThat(rowOf(rows(resp, "month"), mine.schoolId())).isNotNull();
         assertThat(resp.body()).doesNotContain(theirs.schoolId().toString());
-        assertThat(get(REPORT + "?month=" + thisMonth() + "&zoneId=" + theirs.zoneId(), manager).status()).isIn(403, 404);
+        assertThat(get(REPORT + "?month=" + thisMonth() + "&zoneId=" + theirs.zoneId(), manager).status()).isEqualTo(403);
+    }
+
+    @Test
+    void eachAmountLandsInItsAgeingBucket() {
+        String admin = signInAs(Role.ADMIN).token();
+        Fixture f = billedSchoolSince(admin, 150, "10000");
+        mapTeacher(admin, f, 0, thisMonth().minusMonths(3).atDay(1));
+        UUID tenDays = raiseOne(admin, thisMonth(), f.schoolId());
+        UUID seventyFive = raiseOne(admin, thisMonth().minusMonths(1), f.schoolId());
+        UUID oneTwenty = raiseOne(admin, thisMonth().minusMonths(2), f.schoolId());
+        makeOverdue(tenDays, 10);
+        makeOverdue(seventyFive, 75);
+        makeOverdue(oneTwenty, 120);
+
+        Map<String, Object> row = rowOf(rows(collections(admin, "&schoolId=" + f.schoolId()), "ageing"), f.schoolId());
+
+        assertThat(value(row, 2)).as("not yet due").isEqualByComparingTo("0");
+        assertThat(value(row, 3)).as("0 to 30").isEqualByComparingTo(billedOf(admin, f, thisMonth()));
+        assertThat(value(row, 4)).as("31 to 60").isEqualByComparingTo("0");
+        assertThat(value(row, 5)).as("61 to 90").isEqualByComparingTo(billedOf(admin, f, thisMonth().minusMonths(1)));
+        assertThat(value(row, 6)).as("over 90").isEqualByComparingTo(billedOf(admin, f, thisMonth().minusMonths(2)));
+        assertThat(value(row, 1)).isEqualByComparingTo(value(row, 3).add(value(row, 5)).add(value(row, 6)));
+    }
+
+    /** What the School Billing overview says was billed for the School in the month. */
+    @SuppressWarnings("unchecked")
+    private BigDecimal billedOf(String token, Fixture f, java.time.YearMonth month) {
+        Resp overview = get(BILLING + "/overview?month=" + month + "&schoolId=" + f.schoolId(), token);
+        assertThat(overview.status()).as(overview.body()).isEqualTo(200);
+        List<Map<String, Object>> schools = (List<Map<String, Object>>) overview.map().get("schools");
+        assertThat(schools).hasSize(1);
+        return dec(schools.get(0).get("owed"));
+    }
+
+    @Test
+    void zoneAndOrganizationTotalsAreTheSumOfTheSchoolRowsInEveryColumn() {
+        String admin = signInAs(Role.ADMIN).token();
+        Fixture first = billedSchoolSince(admin, 80, "10000", "12000");
+        Fixture second = billedSchoolSince(admin, 80, "7000");
+        for (Fixture f : List.of(first, second)) {
+            mapTeacher(admin, f, 0, thisMonth().minusMonths(1).atDay(1));
+        }
+        mapTeacher(admin, first, 1, thisMonth().minusMonths(1).atDay(1));
+        UUID previous = raiseOne(admin, thisMonth().minusMonths(1), first.schoolId());
+        makeOverdue(previous, 45);
+        raise(admin, thisMonth(), first.schoolId(), second.schoolId());
+        assertThat(collect(admin, collectionBody(first.schoolId(), "4000")).status()).isEqualTo(201);
+
+        Resp resp = collections(admin, "");
+
+        assertTotals(resp, "month", 3);
+        assertTotals(resp, "ageing", 6);
+    }
+
+    /** Every Zone total row, and the section totals, equal the sum of the School rows they cover, column by column. */
+    @SuppressWarnings("unchecked")
+    private static void assertTotals(Resp resp, String key, int columns) {
+        List<Map<String, Object>> all = rows(resp, key);
+        List<Map<String, Object>> schools = all.stream().filter(r -> !String.valueOf(r.get("id")).startsWith("zone:")).toList();
+        assertThat(schools).as(key).isNotEmpty();
+        for (Map<String, Object> zoneRow : all.stream().filter(r -> String.valueOf(r.get("id")).startsWith("zone:")).toList()) {
+            Object zone = ((List<Map<String, Object>>) zoneRow.get("cells")).get(0).get("value");
+            List<Map<String, Object>> members = schools.stream()
+                    .filter(r -> zone.equals(((List<Map<String, Object>>) r.get("cells")).get(0).get("value")))
+                    .toList();
+            assertThat(members).as("schools of " + zone).isNotEmpty();
+            for (int i = 1; i <= columns; i++) {
+                assertThat(value(zoneRow, i)).as(key + " zone " + zone + " column " + i).isEqualByComparingTo(sumOf(members, i));
+            }
+        }
+        Map<String, Object> total = (Map<String, Object>) section(resp, key).get("totals");
+        for (int i = 1; i <= columns; i++) {
+            assertThat(value(total, i)).as(key + " organization column " + i).isEqualByComparingTo(sumOf(schools, i));
+        }
+    }
+
+    private static BigDecimal sumOf(List<Map<String, Object>> rows, int column) {
+        return rows.stream().map(r -> value(r, column)).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Test
+    void aCreditNoteGivesTheSameBilledAndOutstandingAsTheSchoolBillingScreen() {
+        String admin = signInAs(Role.ADMIN).token();
+        Fixture f = billedSchool(admin, "60000");
+        mapTeacher(admin, f, 0, thisMonth().atDay(1));
+        UUID due = raiseOne(admin, thisMonth(), f.schoolId());
+        assertThat(post(BILLING + "/dues/" + due + "/adjustments", admin, Map.of("amount", "10000", "reason", "Agreed waiver of the month")).status())
+                .isEqualTo(201);
+        assertThat(collect(admin, collectionBody(f.schoolId(), "20000")).status()).isEqualTo(201);
+
+        Map<String, Object> row = rowOf(rows(collections(admin, "&schoolId=" + f.schoolId()), "month"), f.schoolId());
+
+        assertThat(value(row, 1)).as("billed").isEqualByComparingTo("50000").isEqualByComparingTo(billedOf(admin, f, thisMonth()));
+        assertThat(value(row, 3)).as("outstanding").isEqualByComparingTo("30000");
+        Resp ledger = get(BILLING + "/schools/" + f.schoolId() + "/ledger", admin);
+        assertThat(value(row, 3)).isEqualByComparingTo(dec(ledger.map().get("outstanding")));
     }
 }
