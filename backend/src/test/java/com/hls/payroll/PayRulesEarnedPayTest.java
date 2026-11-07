@@ -137,7 +137,8 @@ class PayRulesEarnedPayTest extends PayrollRunTestBase {
 
         assertThat(earned.rounded()).isEqualByComparingTo("30000");
         BigDecimal expectedDeduction = perDay("30000", working.size()).multiply(new BigDecimal("1.5"));
-        assertThat(deduction.unrounded()).isEqualByComparingTo(expectedDeduction);
+        // each day is rounded to ten decimals, so the sum can differ from the exact product in the last places
+        assertThat(deduction.unrounded().subtract(expectedDeduction).abs()).isLessThan(new BigDecimal("0.000001"));
         // the net a run would pay is earned less the deduction
         assertThat(earned.rounded().subtract(deduction.rounded()))
                 .isEqualByComparingTo(new BigDecimal("30000").subtract(rupees(expectedDeduction)));
