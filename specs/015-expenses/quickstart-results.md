@@ -47,3 +47,12 @@ Owner confirmation status for every point: **not yet given**.
 - Postman requests were written but not run.
 - Human timing of SC-001 (2 minutes to raise a claim) and SC-002 (30 seconds to decide).
 - Owner confirmation of the financial review.
+
+## Browser walkthrough (Selenium, 2026-11-07)
+
+`e2e/test_expenses.py` ran against the live local stack (UI on 5173, API on 8080): 11 of 11 passed. It covers the web parts of
+scenarios 1 to 10 (raise and submit with a bill, every validation, retry and duplicate confirmation, links to a visit,
+Director approve and reject, correction and resubmission, Admin records paid, reverse, company-paid, budget versus actual
+with its own Zone, pending ageing, cost measures page, CSV export, access by role, phone width). The test header lists what
+a browser cannot cover (pay-run steps, a batch-linked Training Stay, notifications, the database trigger, screen readers,
+human timing). Only the Admin records a claim as paid, as the spec says; the walkthrough signs in as Admin for that step.

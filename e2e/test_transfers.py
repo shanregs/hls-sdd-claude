@@ -232,6 +232,8 @@ def test_2_replacement_candidates_and_approval(world, manager_a, director):
     # School A2's movements: T2 leaves and T3 arrives on the date; T2 (no destination) is available from the date
     close(x, dialog(x))
     x.get(f"{BASE}/master-data/schools")
+    see(x, "Search schools")
+    fill(x, x, "Search schools", world["a2"]["name"])
     wait(x).until(lambda y: world["a2"]["name"] in body(y))
     row = wait(x).until(lambda y: y.find_element(By.XPATH, f"//*[@role='row'][contains(.,'{world['a2']['name']}')]"))
     row.find_element(By.XPATH, ".//button[normalize-space()='Movements']").click()

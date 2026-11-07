@@ -36,9 +36,12 @@ def fill(d, scope, label, value):
 
 def pick(d, scope, label, option):
     """Choose `option` in the MUI select labelled `label` inside `scope` (a `div[role=combobox]`)."""
-    scope.find_element(By.XPATH, f".//*[contains(@id,'-label')][starts-with(normalize-space(.),'{label}')]/..//div[@role='combobox']").click()
-    wait(d).until(EC.element_to_be_clickable(
-        (By.XPATH, f"//li[@role='option'][starts-with(normalize-space(.),'{option}')]"))).click()
+    box = scope.find_element(By.XPATH, f".//*[contains(@id,'-label')][starts-with(normalize-space(.),'{label}')]/..//div[@role='combobox']")
+    d.execute_script("arguments[0].scrollIntoView({block:'center'})", box)
+    box.click()
+    item = wait(d).until(EC.element_to_be_clickable(
+        (By.XPATH, f"//li[@role='option'][starts-with(normalize-space(.),'{option}')]")))
+    d.execute_script("arguments[0].scrollIntoView({block:'nearest'}); arguments[0].click();", item)   # a long list: the item may sit under the page edge
     wait(d).until(EC.invisibility_of_element_located((By.XPATH, "//ul[@role='listbox']")))
 
 

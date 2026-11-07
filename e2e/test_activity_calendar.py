@@ -27,7 +27,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 from hls_api import call, iso_in, make_manager, make_school, make_zone, ok, stamp, token_for
-from test_school_working_days import ADMIN, BASE
+from test_school_working_days import ADMIN, BASE, sign_in
 from ui_helpers import body, button, has_button, no_overflow, settle, wait
 
 DIRECTOR, TEACHER, SYSTEM = "9800000002", "9800000004", "sunil.system"
@@ -65,7 +65,7 @@ def world():
     ok(call("POST", f"/marketing/activities/{v5['id']}/complete", {"outcome": "Visited", "notes": "e2e", "followUpOn": None, "version": v5["version"]}, ta))
     college = ok(call("POST", "/recruitment/colleges", {"name": f"E2E College {s}", "city": "Chennai", "placementOfficer": None, "principal": None}, admin))
     d8 = ok(call("POST", "/recruitment/drives", {"collegeId": college["id"], "dates": [day(8)], "venue": "Hall", "season": "E2E",
-                                                 "interviewerUserIds": [a["userId"]]}, admin))
+                                                 "interviewerUserIds": [a["userId"]]}, ta))   # A schedules it, so A owns it and its Zone is A's
     ok(call("POST", f"/recruitment/drives/{d8['id']}/status", {"status": "HELD", "reason": None, "version": d8["version"]}, admin))
     task10 = ok(call("POST", "/tasks", {"type": "SCHOOL_VISIT", "title": f"E2E cal task {s}", "assigneeUserId": a["userId"], "dueOn": day(10),
                                         "place": sc1["name"]}, admin))
@@ -75,7 +75,7 @@ def world():
     vc = ok(call("POST", "/marketing/activities", {"schoolId": sc1["id"], "type": "VISIT", "date": day(12), "attendeeUserIds": [], "notes": "e2e"}, ta))
     ok(call("POST", f"/marketing/activities/{vc['id']}/cancel", {"reason": "e2e", "version": vc["version"]}, ta))
     d3 = ok(call("POST", "/recruitment/drives", {"collegeId": college["id"], "dates": [day(22), day(23), day(24)], "venue": "Hall 2",
-                                                 "season": "E2E", "interviewerUserIds": [a["userId"]]}, admin))
+                                                 "season": "E2E", "interviewerUserIds": [a["userId"]]}, ta))
     shared = ok(call("POST", "/marketing/activities", {"schoolId": sc1["id"], "type": "VISIT", "date": day(16),
                                                        "attendeeUserIds": [b["userId"]], "notes": "e2e"}, ta))
     # C in Zone 2 has one planned visit
@@ -94,9 +94,12 @@ def select(d, label, text):
 
 
 def open_calendar(d, month=MONTH):
-    d.get(f"{BASE}/operations/activity-calendar")
+    # one load only: two loads in a row can race the refresh-token rotation and drop the session
     d.execute_script("window.sessionStorage.removeItem('activityCalendar.view.v1')")
     d.get(f"{BASE}/operations/activity-calendar")
+    if "/sign-in" in d.current_url:                  # the session was dropped between tests: sign in again
+        sign_in(d, d.hls_user)
+        d.get(f"{BASE}/operations/activity-calendar")
     wait(d).until(lambda x: "Previous month" in body(x).replace("PREVIOUS MONTH", "Previous month") or has_button(x, "Previous month"))
     # step to the month under test with the Next month button
     import datetime
@@ -108,6 +111,11 @@ def open_calendar(d, month=MONTH):
     wait(d, 30).until(lambda x: "Summary" in [e.get_attribute("aria-label") for e in x.find_elements(By.CSS_SELECTOR, "[role=region]")] or
                       "Nothing planned this month" in body(x))
     settle(d, 0.8)
+
+
+def text_without_filters(d):
+    """The page text without the filter bar (its Manager picker lists every Manager's name, clean or not)."""
+    return d.execute_script("const c=document.body.cloneNode(true);c.querySelectorAll('[aria-label=Filters]').forEach(e=>e.remove());return c.textContent")
 
 
 def summary(d):
@@ -165,6 +173,7 @@ def test_2_2_shared_visit_shows_under_both_managers_and_counts_once(world, brows
     # open an item: read-only detail with a link, no complete, move or cancel control
     d.execute_script("arguments[0].click()", d.find_elements(By.CSS_SELECTOR, "[role=gridcell] .MuiChip-root[aria-label]")[0])
     dlg = wait(d).until(lambda x: x.find_element(By.CSS_SELECTOR, "[role=dialog]"))
+    wait(d).until(lambda x: "Place:" in dlg.text)                       # the dialog fades in
     assert "Manager:" in dlg.text and "Status:" in dlg.text and "Place:" in dlg.text
     for control in ("Complete", "Move", "Reschedule", "Cancel"):
         assert not has_button(dlg, control), control
@@ -178,8 +187,8 @@ def test_2_3_zone_filter_and_empty_month(world, browsers):
     select(d, "Zone", world["z2"]["name"])
     s = summary(d)
     assert s["planned"] == 1 and s["cancelled"] == 0, s
-    assert world["c"]["name"] in body(d)
-    assert world["a"]["name"] not in body(d)
+    assert world["c"]["name"] in text_without_filters(d)
+    assert world["a"]["name"] not in text_without_filters(d)       # the Manager picker lists every Manager, so it is left out
     # an empty month (far in the future for this Zone): zero counts and the message
     select(d, "Zone", world["z1"]["name"])
     for _ in range(14):
@@ -236,7 +245,7 @@ def test_4_needs_attention_groups_missed_items_by_manager(world, browsers):
         settle(d, 0.3)
     d.find_element(By.XPATH, "//button[@role='tab'][contains(.,'Needs attention')]").click()
     wait(d, 30).until(lambda x: "days late" in body(x) or "Nothing needs attention" in body(x))
-    text = body(d)
+    text = text_without_filters(d)
     assert "days late" in text, text[:400]
     assert "Manoj Manager" in text and re.search(r"Missed \d+ · Rescheduled \d+", text)
     # entries are oldest first inside a group
@@ -253,7 +262,7 @@ def test_4_needs_attention_groups_missed_items_by_manager(world, browsers):
     open_calendar(d)
     d.find_element(By.XPATH, "//button[@role='tab'][contains(.,'Needs attention')]").click()
     wait(d, 30).until(lambda x: "moved" in body(x))
-    text = body(d)
+    text = text_without_filters(d)
     assert world["a"]["name"] in text and f"first planned 14/{MON:02d}/{YEAR}" in text and "moved 6 days" in text
     assert world["c"]["name"] not in text
 
@@ -300,11 +309,12 @@ def test_5b_a_busy_day_collapses_into_n_more(world, browsers):
     d = browsers(DIRECTOR)
     open_calendar(d)
     pick_manager(d, world["a"]["name"])
-    wait(d).until(lambda x: "6 more" in body(x) or "more" in body(x))
-    assert re.search(r"\b6 more\b", body(d)), "9 items on a day show 3 and '6 more'"
+    wait(d).until(lambda x: "more" in body(x).lower())                  # the button is drawn in capitals
+    assert re.search(r"\b6 more\b", body(d).lower()),"9 items on a day show 3 and '6 more'"
     d.find_element(By.XPATH, "//button[contains(normalize-space(.),'6 more')]").click()
     dlg = wait(d).until(lambda x: x.find_element(By.CSS_SELECTOR, "[role=dialog]"))
-    assert dlg.text.count("Task") >= 9
+    settle(d, 1)                                                          # the dialog fades in
+    assert dlg.text.lower().count("task ·") >= 9, dlg.text   # drawn in capitals
     button(d, "Close", dlg).click()
 
 
