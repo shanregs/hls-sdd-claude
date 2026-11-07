@@ -215,6 +215,7 @@ server shapes are in `data-model.md` (they follow the 032 code, not only the con
 - [X] T049 [P] Update `docs/spec-roadmap.md` row 033 to "Implemented" with the number of app tests, the new package and "device pass pending", and note on row 032 that the Manager screens now exist on mobile
 - [X] T050 Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run check:manifest` from `mobile/` and fix everything they report
 - [ ] T051 (NOT DONE: needs an emulator or phone; see quickstart-results.md) Run the walkthrough in `quickstart.md` end to end on the emulator (steps 1 to 13) and record the results in `specs/033-mobile-manager-field/quickstart-results.md`, including the time to check in as Office (SC-001: under 30 seconds), as Field with an activity (under 60 seconds) and to complete a missed check-out (SC-008: under 45 seconds); steps that need a person at the device (camera, TalkBack, timings) are marked **not done** when not done, never as passed
+  - Note: Converge 2026-11-07: stays open, no new code work found. A person with an emulator or phone must run quickstart.md steps 1-13 (camera, TalkBack, SC-001 under 30 s, Field check-in under 60 s, SC-008 missed check-out under 45 s) and record each step passed or not done in quickstart-results.md; automated results (typecheck, lint, manifest, Jest) are already there.
 
 ---
 

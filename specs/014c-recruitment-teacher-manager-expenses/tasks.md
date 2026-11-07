@@ -70,6 +70,7 @@
 - [x] T033 Check no migration was added; if one is needed take the next free number above V140 on current main and open branches
   - Result: no migration was added on this branch (checked against main).  
 - [ ] T034 Update `docs/spec-roadmap.md` 014 row; run the full backend and frontend suites; manual walkthrough from `quickstart.md`
+  - Convergence note (2026-11-07): Roadmap row 014 is updated and the code and tests for T001-T033 are in place; kept open because no record of a full backend plus frontend suite run exists for this spec and the browser walkthrough of quickstart.md has not been recorded (no quickstart-results.md, no e2e test). A person must run both suites and walk quickstart.md as Director, Zone Manager and Manager in a browser.
 
 ## Dependencies
 

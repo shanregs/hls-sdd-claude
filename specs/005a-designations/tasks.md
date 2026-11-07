@@ -153,7 +153,9 @@ Backend `backend/src/main/java/com/hls/{designation,organization,teacher,identit
 - [X] T040 [P] Add a Designations row to the Default role access matrix and `designation` to the module list in `.specify/memory/constitution.md` (patch 2.5.1 with a Sync Impact note); update `docs/spec-roadmap.md` and `docs/running-locally.md` (V24, demo data)
 - [X] T041 Run `ApplicationModulesTest`, `DesignationModuleRulesTest`, `MasterDataModuleRulesTest` and fix any fixtures the new menu item or fields legitimately change (menu counts, `TeacherView`/`ManagerView` constructors); existing specs 005, 008, 009 and 012 tests stay unchanged in their assertions (SC-005)
 - [ ] T042 Run the full backend suite and the full frontend suite (tests, `npm run build` for typecheck, `npm run lint`) once **Partly done:** frontend typecheck (`tsc -b`) and lint clean (0 errors); the 18 frontend tests of this spec pass; backend classes of this spec plus the identity and architecture tests pass (62). The full backend suite is run after the rebase onto main (see `quickstart-results.md`).
+      **Convergence 2026-11-07 (left open):** cannot be ticked from reading: quickstart-results.md records only 62 targeted backend tests, 18 frontend tests, tsc and lint. A person must run the full backend suite (`mvn test`) and full frontend suite once and record the totals in quickstart-results.md (the 'after rebase' result it promises is not there).
 - [ ] T043 Walk the scenarios in `quickstart.md` as far as the environment allows and record the outcomes in `specs/005a-designations/quickstart-results.md` **Pending:** needs the running app; recorded as pending in `quickstart-results.md`.
+      **Convergence 2026-11-07 (left open):** manual walkthrough; quickstart-results.md says 'Pending: no run against the running app'. A person must walk quickstart.md on the running app (Designations screen, Manager and Teacher employment details) and record the outcomes.
 
 ---
 

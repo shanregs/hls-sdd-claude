@@ -63,6 +63,7 @@ ArchUnit rules. Run one Maven test class at a time.
 - [X] T023 Dev seed is not needed (no demo data); Postman folder "Substitution"; roadmap rows 017 and 008 (A2); constitution access matrix row
 - [X] T024 Full backend test run and frontend test, lint and build run; record in quickstart-results.md
 - [ ] T025 Manual browser walkthrough and accessibility pass (not done in this run)
+  - Convergence note (2026-11-07): Component-level screen tests exist (Substitution.test.tsx) and quickstart-results.md says nobody has clicked through the screens. A person must walk list, detail (assign, disabled unavailable, informed prefill, cancelled) and My Substitutions in a browser, plus a keyboard and screen-reader pass.
 - [x] T026 Postman folder "017a Substitution" (10 requests from contracts/substitution-api.md)
 
 ## Requirement coverage

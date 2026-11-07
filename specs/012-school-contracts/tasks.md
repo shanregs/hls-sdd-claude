@@ -162,7 +162,9 @@ Backend `backend/src/main/java/com/hls/{schoolbilling,teacher,identity}/...`, te
 - [x] T047 [P] Update `docs/running-locally.md` with the contract demo data and the process order (MoU, mapping, attendance, then billing)
 - [x] T048 Review before the PR: run the `java-reviewer` agent on `schoolbilling` and the `teacher` changes, and the `database-reviewer` agent on `V20` and `V21` (exclusion constraints, the copy, the drop); address findings
 - [ ] T049 Walk through every scenario in `quickstart.md` on the local app (database on Docker port 5433), including the placement and attendance comparison before and after `V20`, and write the outcomes to `specs/012-school-contracts/quickstart-results.md`
+      **Convergence 2026-11-07 (left open):** API walk and test mapping are recorded in quickstart-results.md, but the browser walkthrough is not done. A person must click through the contract list, School contract page and Map Teachers dialog (mouse, keyboard-only, screen reader, phone width) and record it.
 - [ ] T050 Run the full backend suite and the full frontend suite once (one Maven class at a time if the machine struggles), then open the PR
+      **Convergence 2026-11-07 (left open):** environment task; the last full run (641 backend, 54 frontend files) predates the review fixes and was not repeated. A person must run both full suites and record the totals.
 
 ---
 

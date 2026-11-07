@@ -440,6 +440,7 @@ complete.
 - [ ] T044 [P] Run all six of `quickstart.md`'s scenarios end-to-end and record the results,
       including timing the SC-001 (create-and-sign-in under 2 minutes) and SC-002 (find and
       deactivate in 3 actions) walkthroughs by hand.
+      **Convergence 2026-11-07 (left open):** manual walkthrough; no quickstart-results.md exists and no e2e/ Selenium test covers spec 004. Every scenario is covered by backend and Vitest tests (T046 and T043 ticked), but a person (or a new e2e test) must run the six quickstart.md scenarios on the running app and time SC-001 (under 2 minutes) and SC-002 (3 actions).
 - [X] T045 [P] Update `docs/spec-roadmap.md` row 004's status to "Implemented" once every
       checkpoint above has passed.
 - [X] T046 Run the full backend suite (`mvn test`) and the full frontend suite (`npm run test`,

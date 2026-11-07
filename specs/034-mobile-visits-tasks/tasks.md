@@ -215,6 +215,7 @@ always `await` it, and do not use `waitFor` in tests that mock the clock; use `f
 - [X] T048 [P] Update `docs/spec-roadmap.md` row 034 to "Implemented" with the number of app tests and "device pass pending", and correct rows 023 and 025 from "PR not yet opened" to merged
 - [X] T049 Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run check:manifest` from `mobile/` and fix everything they report; confirm the 019, 020, 021 and 033 tests pass unchanged
 - [ ] T050 (NOT DONE: needs an emulator or phone; see quickstart-results.md) Run the walkthrough in `quickstart.md` end to end on the emulator (steps 1 to 11) and record the results in `specs/034-mobile-visits-tasks/quickstart-results.md`, including the times for SC-001 and SC-002; steps that need a person at the device (camera, TalkBack, timings) are marked **not done** when not done, never as passed
+  - Note: Converge 2026-11-07: stays open, no new code work found. A person with an emulator or phone must run quickstart.md steps 1-11 (camera, TalkBack, SC-001 and SC-002 timings) and record each step in quickstart-results.md; automated results are already there.
 
 ---
 
