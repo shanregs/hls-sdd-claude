@@ -22,6 +22,24 @@ preview labels) and the server clock helper that picks the month the date choose
 ("Approved by", "Rejection reason") only choose display text. The "Cancelled by the <kind>" text is built from the
 server's `cancelledBy` value, so no role name is compared.
 
+## T036: live check 2026-11-07 (backend on port 8080, demo Teacher 9800000004, Admin for decisions)
+
+- `GET /api/v1/me/leave/types` returned Casual, Sick, Personal, Other, Loss of Pay.
+- `POST /api/v1/me/leave/preview` for one working day returned that day with value 1.0; an empty reason answered
+  "Give a reason." (also 400 on submit); a Sunday returned no days and "None of these dates is a working day for you."
+- Refusal texts triggered through the API and compared with `mobile/__tests__/support/leaveTexts.ts`: all matched
+  exactly. Apply: choose a type, choose dates, last before first, give a reason, reason over 500, over 90 days,
+  started over 30 days ago, not placed at a School, no working day, both half days on one day, overlap with a
+  pending request (preview and submit, 409). Cancel: already started, already cancelled, a rejected request cannot be
+  cancelled. Decide (Admin): cancelled by the Teacher, already approved, already rejected, reason required (revoke and
+  reject), note over 500, stale version ("This record was changed by someone else. Reload and try again.").
+- No mismatch found, so `leaveMessages.ts` is unchanged.
+- Not triggered (they need a locked month, supervisor-set attendance or a concurrent save, which would change shared
+  data): "Attendance is locked for a month in this range (month locked: ...)", "days set by a supervisor: ...",
+  "Leave cannot be removed: month locked: ...", the overlap-at-save race, and the two deciding texts "Only a pending
+  request can be decided." / "Only an approved request can be revoked." (the server answers with the status text
+  instead for these demo states). T036 stays unticked until those are covered.
+
 ## Findings while implementing
 
 - The server requires a reason when applying ("Give a reason."); the spec was corrected on 2026-10-05 (reason required).

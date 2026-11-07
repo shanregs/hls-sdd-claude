@@ -16,6 +16,11 @@ The app shows the server's list in the order received, minus codes of category N
 Still to confirm with the backend running: `GET /api/v1/attendance/status-codes?activeOnly=true` returns
 the list ordered by `sort_order`.
 
+**Live check 2026-11-07**: `GET /api/v1/attendance/status-codes?activeOnly=true` on port 8080 (token of the Admin and of
+the demo Teacher 9800000004, both 200) returned, in this order: P Present, L Leave, T Training day, N Non-working,
+S Substitution, H Holiday, A Absent. Present is first, matching `sort_order` 1 to 7 (the response carries no
+`sortOrder` field, so the order is the server's list position). No change to the app was needed.
+
 ## Real refusal counts (T009)
 
 A Teacher can meet 8 refusals when saving and a Manager 6 (the spec said 6 and 4); both are covered by

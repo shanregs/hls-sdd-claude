@@ -247,7 +247,8 @@ the screens they link to, and open a tile to land on the matching list with the 
 - [x] T065 [P] Demo data: ensure the demo seeders create the scenarios in `quickstart.md` prerequisites (overdue task, missed visit, Manager with no check-in past cut-off, Teacher absent with open substitution, pending Manager leave, payroll run awaiting approval) in the existing dev seeder under `backend/src/main/java/com/hls/` (find it from `backend/src/test/java/com/hls/DevSeedTest.java`) and extend `DevSeedTest`
 - [x] T066 [P] Add a one-line "Dashboard figures: not cached" note to `docs/caching.md`; update the roadmap/status doc if one lists spec 028; apply the Principle VII PATCH to `.specify/memory/constitution.md` naming the `reporting` module and its SPI (version number `NEXT`, assigned at merge)
 - [x] T067 Run the automated set from `quickstart.md`: `mvn -f backend/pom.xml test -Dtest='reporting.*,*Tiles*,*Approvals*,ArchitectureTest,ModulithTest'` (one class at a time if slow) and `npm --prefix frontend run test -- dashboard`; fix failures
-- [ ] T068 (automated part done, see quickstart Results; browser part needs a person) Manual walkthrough of `quickstart.md` sections 1 to 8 with the demo users (Director, Admin, Manager A and B, Teacher, System), including dark mode and phone width; record the result at the end of `quickstart.md`
+- [X] T068 (automated part) Walkthrough of `quickstart.md` sections 1 to 8 with the demo users through tests and the Selenium run `e2e/test_management_dashboard.py` (14 of 14 pass on 2026-11-07, see quickstart Results)
+- [ ] T068b Manual part of the T068 walkthrough that needs a person: dark mode, phone width and real colour contrast (section 8), recorded at the end of `quickstart.md`
 
 ---
 

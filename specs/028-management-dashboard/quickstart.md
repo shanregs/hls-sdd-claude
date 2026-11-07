@@ -83,3 +83,11 @@ Automated (T067): backend `reporting.*`, `*Tiles*`, `*Approvals*`, `ApplicationM
 Walkthrough (T068), done through tests as far as possible: sections 1 to 7 are covered by the parity, failure, scope, extensibility, performance (statements per area stay constant), demo-data and accessibility tests. NEEDS A HUMAN: section 8 in a browser (dark mode, phone width, real contrast; jsdom cannot check colour contrast), clicking each tile through to its list, and the destination filters that are not yet wired (Marketing calendar status and attendee, Teacher attendance `filter=away`, Manager attendance `filter=missing`, induction `view=readyToDeploy`, payroll `tab=owed`). Wired now: tasks (view, assignee), Manager leave and Teacher leave (status), prospects (stage), substitutions (date, status).
 
 Follow-up (filters on the destination screens): all dashboard link filters are now honoured. Marketing calendar (`status=missed`, `attendeeUserId`, client-side, with a Show all button), Teacher attendance (`filter=away`, new `awayOn` grid parameter, tested), induction (`view=readyToDeploy` scrolls to the list), payroll run (`tab=owed` scrolls to the owed list) and Manager attendance (`filter=missing`: the page already lists today's missed check-ins at the top, the same list the tile counts). The browser walkthrough is still a human step.
+
+## Selenium run (2026-11-07)
+
+`python -m pytest test_management_dashboard.py -q -p no:cacheprovider --tb=short --timeout=300` from `e2e/` against the local stack
+(UI on 5173, backend on 8080 rebuilt from main including PR #182): 14 passed in 215 s. Test 3.1 now passes because the Manager
+incentives tile sits in the Managers area (FR-015, PR #182). This covers the sign-in per demo role, the areas and tiles, scope and
+the click-through of tiles in a desktop browser. It does not cover dark mode, phone width or colour contrast: those stay a manual
+step (T068b).
