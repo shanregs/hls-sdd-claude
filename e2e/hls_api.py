@@ -10,7 +10,7 @@ import time
 import urllib.error
 import urllib.request
 
-BASE = os.environ.get("BASE_URL", "http://localhost:5173")
+BASE = os.environ.get("API_URL", "http://localhost:8080")  # direct to the backend: setup calls skip the nginx rate limit
 PASSWORD = "Password123!"
 _tokens = {}
 

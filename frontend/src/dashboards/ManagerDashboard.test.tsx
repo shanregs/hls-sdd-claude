@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ManagerDashboard } from "./ManagerDashboard";
 
 const authFetch = vi.fn();
+let roles: string[] = ["MANAGER"];
 
 vi.mock("../auth/useAuth", () => ({
-  useAuth: () => ({ authFetch }),
+  useAuth: () => ({ authFetch, user: { roles } }),
 }));
 
 function jsonResponse(body: unknown, status = 200) {
@@ -83,6 +84,18 @@ function renderDashboard() {
 describe("ManagerDashboard (User Story 6)", () => {
   beforeEach(() => {
     authFetch.mockReset();
+    roles = ["MANAGER"];
+  });
+
+  it("leaves the management figures to the Director dashboard when the Manager is also a Director, so each tile shows once", async () => {
+    roles = ["MANAGER", "DIRECTOR"];
+    mockCounts(2, 5, 12);
+
+    renderDashboard();
+
+    expect(await screen.findByText("My assigned zones")).toBeInTheDocument();
+    expect(screen.queryByText("My figures")).not.toBeInTheDocument();
+    expect(screen.queryByText("Overdue tasks")).not.toBeInTheDocument();
   });
 
   it("keeps the three count cards and shows the scoped tiles below, with no comparison table, payroll area or inbox", async () => {

@@ -23,6 +23,8 @@ def browsers():
                 drivers[key].title                  # a Chrome that died is signed in again
             except Exception:
                 drivers.pop(key)
+        if key in drivers and "/sign-in" in drivers[key].current_url:      # the session was dropped (a refresh raced): sign in again
+            signed[key] = 0
         if key in drivers and time.time() - signed[key] > 600:     # the access token lives 15 minutes
             drivers[key].delete_all_cookies()
             drivers[key].execute_script("localStorage.clear(); sessionStorage.clear();")
@@ -34,6 +36,7 @@ def browsers():
                 try:
                     sign_in(d, user)
                     drivers[key] = d
+                    d.hls_user = user
                     signed[key] = time.time()
                     break
                 except TimeoutException:          # most likely 429 from the shared sign-in limit: wait and retry
@@ -46,3 +49,20 @@ def browsers():
     yield get
     for d in drivers.values():
         d.quit()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """On a failure, print the URL and the visible text of every open browser so the cause is in the report."""
+    outcome = yield
+    rep = outcome.get_result()
+    if rep.when == "call" and rep.failed and "browsers" in item.funcargs:
+        try:
+            for (user, _), drv in item.funcargs["browsers"].__closure__[0].cell_contents.items():
+                try:
+                    t = drv.find_element("tag name", "body").text
+                    rep.sections.append((f"browser {user}", drv.current_url + chr(10) + t[:300] + chr(10) + "..." + chr(10) + t[-1500:]))
+                except Exception:
+                    pass
+        except Exception:
+            pass

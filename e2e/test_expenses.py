@@ -36,7 +36,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from hls_api import PASSWORD, call, iso_in, make_manager, make_school, make_zone, ok, stamp, token_for
 from test_school_working_days import ADMIN, BASE, make_driver, sign_in
-from ui_helpers import (body, button, dialog, fill, has_button, no_overflow, options_of, pick, settle, wait)
+from ui_helpers import (body, button, click, dialog, set_value, fill, has_button, no_overflow, options_of, pick, settle, wait)
 
 DIRECTOR, TEACHER, SYSTEM = "9800000002", "9800000004", "sunil.system"
 YESTERDAY = iso_in(-1)
@@ -76,11 +76,11 @@ def world():
     return w
 
 
-def api_claim(world, amount, category="OFFICE_SUPPLIES", day=None, paid_by="CLAIMANT", submit=True, who="m"):
+def api_claim(world, amount, category="OFFICE_SUPPLIES", day=None, paid_by="CLAIMANT", submit=True, who="m", zone_id=None):
     """A claim raised through the API for the budget and payment fixtures (no bill, a reason instead)."""
     token = token_for(world[who]["username"])
     body_ = {"clientRequestId": __import__("uuid").uuid4().__str__(), "expenseDate": day or YESTERDAY, "amount": amount, "category": category,
-             "zoneId": world["zone"]["id"] if who == "m" else world["zone2"]["id"], "note": "e2e", "paidBy": paid_by, "reason": "e2e",
+             "zoneId": zone_id or (world["zone"]["id"] if who == "m" else world["zone2"]["id"]), "note": "e2e", "paidBy": paid_by, "reason": "e2e",
              "noBillReason": "no bill in test", "link": None, "submit": submit, "confirmDuplicate": True}
     return ok(call("POST", "/my-expenses", body_, token))
 
@@ -225,7 +225,7 @@ def test_4_training_stay_needs_a_batch_and_a_linked_visit_survives_cancelling(wo
     open_new_claim(d)
     fill_claim(d, "415.00", date=iso_in(0), category="Travel and Fuel", area=world["zone"]["name"])
     form_el = form(d)
-    pick(d, form_el, "Linked work", world["school"]["name"])
+    pick(d, form_el, "Linked work", "School visit")
     add_bills(d, files["bill4.jpg"])
     button(d, "Submit").click()
     S["claim_link"] = claim_id_from_url(d)
@@ -261,7 +261,7 @@ def test_5_director_approves_rejects_and_the_claimant_corrects(world, browsers, 
     c = browsers(world["m"]["username"])
     c.get(f"{BASE}/operations/my-expenses/{to_reject['id']}")
     wait(c).until(lambda x: "Photo of the bill is needed" in body(x))
-    button(c, "Edit").click()
+    click(c, "//a[normalize-space()='Edit']")
     wait(c).until(lambda x: "Edit claim" in body(x))
     add_bills(c, files["bill5.jpg"])
     button(c, "Submit").click()
@@ -298,7 +298,7 @@ def test_5b_admin_cannot_approve_his_own_claim_and_two_approvers_race(world):
 # ---- scenario 6: payment -------------------------------------------------------------------------------------------
 
 def test_6_record_paid_reverse_and_company_paid(world, browsers):
-    d = browsers(DIRECTOR)
+    d = browsers(ADMIN)             # only the Admin records a claim as paid outside payroll (spec 015, user story 4)
     # an approved personally paid claim is offered to payroll; recording it paid outside payroll withdraws that
     paid = api_claim(world, "1500.00")
     assert decide(paid["id"], DIRECTOR, "approve")[0] == 200
@@ -322,6 +322,7 @@ def test_6_record_paid_reverse_and_company_paid(world, browsers):
                      token_for(world["m"]["username"]))
     assert status in (400, 403, 409), status
     assert "History" in body(d), "every change is in the history"
+    d = browsers(DIRECTOR)
     # reverse an approved unpaid claim: back to Submitted
     other = api_claim(world, "1250.00")
     assert decide(other["id"], DIRECTOR, "approve")[0] == 200
@@ -344,13 +345,13 @@ def test_6_record_paid_reverse_and_company_paid(world, browsers):
 # ---- scenario 7: budget --------------------------------------------------------------------------------------------
 
 def test_7_budget_versus_actual(world, browsers):
+    budget_zone, _ = make_zone(token_for(ADMIN), f"E2E Exp Budget Zone {world['s']}")   # a Zone of its own: other tests' claims do not count
     d = browsers(DIRECTOR)
     d.get(f"{BASE}/operations/expenses/budgets")
     wait(d).until(lambda x: "Budget versus actual" in body(x))
-    month = d.find_element(By.XPATH, "//label[starts-with(normalize-space(.),'Month')]/..//input")
-    from ui_helpers import set_value
+    month = month_input(d)
     set_value(d, month, MONTH)
-    zone = world["zone"]["name"]
+    zone = budget_zone["name"]
     wait(d).until(lambda x: zone in body(x))
     button(d, f"Set budget for {zone}").click()
     dlg = dialog(d)
@@ -358,26 +359,30 @@ def test_7_budget_versus_actual(world, browsers):
     button(d, "Save budget", dlg).click()
     wait(d).until(lambda x: "No budget set" not in row_text(x, zone))
     # approve 12,000 and leave 5,000 pending (budget fixtures are claims dated yesterday in the budget month)
-    approved = api_claim(world, "12000.00", category="RENT_UTILITIES")
+    approved = api_claim(world, "12000.00", category="RENT_UTILITIES", zone_id=budget_zone["id"])
     assert decide(approved["id"], DIRECTOR, "approve")[0] == 200
-    api_claim(world, "5000.00", category="OFFICE_SUPPLIES")
+    api_claim(world, "5000.00", category="OFFICE_SUPPLIES", zone_id=budget_zone["id"])
     d.get(f"{BASE}/operations/expenses/budgets")
-    set_value(d, d.find_element(By.XPATH, "//label[starts-with(normalize-space(.),'Month')]/..//input"), MONTH)
+    set_value(d, month_input(d), MONTH)
     wait(d).until(lambda x: zone in body(x))
     settle(d, 1)
     cells = row_cells(d, zone)
     assert "20,000" in cells[1] and "12,000" in cells[2] and "5,000" in cells[3] and "8,000" in cells[4], cells
     assert "Over budget" not in row_text(d, zone)
     # approve 10,000 more: over by 2,000
-    more = api_claim(world, "10000.00", category="MARKETING")
+    more = api_claim(world, "10000.00", category="MARKETING", zone_id=budget_zone["id"])
     assert decide(more["id"], DIRECTOR, "approve")[0] == 200
     d.get(f"{BASE}/operations/expenses/budgets")
-    set_value(d, d.find_element(By.XPATH, "//label[starts-with(normalize-space(.),'Month')]/..//input"), MONTH)
+    set_value(d, month_input(d), MONTH)
     wait(d).until(lambda x: "Over budget" in row_text(x, zone))
     cells = row_cells(d, zone)
     assert "22,000" in cells[2] and "-2,000" in cells[4].replace("−", "-") or "2,000" in cells[4], cells
     # an area with no budget says so
     assert "No budget set" in row_text(d, world["zone2"]["name"]) or world["zone2"]["name"] not in body(d)
+
+
+def month_input(d):
+    return wait(d).until(EC.presence_of_element_located((By.XPATH, "//label[starts-with(normalize-space(.),'Month')]/..//input")))
 
 
 def row_cells(d, text):

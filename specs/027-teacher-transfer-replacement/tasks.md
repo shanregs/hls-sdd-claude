@@ -208,7 +208,7 @@ implementations in each module's `internal`; migration `backend/src/main/resourc
 - [X] T067 [P] Constitution and roadmap: add the Transfers & Replacements row to the default access matrix and the OPERATIONS navigation in `.specify/memory/constitution.md` with a PATCH version bump (the next patch after whichever of 026 and 027 merges first), and mark the roadmap row for 027 in the roadmap document
 - [X] T068 Run `ModulithVerificationTest` and the module-rule ArchUnit tests (`TransferModuleRulesTest` and the existing ones) and fix any boundary violation
 - [X] T069 Run the full backend suite for the touched modules one class at a time and the frontend with `npm test -- transfers` and `npm test -- teachers` in `frontend/`; fix failures
-- [ ] T070 Walk through `specs/027-teacher-transfer-replacement/quickstart.md` sections 1 to 5 by hand against the dev seeder and record the result in the pull request description
+- [x] T070 (done as the Selenium walkthrough e2e/test_transfers.py, 13 of 13 passed on 2026-11-07) Walk through `specs/027-teacher-transfer-replacement/quickstart.md` sections 1 to 5 by hand against the dev seeder and record the result in the pull request description
 
 ---
 

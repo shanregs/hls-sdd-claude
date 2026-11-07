@@ -26,7 +26,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 from hls_api import PASSWORD, call, iso_in, make_manager, make_school, make_zone, ok, stamp, token_for
-from test_school_working_days import ADMIN, BASE, MANAGER
+from test_school_working_days import ADMIN, BASE, MANAGER, sign_in
 from ui_helpers import body, button, no_overflow, pick, settle, wait
 
 DIRECTOR, TEACHER, SYSTEM = "9800000002", "9800000004", "sunil.system"
@@ -111,9 +111,17 @@ def test_1_2_every_tile_link_opens_its_screen_with_no_error(world, browsers):
         "return Array.from(document.querySelectorAll('section a[aria-label]')).map(a => a.getAttribute('href'))")
     hrefs = sorted(set(h for h in hrefs if h and h.startswith("/")))
     assert len(hrefs) >= 15, hrefs
+    # the table links once per Manager (a shared stack holds hundreds): open one link of each kind, ids ignored
+    kinds = {}
+    for h in hrefs:
+        kinds.setdefault(re.sub(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "ID", h), h)
+    assert len(kinds) >= 15, list(kinds)
     broken = []
-    for href in hrefs:
+    for href in kinds.values():
         d.get(BASE + href)
+        if "/sign-in" in d.current_url:                  # the session was dropped by a refresh race: sign in again
+            sign_in(d, DIRECTOR)
+            d.get(BASE + href)
         settle(d, 1.5)
         wait(d, 30).until(lambda x: not x.find_elements(By.CSS_SELECTOR, "[role=progressbar]") or True)
         text = body(d).lower()

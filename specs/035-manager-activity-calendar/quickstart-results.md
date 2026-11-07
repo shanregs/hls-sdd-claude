@@ -50,3 +50,11 @@ timeouts under load; nothing in 035 was changed for them.
   "more" overflow, dark mode, narrow width).
 - Complete a visit and move a drive date in their own screens and confirm the calendar shows both on reload (section 7, last item).
 - Screen-reader pass over the calendar page.
+
+## Browser walkthrough (Selenium, 2026-11-07)
+
+`e2e/test_activity_calendar.py` ran against the live local stack: 10 of 10 passed (Director month and hand count, shared visit
+counted once, Zone filter and empty month, Manager view and refusals, Needs attention, filters in grid and list, "N more" on a
+busy day, Training filter, read-only and reload, phone width and dark scheme). The "Needs a person" items above that are
+covered by this run are the Admin/Director/Manager/Teacher sign-ins, the grid, list, summary, overflow, dark mode, narrow width
+and the reload after a visit is completed; the screen-reader pass is still open.
