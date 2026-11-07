@@ -77,3 +77,7 @@ The owner confirmed all seven points on 2026-10-24 (given in a working session, 
 - The Postman collection (`postman/HLS API/013b Payroll Run/`) was not run.
 - The owner confirmed the seven financial points above (2026-10-24). The manual browser, screen-reader and SC-005 checks listed here are still open before release.
 - Five unrelated backend tests failed in the full run and passed alone (see Suites).
+
+## Full browser walk (2026-11-07)
+
+`e2e/test_payroll_full_walk.py` walks, in Chrome: start a run for May 2026, a +777 correction on the Adjustments screen, the "waiting since this run was computed" notice, Compute again (ends DONE, adjustment on the line once, net up by exactly 777: the PR #171 case), CSV export of the draft, submit, the submitter has no Approve, the Director approves, the approved run offers no Compute again, Cancel run or Submit, "Download all payslips" gives a zip. It also marks a line paid by UPI with a reference (scenario 17) on an approved run and checks the amounts do not change. Scenarios now also covered in the browser: 9 (buttons gone), 11, 15 (zip), 17 and 19 (approved export). The one-shot full walk consumed May and April 2026 (both now approved, unpaid except the payment test on July); it skips when its month is taken.
