@@ -84,17 +84,17 @@ class NotificationAndDashboardTest extends IncentiveTestBase {
         approveMou(m);
         awaitIncentive(m.f().schoolId());
 
-        Resp tile = get("/api/v1/dashboard/areas/PAYROLL/tiles/incentives.summary", m.managerToken());
+        Resp tile = get("/api/v1/dashboard/areas/MANAGERS/tiles/incentives.summary", m.managerToken());
 
         assertThat(tile.status()).as(tile.body()).isEqualTo(200);
         assertThat(tile.map().get("state")).isEqualTo("OK");
         List<Map<String, Object>> values = (List<Map<String, Object>>) tile.map().get("values");
         assertThat(values.get(0)).containsEntry("label", "Waiting for a decision");
         assertThat(((Number) values.get(0).get("value")).longValue()).isEqualTo(1);
-        Resp director = get("/api/v1/dashboard/areas/PAYROLL/tiles/incentives.summary", m.director().token());
+        Resp director = get("/api/v1/dashboard/areas/MANAGERS/tiles/incentives.summary", m.director().token());
         assertThat(((Number) ((List<Map<String, Object>>) director.map().get("values")).get(0).get("value")).longValue())
                 .isGreaterThanOrEqualTo(1);
-        assertThat(get("/api/v1/dashboard/areas/PAYROLL/tiles/incentives.summary", signInAs(com.hls.identity.user.Role.TEACHER).token()).status())
+        assertThat(get("/api/v1/dashboard/areas/MANAGERS/tiles/incentives.summary", signInAs(com.hls.identity.user.Role.TEACHER).token()).status())
                 .isIn(403, 404);
     }
 

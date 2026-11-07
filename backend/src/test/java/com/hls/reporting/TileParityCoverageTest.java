@@ -31,7 +31,8 @@ class TileParityCoverageTest extends MasterDataTestBase {
     private static final Pattern ROW = Pattern.compile("^[|] [A-Za-z ]+ [|] ([a-zA-Z]+(?:[.][a-zA-Z]+)+) [|]");
 
     /** Keys whose parity test is named by class rather than by the key text. */
-    private static final Map<String, String> BY_CLASS = Map.of("managers.comparison", "ManagerComparisonTest.java");
+    private static final Map<String, String> BY_CLASS = Map.of(
+            "managers.comparison", "ManagerComparisonTest.java", "incentives.summary", "NotificationAndDashboardTest.java");
 
     @Autowired
     TileRegistry registry;
@@ -56,7 +57,7 @@ class TileParityCoverageTest extends MasterDataTestBase {
     private static Map<Path, String> parityClasses() throws IOException {
         Path tests = root().resolve("backend/src/test/java");
         try (Stream<Path> files = Files.walk(tests)) {
-            return files.filter(p -> p.getFileName().toString().matches(".*(Tiles|Comparison).*Test[.]java"))
+            return files.filter(p -> p.getFileName().toString().matches(".*(Tiles|Comparison|NotificationAndDashboard).*Test[.]java"))
                     .collect(Collectors.toMap(p -> p, p -> {
                         try {
                             return Files.readString(p, StandardCharsets.UTF_8);

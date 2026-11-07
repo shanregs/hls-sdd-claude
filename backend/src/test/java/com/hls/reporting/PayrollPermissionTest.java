@@ -29,7 +29,10 @@ class PayrollPermissionTest extends MasterDataTestBase {
             for (String area : new String[] {"MANAGERS", "SCHOOLS", "RECRUITMENT", "TEACHERS", "ATTENDANCE_LEAVE"}) {
                 Resp resp = get(BASE + "/areas/" + area, admin);
                 if (resp.status() == 200) {
-                    assertThat(resp.body().toLowerCase()).doesNotContain("payroll").doesNotContain("rupees");
+                    assertThat(resp.body().toLowerCase()).doesNotContain("payroll");
+                    if (!area.equals("MANAGERS")) { // the Managers area carries the spec 030 incentive tile, whose amount is not payroll
+                        assertThat(resp.body().toLowerCase()).doesNotContain("rupees");
+                    }
                 }
             }
             Resp table = get(BASE + "/managers", admin);
