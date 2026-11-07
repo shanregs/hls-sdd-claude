@@ -505,6 +505,8 @@ public class RunComputation {
                 Map<UUID, PayRunLine> byId = lines.findAllById(toUpdate).stream()
                         .collect(Collectors.toMap(PayRunLine::getId, l -> l));
                 lineAdjustments.deleteByLineIdIn(toUpdate);
+                // Hibernate runs inserts before deletes at flush; without this the re-inserted copies hit uq_payroll_run_line_adjustment
+                lines.flush();
                 for (PersonResult r : batch) {
                     RecomputeDiff.Before old = before.get(new RecomputeDiff.Key(r.person().kind(), r.person().id()));
                     if (old != null && byId.containsKey(old.id())) {

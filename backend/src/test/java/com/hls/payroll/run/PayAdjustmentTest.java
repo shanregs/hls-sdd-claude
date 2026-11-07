@@ -215,6 +215,30 @@ class PayAdjustmentTest extends PayrollRunTestBase {
     }
 
     @Test
+    void computeAgainAfterTheSourceDataChangedKeepsTheAdjustmentAttachedOnceAndEndsDone() {
+        String admin = signInAs(Role.ADMIN).token();
+        Site site = site(admin);
+        UUID teacher = paidTeacher(admin, site, "26000");
+        UUID adjustmentId = record(admin, teacher, 2000, "August was underpaid").id();
+        UUID run = startAndCompute(admin);
+        assertThat(amount(lineOf(admin, run, teacher).get("adjustments"))).isEqualByComparingTo("2000.00");
+
+        // the line's own inputs change (backdated raise), so compute again rewrites it
+        teacherSalary(admin, teacher, "30000", month.atDay(1));
+        Resp resp = post(RUNS + "/" + run + "/recompute", admin, Map.of());
+        assertThat(resp.status()).as(resp.body()).isEqualTo(202);
+        Map<String, Object> done = awaitComputed(admin, run);
+
+        assertThat(done.get("computeState")).as(String.valueOf(done)).isEqualTo("DONE");
+        Map<String, Object> line = lineOf(admin, run, teacher);
+        assertThat(amount(line.get("earned"))).isEqualByComparingTo("30000.00");
+        assertThat(amount(line.get("adjustments"))).isEqualByComparingTo("2000.00");
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from payroll_run_line_adjustment where adjustment_id = ?", Long.class, adjustmentId))
+                .isEqualTo(1L);
+    }
+
+    @Test
     void withdrawingWhileADraftHoldsItRemovesTheLineCopyAndWorksTheNetOutAgain() {
         String admin = signInAs(Role.ADMIN).token();
         Site site = site(admin);
