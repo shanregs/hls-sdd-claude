@@ -217,7 +217,7 @@ class MarginReportTest extends ReceivablesTestBase {
         assertThat(rowOf(teachers, mineTeacher)).isNotNull();
         assertThat(resp.body()).doesNotContain(theirTeacher.toString());
         assertThat(get("/api/v1/reports/payroll?month=" + thisMonth(), manager).status()).isEqualTo(403);
-        assertThat(get(REPORT + "?month=" + thisMonth() + "&zoneId=" + theirs.zoneId(), manager).status()).isIn(403, 404);
+        assertThat(get(REPORT + "?month=" + thisMonth() + "&zoneId=" + theirs.zoneId(), manager).status()).isEqualTo(403);
     }
 
     @Test
@@ -234,5 +234,39 @@ class MarginReportTest extends ReceivablesTestBase {
         assertThat(rows(resp, "teachers")).isEmpty();
         assertThat(rows(resp, "schools")).isEmpty();
         assertThat(resp.body()).doesNotContain(t.toString());
+    }
+
+    @Test
+    void aTeacherAtTwoSchoolsGivesTwoRowsWhosePaysAddUpToThePayslipNet() {
+        String admin = signInAs(Role.ADMIN).token();
+        YearMonth month = thisMonth().minusMonths(1);
+        Fixture first = billedSchoolSince(admin, 80, "15000");
+        Fixture second = billedSchoolSince(admin, 80, "16000");
+        UUID t = mapTeacher(admin, first, 0, month.atDay(1));
+        assertThat(assign(admin, t, second.schoolId(), positionId(admin, second.schoolId(), 0), month.atDay(16)).status()).isEqualTo(200);
+        raiseOne(admin, month, first.schoolId());
+        raiseOne(admin, month, second.schoolId());
+        BigDecimal net = new BigDecimal("12345.67");
+        RunSummary summary = new RunSummary(UUID.randomUUID(), month, RunState.APPROVED, net, net, net, net, 1, 0);
+        doReturn(Optional.of(summary)).when(payroll).runOf(month);
+        doReturn(List.of(slip(t, second.zoneId(), second.schoolId(), true, net.toPlainString()))).when(payroll).peopleOf(month);
+
+        Resp resp = get(REPORT + "?month=" + month, admin);
+        assertThat(resp.status()).as(resp.body()).isEqualTo(200);
+        List<Map<String, Object>> mine = rows(resp, "teachers").stream()
+                .filter(r -> ((String) r.get("id")).startsWith(t.toString())).toList();
+
+        assertThat(mine).hasSize(2);
+        assertThat(mine.stream().map(r -> r.get("id")).toList())
+                .containsExactlyInAnyOrder(t + ":" + first.schoolId(), t + ":" + second.schoolId());
+        for (Map<String, Object> row : mine) {
+            assertThat(cell(row, STATUS).get("value")).isEqualTo("matched");
+            assertThat(value(cell(row, PAY)).signum()).isPositive();
+        }
+        BigDecimal pays = mine.stream().map(r -> value(cell(r, PAY))).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertThat(pays).isEqualByComparingTo(net);
+        BigDecimal fees = mine.stream().map(r -> value(cell(r, FEE))).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal margins = mine.stream().map(r -> value(cell(r, MARGIN))).reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertThat(margins).isEqualByComparingTo(fees.subtract(net));
     }
 }
