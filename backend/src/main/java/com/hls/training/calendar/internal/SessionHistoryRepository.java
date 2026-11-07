@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface SessionHistoryRepository extends JpaRepository<SessionHistory, UUID> {
 
+    boolean existsBySessionId(UUID sessionId);
+
     List<SessionHistory> findBySessionIdOrderByChangedAtAsc(UUID sessionId);
 
     List<SessionHistory> findBySessionIdInAndField(Collection<UUID> sessionIds, String field);

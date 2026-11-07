@@ -244,6 +244,7 @@ integration tests. Migration in `backend/src/main/resources/db/migration`.
 - [ ] T088 Manual walkthrough LAST: follow quickstart.md sections 1 to 6 in the browser as Admin, Director, Manager A, Manager B and Teachers; confirm the screen-reader and keyboard use of the attendance grid; record results in this file. T080 (the 032 Manager-pay amendment) is built and checked separately **Not done: needs a person in a browser.** Selenium e2e/test_training_calendar.py (2026-11-07): 15 of 16 pass; test_2_2 fails on a real bug: stopping a pattern whose skipped month has history returns 500 (FK training_session_history_session_id_fkey, PatternService.stop deletes the skipped session). Screen-reader/keyboard check still manual.
 
 ---
+- [x] T090 Fix: PatternService.stop must not delete a session that has training_session_history rows (insert-only, FK 500). Such a session is kept: skipped stays SKIPPED, published becomes CANCELLED ("Pattern stopped"); regression test in PatternEditTest.
 
 ## Dependencies & Execution Order
 

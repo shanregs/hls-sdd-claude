@@ -100,6 +100,28 @@ class PatternEditTest extends TrainingCalendarTestBase {
     }
 
     @Test
+    void stoppingAPatternWhoseSkippedMonthHasHistoryKeepsTheSessionAndItsHistory() {
+        World w = newWorld();
+        UUID pattern = createPattern(w.admin(), patternBody(today()));
+        List<UUID> sessions = patternSessions(pattern);
+        UUID skipped = sessions.get(2);
+        LocalDate skipMonth = jdbc.queryForObject("select pattern_month from training_session where id = ?", LocalDate.class, skipped);
+        assertThat(post(API + "/patterns/" + pattern + "/skips", w.admin(), Map.of("month", skipMonth.toString(), "reason", "Festival")).status()).isEqualTo(200);
+        int historyBefore = jdbc.queryForObject("select count(*) from training_session_history where session_id = ?", Integer.class, skipped);
+        assertThat(historyBefore).isGreaterThan(0);
+        LocalDate from = jdbc.queryForObject("select pattern_month from training_session where id = ?", LocalDate.class, sessions.get(1));
+
+        Resp stopped = post(API + "/patterns/" + pattern + "/stop", w.admin(), Map.of("fromMonth", from.toString()));
+        assertThat(stopped.status()).as(stopped.body()).isEqualTo(200);
+
+        assertThat(exists(sessions.get(1))).isFalse();
+        assertThat(exists(skipped)).isTrue();
+        assertThat(status(skipped)).isEqualTo("SKIPPED");
+        assertThat(jdbc.queryForObject("select count(*) from training_session_history where session_id = ?", Integer.class, skipped))
+                .isEqualTo(historyBefore);
+    }
+
+    @Test
     void aDuplicateRuleAndTimeIsRefused() {
         World w = newWorld();
         Map<String, Object> body = patternBody(today());
