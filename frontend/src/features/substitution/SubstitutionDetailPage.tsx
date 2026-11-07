@@ -19,6 +19,7 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { formatDate } from "../attendance/monthUtils";
 import type { ApiResult } from "../common/masterDataApi";
+import { ATTENDANCE_LABELS, listDays, markDay, type Attendance, type DayRow } from "../substitutePayouts/payoutsApi";
 import {
   assignSubstitute,
   coverRequirement,
@@ -47,6 +48,7 @@ export function SubstitutionDetailPage() {
   const [informNote, setInformNote] = useState("");
 
   const [reload, setReload] = useState(0);
+  const [day, setDay] = useState<DayRow | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +64,22 @@ export function SubstitutionDetailPage() {
       setContact((c) => c || d.data.requirement.principalContact || "");
       const c = await getCandidates(authFetch, id);
       if (!cancelled) setCandidates(c.ok ? c.data : []);
+      // Spec 017b T023: the substitute's day record for this duty date, when a Substitute is assigned.
+      const req = d.data.requirement;
+      if (req.substituteTeacherId && req.status !== "CANCELLED") {
+        const days = await listDays(authFetch, {
+          month: req.dutyDate.slice(0, 7),
+          substituteId: req.substituteTeacherId,
+          schoolId: req.schoolId,
+          size: 100,
+        });
+        const row = days.ok && Array.isArray(days.data.content)
+          ? days.data.content.find((x) => x.date === req.dutyDate)
+          : undefined;
+        if (!cancelled) setDay(row ?? null);
+      } else if (!cancelled) {
+        setDay(null);
+      }
     })();
     return () => {
       cancelled = true;
@@ -75,6 +93,17 @@ export function SubstitutionDetailPage() {
       return;
     }
     setReload((n) => n + 1);
+  }
+
+  async function mark(attendance: Attendance) {
+    if (!day) return;
+    const result = await markDay(authFetch, day, attendance);
+    if (!result.ok) {
+      setError(result.reason);
+      return;
+    }
+    setError(null);
+    setDay(result.data);
   }
 
   if (error && !detail) return <Alert severity="error">{error}</Alert>;
@@ -159,6 +188,35 @@ export function SubstitutionDetailPage() {
               Release
             </Button>
           </Stack>
+        </Paper>
+      )}
+
+      {live && day && (
+        <Paper sx={{ p: 2, my: 2 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 1 }}>
+            Substitute attendance
+          </Typography>
+          <Typography sx={{ mb: 1 }}>
+            {r.substituteName}: {ATTENDANCE_LABELS[day.attendance]} ({day.statusText})
+          </Typography>
+          {day.actions.includes("MARK") && (
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant={day.attendance === "PRESENT" ? "contained" : "outlined"}
+                onClick={() => void mark("PRESENT")}
+                aria-label={`Mark ${r.substituteName} present`}
+              >
+                Present
+              </Button>
+              <Button
+                variant={day.attendance === "ABSENT" ? "contained" : "outlined"}
+                onClick={() => void mark("ABSENT")}
+                aria-label={`Mark ${r.substituteName} absent`}
+              >
+                Absent
+              </Button>
+            </Stack>
+          )}
         </Paper>
       )}
 

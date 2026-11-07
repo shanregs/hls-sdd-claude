@@ -202,6 +202,45 @@ describe("SubstitutionDetailPage", () => {
     ).toBeEnabled();
   });
 
+  it("lets the Zone Manager mark the assigned substitute present on the duty day", async () => {
+    const assigned = { ...REQ, status: "ASSIGNED", substituteTeacherId: "b1", substituteName: "Bina Bench" };
+    const dayRow = {
+      id: "d1",
+      date: "2026-10-05",
+      attendance: "NOT_MARKED",
+      statusText: "Allocated, attendance not marked",
+      version: 3,
+      actions: ["MARK"],
+    };
+    authFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.method === "PUT")
+        return json({ ...dayRow, attendance: "PRESENT", statusText: "Attended, month not locked yet", version: 4 });
+      if (url.endsWith("/candidates")) return json([]);
+      if (url.includes("/substitute-payouts/days")) return json({ content: [dayRow] });
+      return json({ requirement: assigned, history: [] });
+    });
+    renderDetail();
+    expect(await screen.findByText(/Bina Bench: Not marked/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Mark Bina Bench present" }));
+    expect(await screen.findByText(/Bina Bench: Present/)).toBeInTheDocument();
+    const put = authFetch.mock.calls.find((c) => c[1]?.method === "PUT");
+    expect(put?.[0]).toBe("/api/v1/substitute-payouts/days/d1/attendance");
+    expect(JSON.parse(put?.[1].body)).toEqual({ attendance: "PRESENT", version: 3 });
+  });
+
+  it("offers no mark buttons when the server sent no MARK action", async () => {
+    const assigned = { ...REQ, status: "ASSIGNED", substituteTeacherId: "b1", substituteName: "Bina Bench" };
+    authFetch.mockImplementation(async (url: string) => {
+      if (url.endsWith("/candidates")) return json([]);
+      if (url.includes("/substitute-payouts/days"))
+        return json({ content: [{ id: "d1", date: "2026-10-05", attendance: "PRESENT", statusText: "Paid", version: 5, actions: [] }] });
+      return json({ requirement: assigned, history: [] });
+    });
+    renderDetail();
+    expect(await screen.findByText(/Bina Bench: Present/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Mark Bina Bench/ })).not.toBeInTheDocument();
+  });
+
   it("shows a cancelled requirement without actions", async () => {
     authFetch.mockImplementation(async (url: string) => {
       if (url.endsWith("/candidates")) return json([]);
