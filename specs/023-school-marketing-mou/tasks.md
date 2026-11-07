@@ -186,7 +186,9 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
 - [X] T054 [P] Update `docs/spec-roadmap.md` (023 status; the shared file storage contract C7 is now built here) and `docs/running-locally.md` (the marketing flow, the files directory and demo data)
 - [x] T055 Review before the PR: run the `java-reviewer` agent on `recruitment/marketing`, `files` and the `school`, `organization`, `schoolbilling` and `notification` changes, and the `database-reviewer` agent on `V23`; address findings
 - [ ] T056 Walk through every scenario in `quickstart.md` on the local app (database on Docker port 5433) and write the outcomes to `specs/023-school-marketing-mou/quickstart-results.md`
+  - Convergence note (2026-11-07): quickstart-results.md records every scenario as Pass at test level (ProspectApiTest, PipelineApiTest, ProposalApiTest, WinServiceTest, ...) but no browser walk. A person must walk the scenarios as Asha, Divya and Manoj, run keyboard-only, screen-reader and phone-width passes, and record them.
 - [ ] T057 Run the full backend and frontend suites once, then open the PR
+  - Convergence note (2026-11-07): Needs one recorded run of the full backend and frontend suites (quickstart-results.md notes marketing.test.tsx timing out under load in another run); the PR step is already done by history.
 
 ---
 
