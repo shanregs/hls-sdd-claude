@@ -73,7 +73,26 @@ class YearEntryApiTest extends WorkingDaysTestBase {
                 "select count(*) from school_working_days where school_id = ? and year = ?", Long.class, school, year);
     }
 
+    /** Audit entries land asynchronously, so wait until the count stops moving before trusting it. */
     private long auditCountForSchool(UUID school, int year) {
+        long last = auditCountNow(school, year);
+        for (int i = 0; i < 20; i++) {
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            long now = auditCountNow(school, year);
+            if (now == last && i >= 2) {
+                return now;
+            }
+            last = now;
+        }
+        return last;
+    }
+
+    private long auditCountNow(UUID school, int year) {
         return jdbc.queryForObject(
                 "select count(*) from change_history_entry c join school_working_days r on c.entity_id = r.id::text"
                         + " where c.entity_type = 'SCHOOL_WORKING_DAYS' and r.school_id = ? and r.year = ?",

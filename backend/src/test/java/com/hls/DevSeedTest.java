@@ -189,7 +189,9 @@ class DevSeedTest extends IntegrationTestBase {
 
         String days = get("/api/v1/substitute-payouts/days?size=100", admin.token()).body();
         assertThat(days).contains("Sunita Substitute", "Suresh Substitute");
-        assertThat(days).contains("LOCKED_WAITING_RUN", "ATTENDED", "DID_NOT_ATTEND", "ALLOCATED");
+        // Sunita's locked month waits for a run; once a run exists on the shared database it is in a later state
+        assertThat(days).containsAnyOf("LOCKED_WAITING_RUN", "IN_DRAFT_RUN", "IN_RUN_AWAITING_APPROVAL", "PAID");
+        assertThat(days).contains("ATTENDED", "DID_NOT_ATTEND", "ALLOCATED");
         assertThat(get("/api/v1/teachers?query=Sunita", admin.token()).body()).contains("\"engagement\":\"SUBSTITUTE\"");
         assertThat(get("/api/v1/salary-structures/designation-day-rates", admin.token()).body())
                 .contains("Cover Teacher")

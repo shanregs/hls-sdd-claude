@@ -137,8 +137,10 @@ class PayRulesCalendarTest extends PayrollTestBase {
         assertThat(exited.status()).as(exited.body()).isEqualTo(200);
 
         PayableDays payable = payRules.payableDays(new PersonRef(Kind.TEACHER, teacher), month);
-        assertThat(payable.dates()).isNotEmpty().allMatch(d -> !d.isAfter(exit));
-        assertThat(payable.dates()).contains(workingCalendar.workingDays(school, month.atDay(1), exit).getLast());
+        // the Teacher is no longer placed from the exit date itself, so the last payable day is the day before
+        LocalDate lastDay = exit.minusDays(1);
+        assertThat(payable.dates()).isNotEmpty().allMatch(d -> !d.isAfter(lastDay));
+        assertThat(payable.dates()).contains(workingCalendar.workingDays(school, month.atDay(1), lastDay).getLast());
     }
 
     @Test
