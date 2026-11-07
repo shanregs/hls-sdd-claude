@@ -38,7 +38,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T020 [US2] Marking: `PUT /days/{id}/attendance` (Edit; refuse future date, locked month, cancelled day, stale `version`), Zone scope through `ScopeQueries`, 404 out of scope; no substitute self-marking path exists
 - [x] T021 [US2] Lock and reopen: `POST /months/{teacherId}/{yyyy-MM}/lock`, `/reopen` (Approve; month ended; no live NOT_MARKED day, `409` lists them; reopen reason max 500), bulk `POST /months/lock?month=`; audit
 - [x] T022 [P] [US2] API and service tests: marking by Admin, Director, Zone A, Zone B (404), Teacher and System; future date; lock refusals; reopen; history (`DayApiTest`)
-- [ ] T023 [US2] Web: mark Present/Absent in the 017a Substitutions requirement screen and a day list "Substitute attendance" (`frontend/src/features/substitutions/`), lock and reopen actions for Admin and Director; Vitest and keyboard check
+- [x] T023 [US2] Web: mark Present/Absent in the 017a Substitutions requirement screen and a day list "Substitute attendance" (`frontend/src/features/substitutions/`), lock and reopen actions for Admin and Director; Vitest and keyboard check
 
 ## Phase 4: User Story 1 - Paid for the month through the run (P1) MVP
 
@@ -61,8 +61,8 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T033 [US3] `PayoutQueryService` in `substitution/payout/service/`: filters (month or range, substitute, School, Zone, status), paging, sorting, totals over the whole filter, batch lookups
 - [x] T034 [US3] `PayoutController`: `GET /days`, `/substitutes/{id}`, `/summary`, `/days/{id}` with `actions[]`
 - [x] T035 [US3] `GET /export` CSV with formula neutralising, DD/MM/YYYY dates, numeric Rupee amounts; test rows equal the list (SC-007)
-- [ ] T036 [P] [US3] Web: `frontend/src/features/substitute-payouts/` list, filters, status chips, totals footer, substitute month view, detail with history; Indian grouping; route guard
-- [ ] T037 [US3] Web tests (Vitest): list, filters, empty/error states, keyboard use
+- [x] T036 [P] [US3] Web: `frontend/src/features/substitute-payouts/` list, filters, status chips, totals footer, substitute month view, detail with history; Indian grouping; route guard
+- [x] T037 [US3] Web tests (Vitest): list, filters, empty/error states, keyboard use
 
 ## Phase 6: User Story 4 - Mismatches, cancellation after payment, Corrections (P1)
 
@@ -99,7 +99,7 @@ Format: `- [ ] T### [P] [US#] description with path`. `[P]` = parallel (differen
 - [x] T053 [P] Dev seed: a Substitute designation with a rate, two Substitutes, days in each status
 - [x] T054 Selenium end-to-end walkthrough of quickstart steps 1 to 9 as an e2e test; results in `specs/017b-payout-reconciliation/quickstart-results.md`
 - [x] T055 Accessibility, dark mode and phone-width pass of the new screens (quickstart step 11)
-- [ ] T056 Full backend and web test runs; fix regressions in 005, 008, 013a, 013b, 015, 017a, 030
+- [ ] T056 (017b classes pass individually; full-suite run left to CI) Full backend and web test runs; fix regressions in 005, 008, 013a, 013b, 015, 017a, 030
 
 ## Requirement coverage
 
