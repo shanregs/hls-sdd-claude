@@ -197,7 +197,9 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
 - [X] T061 [P] Update `docs/spec-roadmap.md` (016 status; A4 and A5 done) and `docs/running-locally.md` (the recruitment flow and demo data)
 - [X] T062 Review before the PR: run the `java-reviewer` agent on `recruitment`, `training`, and the `teacher`, `attendance` and `schoolbilling` changes, and the `database-reviewer` agent on `V22` (the trigger, the partial unique indexes, the gist exclusion, the attendance column change); address findings
 - [ ] T063 Walk through every scenario in `quickstart.md` on the local app (database on Docker port 5433) and write the outcomes to `specs/016-campus-recruitment/quickstart-results.md`
+  - Convergence note (2026-11-07): quickstart-results.md exists and records every scenario as Pass at test level (DriveApiTest, OfferApiTest, InductionAttendanceTest, DashboardTest, ...), but states that no browser walk has been done. A person must walk the six scenarios in a browser as Asha, Divya and Manoj, do the keyboard-only, screen-reader and phone-width passes, and record them.
 - [ ] T064 Run the full backend and frontend suites once, then open the PR
+  - Convergence note (2026-11-07): Needs a person (or a Maven/npm run) to run the full backend and frontend suites once; no suite result is recorded in quickstart-results.md, and the PR step is already done by history, so only the suite run remains.
 
 ---
 
