@@ -591,6 +591,7 @@ never receives salary.
       variables set from create responses.
 - [ ] T095 [P] Run quickstart.md's eight scenarios end-to-end against the running app and record the
       results (including timing the SC-001 ten-minute setup and the SC-004 1,000-row import). Record whether `btree_gist` was already present in the environment used. Time the Manager dashboard against SC-007 (3 seconds) by hand.
+      **Convergence 2026-11-07 (left open):** manual walkthrough; no quickstart-results.md exists and no e2e/ test covers spec 005 directly. A person must run the eight quickstart.md scenarios on the running app, time SC-001 (10-minute setup), SC-004 (1,000-row import) and SC-007 (Manager dashboard under 3 s), and record whether btree_gist was already present.
 - [X] T096 [P] Update `docs/spec-roadmap.md` row 005 to "Implemented" once every checkpoint above has
       passed, and note the new shared APIs (`ScopeQueries`, `TeacherScopeQueries`) for specs 008+.
 - [X] T097 Run the full backend suite (`mvn test`, including `ApplicationModulesTest` and
