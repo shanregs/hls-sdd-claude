@@ -9,4 +9,14 @@ body:
   type: json
   content: |-
     {}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('202 accepted (draft run, not already computing)', () => pm.response.to.have.status(202));
+      const r = pm.response.json();
+      pm.test('still the same DRAFT run, back in the queue', () => { pm.expect(r.id).to.eql(pm.collectionVariables.get('runId')); pm.expect(r.status).to.eql('DRAFT'); pm.expect(r.computeState).to.be.oneOf(['QUEUED', 'RUNNING', 'DONE']); });
+      pm.collectionVariables.set('runStatus', r.status);
+      pm.collectionVariables.set('awaitCompute', 'yes');
+      pm.collectionVariables.set('adjustmentJoinedRun', 'yes');
+    language: text/javascript
 order: 4000

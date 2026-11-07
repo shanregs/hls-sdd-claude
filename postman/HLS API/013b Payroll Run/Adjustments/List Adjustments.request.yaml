@@ -3,4 +3,12 @@ name: List Adjustments
 description: "Filters personKind, personId and status (WAITING, APPLIED, WITHDRAWN). Needs PAYROLL.VIEW."
 url: "{{baseUrl}}/api/v1/payroll/adjustments?status=WAITING&page=0&size=50"
 method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 with a page of adjustments', () => pm.response.to.have.status(200));
+      const p = pm.response.json();
+      pm.test('page shape', () => { pm.expect(p.content).to.be.an('array'); pm.expect(p.totalElements).to.be.a('number'); });
+      pm.test('every row has the filtered status', () => { const st = pm.request.url.query.get('status'); p.content.forEach(a => pm.expect(a.status).to.eql(st)); });
+    language: text/javascript
 order: 1000

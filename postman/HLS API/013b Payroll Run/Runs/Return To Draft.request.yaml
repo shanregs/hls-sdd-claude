@@ -11,4 +11,12 @@ body:
     {
       "reason": "Check the deduction for one Teacher"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200));
+      const r = pm.response.json();
+      pm.test('run is back to DRAFT', () => { pm.expect(r.id).to.eql(pm.collectionVariables.get('runId')); pm.expect(r.status).to.eql('DRAFT'); });
+      pm.collectionVariables.set('runStatus', r.status);
+    language: text/javascript
 order: 7000

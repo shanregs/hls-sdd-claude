@@ -3,4 +3,16 @@ name: Get Payment
 description: "The current entry and the earlier ones, newest first. Needs PAYROLL.VIEW."
 url: "{{baseUrl}}/api/v1/payroll/runs/{{runId}}/lines/{{lineId}}/payment"
 method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200));
+      const e = pm.response.json();
+      pm.test('lineId, current and earlier', () => { pm.expect(e.lineId).to.eql(pm.collectionVariables.get('lineId')); pm.expect(e).to.have.property('current'); pm.expect(e.earlier).to.be.an('array'); });
+      if (pm.collectionVariables.get('paymentRecorded') === 'yes') {
+        pm.test('the current entry is the paid one', () => { pm.expect(e.current).to.be.an('object'); pm.expect(e.current.paid).to.eql(true); pm.expect(e.current.mode).to.eql('BANK_TRANSFER'); });
+      } else {
+        pm.test('no current entry before a payment is recorded', () => pm.expect(e.current).to.eql(null));
+      }
+    language: text/javascript
 order: 2000

@@ -9,4 +9,12 @@ body:
   type: json
   content: |-
     {}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200));
+      const r = pm.response.json();
+      pm.test('run is AWAITING_APPROVAL with the submitter recorded', () => { pm.expect(r.id).to.eql(pm.collectionVariables.get('runId')); pm.expect(r.status).to.eql('AWAITING_APPROVAL'); pm.expect(r.submittedBy).to.be.an('object'); pm.expect(r.submittedAt).to.be.a('string'); });
+      pm.collectionVariables.set('runStatus', r.status);
+    language: text/javascript
 order: 6000

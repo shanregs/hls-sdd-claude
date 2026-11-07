@@ -14,4 +14,20 @@ body:
       "mode": "BANK_TRANSFER",
       "reference": "UTR 123456"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      const st = pm.collectionVariables.get('runStatus');
+      if (st === 'APPROVED') {
+        pm.test('200 on an approved run and a payable line', () => pm.response.to.have.status(200));
+        const e = pm.response.json();
+        pm.test('the response carries the current entry: paid, BANK_TRANSFER, reference', () => {
+          const cur = e.current || e;
+          pm.expect(cur.paid).to.eql(true); pm.expect(cur.mode).to.eql('BANK_TRANSFER'); pm.expect(cur.reference).to.eql('UTR 123456'); pm.expect(cur.paidOn).to.eql('2026-10-05');
+        });
+        pm.collectionVariables.set('paymentRecorded', 'yes');
+      } else {
+        pm.test('409 while the run is ' + st + ' (not approved)', () => pm.response.to.have.status(409));
+      }
+    language: text/javascript
 order: 1000

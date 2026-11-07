@@ -9,14 +9,25 @@ body:
   type: json
   content: |-
     {
-      "personKind": "TEACHER",
-      "personId": "{{teacherId}}",
+      "personKind": "{{personKind}}",
+      "personId": "{{personId}}",
       "kind": "CORRECTION",
       "amount": 2000,
       "reason": "August was underpaid"
     }
 scripts:
   - type: afterResponse
-    code: "if (pm.response.code === 201) { pm.collectionVariables.set('adjustmentId', pm.response.json().id); }"
+    code: |-
+      pm.test('201 created', () => pm.response.to.have.status(201));
+      const a = pm.response.json();
+      pm.test('a WAITING CORRECTION of 2000 for the chosen person', () => {
+        pm.expect(a.id).to.be.a('string');
+        pm.expect(a.status).to.eql('WAITING');
+        pm.expect(a.kind).to.eql('CORRECTION');
+        pm.expect(Number(a.amount)).to.eql(2000);
+        pm.expect(a.personId).to.eql(pm.collectionVariables.get('personId'));
+        pm.expect(a.personKind).to.eql(pm.collectionVariables.get('personKind'));
+      });
+      if (a.id) { pm.collectionVariables.set('adjustmentId', a.id); }
     language: text/javascript
 order: 2000

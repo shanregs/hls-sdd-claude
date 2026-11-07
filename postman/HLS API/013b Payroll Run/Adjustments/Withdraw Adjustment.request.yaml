@@ -11,4 +11,17 @@ body:
     {
       "reason": "Entered twice"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      const st = pm.collectionVariables.get('runStatus');
+      const attached = (st === 'AWAITING_APPROVAL' || st === 'APPROVED') && pm.collectionVariables.get('adjustmentJoinedRun') === 'yes';
+      if (attached) {
+        pm.test('409 when the adjustment is attached to a run that is ' + st, () => pm.response.to.have.status(409));
+      } else {
+        pm.test('200', () => pm.response.to.have.status(200));
+        const a = pm.response.json();
+        pm.test('the adjustment is WITHDRAWN with the reason', () => { pm.expect(a.id).to.eql(pm.collectionVariables.get('adjustmentId')); pm.expect(a.status).to.eql('WITHDRAWN'); pm.expect(a.withdrawReason).to.eql('Entered twice'); });
+      }
+    language: text/javascript
 order: 3000
