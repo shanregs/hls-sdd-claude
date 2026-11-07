@@ -174,7 +174,7 @@ MoU. No user story can start before these.
 - [X] T053 **Re-check the migration number**: list `backend/src/main/resources/db/migration` on the latest `origin/main` and on every open implementation branch; if V100 is taken, rename `V100__create_mou_approval.sql` and update plan.md, data-model.md, research.md and this file before merging. Do this again immediately before the PR is marked ready
 - [X] T054 Full backend run (`mvn -o test`, Docker running) including `ModulithVerificationTest`; record the results in plan.md or quickstart.md; fix regressions in specs 012, 023, 027 and the permission tests
 - [X] T055 Full frontend run (`npm test`, `npm run build`, lint) and record the result
-- [ ] T056 Manual walkthrough of quickstart.md sections 1 to 5 on the running app with each role (Admin, Director, Manager A, Manager B), at desktop and phone width; record the result; this is the last task before the PR
+- [ ] T056 Manual walkthrough of quickstart.md sections 1 to 5 on the running app with each role (Admin, Director, Manager A, Manager B), at desktop and phone width; record the result; this is the last task before the PR Browser walk by Selenium e2e/test_mou_documents.py (2026-11-07): 7 of 7 pass for quickstart sections 1 to 3; sections 4 and 5 and the phone-width/human review remain, so not ticked.
 
 ---
 
