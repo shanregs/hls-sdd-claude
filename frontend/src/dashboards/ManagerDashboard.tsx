@@ -50,7 +50,9 @@ function CountWidget({
  * content for a Manager (Constitution Principle III).
  */
 export function ManagerDashboard() {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
+  // a Director or Admin who is also a Manager already has the (union) management figures from their own dashboard
+  const showFigures = !(user?.roles ?? []).some((r) => r === "ADMIN" || r === "DIRECTOR");
   const [counts, setCounts] = useState<Counts>({ kind: "loading" });
 
   useEffect(() => {
@@ -144,9 +146,11 @@ export function ManagerDashboard() {
         <PendingLeaveWidget />
         <PlaceholderWidget title="This month's attendance" />
       </Box>
-      <Box sx={{ mt: 3 }}>
-        <ManagementDashboard title="My figures" />
-      </Box>
+      {showFigures && (
+        <Box sx={{ mt: 3 }}>
+          <ManagementDashboard title="My figures" />
+        </Box>
+      )}
     </Box>
   );
 }
