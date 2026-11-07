@@ -169,7 +169,9 @@ and when; find the audit entries; see the flag on a designation that people use 
 - [X] T048 Run `PayrollModuleRulesTest` and `ApplicationModulesTest` (Spring Modulith verification) and fix any boundary violation; confirm `attendance` and `teacher` tests still pass unchanged
 - [x] T049 [P] Accessibility pass on the three screens: keyboard order, labels on every form field, error text announced, WCAG 2.2 AA contrast in light and dark themes, no horizontal scroll at phone width
 - [ ] T050 Run the full quickstart.md walkthrough and record each step's outcome in `specs/013a-salary-structures/quickstart-results.md`; also time recording a salary (under 1 minute) and finding the salary in effect on a date from its history (under 30 seconds), SC-005
+      **Convergence 2026-11-07 (left open):** every step of quickstart.md is mapped to an automated test in quickstart-results.md, but nobody has clicked through the screens or timed SC-005 (record a salary under 1 minute; find the salary in effect on a date under 30 seconds). A person must do both.
 - [ ] T051 Financial review of the formulas in research.md section 4 against `docs/spec-roadmap.md` decisions D2, D12 and D13 (Constitution Principle IX, Development Workflow item 5); note the outcome in `quickstart-results.md`
+      **Convergence 2026-11-07 (left open):** the author's desk check is in quickstart-results.md, which itself says a person who owns the pay rules must sign off (Constitution Principle IX), including the four open points listed there. Tick only after that sign-off.
 
 ---
 
