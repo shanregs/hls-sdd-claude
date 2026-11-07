@@ -175,6 +175,7 @@ MoU. No user story can start before these.
 - [X] T054 Full backend run (`mvn -o test`, Docker running) including `ModulithVerificationTest`; record the results in plan.md or quickstart.md; fix regressions in specs 012, 023, 027 and the permission tests
 - [X] T055 Full frontend run (`npm test`, `npm run build`, lint) and record the result
 - [ ] T056 Manual walkthrough of quickstart.md sections 1 to 5 on the running app with each role (Admin, Director, Manager A, Manager B), at desktop and phone width; record the result; this is the last task before the PR Browser walk by Selenium e2e/test_mou_documents.py (2026-11-07): 7 of 7 pass for quickstart sections 1 to 3; sections 4 and 5 and the phone-width/human review remain, so not ticked.
+  - Note: Converge 2026-11-07: stays open. Covered: quickstart 1-3 and the 390 px no-scroll check by `e2e/test_mou_documents.py` (7 of 7); section 4 by `MouApprovalsPublicApiTest`, section 5 by `MouRegressionTest`. A person must still do the human walk required by this task: each role (Admin, Director, Manager A, Manager B) on the running app at desktop and phone width, including section 3 steps 3-4 (change a pending MoU's Zone Manager; placeholder and cancelled MoU behaviour), then record the result in quickstart.md.
 
 ---
 
