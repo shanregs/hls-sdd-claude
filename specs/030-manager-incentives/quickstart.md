@@ -15,7 +15,7 @@ a Director, a won prospect owned by the Zone A Manager, and a payroll month with
 5. **Hold.** Approve an incentive, then replace the MoU document (MoU goes pending). The incentive becomes HELD and a new run does not take it.
    Approve the MoU again: it returns to APPROVED and the next run takes it. Repeat with a run awaiting approval: incentive keeps `mouChanged` and the Director is notified.
 6. **Lists.** Director sees all; filter by Zone, status, month; totals per Manager and month; CSV export matches. A Manager's `/mine` shows only own.
-7. **Dashboard and inbox.** Pending incentives appear in the Director approvals inbox and the 028 tile.
+7. **Dashboard and inbox.** Pending incentives appear in the Director approvals inbox and the 028 tile (Managers area, `incentives.summary`).
 8. **Regression.** Run the 013b and 015 payroll tests (unchanged results) and the access-model tests for the new menu and permission.
 9. Keyboard and screen-reader pass; dark mode; phone width.
 

@@ -16,6 +16,7 @@ and the parity test (SC-003) proves it.
 | Managers | managers.onLeaveToday | Managers on leave | today | Manager Leave | yes | Manager Leave, approved, covering today | leave.manager |
 | Managers | managers.pendingRequests | leave and forgotten check-ins awaiting decision | all time | Manager Leave | yes | Manager Leave, pending | leave.manager |
 | Managers | managers.comparison | table: overdue, awaiting, escalated, visits missed, Schools won, days with no check-in | month | Manager Tasks | yes | row opens that Manager's task list; org-wide only | tasks, marketing, attendance.manager |
+| Managers | incentives.summary | Manager incentives: waiting, approved not yet paid, paid this month, Schools with no earner (spec 030; Managers area so a Manager sees it without the Payroll area) | month | Manager Incentives | no | Incentives, status filter | incentive |
 | Schools | schools.stages | prospects at each stage | all time | Marketing | yes | Pipeline | marketing |
 | Schools | schools.finalStage | Final Stage prospects awaiting review | all time | Marketing | yes | Prospects, Final Stage awaiting review (check) | marketing |
 | Schools | schools.visits | planned, completed, missed | month | Marketing | yes | Marketing calendar (check) | marketing |

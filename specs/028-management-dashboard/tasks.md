@@ -271,3 +271,5 @@ the screens they link to, and open a tile to land on the matching list with the 
 2. Add US3, US4, US5 (remaining P1 areas), then ship the Dashboard to Admin and Director.
 3. Then US6 (inbox), US8 (filters), US7 (proof of extensibility), US9 (Manager scoping), then Polish.
 4. Each tile is delivered with its parity test; no tile is merged without it.
+
+Note: spec 030's tile `incentives.summary` is in the Managers area, not Payroll, so FR-015 (a Manager never sees payroll) holds.

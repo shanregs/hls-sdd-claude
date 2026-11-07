@@ -75,7 +75,7 @@ adjustment waiting (013b FR-019). 030 shows the incentive as APPROVED with the p
 
 **D-11 Notifications.** New types `INCENTIVE_PENDING` (active Directors and the School's Zone Manager; the earner is not excluded when they are that Zone Manager, since they may approve) and `INCENTIVE_DECIDED` (the earner, minus the decider). Delivered by a new `IncentiveEventListener` in `notification` for api events `IncentiveEarned` and `IncentiveDecided`. The `NotificationType` column is already `VARCHAR(60)`.
 
-**D-12 Dashboard (028).** `reporting` has a tile SPI and approvals-inbox SPI; 030 implements `incentive.api.IncentiveSummary`
+**D-12 Dashboard (028).** The tile `incentives.summary` sits in the Managers area (order 10), not Payroll: a Manager sees it and 028 FR-015 hides the Payroll area from Managers. `reporting` has a tile SPI and approvals-inbox SPI; 030 implements `incentive.api.IncentiveSummary`
 (counts pending, approved awaiting payroll, amounts this month, no-earner count) and the inbox entry. If those SPI classes differ at
 implementation they are adapted in `reporting`, not in `incentive`.
 

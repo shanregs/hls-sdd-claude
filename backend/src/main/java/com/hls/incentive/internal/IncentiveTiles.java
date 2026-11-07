@@ -29,7 +29,7 @@ class IncentiveTiles implements TileSource {
     @Override
     public List<TileDefinition> tiles() {
         return List.of(new TileDefinition(
-                KEY, Area.PAYROLL, 4, "Manager incentives", PeriodKind.MONTH, "MANAGER_INCENTIVES", PermissionAction.VIEW,
+                KEY, Area.MANAGERS, 10, "Manager incentives", PeriodKind.MONTH, "MANAGER_INCENTIVES", PermissionAction.VIEW,
                 ScopeKind.ALL, false, Link.to("/operations/incentives")));
     }
 
