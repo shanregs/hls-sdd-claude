@@ -294,8 +294,8 @@ Findings: ______________________________________________
 
 ### 6B. Spec 040 Same-day flexibility (T049)
 
-Source: `specs/040-same-day-flexibility/quickstart.md`, `quickstart-results.md`. The implementation is not merged to main
-(branch `origin/040-same-day-flexibility`); run this only on a stack built from that branch.
+Source: `specs/040-same-day-flexibility/quickstart.md`, `quickstart-results.md`. The implementation is merged to main
+(PRs #150, #157 and fix #177); run this on the normal local stack at http://localhost:5173 (see `docs/running-locally.md`).
 **Automated (Selenium `e2e/test_same_day_flexibility.py`, 12 passed):** web parts of steps 1, 3, 6, 8, 10.
 **Left for a person (T049 stays open):** mobile steps (7 offline), notification inboxes, steps needing a second day, and the
 hand-computed pay (step 4), Manager cover (5), range leave (2).
