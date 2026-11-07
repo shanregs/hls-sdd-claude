@@ -22,6 +22,7 @@ import com.hls.teacher.api.TeacherPlacementSource;
 import com.hls.teacher.api.TeacherPlacementSource.Assignment;
 import com.hls.teacher.api.TeacherScopeQueries.TeacherScope;
 import com.hls.teacher.api.TeacherView;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -60,6 +61,7 @@ public class TeacherService {
     private final ChangeRecorder changes;
     private final DesignationDirectory designations;
     private final Clock clock;
+    private final BusinessDate businessDate;
     private final org.springframework.beans.factory.ObjectProvider<com.hls.teacher.api.TeacherMovementSource> movements;
 
     public TeacherService(
@@ -73,6 +75,7 @@ public class TeacherService {
             ChangeRecorder changes,
             DesignationDirectory designations,
             Clock clock,
+            BusinessDate businessDate,
             org.springframework.beans.factory.ObjectProvider<com.hls.teacher.api.TeacherMovementSource> movements) {
         this.movements = movements;
         this.teacherRepository = teacherRepository;
@@ -85,6 +88,7 @@ public class TeacherService {
         this.changes = changes;
         this.designations = designations;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     // ------------------------------------------------------------------ reads
@@ -146,7 +150,7 @@ public class TeacherService {
         }
         if (schoolId != null) {
             Set<UUID> atSchool =
-                    new HashSet<>(placementSource.teacherIdsAtSchoolsOn(List.of(schoolId), LocalDate.now(clock)));
+                    new HashSet<>(placementSource.teacherIdsAtSchoolsOn(List.of(schoolId), businessDate.today()));
             if (restrict == null) {
                 restrict = atSchool;
             } else {
@@ -183,7 +187,7 @@ public class TeacherService {
             if (schoolId == null || !scopeQueries.scopeOf(userId, roles).allowsSchool(schoolId)) {
                 throw new NotFoundException("School not found.");
             }
-            LocalDate today = LocalDate.now(clock);
+            LocalDate today = businessDate.today();
             if (effectiveOn != null && effectiveOn.isBefore(today)) {
                 throw new InvalidInputException("A Zone Manager assigns Teachers from today onwards.");
             }
@@ -286,7 +290,7 @@ public class TeacherService {
                 clean(request.email(), 200, "Email"),
                 clean(request.address(), 2000, "Address"),
                 status,
-                LocalDate.now(clock),
+                businessDate.today(),
                 clock.instant());
         if (request.userId() != null) {
             checkLinkable(request.userId(), null);
@@ -332,7 +336,7 @@ public class TeacherService {
         if (!before.canMoveTo(next)) {
             throw new ConflictException("A Teacher cannot move from " + before + " to " + next + ".");
         }
-        LocalDate on = effectiveOn == null ? LocalDate.now(clock) : effectiveOn;
+        LocalDate on = effectiveOn == null ? businessDate.today() : effectiveOn;
         if (next == TeacherStatus.EXITED) {
             placementSource.endForExit(id, on);
             if (teacher.getUserId() != null) {
@@ -363,7 +367,7 @@ public class TeacherService {
             return viewsOf(List.of(teacher), null).get(0);
         }
         if (next == TeacherEngagement.SUBSTITUTE) {
-            LocalDate today = LocalDate.now(clock);
+            LocalDate today = businessDate.today();
             boolean placed = !placementSource.currentOf(List.of(id), today).isEmpty()
                     || !placementSource.pendingOf(List.of(id), today).isEmpty();
             if (placed) {
@@ -429,7 +433,7 @@ public class TeacherService {
         if (teachers.isEmpty()) {
             return List.of();
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<UUID> ids = teachers.stream().map(Teacher::getId).toList();
         Map<UUID, Assignment> current = placementSource.currentOf(ids, today);
         Map<UUID, Assignment> pending = placementSource.pendingOf(ids, today);

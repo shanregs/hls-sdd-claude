@@ -3,7 +3,7 @@ package com.hls.teacher.internal;
 import com.hls.organization.api.ManagerQueries;
 import com.hls.organization.api.ManagerViewEnricher;
 import com.hls.teacher.api.TeacherPlacementSource;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,20 +20,20 @@ public class ManagerTeacherCountEnricher implements ManagerViewEnricher {
 
     private final ManagerQueries managerQueries;
     private final TeacherPlacementSource placementSource;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
     public ManagerTeacherCountEnricher(
-            @Lazy ManagerQueries managerQueries, TeacherPlacementSource placementSource, Clock clock) {
+            @Lazy ManagerQueries managerQueries, TeacherPlacementSource placementSource, BusinessDate businessDate) {
         this.managerQueries = managerQueries;
         this.placementSource = placementSource;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, Map<String, Object>> enrich(Collection<UUID> managerIds) {
         Map<UUID, Set<UUID>> schoolsByManager = managerQueries.currentSchoolIds(managerIds);
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Map<UUID, Map<String, Object>> result = new HashMap<>();
         for (UUID managerId : managerIds) {
             Set<UUID> schools = schoolsByManager.getOrDefault(managerId, Set.of());

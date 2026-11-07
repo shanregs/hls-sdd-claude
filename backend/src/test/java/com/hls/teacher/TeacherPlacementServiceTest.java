@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /** Spec 005 FR-012: immediate, past, scheduled, cancelled and corrected placements; no overlap or gap. */
 class TeacherPlacementServiceTest extends MasterDataTestBase {
 
-    private final LocalDate today = LocalDate.now();
+    private final LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
 
     private UUID schoolIn(String admin) {
         return schoolInNewZone(admin)[2];
