@@ -3,20 +3,19 @@
 One PostgreSQL schema. Real foreign keys everywhere. Naming: `snake_case`, `id` bigint identity (or UUID, decide in plan), `created_at`, `created_by`, `updated_at`. Money `numeric(12,2)`. Dates `date`. Timestamps `timestamptz` (UTC); business date is computed in IST.
 Enums as Postgres enums or checked text. Key columns only; the plan adds the rest.
 
-## Platform (9)
+## Platform (8)
 | Table | Key columns and rules |
 |---|---|
 | `app_user` | username, phone (unique), password_hash, employee_id (nullable FK), active, locked_until, failed_count, last_login_at |
 | `user_role` | user_id, role (ADMIN, DIRECTOR, MANAGER, TEACHER, CONTENT_CREATOR, SYSTEM_ENGINEER). Unique (user_id, role) |
 | `role_permission` | role, permission_key. Unique pair. Seeded by migration, edited by Admin. |
-| `otp_code` | user_id, code_hash, expires_at, used_at |
 | `login_session` | user_id, token_hash, expires_at, last_seen_at |
 | `setting` | key (pk), value, updated_by, updated_at |
 | `audit_log` | at, user_id, action, entity_type, entity_id, before_json, after_json, reason |
 | `notification` | user_id, event_key, entity_ref, text, created_at, read_at |
 | `stored_file` | name, content_type, size, storage_path, uploader_id, created_at, owner_type, owner_id |
 
-## Master data (8)
+## Master data (9)
 | Table | Key columns and rules |
 |---|---|
 | `zone` | name (unique) |
@@ -27,6 +26,7 @@ Enums as Postgres enums or checked text. Key columns only; the plan adds the res
 | `employee_zone` | employee_id, zone_id. Managers (one or more) and Substitutes (one). |
 | `employee_salary` | employee_id, amount, effective_from, created_by. Append-only; the row in effect on a date is the latest with effective_from <= date. |
 | `holiday` | date (unique), name |
+| `school_month_days` | school_id, year, month, days (default calendar days, editable). Unique school+year+month. Used as the invoice divisor only. |
 
 ## Contracts (3)
 | Table | Key columns and rules |
@@ -77,7 +77,7 @@ Enums as Postgres enums or checked text. Key columns only; the plan adds the res
 `expense_claim` (employee_id, date, amount, category, zone_id or head_office, reference_text, status, approver_id, reject_reason, paid_on, adjustment_id), `expense_bill` (claim_id, file_id).
 
 ## Billing (5)
-`invoice` (school_id, year, month, invoice_date, due_date, total; unique school+year+month; immutable), `invoice_line` (invoice_id, placement_id, days, fee, amount), `payment` (school_id, amount signed, date, mode, ref), `payment_allocation` (payment_id, invoice_id, amount), `invoice_adjustment` (invoice_id, amount signed, reason).
+`invoice` (school_id, year, month, invoice_date, due_date, total; unique school+year+month; immutable), `invoice_line` (invoice_id, kind PLACEMENT or UNCOVERED_DAY_CREDIT, placement_id, substitution_id nullable, days, fee, amount signed), `payment` (school_id, amount signed, date, mode, ref), `payment_allocation` (payment_id, invoice_id, amount), `invoice_adjustment` (invoice_id, amount signed, reason).
 
 ## Content (2)
 `content_item` (title, owner_id, status), `content_version` (item_id, number, file_id, status, review_comment, reviewed_by).
@@ -88,3 +88,4 @@ Enums as Postgres enums or checked text. Key columns only; the plan adds the res
 - Derived values (overdue, absent today, not billed) are queries, not columns.
 - No stored month rollups; totals are computed from marks.
 - GST columns are intentionally absent (D-20).
+- `otp_code` is intentionally absent; it is added when SMS sign-in is added (D-36).

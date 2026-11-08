@@ -20,7 +20,7 @@ Everything here is in scope for release 1. There is no "phase 2".
 
 1. Create the repo. Copy this folder to `docs/baseline/`.
 2. Run `/speckit-constitution` with `07-constitution-draft.md` as input.
-3. Resolve the "Assumptions to confirm" list in `02-decisions-and-assumptions.md` with the owner. Do this before specs 10 (payroll) and 11 (billing); the other specs can start earlier.
+3. The assumptions were reviewed with the owner on 2026-11-08; outcomes are in section 4 of `02-decisions-and-assumptions.md`. Two items remain open: confirm the 3-year audit retention with the accountant (A-12) and the proposed System Engineer guardrail (A-13).
 4. For each spec in `08-spec-roadmap.md`, in order: `/speckit-specify` (paste the description), `/speckit-clarify`, `/speckit-plan` (tell it to follow `05` and `06`), `/speckit-tasks`, `/speckit-analyze`, `/speckit-implement`.
 5. Keep `03-business-rules.md` worked examples as automated tests. These money rules are the costly ones to get wrong.
 
@@ -29,7 +29,10 @@ Everything here is in scope for release 1. There is no "phase 2".
 - Six roles (System Engineer added) with an **editable** permission matrix.
 - Payroll: Admin runs and finalises, Director only acknowledges.
 - Substitute day rate is entered per assignment.
-- Pay and billing use actual calendar days of the month. The per-School working-days table is gone.
+- Pay uses actual calendar days of the month. Invoices use a per-School monthly day figure (default calendar days) and give credit for uncovered absence days.
+- Managers act by Zone; a named Manager per School approves.
+- Password sign-in only; SMS codes deferred.
+- System Engineer also manages users and roles.
 - Everything is in release 1: recruitment, training, marketing, tasks, observations, transfers, content.
 - Expense budgets and GST are out. Expenses report is a monthly total by Zone and category.
 - Stack fixed: React PWA, Java 25 with Spring Boot, PostgreSQL, full logging, metrics and observability.
