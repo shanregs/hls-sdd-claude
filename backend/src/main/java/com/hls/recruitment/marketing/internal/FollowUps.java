@@ -1,6 +1,6 @@
 package com.hls.recruitment.marketing.internal;
 
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,18 +19,19 @@ import org.springframework.stereotype.Component;
 class FollowUps {
 
     private final MarketingActivityRepository activities;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
-    FollowUps(MarketingActivityRepository activities, Clock clock) {
+    FollowUps(MarketingActivityRepository activities,
+            BusinessDate businessDate) {
         this.activities = activities;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     Set<UUID> overdueProspects(Collection<UUID> prospectIds) {
         if (prospectIds.isEmpty()) {
             return Set.of();
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Map<UUID, List<MarketingActivity>> byProspect =
                 activities.findByProspectIdIn(prospectIds).stream().collect(Collectors.groupingBy(MarketingActivity::getProspectId));
         Set<UUID> overdue = new HashSet<>();

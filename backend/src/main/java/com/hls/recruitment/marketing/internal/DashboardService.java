@@ -6,10 +6,10 @@ import com.hls.recruitment.api.SupplySource;
 import com.hls.school.api.SchoolDirectory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,6 +55,7 @@ public class DashboardService {
     private final DemandFiguresImpl demandFigures;
     private final ObjectProvider<SupplySource> supply;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public DashboardService(
             ProspectRepository prospects,
@@ -65,7 +66,8 @@ public class DashboardService {
             MarketingScope scope,
             DemandFiguresImpl demandFigures,
             ObjectProvider<SupplySource> supply,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.prospects = prospects;
         this.activities = activities;
         this.stages = stages;
@@ -75,6 +77,7 @@ public class DashboardService {
         this.demandFigures = demandFigures;
         this.supply = supply;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +92,7 @@ public class DashboardService {
         YearMonth month = periodOf(period);
         LocalDate from = month.atDay(1);
         LocalDate to = month.atEndOfMonth();
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
 
         List<Prospect> visible = prospects.findAll().stream().filter(p -> scope.allowsZone(view, p.getZoneId()))
                 .filter(p -> zoneId == null || zoneId.equals(p.getZoneId()))
@@ -144,7 +147,7 @@ public class DashboardService {
 
     private YearMonth periodOf(String period) {
         if (period == null || period.isBlank()) {
-            return YearMonth.now(clock.withZone(ZoneOffset.UTC));
+            return YearMonth.from(businessDate.today());
         }
         try {
             return YearMonth.parse(period.trim());

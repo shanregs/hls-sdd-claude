@@ -5,7 +5,7 @@ import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherRegistry;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -55,7 +55,7 @@ public class RecruitmentDashboardService {
     private final TeacherDirectory teacherDirectory;
     private final TeacherRegistry registry;
     private final ObjectProvider<InductionProgress> induction;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
     public RecruitmentDashboardService(
             CampusDriveRepository drives,
@@ -66,7 +66,7 @@ public class RecruitmentDashboardService {
             TeacherDirectory teacherDirectory,
             TeacherRegistry registry,
             ObjectProvider<InductionProgress> induction,
-            Clock clock) {
+            BusinessDate businessDate) {
         this.drives = drives;
         this.colleges = colleges;
         this.candidates = candidates;
@@ -75,7 +75,7 @@ public class RecruitmentDashboardService {
         this.teacherDirectory = teacherDirectory;
         this.registry = registry;
         this.induction = induction;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional(readOnly = true)
@@ -98,7 +98,7 @@ public class RecruitmentDashboardService {
                         .filter(o -> SENT.contains(o.getStatus()))
                         .map(JobOffer::getCandidateId)
                         .collect(Collectors.toSet());
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Set<UUID> completed = induction.stream().findFirst().map(InductionProgress::completedTeacherIds).orElse(Set.of());
         Set<UUID> placedNow = teacherDirectory.teachersPlacedDuring(today, today);
         Set<UUID> activeTeachers = registry.activeTeacherIds();

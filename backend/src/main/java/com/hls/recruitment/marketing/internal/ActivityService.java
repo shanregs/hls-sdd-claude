@@ -392,7 +392,7 @@ public class ActivityService {
         if (list.isEmpty()) {
             return List.of();
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Set<UUID> userIds = new HashSet<>();
         list.forEach(a -> userIds.addAll(a.getAttendees()));
         Map<UUID, String> names = prospectService.namesOf(userIds);

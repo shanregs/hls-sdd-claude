@@ -267,7 +267,7 @@ public class DriveService {
                 .collect(Collectors.toMap(AppUser::getId, AppUser::getDisplayName));
         Map<UUID, List<Candidate>> byDrive = candidates.findByDriveIdIn(ids).stream()
                 .collect(Collectors.groupingBy(Candidate::getDriveId));
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<DriveDto> out = new ArrayList<>();
         for (CampusDrive d : rows) {
             College college = collegeById.get(d.getCollegeId());
