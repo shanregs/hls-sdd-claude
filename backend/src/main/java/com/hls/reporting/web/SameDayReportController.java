@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SameDayReportController {
 
     private final SameDayReportService service;
+    private final com.hls.designation.api.BusinessDate businessDate;
 
-    public SameDayReportController(SameDayReportService service) {
+    public SameDayReportController(SameDayReportService service, com.hls.designation.api.BusinessDate businessDate) {
         this.service = service;
+        this.businessDate = businessDate;
     }
 
     @GetMapping
@@ -31,7 +33,7 @@ public class SameDayReportController {
             @AuthenticationPrincipal Jwt jwt) {
         YearMonth wanted;
         try {
-            wanted = month == null || month.isBlank() ? YearMonth.now() : YearMonth.parse(month);
+            wanted = month == null || month.isBlank() ? YearMonth.from(businessDate.today()) : YearMonth.parse(month);
         } catch (DateTimeParseException e) {
             throw new DashboardInvalidInputException("The month must look like 2026-10.");
         }
