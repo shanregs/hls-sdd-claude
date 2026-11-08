@@ -53,7 +53,7 @@ I made these to close gaps. Items marked **(high)** change money and should be c
 | A-10 | Max 5 bills per expense claim, 10 MB each. Content cap 100 MB. Offer, MoU and evidence files 20 MB. | Limits |
 | A-11 | Incentive amount is one setting, snapshotted when the MoU is approved. It is paid once per School (the first signed MoU). The earner is the prospect owner; if the MoU has no prospect, the School's Manager. | Incentive |
 | A-12 | Audit log retention is 3 years; money tables (invoices, payroll, payments, salaries, placements) are never purged. Confirm with the accountant. | Compliance |
-| A-13 | CHANGED. System Engineer has technical access and also manages users and roles, like Admin. No payroll, billing or HR data by default. Risk: they could grant themselves money permissions; a guardrail is proposed in `04-roles-permissions.md`. | Role scope |
+| A-13 | CHANGED. System Engineer has technical access and also manages users and roles, like Admin. No payroll, billing or HR data by default. Risk of granting themselves money permissions is closed by the guardrail in D-37. | Role scope |
 | A-14 | CHANGED. Password login only for now. SMS one-time codes are deferred and will need a DLT-registered sender when added. | Lead time |
 | A-15 | Backups: nightly database dump plus an off-site copy, with a restore test each quarter. | Data safety |
 
@@ -87,7 +87,7 @@ I made these to close gaps. Items marked **(high)** change money and should be c
 | A-10 | Confirmed. |
 | A-11 | Confirmed. |
 | A-12 | Confirmed: 3 years for audit, configurable; confirm with the accountant before go-live. |
-| A-13 | Changed: System Engineer also manages users and roles (new D-35). Guardrail proposed, not yet confirmed. |
+| A-13 | Changed: System Engineer also manages users and roles (new D-35). Guardrail confirmed (D-37). |
 | A-14 | Changed: password login only for now; SMS deferred (new D-36). |
 | A-15 | Confirmed. |
 
@@ -101,3 +101,4 @@ I made these to close gaps. Items marked **(high)** change money and should be c
 | D-34 | Managers act on all Schools in their Zones. The named School Manager approves its MoU, transfers and Teacher expense claims. |
 | D-35 | System Engineer manages users and roles in addition to technical settings. |
 | D-36 | No SMS sign-in in release 1. Admin or System Engineer sets temporary passwords. |
+| D-37 | The System Engineer role can never be granted payroll, salary, billing or HR-record permissions. The permission-save code rejects it and audits the attempt. |

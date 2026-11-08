@@ -2,7 +2,7 @@
 
 All specs are in release 1. The order only sequences the work; nothing is deferred.
 Each description is ready to paste into `/speckit-specify`. Always add: "Follow docs/baseline (requirements, business rules, roles, data model, NFR)." Requirement ids refer to `01-requirements.md`.
-Assumptions were reviewed with the owner on 2026-11-08 (see section 4 of `02-decisions-and-assumptions.md`). Open: A-12 audit retention and the A-13 System Engineer guardrail.
+Assumptions were reviewed with the owner on 2026-11-08 (see section 4 of `02-decisions-and-assumptions.md`). Open: A-12 audit retention.
 
 | # | Spec | Depends on | Requirements |
 |---|------|-----------|--------------|
@@ -36,7 +36,7 @@ Order note: build 01 to 13 first to get a running system that can pay people and
 
 **02 Authentication and users.** Users sign in with phone or username and password (no SMS codes in release 1). Five failures lock for 30 minutes; failures reveal nothing. Sessions last about 12 hours and renew on use. Admin creates users, assigns roles, deactivates, resets passwords, sets temporary passwords and signs users out. The last Admin and oneself cannot be deactivated.
 
-**03 Access model and app shell.** Six roles. An Admin page edits the role x permission matrix (seeded defaults from `04-roles-permissions.md`). Permission is checked on every API call, then scope in code. Admin cannot remove their own `permissions.manage`. Role-specific menus and route guards; responsive PWA shell with page size 50; IST DD/MM/YYYY and Indian number formatting.
+**03 Access model and app shell.** Six roles. An Admin page edits the role x permission matrix (seeded defaults from `04-roles-permissions.md`). Permission is checked on every API call, then scope in code. Admin cannot remove their own `permissions.manage`, and the System Engineer role can never be granted payroll, salary, billing or HR-record permissions (PLT-07a). Role-specific menus and route guards; responsive PWA shell with page size 50; IST DD/MM/YYYY and Indian number formatting.
 
 **04 Audit, settings, notifications, files.** One audit log written by a single helper, with a search screen and 3-year retention. A key-value settings page (incentive amount, due days, overdue-task days, lockout constants). A notification bell with the 12 events in PLT-13, inserted in the causing transaction. File upload and download with access checks.
 

@@ -20,7 +20,7 @@ Everything here is in scope for release 1. There is no "phase 2".
 
 1. Create the repo. Copy this folder to `docs/baseline/`.
 2. Run `/speckit-constitution` with `07-constitution-draft.md` as input.
-3. The assumptions were reviewed with the owner on 2026-11-08; outcomes are in section 4 of `02-decisions-and-assumptions.md`. Two items remain open: confirm the 3-year audit retention with the accountant (A-12) and the proposed System Engineer guardrail (A-13).
+3. The assumptions were reviewed with the owner on 2026-11-08; outcomes are in section 4 of `02-decisions-and-assumptions.md`. One item remains open: confirm the 3-year audit retention with the accountant (A-12).
 4. For each spec in `08-spec-roadmap.md`, in order: `/speckit-specify` (paste the description), `/speckit-clarify`, `/speckit-plan` (tell it to follow `05` and `06`), `/speckit-tasks`, `/speckit-analyze`, `/speckit-implement`.
 5. Keep `03-business-rules.md` worked examples as automated tests. These money rules are the costly ones to get wrong.
 

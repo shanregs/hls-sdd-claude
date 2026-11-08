@@ -29,7 +29,7 @@ A user may hold more than one role; permissions are the union.
 - Permissions are a fixed list of keys defined in code (for example `attendance.mark_own`, `payroll.run`). Which role holds which key is data in `role_permission`, edited on an Admin page.
 - Changes are audited and apply on the next request.
 - Guardrail: Admin cannot lose `permissions.manage`.
-- Proposed guardrail (confirm): System Engineer manages users and roles but cannot be granted payroll, salary, billing or HR-record permissions, so technical access cannot widen into money data.
+- Guardrail (confirmed): System Engineer manages users and roles but can never be granted payroll, salary, billing or HR-record permissions. The matrix save rejects such a grant and audits the attempt (PLT-07a).
 - Scope is applied after the permission check; the matrix never widens scope.
 - The matrix below is the seed from migration.
 
