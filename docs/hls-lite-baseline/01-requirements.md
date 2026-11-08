@@ -11,6 +11,7 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 - PLT-05 Admin or System Engineer creates users, assigns one or more roles, deactivates users, resets passwords. The last Admin and oneself cannot be deactivated.
 - PLT-06 An Admin-edited permission matrix (role x permission) controls menus, routes and API actions. Changes take effect on the next request and are audited.
 - PLT-07 The matrix cannot remove the "manage permissions" permission from Admin.
+- PLT-07a The matrix rejects granting the System Engineer role any payroll, salary, billing or HR-record permission, and the rejected attempt is audited. The check lives in the permission-save code, not only the screen.
 - PLT-08 Data scope rules (Admin and Director all; Manager the Schools in their Zones; Teacher self; Content Creator own items) are enforced in code on every query and are not editable.
 - PLT-09 One `audit_log` records who, when, what, entity, before and after for changes to people, assignments, attendance corrections, money, approvals, settings and permissions.
 - PLT-10 Admin and Director search the audit log by user, entity and date. Audit entries are kept 3 years.
