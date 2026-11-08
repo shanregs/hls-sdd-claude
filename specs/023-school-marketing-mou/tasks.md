@@ -189,6 +189,7 @@ tests under `backend/src/test/java/com/hls/...`; migration `backend/src/main/res
   - Convergence note (2026-11-07): quickstart-results.md records every scenario as Pass at test level (ProspectApiTest, PipelineApiTest, ProposalApiTest, WinServiceTest, ...) but no browser walk. A person must walk the scenarios as Asha, Divya and Manoj, run keyboard-only, screen-reader and phone-width passes, and record them.
 - [ ] T057 Run the full backend and frontend suites once, then open the PR
   - Convergence note (2026-11-07): Needs one recorded run of the full backend and frontend suites (quickstart-results.md notes marketing.test.tsx timing out under load in another run); the PR step is already done by history.
+  - Package run 2026-11-08 (not the whole suite, so left open): backend 73 tests (recruitment.marketing) plus MOU classes of schoolbilling, frontend 20 tests (marketing) and 54 (schoolbilling) pass; marketing.test.tsx did not time out. Details in docs/full-suite-results-2026-11.md.
 
 ---
 

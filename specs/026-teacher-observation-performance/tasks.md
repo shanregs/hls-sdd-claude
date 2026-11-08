@@ -105,6 +105,7 @@ Goal: management review. Test: quickstart section 6.
 - [x] T055 Fix the wording gap in spec.md: FR-002 lists eight rating areas, Assumptions say "nine items".
 - [ ] T056 Run the full backend and frontend suites, walk through quickstart.md, record results in `specs/026-teacher-observation-performance/quickstart-results.md`.
   - Note: Converge 2026-11-07: stays open. Evidence: backend `com.hls.performance.*` tests, frontend vitest and a11y suites, API walk of sections 1-6 and `e2e/test_teacher_performance.py` (4 of 4) are recorded in quickstart-results.md. A person must still: run the full backend suite on an idle machine (the 2026-10-23 full run never finished), walk in the browser the correction/version, Not held, corrective-action, referral and feedback screens and section 7 (reconcile job, load check), and Manager B scope with a second Manager in the demo data.
+  - Package run 2026-11-08 (not the whole suite, so left open): backend 57 tests (com.hls.performance) and frontend 27 tests (performance) pass after a stale module-rule fix; browser walk and section 7 still open. Details in docs/full-suite-results-2026-11.md.
 
 ## Dependencies and order
 

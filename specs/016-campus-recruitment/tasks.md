@@ -200,6 +200,7 @@ under `backend/src/test/java/com/hls/...`; migration `backend/src/main/resources
   - Convergence note (2026-11-07): quickstart-results.md exists and records every scenario as Pass at test level (DriveApiTest, OfferApiTest, InductionAttendanceTest, DashboardTest, ...), but states that no browser walk has been done. A person must walk the six scenarios in a browser as Asha, Divya and Manoj, do the keyboard-only, screen-reader and phone-width passes, and record them.
 - [ ] T064 Run the full backend and frontend suites once, then open the PR
   - Convergence note (2026-11-07): Needs a person (or a Maven/npm run) to run the full backend and frontend suites once; no suite result is recorded in quickstart-results.md, and the PR step is already done by history, so only the suite run remains.
+  - Package run 2026-11-08 (not the whole suite, so left open): backend 62 tests (com.hls.recruitment) and frontend 12 tests (recruitment) pass. Details in docs/full-suite-results-2026-11.md.
 
 ---
 
