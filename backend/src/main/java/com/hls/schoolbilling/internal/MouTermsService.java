@@ -8,6 +8,7 @@ import com.hls.schoolbilling.internal.MouDtos.AmendRequest;
 import com.hls.schoolbilling.internal.MouDtos.AmendResponse;
 import com.hls.schoolbilling.internal.MouDtos.PositionSalary;
 import java.math.BigDecimal;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class MouTermsService {
     private final MouApprovalQueries queries;
     private final ContractService contractService;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     MouTermsService(
             MouAccess access,
@@ -52,7 +54,8 @@ public class MouTermsService {
             MouRecorder recorder,
             MouApprovalQueries queries,
             ContractService contractService,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.access = access;
         this.contracts = contracts;
         this.positions = positions;
@@ -62,6 +65,7 @@ public class MouTermsService {
         this.queries = queries;
         this.contractService = contractService;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional
@@ -86,7 +90,7 @@ public class MouTermsService {
         }
         StaleVersion.check(MouApproval.class, approval.getId(), approval.getVersion(), request.version());
 
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<ContractPosition> rows = positions.findByContractIdOrderByNumber(contractId);
         List<String> detail = new ArrayList<>();
         List<Runnable> audits = new ArrayList<>();

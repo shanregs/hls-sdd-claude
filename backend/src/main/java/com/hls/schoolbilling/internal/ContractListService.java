@@ -11,7 +11,7 @@ import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.schoolbilling.internal.ContractDtos.ContractListRow;
 import com.hls.schoolbilling.internal.ContractDtos.ContractStatus;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,7 +40,7 @@ public class ContractListService {
     private final ManagerQueries managers;
     private final ScopeQueries scopeQueries;
     private final ContractService contractService;
-    private final Clock clock;
+    private final BusinessDate businessDate;
     private final MouApprovalQueries approvalQueries;
 
     public ContractListService(
@@ -51,7 +51,7 @@ public class ContractListService {
             ManagerQueries managers,
             ScopeQueries scopeQueries,
             ContractService contractService,
-            Clock clock,
+            BusinessDate businessDate,
             MouApprovalQueries approvalQueries) {
         this.contracts = contracts;
         this.positions = positions;
@@ -60,7 +60,7 @@ public class ContractListService {
         this.managers = managers;
         this.scopeQueries = scopeQueries;
         this.contractService = contractService;
-        this.clock = clock;
+        this.businessDate = businessDate;
         this.approvalQueries = approvalQueries;
     }
 
@@ -74,7 +74,7 @@ public class ContractListService {
             String document,
             int page,
             int size) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<SchoolInfo> inScope = schools.allSchools();
         if (!CallerContext.isOrgWide(roles)) {
             ScopeView scope = scopeQueries.scopeOf(userId, roles);

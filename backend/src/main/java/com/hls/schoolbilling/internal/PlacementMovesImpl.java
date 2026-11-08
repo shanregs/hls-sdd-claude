@@ -7,6 +7,7 @@ import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.schoolbilling.api.PlacementMoves;
 import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ class PlacementMovesImpl implements PlacementMoves {
     private final ContractPositionRepository positions;
     private final ContractAssignmentRepository assignments;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     PlacementMovesImpl(
             AssignmentService service,
@@ -45,7 +47,8 @@ class PlacementMovesImpl implements PlacementMoves {
             ContractRepository contracts,
             ContractPositionRepository positions,
             ContractAssignmentRepository assignments,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.service = service;
         this.teachers = teachers;
         this.schools = schools;
@@ -53,6 +56,7 @@ class PlacementMovesImpl implements PlacementMoves {
         this.positions = positions;
         this.assignments = assignments;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Override
@@ -107,7 +111,7 @@ class PlacementMovesImpl implements PlacementMoves {
     @Override
     @Transactional
     public void reverse(UUID actorUserId, AppliedMove move) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<ContractAssignment> createdRows = new ArrayList<>();
         for (UUID id : move.createdAssignmentIds()) {
             ContractAssignment row = assignments.findById(id).orElse(null);

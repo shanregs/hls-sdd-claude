@@ -9,6 +9,7 @@ import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.schoolbilling.api.TeacherFirstAssigned;
 import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -42,6 +43,7 @@ public class AssignmentService {
     private final ContractAssignmentRepository assignments;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
     private final ApplicationEventPublisher events;
 
     public AssignmentService(
@@ -52,6 +54,7 @@ public class AssignmentService {
             ContractAssignmentRepository assignments,
             ChangeRecorder changes,
             Clock clock,
+            BusinessDate businessDate,
             ApplicationEventPublisher events) {
         this.teachers = teachers;
         this.schools = schools;
@@ -60,6 +63,7 @@ public class AssignmentService {
         this.assignments = assignments;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
         this.events = events;
     }
 
@@ -86,7 +90,7 @@ public class AssignmentService {
         if (!school.active()) {
             throw new ConflictException("This School is inactive.");
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         LocalDate start = effectiveOn == null ? today : effectiveOn;
 
         boolean firstAssignment = assignments.findByTeacherIdOrderByStartsOnDesc(teacherId).stream()
@@ -141,7 +145,7 @@ public class AssignmentService {
         if (!teachers.teacherInfo(List.of(teacherId)).containsKey(teacherId)) {
             throw new NotFoundException("Teacher not found.");
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<ContractAssignment> active =
                 assignments.findByTeacherIdAndStatusOrderByStartsOnDesc(teacherId, AssignmentStatus.ACTIVE);
         ContractAssignment pending = active.stream()
@@ -159,7 +163,7 @@ public class AssignmentService {
     /** Ends the current assignment on the exit date and cancels a scheduled one (Teacher exit). */
     @Transactional
     public void endForExit(UUID teacherId, LocalDate exitDate) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<ContractAssignment> active =
                 assignments.findByTeacherIdAndStatusOrderByStartsOnDesc(teacherId, AssignmentStatus.ACTIVE);
         ContractAssignment current =
