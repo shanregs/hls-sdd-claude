@@ -10,6 +10,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
 import java.math.BigDecimal;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -51,6 +52,7 @@ public class InductionAttendanceService {
     private final TeacherDirectory teacherDirectory;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public InductionAttendanceService(
             InductionEnrolmentRepository enrolments,
@@ -60,7 +62,8 @@ public class InductionAttendanceService {
             AttendanceReadApi attendanceRead,
             TeacherDirectory teacherDirectory,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.enrolments = enrolments;
         this.absences = absences;
         this.batches = batches;
@@ -69,6 +72,7 @@ public class InductionAttendanceService {
         this.teacherDirectory = teacherDirectory;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional
@@ -84,7 +88,7 @@ public class InductionAttendanceService {
         if (date.isBefore(enrolment.getStartsOn()) || date.isAfter(enrolment.getEndsOn())) {
             throw new InvalidInputException("The date is outside the batch dates.");
         }
-        if (date.isAfter(LocalDate.now(clock))) {
+        if (date.isAfter(businessDate.today())) {
             throw new ConflictException("You cannot record attendance for a future date.");
         }
         String status = request.status() == null ? "" : request.status().trim().toUpperCase();

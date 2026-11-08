@@ -7,6 +7,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
 import com.hls.teacher.api.TeacherRegistry;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ public class BatchService {
     private final TeacherRegistry registry;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public BatchService(
             InductionBatchRepository batches,
@@ -61,13 +63,15 @@ public class BatchService {
             TeacherDirectory teacherDirectory,
             TeacherRegistry registry,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.batches = batches;
         this.enrolments = enrolments;
         this.teacherDirectory = teacherDirectory;
         this.registry = registry;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional(readOnly = true)
@@ -144,7 +148,7 @@ public class BatchService {
         if (batch.isCancelled()) {
             throw new ConflictException("This batch was cancelled.");
         }
-        if (batch.getEndsOn().isBefore(LocalDate.now(clock))) {
+        if (batch.getEndsOn().isBefore(businessDate.today())) {
             throw new ConflictException("This batch has already ended.");
         }
         TeacherInfo teacher = teacherDirectory.teacherInfo(List.of(teacherId)).get(teacherId);
@@ -172,7 +176,7 @@ public class BatchService {
 
     /** The earliest batch that has not ended, is not cancelled and has a free seat, excluding {@code except}. */
     Optional<InductionBatch> nextWithRoom(UUID except) {
-        for (InductionBatch candidate : batches.openFrom(LocalDate.now(clock))) {
+        for (InductionBatch candidate : batches.openFrom(businessDate.today())) {
             if (candidate.getId().equals(except)) {
                 continue;
             }
@@ -211,7 +215,7 @@ public class BatchService {
     /** Active Teachers who completed an induction and have no School assignment today. */
     @Transactional(readOnly = true)
     public List<RecruitRef> readyToDeploy() {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Set<UUID> ready = new HashSet<>(enrolments.completedTeacherIds());
         ready.retainAll(registry.activeTeacherIds());
         ready.removeAll(teacherDirectory.teachersPlacedDuring(today, today));
@@ -229,7 +233,7 @@ public class BatchService {
     }
 
     BatchDto view(InductionBatch b, long enrolled) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         String status = b.isCancelled()
                 ? "CANCELLED"
                 : b.getEndsOn().isBefore(today) ? "COMPLETED" : b.getStartsOn().isAfter(today) ? "PLANNED" : "RUNNING";
