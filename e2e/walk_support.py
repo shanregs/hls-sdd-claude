@@ -9,7 +9,7 @@ import os
 import time
 import urllib.error
 import urllib.request
-from datetime import date, timedelta
+from datetime import date
 
 BASE = os.environ.get("BASE_URL", "http://localhost:5173")
 API = os.environ.get("API_URL", "http://localhost:8080")  # direct to the backend: setup calls skip the nginx rate limit
@@ -100,8 +100,7 @@ def build_world(tag, with_manager_b=True, teachers_a=2, teachers_b=1):
             "address": "Test Street", "status": "ACTIVE", "userId": u["id"]}))
         ok(call(admin, "POST", f"/api/v1/teachers/{t['id']}/placements", {
             "schoolId": sch["id"], "positionId": None,
-            # yesterday: the server resolves scope on the UTC date, which lags the business (IST) date by up to 5.5 hours
-            "effectiveOn": (date.today() - timedelta(days=1)).isoformat()}))
+            "effectiveOn": date.today().isoformat()}))
         return {"phone": u["phone"], "name": t["name"], "id": t["id"], "userId": u["id"]}
 
     za, pa = zone("Zone A", 0)
