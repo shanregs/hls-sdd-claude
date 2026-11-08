@@ -8,8 +8,8 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.Test;
 
 /**
- * Spec 026 plan.md, Principle VII: performance reads other modules through their api packages; only notification (and later
- * specs 027 and 028) read performance.api.
+ * Spec 026 plan.md, Principle VII: performance reads other modules through their api packages; only notification, the report modules
+ * of spec 014 (PerformanceSummary columns) and later specs 027 and 028 read performance.api.
  */
 class PerformanceModuleRulesTest {
 
@@ -47,7 +47,7 @@ class PerformanceModuleRulesTest {
     void onlyNotificationAndThePerformanceModuleUseThePerformanceApi() {
         noClasses()
                 .that()
-                .resideOutsideOfPackages("com.hls.performance..", "com.hls.notification..")
+                .resideOutsideOfPackages("com.hls.performance..", "com.hls.notification..", "com.hls.peoplereports..", "com.hls.schoolreports..")
                 .should()
                 .dependOnClassesThat()
                 .resideInAPackage("com.hls.performance..")
