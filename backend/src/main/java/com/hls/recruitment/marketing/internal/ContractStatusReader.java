@@ -5,7 +5,7 @@ import com.hls.schoolbilling.api.Occupancy;
 import com.hls.schoolbilling.api.PositionView;
 import com.hls.schoolbilling.api.SchoolContracts;
 import java.math.BigDecimal;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,12 +48,13 @@ class ContractStatusReader {
 
     private final ObjectProvider<SchoolContracts> contracts;
     private final ProposalService proposals;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
-    ContractStatusReader(ObjectProvider<SchoolContracts> contracts, ProposalService proposals, Clock clock) {
+    ContractStatusReader(ObjectProvider<SchoolContracts> contracts, ProposalService proposals,
+            BusinessDate businessDate) {
         this.contracts = contracts;
         this.proposals = proposals;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     Status of(Prospect prospect) {
@@ -68,7 +69,7 @@ class ContractStatusReader {
         if (prospect.getSchoolId() == null) {
             return new Status(true, NOT_RECORDED, null, proposal.orElse(null), List.of());
         }
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         ContractView contract = source.contractOf(prospect.getSchoolId(), today)
                 .or(() -> source.contractsOverlapping(prospect.getSchoolId(), today, today.plusYears(5)).stream().findFirst())
                 .filter(c -> "ACTIVE".equals(c.state()))

@@ -5,6 +5,7 @@ import com.hls.school.api.ConflictException;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import com.hls.teacher.api.TeacherRegistry;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class SignOffService {
     private final TeacherRegistry registry;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public SignOffService(
             InductionEnrolmentRepository enrolments,
@@ -34,13 +36,15 @@ public class SignOffService {
             BatchService batchService,
             TeacherRegistry registry,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.enrolments = enrolments;
         this.batches = batches;
         this.batchService = batchService;
         this.registry = registry;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional
@@ -54,7 +58,7 @@ public class SignOffService {
             throw new ConflictException("This recruit has already been signed off.");
         }
         InductionBatch batch = batchService.find(enrolment.getBatchId());
-        if (batch.getStartsOn().isAfter(LocalDate.now(clock))) {
+        if (batch.getStartsOn().isAfter(businessDate.today())) {
             throw new ConflictException("The batch has not started yet.");
         }
         String remarks = request.remarks() == null || request.remarks().isBlank() ? null : request.remarks().trim();
@@ -94,7 +98,7 @@ public class SignOffService {
                 if (reason.isEmpty()) {
                     throw new InvalidInputException("A reason is required to release a recruit.");
                 }
-                registry.exit(actor, enrolment.getTeacherId(), LocalDate.now(clock), reason);
+                registry.exit(actor, enrolment.getTeacherId(), businessDate.today(), reason);
                 enrolment.followUp("RELEASED");
             }
             default -> throw new InvalidInputException("The action must be NEXT_BATCH or RELEASE.");

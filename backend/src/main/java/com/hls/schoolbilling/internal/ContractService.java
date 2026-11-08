@@ -30,6 +30,7 @@ import com.hls.teacher.api.TeacherDirectory;
 import com.hls.teacher.api.TeacherDirectory.TeacherInfo;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ public class ContractService {
     private final AppUserRepository users;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
     private final MouApprovalRepository approvals;
     private final MouApprovalQueries approvalQueries;
 
@@ -89,6 +91,7 @@ public class ContractService {
             AppUserRepository users,
             ChangeRecorder changes,
             Clock clock,
+            BusinessDate businessDate,
             MouApprovalRepository approvals,
             MouApprovalQueries approvalQueries) {
         this.contracts = contracts;
@@ -103,6 +106,7 @@ public class ContractService {
         this.users = users;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
         this.approvals = approvals;
         this.approvalQueries = approvalQueries;
     }
@@ -144,7 +148,7 @@ public class ContractService {
             throw new ConflictException("This School is inactive.");
         }
         requireZoneManager(schoolId);
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         if (request.startsOn() == null) {
             throw new InvalidInputException("The start date is required.");
         }
@@ -195,7 +199,7 @@ public class ContractService {
             throw new ConflictException("The MoU is already recorded. Record a new contract to change it.");
         }
         requireZoneManager(contract.getSchoolId());
-        Validated mou = validate(contract.getSchoolId(), request, LocalDate.now(clock));
+        Validated mou = validate(contract.getSchoolId(), request, businessDate.today());
         contract.recordMou(mou.mode(), mou.count(), mou.rate(), mou.signedOn());
         contracts.saveAndFlush(contract);
         insertDetails(contract, mou);
@@ -493,7 +497,7 @@ public class ContractService {
             return List.of();
         }
         Map<UUID, MouDtos.ApprovalSummaryDto> approvalOf = approvalQueries.summaries(list, roles);
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<UUID> ids = list.stream().map(Contract::getId).toList();
         Map<UUID, List<ContractPosition>> positionsByContract = positions
                 .findByContractIdInOrderByContractIdAscNumberAsc(ids)
@@ -550,7 +554,7 @@ public class ContractService {
      * assignments, or assignments left on a contract that has ended or been replaced; spec 012 FR-007a).
      */
     List<UnmappedTeacherDto> unmappedTeachers(UUID schoolId) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         Optional<Contract> inEffect = contracts.liveOn(schoolId, today);
         Set<UUID> inEffectPositions = inEffect.isEmpty() || inEffect.get().isPending()
                 ? Set.of()

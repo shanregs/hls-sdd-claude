@@ -10,6 +10,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.teacher.api.TeacherRegistry;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -78,6 +79,7 @@ public class OfferService {
     private final ApplicationEventPublisher events;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
     private final OfferLetterRenderer renderer;
 
     public OfferService(
@@ -90,6 +92,7 @@ public class OfferService {
             ApplicationEventPublisher events,
             ChangeRecorder changes,
             Clock clock,
+            BusinessDate businessDate,
             OfferLetterRenderer renderer) {
         this.offers = offers;
         this.candidates = candidates;
@@ -100,6 +103,7 @@ public class OfferService {
         this.events = events;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
         this.renderer = renderer;
     }
 
@@ -175,7 +179,7 @@ public class OfferService {
         if (offer.getStatus() != OfferStatus.DRAFT) {
             throw new ConflictException("Only a draft can be issued.");
         }
-        if (offer.getResponseDeadline().isBefore(LocalDate.now(clock))) {
+        if (offer.getResponseDeadline().isBefore(businessDate.today())) {
             throw new ConflictException("The response deadline has already passed.");
         }
         offer.issue(actor, clock.instant());
@@ -240,7 +244,7 @@ public class OfferService {
         if (offer.getStatus() != OfferStatus.ISSUED) {
             throw new ConflictException("Only an issued offer can be accepted.");
         }
-        if (offer.getResponseDeadline().isBefore(LocalDate.now(clock))) {
+        if (offer.getResponseDeadline().isBefore(businessDate.today())) {
             throw new ConflictException("This offer passed its response deadline and can no longer be accepted.");
         }
         Candidate candidate = candidates.findById(offer.getCandidateId()).orElseThrow(() -> new NotFoundException("Candidate not found."));
@@ -269,7 +273,7 @@ public class OfferService {
     /** Marks every issued offer past its deadline as expired; returns how many. */
     @Transactional
     public int expireOverdue(UUID systemActor) {
-        List<JobOffer> overdue = offers.findByStatusAndResponseDeadlineBefore(OfferStatus.ISSUED, LocalDate.now(clock));
+        List<JobOffer> overdue = offers.findByStatusAndResponseDeadlineBefore(OfferStatus.ISSUED, businessDate.today());
         for (JobOffer offer : overdue) {
             offer.expire();
             offers.saveAndFlush(offer);
@@ -320,7 +324,7 @@ public class OfferService {
         if (salary.signum() <= 0 || salary.compareTo(MAX_SALARY) > 0) {
             throw new InvalidInputException("The monthly salary must be more than zero.");
         }
-        LocalDate offerDate = request.offerDate() == null ? LocalDate.now(clock) : request.offerDate();
+        LocalDate offerDate = request.offerDate() == null ? businessDate.today() : request.offerDate();
         if (request.responseDeadline() == null) {
             throw new InvalidInputException("A response deadline is required.");
         }

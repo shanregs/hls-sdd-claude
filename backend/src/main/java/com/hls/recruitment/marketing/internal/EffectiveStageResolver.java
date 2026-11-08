@@ -2,7 +2,7 @@ package com.hls.recruitment.marketing.internal;
 
 import com.hls.schoolbilling.api.Occupancy;
 import com.hls.schoolbilling.api.SchoolContracts;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -27,11 +27,12 @@ class EffectiveStageResolver {
     static final String ACTIVE = "ACTIVE";
 
     private final ObjectProvider<SchoolContracts> contracts;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
-    EffectiveStageResolver(ObjectProvider<SchoolContracts> contracts, Clock clock) {
+    EffectiveStageResolver(ObjectProvider<SchoolContracts> contracts,
+            BusinessDate businessDate) {
         this.contracts = contracts;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     /** One batch call to spec 012 for every won prospect with a School, however many prospects there are. */
@@ -44,7 +45,7 @@ class EffectiveStageResolver {
         Map<UUID, Occupancy> occupancy = Map.of();
         SchoolContracts source = contracts.getIfAvailable();
         if (source != null && !schoolIds.isEmpty()) {
-            occupancy = source.occupancyOfAll(schoolIds, LocalDate.now(clock));
+            occupancy = source.occupancyOfAll(schoolIds, businessDate.today());
         }
         for (Prospect p : prospects) {
             if (!p.isWon()) {

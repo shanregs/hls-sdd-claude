@@ -3,7 +3,7 @@ package com.hls.recruitment.marketing.internal;
 import com.hls.recruitment.api.DemandFigures;
 import com.hls.schoolbilling.api.Occupancy;
 import com.hls.schoolbilling.api.SchoolContracts;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
@@ -23,12 +23,13 @@ class DemandFiguresImpl implements DemandFigures {
 
     private final ProspectRepository prospects;
     private final ObjectProvider<SchoolContracts> contracts;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
-    DemandFiguresImpl(ProspectRepository prospects, ObjectProvider<SchoolContracts> contracts, Clock clock) {
+    DemandFiguresImpl(ProspectRepository prospects, ObjectProvider<SchoolContracts> contracts,
+            BusinessDate businessDate) {
         this.prospects = prospects;
         this.contracts = contracts;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     /** The vacant positions of the Schools of these won prospects. */
@@ -37,7 +38,7 @@ class DemandFiguresImpl implements DemandFigures {
         Set<UUID> schools = won.stream().map(Prospect::getSchoolId).filter(Objects::nonNull).collect(Collectors.toSet());
         long demand = 0;
         if (source != null && !schools.isEmpty()) {
-            for (Occupancy o : source.occupancyOfAll(schools, LocalDate.now(clock)).values()) {
+            for (Occupancy o : source.occupancyOfAll(schools, businessDate.today()).values()) {
                 demand += o.vacant();
             }
         }

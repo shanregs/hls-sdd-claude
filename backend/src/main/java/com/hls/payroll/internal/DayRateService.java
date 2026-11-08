@@ -7,6 +7,7 @@ import com.hls.school.api.ChangeRecorder;
 import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import java.math.BigDecimal;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -39,12 +40,15 @@ public class DayRateService implements DayRates {
     private final PersonDirectory people;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
-    DayRateService(DesignationDayRateRepository rates, PersonDirectory people, ChangeRecorder changes, Clock clock) {
+    DayRateService(DesignationDayRateRepository rates, PersonDirectory people, ChangeRecorder changes, Clock clock,
+            BusinessDate businessDate) {
         this.rates = rates;
         this.people = people;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     // ------------------------------------------------------------------ reads
@@ -52,7 +56,7 @@ public class DayRateService implements DayRates {
     /** Every Teacher designation with the day rate in effect today; a fixed number of queries. */
     @Transactional(readOnly = true)
     public List<ListEntry> list(boolean includeRetired) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         List<DesignationRef> designations = people.designations(Kind.TEACHER, includeRetired);
         Map<UUID, RateOn> inEffect =
                 ratesOn(designations.stream().map(DesignationRef::id).toList(), today);

@@ -2,7 +2,7 @@ package com.hls.recruitment.marketing.internal;
 
 import com.hls.reporting.api.ManagerColumns;
 import com.hls.reporting.api.TileContext;
-import java.time.Clock;
+import com.hls.designation.api.BusinessDate;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -26,17 +26,17 @@ class MarketingManagerColumns implements ManagerColumns {
 
     private final MarketingActivityRepository activities;
     private final ProspectRepository prospects;
-    private final Clock clock;
+    private final BusinessDate businessDate;
     private final ZoneId zone;
 
     MarketingManagerColumns(
             MarketingActivityRepository activities,
             ProspectRepository prospects,
-            Clock clock,
+            BusinessDate businessDate,
             @Value("${hls.business-timezone:Asia/Kolkata}") String zoneId) {
         this.activities = activities;
         this.prospects = prospects;
-        this.clock = clock;
+        this.businessDate = businessDate;
         this.zone = ZoneId.of(zoneId);
     }
 
@@ -52,7 +52,7 @@ class MarketingManagerColumns implements ManagerColumns {
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, Map<String, Long>> figures(TileContext ctx, Set<UUID> managerUserIds) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         YearMonth month = ctx.month();
         Map<UUID, long[]> counts = new HashMap<>();
         for (MarketingActivity a : activities.findByActivityDateBetweenOrderByActivityDate(month.atDay(1), month.atEndOfMonth())) {

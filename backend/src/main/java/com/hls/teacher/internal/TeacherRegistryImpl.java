@@ -1,5 +1,6 @@
 package com.hls.teacher.internal;
 
+import com.hls.designation.api.BusinessDate;
 import com.hls.identity.user.Role;
 import com.hls.school.api.ChangeRecorder;
 import com.hls.school.api.ConflictException;
@@ -24,18 +25,21 @@ class TeacherRegistryImpl implements TeacherRegistry {
     private final TeacherRepository teachers;
     private final SalaryHistoryRepository salaries;
     private final ChangeRecorder changes;
+    private final BusinessDate businessDate;
 
     TeacherRegistryImpl(
             TeacherService teacherService,
             SalaryService salaryService,
             TeacherRepository teachers,
             SalaryHistoryRepository salaries,
-            ChangeRecorder changes) {
+            ChangeRecorder changes,
+            BusinessDate businessDate) {
         this.teacherService = teacherService;
         this.salaryService = salaryService;
         this.teachers = teachers;
         this.salaries = salaries;
         this.changes = changes;
+        this.businessDate = businessDate;
     }
 
     /** The last ten digits of the phone, or null when it has none. */
@@ -81,7 +85,7 @@ class TeacherRegistryImpl implements TeacherRegistry {
         if (teacher.getStatus() != TeacherStatus.IN_TRAINING) {
             throw new ConflictException("Only a Teacher in training can be activated.");
         }
-        teacherService.changeStatus(actor, teacherId, TeacherStatus.ACTIVE, LocalDate.now());
+        teacherService.changeStatus(actor, teacherId, TeacherStatus.ACTIVE, businessDate.today());
     }
 
     @Override
