@@ -6,6 +6,7 @@ import com.hls.school.api.InvalidInputException;
 import com.hls.school.api.NotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,18 +35,21 @@ public class SalaryService {
     private final TeacherScopeService scopeService;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public SalaryService(
             SalaryHistoryRepository repository,
             TeacherRepository teacherRepository,
             TeacherScopeService scopeService,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.repository = repository;
         this.teacherRepository = teacherRepository;
         this.scopeService = scopeService;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +60,7 @@ public class SalaryService {
                 .toList();
         Entry current = repository
                 .findFirstByTeacherIdAndEffectiveOnLessThanEqualOrderByEffectiveOnDescCreatedAtDesc(
-                        teacherId, LocalDate.now(clock))
+                        teacherId, businessDate.today())
                 .map(SalaryService::toEntry)
                 .orElse(null);
         return new History(current, entries);
@@ -86,7 +90,7 @@ public class SalaryService {
         }
         BigDecimal before = repository
                 .findFirstByTeacherIdAndEffectiveOnLessThanEqualOrderByEffectiveOnDescCreatedAtDesc(
-                        teacherId, LocalDate.now(clock))
+                        teacherId, businessDate.today())
                 .map(SalaryHistoryEntry::getAmount)
                 .orElse(null);
         SalaryHistoryEntry saved =

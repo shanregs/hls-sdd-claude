@@ -4,8 +4,7 @@ import com.hls.school.api.ConflictException;
 import com.hls.school.api.SchoolDeactivationGuard;
 import com.hls.school.api.SchoolViewEnricher;
 import com.hls.teacher.api.TeacherPlacementSource;
-import java.time.Clock;
-import java.time.LocalDate;
+import com.hls.designation.api.BusinessDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,17 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class TeacherSchoolHooks implements SchoolDeactivationGuard, SchoolViewEnricher {
 
     private final TeacherPlacementSource placementSource;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
-    public TeacherSchoolHooks(TeacherPlacementSource placementSource, Clock clock) {
+    public TeacherSchoolHooks(TeacherPlacementSource placementSource, BusinessDate businessDate) {
         this.placementSource = placementSource;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Override
     @Transactional(readOnly = true)
     public void checkDeactivate(UUID schoolId) {
-        if (placementSource.hasCurrentOrFutureAssignment(schoolId, LocalDate.now(clock))) {
+        if (placementSource.hasCurrentOrFutureAssignment(schoolId, businessDate.today())) {
             throw new ConflictException(
                     "This School still has Teachers placed in it or scheduled to arrive. Move them first.");
         }
@@ -40,7 +39,7 @@ public class TeacherSchoolHooks implements SchoolDeactivationGuard, SchoolViewEn
         if (schoolIds.isEmpty()) {
             return Map.of();
         }
-        Map<UUID, Long> counts = placementSource.teacherCountsBySchool(schoolIds, LocalDate.now(clock));
+        Map<UUID, Long> counts = placementSource.teacherCountsBySchool(schoolIds, businessDate.today());
         Map<UUID, Map<String, Object>> result = new HashMap<>();
         for (UUID id : schoolIds) {
             result.put(id, Map.of("teacherCount", counts.getOrDefault(id, 0L)));

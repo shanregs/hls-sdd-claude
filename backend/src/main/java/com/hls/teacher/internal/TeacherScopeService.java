@@ -6,8 +6,7 @@ import com.hls.organization.api.ScopeView;
 import com.hls.school.api.CallerContext;
 import com.hls.teacher.api.TeacherPlacementSource;
 import com.hls.teacher.api.TeacherScopeQueries;
-import java.time.Clock;
-import java.time.LocalDate;
+import com.hls.designation.api.BusinessDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -26,17 +25,17 @@ public class TeacherScopeService implements TeacherScopeQueries {
     private final ScopeQueries scopeQueries;
     private final TeacherPlacementSource placementSource;
     private final TeacherRepository teacherRepository;
-    private final Clock clock;
+    private final BusinessDate businessDate;
 
     public TeacherScopeService(
             ScopeQueries scopeQueries,
             TeacherPlacementSource placementSource,
             TeacherRepository teacherRepository,
-            Clock clock) {
+            BusinessDate businessDate) {
         this.scopeQueries = scopeQueries;
         this.placementSource = placementSource;
         this.teacherRepository = teacherRepository;
-        this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     @Override
@@ -48,7 +47,7 @@ public class TeacherScopeService implements TeacherScopeQueries {
         if (roles.contains(Role.MANAGER)) {
             ScopeView scope = scopeQueries.scopeOf(userId, roles);
             if (!scope.schoolIds().isEmpty()) {
-                ids.addAll(placementSource.teacherIdsAtSchoolsOn(scope.schoolIds(), LocalDate.now(clock)));
+                ids.addAll(placementSource.teacherIdsAtSchoolsOn(scope.schoolIds(), businessDate.today()));
             }
         }
         if (roles.contains(Role.TEACHER)) {
