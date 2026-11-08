@@ -165,6 +165,7 @@ Backend `backend/src/main/java/com/hls/{schoolbilling,teacher,identity}/...`, te
       **Convergence 2026-11-07 (left open):** API walk and test mapping are recorded in quickstart-results.md, but the browser walkthrough is not done. A person must click through the contract list, School contract page and Map Teachers dialog (mouse, keyboard-only, screen reader, phone width) and record it.
 - [ ] T050 Run the full backend suite and the full frontend suite once (one Maven class at a time if the machine struggles), then open the PR
       **Convergence 2026-11-07 (left open):** environment task; the last full run (641 backend, 54 frontend files) predates the review fixes and was not repeated. A person must run both full suites and record the totals.
+  - Package run 2026-11-08 (not the whole suite, so left open): backend 208 tests (36 classes: schoolbilling, SchoolContractsApproveGrantTest, 2 teacher classes) and frontend 54 tests (schoolbilling, 7 files) pass. Details in docs/full-suite-results-2026-11.md.
 
 ---
 
