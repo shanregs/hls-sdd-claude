@@ -13,6 +13,7 @@ import com.hls.school.api.NotFoundException;
 import com.hls.school.api.SchoolDirectory;
 import com.hls.school.api.SchoolDirectory.SchoolInfo;
 import com.hls.school.api.StaleVersion;
+import com.hls.designation.api.BusinessDate;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class ManagerService implements ManagerQueries {
     private final ManagerEmploymentService employment;
     private final ChangeRecorder changes;
     private final Clock clock;
+    private final BusinessDate businessDate;
 
     public ManagerService(
             ManagerRepository managerRepository,
@@ -61,7 +63,8 @@ public class ManagerService implements ManagerQueries {
             List<ManagerViewEnricher> enrichers,
             ManagerEmploymentService employment,
             ChangeRecorder changes,
-            Clock clock) {
+            Clock clock,
+            BusinessDate businessDate) {
         this.managerRepository = managerRepository;
         this.zoneAssignments = zoneAssignments;
         this.schoolAssignments = schoolAssignments;
@@ -71,6 +74,7 @@ public class ManagerService implements ManagerQueries {
         this.employment = employment;
         this.changes = changes;
         this.clock = clock;
+        this.businessDate = businessDate;
     }
 
     // ------------------------------------------------------------------ reads
@@ -303,7 +307,7 @@ public class ManagerService implements ManagerQueries {
             }
         }
 
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         for (ZoneManagerAssignment row : current) {
             if (removed.contains(row.getZoneId())) {
                 row.end(today);
@@ -359,7 +363,7 @@ public class ManagerService implements ManagerQueries {
             return;
         }
 
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = businessDate.today();
         UUID before = currentRow.map(SchoolManagerAssignment::getManagerId).orElse(null);
         currentRow.ifPresent(row -> {
             row.end(today);
