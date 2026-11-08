@@ -35,26 +35,26 @@
 | D-29 | Stack: React frontend (PWA), Java 25 with the latest Spring Boot, PostgreSQL latest community edition. Logging, metrics and observability are required. | E1 |
 | D-30 | All modules ship in release 1. | F |
 
-## 2. Assumptions to confirm
+## 2. Assumptions (reviewed with the owner 2026-11-08; outcomes in section 4)
 
 I made these to close gaps. Items marked **(high)** change money and should be confirmed before the payroll and billing specs.
 
 | Id | Assumption | Why it matters |
 |----|-----------|----------------|
-| A-01 **(high)** | Pay and invoice use the **actual calendar days of the month** (28 to 31) as the divisor. The per-School "working days" screen (old specs 037/038) is dropped. Your note "each School may have different calendar days, 30 or 31" was read as month length. If a School really needs its own day count, add a `school_month_days` table and use it for that School's invoice only. | Divisor for LOP, pro-rata, invoice |
+| A-01 **(high)** | CHANGED. Pay uses the actual calendar days of the month. Invoices use a per-School, per-month **School month figure** (default calendar days, editable). The table `school_month_days` returns. | Divisor for pay and invoice |
 | A-02 **(high)** | LOP day value = monthly salary / calendar days of the month. Payable days = days placed (Teachers) or days employed (others) in the month, minus unpaid days. A weekly off or holiday is never deducted. | Core pay formula |
 | A-03 **(high)** | **Staff** (Admin, Director, System Engineer, Content Creator) have no attendance tracking. They get full salary unless Admin enters a manual LOP adjustment line. | Payroll for 4 roles |
-| A-04 **(high)** | Billing ignores absences and substitutes: a placed Teacher is billed the full position fee for her placed days. Vacant positions are not billed. | Invoice amount |
+| A-04 **(high)** | CHANGED. A School gets a credit of position fee / School month figure for each uncovered day. Covered = Substitute marked Present, or Manager covers. Vacant positions are not billed. | Invoice amount |
 | A-05 **(high)** | Manager "No check-in" working days are listed at month lock; Admin must resolve each one (Office, Field, Leave or Absent). Absent and Leave are LOP. Same rule for unmarked Teacher days: Manager or Admin resolves them before the lock. | Month lock |
 | A-06 | Rounding: each pay or invoice component is rounded half-up to 2 decimals. | Totals reproducible |
 | A-07 | Expense approvers: Teacher claims go to the School's Manager. Manager claims go to Admin or Director. Admin's claim goes to the Director. Admin and Director can approve any claim except their own. | Self-approval |
-| A-08 | Leave decisions: Teacher leave by the Manager (Admin and Director may also decide). Manager leave by the Director. | Leave workflow |
-| A-09 | A Manager's data scope is the **Schools assigned to them**. Zone-wide actions (substitute pool, marking Substitute days) are open to any Manager of that Zone. A Zone can have several Managers. | Scope rule |
+| A-08 | Leave decisions: Teacher leave by a Manager of the Zone (Admin and Director may also decide). Manager leave by Admin or Director. | Leave workflow |
+| A-09 | CHANGED. A Manager sees and acts on **all Schools in their Zones**. Each School still has one named Manager who approves its MoU, transfers and Teacher expense claims. A Zone can have several Managers. | Scope rule |
 | A-10 | Max 5 bills per expense claim, 10 MB each. Content cap 100 MB. Offer, MoU and evidence files 20 MB. | Limits |
 | A-11 | Incentive amount is one setting, snapshotted when the MoU is approved. It is paid once per School (the first signed MoU). The earner is the prospect owner; if the MoU has no prospect, the School's Manager. | Incentive |
 | A-12 | Audit log retention is 3 years; money tables (invoices, payroll, payments, salaries, placements) are never purged. Confirm with the accountant. | Compliance |
-| A-13 | System Engineer has technical and platform access only (settings, health, observability, unlocking users, audit view). No payroll, billing or HR data. | Role scope |
-| A-14 | SMS one-time codes need a registered sender in India (DLT). Start registration early. Password login and an Admin temporary password remain as fallback. | Lead time |
+| A-13 | CHANGED. System Engineer has technical access and also manages users and roles, like Admin. No payroll, billing or HR data by default. Risk: they could grant themselves money permissions; a guardrail is proposed in `04-roles-permissions.md`. | Role scope |
+| A-14 | CHANGED. Password login only for now. SMS one-time codes are deferred and will need a DLT-registered sender when added. | Lead time |
 | A-15 | Backups: nightly database dump plus an off-site copy, with a restore test each quarter. | Data safety |
 
 ## 3. Conflicts resolved from the earlier draft
@@ -69,4 +69,35 @@ I made these to close gaps. Items marked **(high)** change money and should be c
 | Five roles | Six roles; Substitute has no login |
 | Phase 1 / Phase 2 split | One release (D-30) |
 | "No monitoring beyond a health URL" | Logging, metrics, tracing (D-29) |
-| Per-School monthly working days (037/038) | Dropped; calendar days (A-01) |
+| Per-School monthly working days (037/038) | Kept only as the School month figure for invoices; pay uses calendar days (A-01) |
+
+## 4. Assumption review outcome (2026-11-08)
+
+| Id | Outcome |
+|----|---------|
+| A-01 | Changed: per-School month figure for invoices only (new D-31). Pay uses calendar days. |
+| A-02 | Confirmed. Weekly offs and holidays are never deducted; leave counts working days only. |
+| A-03 | Confirmed. Staff get full salary; Admin adds a manual LOP line when needed. |
+| A-04 | Changed: credit for uncovered days at position fee / School month figure (new D-32). Covered = Substitute marked Present or Manager covers. |
+| A-05 | Confirmed. Month lock is blocked until every unmarked or no-check-in working day is resolved. |
+| A-06 | Confirmed. Round each component half-up to 2 decimals. |
+| A-07 | Confirmed. |
+| A-08 | Changed: Manager leave decided by Admin or Director (new D-33). |
+| A-09 | Changed: Manager scope is by Zone; one named Manager per School kept for approvals (new D-34). |
+| A-10 | Confirmed. |
+| A-11 | Confirmed. |
+| A-12 | Confirmed: 3 years for audit, configurable; confirm with the accountant before go-live. |
+| A-13 | Changed: System Engineer also manages users and roles (new D-35). Guardrail proposed, not yet confirmed. |
+| A-14 | Changed: password login only for now; SMS deferred (new D-36). |
+| A-15 | Confirmed. |
+
+### New decisions from the review
+
+| Id | Decision |
+|----|----------|
+| D-31 | Invoices divide by a School month figure per School and month. Default is the calendar days of the month; Admin can edit it. Pay never uses it. |
+| D-32 | An uncovered day (Teacher Absent or on Leave on a School working day, no Substitute marked Present, no Manager cover) gives the School a credit of position fee / School month figure. Raising an invoice is blocked while a Substitute assignment in the month has no day mark. |
+| D-33 | Manager leave is decided by Admin or Director. |
+| D-34 | Managers act on all Schools in their Zones. The named School Manager approves its MoU, transfers and Teacher expense claims. |
+| D-35 | System Engineer manages users and roles in addition to technical settings. |
+| D-36 | No SMS sign-in in release 1. Admin or System Engineer sets temporary passwords. |

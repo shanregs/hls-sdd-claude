@@ -4,14 +4,14 @@ One testable statement each. Rules and numbers are in `03-business-rules.md`. Ro
 Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, about 250 sign-in users.
 
 ## Platform (PLT)
-- PLT-01 Users sign in with phone or username and password. Teachers and Managers may sign in with an SMS one-time code instead.
+- PLT-01 Users sign in with phone or username and password. SMS one-time codes are not in this release; Admin or System Engineer sets a temporary password for a user who forgets theirs.
 - PLT-02 Five failed sign-ins lock the account for 30 minutes. Failure messages never reveal whether the user exists.
 - PLT-03 A session lasts about 12 hours and renews on activity. Admin can sign a user out.
 - PLT-04 Admin sets a temporary password for a user who cannot sign in.
-- PLT-05 Admin creates users, assigns one or more roles, deactivates users, resets passwords. The last Admin and oneself cannot be deactivated.
+- PLT-05 Admin or System Engineer creates users, assigns one or more roles, deactivates users, resets passwords. The last Admin and oneself cannot be deactivated.
 - PLT-06 An Admin-edited permission matrix (role x permission) controls menus, routes and API actions. Changes take effect on the next request and are audited.
 - PLT-07 The matrix cannot remove the "manage permissions" permission from Admin.
-- PLT-08 Data scope rules (Admin and Director all; Manager own Schools; Teacher self; Content Creator own items) are enforced in code on every query and are not editable.
+- PLT-08 Data scope rules (Admin and Director all; Manager the Schools in their Zones; Teacher self; Content Creator own items) are enforced in code on every query and are not editable.
 - PLT-09 One `audit_log` records who, when, what, entity, before and after for changes to people, assignments, attendance corrections, money, approvals, settings and permissions.
 - PLT-10 Admin and Director search the audit log by user, entity and date. Audit entries are kept 3 years.
 - PLT-11 A settings page edits: incentive amount, payment due days, overdue-task days, lockout constants.
@@ -25,7 +25,7 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 ## Master data (MST)
 - MST-01 Admin and Director maintain Zones.
 - MST-02 Admin and Director maintain Schools: name, address, city, pincode, Zone, Manager (defaults to a Zone Manager), optional weekly-off override, contacts with name, designation (for example Principal) and phone.
-- MST-03 Each School has exactly one responsible Manager.
+- MST-03 Each School has exactly one named responsible Manager, who approves its MoU, transfers and Teacher expense claims. Other Managers of the Zone can still view it and act on attendance, substitution and observations.
 - MST-04 A Manager belongs to one or more Zones. A Zone can have several Managers.
 - MST-05 Admin and Director maintain employees of kinds Teacher, Manager, Admin, Director, System Engineer, Content Creator and Substitute, with employee id, designation, joining and exit dates, and status.
 - MST-06 Employees are never deleted.
@@ -34,6 +34,7 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 - MST-09 Each employee has a dated salary history. Rows are never overwritten; a change adds a row with an effective date.
 - MST-10 Substitutes belong to a Zone, have no login, no salary and no placement.
 - MST-11 Admin maintains the holiday list and org-wide weekly offs. A School may override weekly offs.
+- MST-12 Admin sets a School month figure (days) per School and month for invoicing. It defaults to the calendar days of that month and may be edited, for example to 30 for a 31-day month. One screen per School and year; save is all or nothing.
 
 ## Contracts and placements (CON)
 - CON-01 A School contract holds Teacher count, start and end dates, monthly fee (same for all positions or per position), signatories and signed-PDF versions.
@@ -46,16 +47,16 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 
 ## Attendance and leave (ATT)
 - ATT-01 A Teacher marks own attendance for today and the previous 3 days using Present, Absent, Leave, Half day.
-- ATT-02 A Manager marks and corrects Teachers at own Schools. Admin and Director do so anywhere. Every correction is audited with a reason.
+- ATT-02 A Manager marks and corrects Teachers at Schools in their Zones. Admin and Director do so anywhere. Every correction is audited with a reason.
 - ATT-03 Attendance is not markable on weekly offs or holidays.
 - ATT-04 A monthly grid per School shows attendance and exports CSV.
 - ATT-05 Admin locks a month for Teachers; locking is refused while any placed working day is unmarked. Reopening needs a reason.
 - ATT-06 A Teacher applies for leave of type Casual, Sick, Personal, Other or Loss-of-Pay. Every leave day is deducted.
-- ATT-07 The School's Manager decides leave; a rejection needs a reason. Approval writes Leave marks on working days only.
+- ATT-07 A Manager of the School's Zone decides leave; a rejection needs a reason. Approval writes Leave marks on working days only.
 - ATT-08 Leave for today is auto-approved and flagged. A Manager can record leave on a Teacher's behalf.
 - ATT-09 A Teacher may cancel a pending or future leave.
 - ATT-10 Managers check in and out daily with browser location, a day type (Office, Field, Leave) and, for Field, a purpose text.
-- ATT-11 Manager leave is requested by the Manager and decided by the Director.
+- ATT-11 Manager leave is requested by the Manager and decided by the Admin or Director.
 - ATT-12 Admin edits a Manager's day with a reason (forgotten check-in).
 - ATT-13 A month grid for Managers exports CSV. Admin locks the Manager month. Lock lists unresolved working days; each must be resolved first.
 - ATT-14 The dashboard lists Managers with no check-in today.
@@ -85,14 +86,15 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 - PAY-13 A run exports CSV for the accountant; a payslip is a printable page.
 - PAY-14 An Incentive adjustment is created when a MoU is approved: once per School, earner is the prospect owner or else the School's Manager, amount from the setting at that time.
 - PAY-15 Teachers and Managers can view only their own payslips.
-- BIL-01 Admin raises one invoice per School per month from placements, per the formula in `03-business-rules.md` section 8.
+- BIL-01 Admin raises one invoice per School per month from placements, per the formula in `03-business-rules.md` section 8, using the School month figure for that month.
 - BIL-02 An invoice is immutable once raised; corrections are credit or debit adjustments.
 - BIL-03 Due date = invoice date + the due-days setting.
 - BIL-04 Admin records payments (amount, date, mode, reference) and allocates them to one or more invoices.
 - BIL-05 A payment can be reversed only by a negative payment.
 - BIL-06 Ageing buckets (0-30, 31-60, 61-90, 90+) are shown by School, Zone and Manager.
 - BIL-07 A "not billed" list shows Schools with placements but no invoice for a finished month.
-- BIL-08 Managers can view dues and overdue invoices for their own Schools but cannot record payments by default.
+- BIL-08 Managers can view dues and overdue invoices for Schools in their Zones but cannot record payments by default.
+- BIL-09 An invoice carries a credit line for each uncovered day: a working day on which the placed Teacher was Absent or on Leave and no Substitute was marked Present and no Manager covered. Credit = position fee / School month figure. Raising the invoice is refused while a Substitute assignment in the month has no day mark.
 - EXP-01 Any employee with the permission raises a claim: date, amount, category (6), Zone or Head office, up to 5 bills, optional reference text.
 - EXP-02 Status is Submitted, Approved, Rejected (reason) or Paid.
 - EXP-03 Approvers follow the hierarchy in `03-business-rules.md` section 13; nobody approves their own claim.
@@ -127,7 +129,7 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 - TSK-02 Status moves Assigned, In progress, Completed, Verified. Completion needs a note; evidence is optional.
 - TSK-03 Completing past due date requires a reason.
 - TSK-04 Admin or Director verifies; the Director sees overdue tasks.
-- OBS-01 A Manager enters an observation for a Teacher at own School: date, six ratings (1 to 5), comments, School feedback note, attachments, optional result.
+- OBS-01 A Manager enters an observation for a Teacher at a School in their Zones: date, six ratings (1 to 5), comments, School feedback note, attachments, optional result.
 - OBS-02 Draft is editable; after Submit only notes can be added.
 - OBS-03 "Needs improvement" creates a follow-up task with a follow-up date.
 - OBS-04 "Unsuitable" opens a transfer request.
@@ -142,7 +144,7 @@ Scale: 200 Teachers, 15-20 Managers, 50 Schools, 10 Zones, 10-20 Substitutes, ab
 
 ## Dashboard and reports (RPT)
 - RPT-01 Director and Admin dashboard of live tiles: Teachers absent today, Managers not checked in, pending approvals by kind, open substitutions, overdue tasks, overdue invoices, payroll month status, expenses pending, prospects by stage, joiners ready to place, Schools without a contract.
-- RPT-02 Manager dashboard: own Schools' absences, pending leave, open substitutions, own tasks, overdue invoices of own Schools, activities due.
+- RPT-02 Manager dashboard: absences at Schools in their Zones, pending leave, open substitutions, own tasks, overdue invoices of Schools in their Zones, activities due.
 - RPT-03 Teacher dashboard: own attendance, leave, payslip, training sessions, notifications.
 - RPT-04 Reports with filters and a CSV button: Attendance/LOP, Payroll register, Margin, Collections and ageing, Expenses by Zone and category, People list.
 - RPT-05 Margin = fee billed minus Teacher pay allocated by placement days. Visible to Admin and Director only.
