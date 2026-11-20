@@ -18,7 +18,8 @@ A Teacher moves Trainee to Active when induction is signed off. She is paid only
 - Weekly offs are org-wide, with an optional per-School override. Holidays are a single list.
 - A **working day** for a School is a day that is neither a weekly off nor a holiday.
 - Attendance is marked only on working days. Weekly offs and holidays are never deducted.
-- Calendar days of a month is the real count (28 to 31).
+- Calendar days of a month is the real count (28 to 31). Pay always uses it.
+- **School month figure**: a per-School, per-month number of days used only as the invoice divisor. Default = calendar days of the month. Admin may edit it (for example 30 for a 31-day month).
 
 ## 3. Teacher attendance
 
@@ -34,7 +35,7 @@ Codes: Present, Absent, Leave, Half day, Training day. Holiday is system-generat
 - Types: Casual, Sick, Personal, Other, Loss-of-Pay. No balances. Every leave day is deducted (D-07).
 - Only working days inside the request are leave days; a holiday or weekly off in the range is not counted.
 - Teacher leave: Manager decides (reject needs a reason). Approval writes Leave marks.
-- Manager leave: Director decides.
+- Manager leave: Admin or Director decides.
 - Half-day leave deducts 0.5 day.
 
 ## 5. Pay formula (A-01, A-02)
@@ -93,7 +94,7 @@ lines        = net + adjustments (+ or -)
 - Pay for a Substitute = sum of (rate x 1 day) over days marked Present. **The rate is typed on each substitution** (D-19). It may differ every time.
 - A day marked after the run is finalised is paid by an adjustment line in the next run.
 - If leave is revoked or the Teacher attendance changes to Present, the requirement reopens or is cancelled; a cancelled requirement with a marked-Present Substitute day is flagged to Admin.
-- Substitution never changes the School invoice (A-04).
+- A day with no cover earns the School a credit on its invoice (section 8). Substitute pay itself is never billed to the School.
 
 ## 8. Contracts, billing, collections
 
@@ -103,10 +104,16 @@ lines        = net + adjustments (+ or -)
 - **Invoice** per School per month (Admin raises). Line per placement segment:
 
 ```
-lineAmount = round( positionFee x placedDaysInMonth / calendarDaysInMonth , 2 )
+billableDays = min( placedDaysInMonth , schoolMonthFigure )
+lineAmount   = round( positionFee x billableDays / schoolMonthFigure , 2 )
+creditPerUncoveredDay = round( positionFee / schoolMonthFigure , 2 )
 ```
 
-  A full-month placement is the full fee. Invoice is immutable once raised. Due date = invoice date + the due-days setting.
+  A full-month placement is the full fee.
+- **Uncovered day credit** (A-04): a School working day on which the placed Teacher was Absent or on approved Leave, and the substitution requirement is not covered. Covered means a Substitute marked Present, or Manager covers. OPEN, or ASSIGNED with the Substitute marked Absent, is uncovered. CANCELLED (Teacher was not absent after all) is not a credit. Half days, weekly offs and holidays never create a credit. Each uncovered day is a negative invoice line.
+- Raising an invoice is refused while any Substitute assignment in that month has no day mark.
+- Anything that changes after the invoice is raised (a late Substitute mark, for example) becomes an invoice adjustment.
+- Invoice is immutable once raised. Due date = invoice date + the due-days setting.
 - Corrections are credit/debit adjustments, never edits.
 - Payment: amount, date, mode, reference; allocated across invoices (part or full). Reversal is a negative payment.
 - Ageing buckets 0-30, 31-60, 61-90, 90+ days overdue, by School, Zone and Manager.
@@ -122,6 +129,10 @@ lineAmount = round( positionFee x placedDaysInMonth / calendarDaysInMonth , 2 )
 | B3 | Fee 31,000. Placed 10 days of July. | 10,000.00. |
 | B4 | Teacher transferred 16 June: School A 15 days, School B 15 days, fee 30,000 each. | A: 15,000. B: 15,000. |
 | B5 | Payment 50,000 allocated 30,000 to invoice 1 and 20,000 to invoice 2. | Invoice 1 settled; invoice 2 has the balance. |
+| B6 | Fee 30,000. Figure 30. Placed all of June. 2 uncovered days. | Placement 30,000.00, credit 2 x 1,000, total 28,000.00. |
+| B7 | Fee 31,000. July (31 days) but School figure set to 31. Placed all month. 1 day covered by Substitute Present, 1 day Manager covers. | 31,000.00, no credit. |
+| B8 | Fee 30,000. July with School figure 30. Placed all 31 days. | billableDays min(31,30) = 30, so 30,000.00. |
+| B9 | Fee 30,000. Figure 30. Placed 11 to 30 June (20 days). 1 day Absent with Substitute assigned and marked Absent. | 20,000.00 - 1,000.00 = 19,000.00. |
 
 ## 9. Transfers
 
